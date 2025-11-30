@@ -24,10 +24,10 @@ LOGO_UPLOAD_FOLDER = os.path.join(BASE_DIR, 'static', 'images', 'logos')
 app = Flask(__name__, static_folder=os.path.join(BASE_DIR, 'static'), template_folder=os.path.join(BASE_DIR, 'templates'))
 auth = HTTPBasicAuth()
 
-app.config['SESSION_COOKIE_SECURE'] = False  # Set to True only in production with HTTPS
+app.config['SESSION_COOKIE_SECURE'] = False
 app.config['SESSION_COOKIE_HTTPONLY'] = True
 app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
-app.config['SECRET_KEY'] = "BALULEROBALULEICHINGONJEJE"
+app.config['SECRET_KEY'] = "PAAS" # Esta no es la que está en producción claramente
 
 from bunkerlabs.extensions import limiter
 limiter.init_app(app)
