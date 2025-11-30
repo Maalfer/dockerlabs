@@ -1,0 +1,331 @@
+/* ===========================
+   Writeups recibidos (minimalista + azul oscuro)
+   =========================== */
+
+.container {
+    padding-top: 96px;
+    padding-bottom: 40px;
+    max-width: 1200px;
+    min-height: calc(100vh - 96px);
+}
+
+/* ===== Cabecera ===== */
+
+h1.mb-3 {
+    font-size: 2.2rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    letter-spacing: 0.03em;
+    margin-bottom: 0.75rem !important;
+}
+
+.text-secondary.mb-4 {
+    max-width: 800px;
+    color: var(--text-secondary) !important;
+    font-size: 0.98rem;
+    line-height: 1.6;
+}
+
+/* ===== Alertas flotantes ===== */
+
+#alert-container {
+    position: fixed;
+    top: 96px;
+    right: 20px;
+    z-index: 9999;
+    min-width: 280px;
+    max-width: 360px;
+}
+
+#alert-container .alert {
+    border-radius: 10px;
+    border-width: 1px;
+    border-style: solid;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
+    padding: 0.75rem 1rem;
+    font-size: 0.9rem;
+}
+
+/* Colores de alertas */
+#alert-container .alert-success {
+    background-color: #022c22;
+    border-color: #16a34a;
+    color: #bbf7d0;
+}
+
+#alert-container .alert-danger {
+    background-color: #450a0a;
+    border-color: #ef4444;
+    color: #fecaca;
+}
+
+#alert-container .alert-warning {
+    background-color: #451a03;
+    border-color: #f59e0b;
+    color: #fef3c7;
+}
+
+#alert-container .alert-info {
+    background-color: #0b2545;
+    border-color: #3b82f6;
+    color: #dbeafe;
+}
+
+/* ===== Tabla contenedora ===== */
+
+.table-responsive {
+    background-color: #0A1A2F;       /* azul oscuro clarito */
+    border-radius: 14px;
+    border: 1px solid rgba(59, 130, 246, 0.35);
+    padding: 1.25rem 1.1rem;
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.45);
+}
+
+/* ===== Tabla ===== */
+
+#tabla-writeups-recibidos {
+    margin-bottom: 0;
+    border-collapse: separate;
+    border-spacing: 0;
+    width: 100%;
+    background-color: transparent;
+    color: var(--text-secondary);
+}
+
+/* Head */
+#tabla-writeups-recibidos thead {
+    background-color: #0A1A2F;
+}
+
+#tabla-writeups-recibidos thead th {
+    background-color: #0A1A2F;
+    border-bottom: 1px solid rgba(51, 65, 85, 0.9) !important;
+    color: var(--text-muted);
+    font-size: 0.78rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    padding: 0.6rem 0.6rem;
+    white-space: nowrap;
+}
+
+/* Body filas */
+#tabla-writeups-recibidos tbody tr {
+    background-color: #0A1A2F !important;
+    border-bottom: 1px solid rgba(30, 41, 59, 0.9);
+    transition: background-color 0.18s ease-out, transform 0.18s ease-out;
+}
+
+#tabla-writeups-recibidos tbody tr:hover {
+    background-color: #112840 !important;
+    transform: translateY(-1px);
+}
+
+/* Celdas */
+#tabla-writeups-recibidos tbody td {
+    border-top: 1px solid rgba(15, 23, 42, 0.9) !important;
+    padding: 0.65rem 0.6rem;
+    vertical-align: middle;
+    font-size: 0.86rem;
+    color: var(--text-secondary);
+}
+
+/* ID columna más compacta */
+#tabla-writeups-recibidos tbody td:first-child {
+    width: 60px;
+    font-size: 0.8rem;
+    color: var(--text-muted);
+}
+
+/* Fecha */
+#tabla-writeups-recibidos tbody td:nth-child(6) {
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+    color: var(--text-secondary);
+}
+
+/* Fila vacía / mensajes */
+#tabla-writeups-recibidos tbody td[colspan] {
+    text-align: center;
+    padding: 1.8rem 1rem;
+    color: var(--text-muted) !important;
+    font-style: italic;
+}
+
+/* ===== Inputs y selects dentro de la tabla ===== */
+
+#tabla-writeups-recibidos .form-control,
+#tabla-writeups-recibidos .form-select {
+    background-color: #0F223B;      /* un poco más claro que el fondo de la tabla */
+    border-radius: 8px;
+    border: 1px solid rgba(59, 130, 246, 0.35);
+    color: var(--text-primary);
+    font-size: 0.82rem;
+    padding: 0.35rem 0.55rem;
+}
+
+#tabla-writeups-recibidos .form-control::placeholder {
+    color: var(--text-muted);
+}
+
+#tabla-writeups-recibidos .form-control:focus,
+#tabla-writeups-recibidos .form-select:focus {
+    background-color: #0F223B;
+    border-color: rgba(59, 130, 246, 0.8);
+    box-shadow: 0 0 0 1px rgba(59, 130, 246, 0.45);
+    outline: none;
+}
+
+/* Input pequeños */
+#tabla-writeups-recibidos .form-control-sm,
+#tabla-writeups-recibidos .form-select-sm {
+    padding: 0.35rem 0.55rem;
+}
+
+/* ===== Badges de tipo ===== */
+
+.tipo-badge {
+    margin-top: 0.25rem;
+}
+
+.tipo-badge .badge-sm {
+    font-size: 0.7rem;
+    padding: 0.18rem 0.55rem;
+    border-radius: 999px;
+}
+
+/* Colores planos (sin degradado) */
+.tipo-badge .badge.bg-primary {
+    background-color: #1d4ed8 !important;
+    color: #e5e7eb;
+}
+
+.tipo-badge .badge.bg-success {
+    background-color: #16a34a !important;
+    color: #e5e7eb;
+}
+
+.tipo-badge .badge.bg-secondary {
+    background-color: #475569 !important;
+    color: #e5e7eb;
+}
+
+/* ===== Botones de acciones ===== */
+
+#tabla-writeups-recibidos .btn {
+    font-weight: 500;
+    font-size: 0.78rem;
+    border-radius: 999px;
+    padding: 0.32rem 0.7rem;
+    border-width: 1px;
+    border-style: solid;
+    transition: background-color 0.15s ease-out, transform 0.15s ease-out, box-shadow 0.15s ease-out;
+}
+
+/* Primary */
+#tabla-writeups-recibidos .btn.btn-primary {
+    background-color: #2563eb;
+    border-color: #1d4ed8;
+    color: #f9fafb;
+}
+
+#tabla-writeups-recibidos .btn.btn-primary:hover {
+    background-color: #1d4ed8;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.45);
+}
+
+/* Success */
+#tabla-writeups-recibidos .btn.btn-success {
+    background-color: #16a34a;
+    border-color: #15803d;
+    color: #f9fafb;
+}
+
+#tabla-writeups-recibidos .btn.btn-success:hover {
+    background-color: #15803d;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(22, 163, 74, 0.45);
+}
+
+/* Danger */
+#tabla-writeups-recibidos .btn.btn-danger {
+    background-color: #dc2626;
+    border-color: #b91c1c;
+    color: #fef2f2;
+}
+
+#tabla-writeups-recibidos .btn.btn-danger:hover {
+    background-color: #b91c1c;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(220, 38, 38, 0.45);
+}
+
+/* Contenedor de botones */
+#tabla-writeups-recibidos td .d-flex.gap-1 {
+    gap: 0.35rem !important;
+}
+
+/* ===== Scrollbar ===== */
+
+.table-responsive::-webkit-scrollbar {
+    height: 8px;
+    width: 8px;
+}
+
+.table-responsive::-webkit-scrollbar-thumb {
+    background-color: rgba(148, 163, 184, 0.6);
+    border-radius: 999px;
+}
+
+/* ===== Responsive ===== */
+
+@media (max-width: 768px) {
+    .container {
+        padding-top: 84px;
+    }
+
+    h1.mb-3 {
+        font-size: 1.9rem;
+    }
+
+    .table-responsive {
+        padding: 1rem 0.8rem;
+    }
+
+    #tabla-writeups-recibidos thead th {
+        font-size: 0.72rem;
+        padding: 0.5rem 0.45rem;
+    }
+
+    #tabla-writeups-recibidos tbody td {
+        font-size: 0.8rem;
+        padding: 0.55rem 0.45rem;
+    }
+
+    #tabla-writeups-recibidos .btn {
+        font-size: 0.72rem;
+        padding: 0.28rem 0.6rem;
+    }
+
+    #alert-container {
+        right: 12px;
+        left: 12px;
+        max-width: none;
+    }
+}
+
+@media (max-width: 576px) {
+    .container {
+        padding-top: 78px;
+    }
+
+    #tabla-writeups-recibidos td .d-flex.gap-1 {
+        gap: 0.25rem !important;
+    }
+
+    #tabla-writeups-recibidos td .d-flex.gap-1 .btn {
+        flex: 1 1 auto;
+        text-align: center;
+    }
+}

@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+
+{% block title %}Añadir máquina - DockerLabs{% endblock %}
+
+{% block content %}
+<div class="container" style="padding-top: 80px; max-width: 600px;">
+    <h2>Añadir nueva máquina</h2>
+
+    {% if error %}
+    <div class="alert alert-danger mt-3">{{ error }}</div>
+    {% endif %}
+
+    <form method="post" enctype="multipart/form-data" class="mt-3">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+
+        <div class="mb-3">
+            <label for="nombre" class="form-label">Nombre de la máquina</label>
+            <input type="text" name="nombre" id="nombre" class="form-control" required>
+        </div>
+
+        <div class="mb-3">
+            <label for="dificultad" class="form-label">Dificultad</label>
+            <select name="dificultad" id="dificultad" class="form-select" required>
+                <option value="">Selecciona una dificultad</option>
+                <option value="Muy Fácil">Muy fácil</option>
+                <option value="Fácil">Fácil</option>
+                <option value="Medio">Medio</option>
+                <option value="Difícil">Difícil</option>
+            </select>
+        </div>
+
+        <div class="mb-3">
+            <label for="autor" class="form-label">Autor</label>
+            <input type="text" name="autor" id="autor" class="form-control" required>
+        </div>
+
+        <div class="mb-3">
+            <label for="enlace_autor" class="form-label">Enlace del autor (YouTube, web, etc.)</label>
+            <input type="url" name="enlace_autor" id="enlace_autor" class="form-control" placeholder="https://..."
+                required>
+        </div>
+
+        <div class="mb-3">
+            <label for="fecha" class="form-label">Fecha</label>
+            <input type="date" name="fecha" id="fecha" class="form-control" required>
+        </div>
+
+        <div class="mb-3">
+            <label for="imagen" class="form-label">Imagen de la máquina (subir archivo)</label>
+            <input type="file" name="imagen" id="imagen" class="form-control" accept="image/*">
+        </div>
+
+        <div class="mb-3">
+            <label for="descripcion" class="form-label">Descripción</label>
+            <textarea name="descripcion" id="descripcion" class="form-control" rows="4"
+                placeholder="Descripción de lo que se aprende en esta máquina" required></textarea>
+        </div>
+
+        <div class="mb-3">
+            <label for="link_descarga" class="form-label">Link de descarga</label>
+            <input type="url" name="link_descarga" id="link_descarga" class="form-control" placeholder="https://..."
+                required>
+        </div>
+
+
+        <div class="mb-3">
+            <label for="destino" class="form-label">Enviar a</label>
+            <select name="destino" id="destino" class="form-select" onchange="togglePinField()">
+                <option value="docker">DockerLabs (página principal)</option>
+                <option value="bunker">BunkerLabs (zona protegida)</option>
+            </select>
+        </div>
+
+        <div class="mb-3" id="pin-container" style="display: none;">
+            <label for="pin" class="form-label">PIN de la máquina (Flag)</label>
+            <input type="text" name="pin" id="pin" class="form-control"
+                placeholder="Introduce el PIN/Flag para esta máquina">
+        </div>
+
+        <button type="submit" class="btn btn-primary">Guardar máquina</button>
+    </form>
+</div>
+
+<script>
+    function togglePinField() {
+        const destino = document.getElementById('destino').value;
+        const pinContainer = document.getElementById('pin-container');
+        const pinInput = document.getElementById('pin');
+
+        if (destino === 'bunker') {
+            pinContainer.style.display = 'block';
+            pinInput.required = true;
+        } else {
+            pinContainer.style.display = 'none';
+            pinInput.required = false;
+            pinInput.value = ''; // Limpiar valor si se oculta
+        }
+    }
+</script>
+{% endblock %}

@@ -1,0 +1,110 @@
+{% extends "base.html" %}
+
+{% block title %}Accesos BunkerLabs - DockerLabs{% endblock %}
+
+{% block content %}
+<div class="container my-4">
+    <h1 class="mb-4">Accesos BunkerLabs</h1>
+
+    {% if error %}
+        <div class="alert alert-danger">
+            <i class="bi bi-exclamation-triangle"></i> {{ error }}
+        </div>
+    {% endif %}
+
+    {% if success %}
+        <div class="alert alert-success">
+            <i class="bi bi-check-circle"></i> {{ success }}
+            {% if nuevo_token %}
+                <div class="mt-2">
+                    <strong>Token generado:</strong>
+                    <code>{{ nuevo_token }}</code>
+                    <small class="text-muted d-block">
+                        Entrega este token al usuario (no necesita estar registrado en DockerLabs).
+                    </small>
+                </div>
+            {% endif %}
+        </div>
+    {% endif %}
+
+    <div class="card mb-4">
+        <div class="card-body">
+            <h5 class="card-title">Crear nuevo acceso</h5>
+            <form method="post">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+
+                <div class="mb-3">
+                    <label for="nombre" class="form-label">Nombre del usuario</label>
+                    <input
+                        type="text"
+                        class="form-control"
+                        id="nombre"
+                        name="nombre"
+                        placeholder="Ej: Pepe"
+                        required
+                    >
+                    <div class="form-text">
+                        Este nombre es sólo informativo, el usuario no necesita estar registrado.
+                    </div>
+                </div>
+
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-key"></i> Generar token de acceso
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            <h5 class="card-title">Tokens existentes</h5>
+
+            {% if tokens|length == 0 %}
+                <p class="text-muted">Todavía no hay tokens creados.</p>
+            {% else %}
+                <div class="table-responsive">
+                    <table class="table table-sm align-middle">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Nombre</th>
+                                <th>Token</th>
+                                <th>Creado</th>
+                                <th>Activo</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for t in tokens %}
+                            <tr>
+                                <td>{{ t.id }}</td>
+                                <td>{{ t.nombre }}</td>
+                                <td>
+                                    <code>{{ t.token }}</code>
+                                </td>
+                                <td>{{ t.created_at }}</td>
+                                <td>
+                                    {% if t.activo %}
+                                        <span class="badge bg-success">Activo</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">Inactivo</span>
+                                    {% endif %}
+                                </td>
+                                <td class="text-end">
+                                    <form method="post" action="{{ url_for('bunkerlabs.delete_bunker_token', token_id=t.id) }}" class="d-inline">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                                        <button type="submit" class="btn btn-sm btn-outline-danger">
+                                            <i class="bi bi-trash"></i> Eliminar
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

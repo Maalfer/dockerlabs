@@ -1,0 +1,42 @@
+# Database files
+*.db
+
+# Libraries directory
+librerias/
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Git
+.git/
+.gitignore
+.gitattributes
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Docker
+.dockerignore
+Dockerfile
+
+# Temporary files
+*.log
+*.tmp
+.DS_Store
+dockerlabs.zip

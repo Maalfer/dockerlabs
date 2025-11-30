@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-5">
+    <h1 class="title">Enviar Máquina</h1>
+
+    <p class="mt-4">
+        En DockerLabs, las máquinas enviadas por la comunidad son una parte fundamental del proyecto.
+        Actualmente, las máquinas se suben de forma manual una por una por <strong>El Pingüino de Mario</strong>,
+        por lo que el proceso puede tardar un poco dependiendo de su disponibilidad.
+    </p>
+
+    <div class="card p-4 mt-4">
+        <h3 class="subtitle">¿Cómo avisar correctamente de que tienes una máquina lista?</h3>
+
+        <p class="mt-3">
+            La forma más recomendada y rápida es avisar a través del servidor oficial de Discord,
+            en el canal <strong>#dockerlabs</strong>, mencionando a los moderadores. Esto garantiza que el equipo
+            se entere cuanto antes y pueda revisar tu máquina para publicarla.
+        </p>
+
+        <p class="mt-3">
+            También es posible contactar directamente a El Pingüino de Mario mediante LinkedIn, pero al ser un
+            mensaje privado es posible que tarde más tiempo en verlo.
+        </p>
+
+        <div class="mt-4">
+            <a href="https://discord.com/invite/dD3yVejBUR" target="_blank" class="btn btn-primary">
+                <i class="bi bi-discord"></i> Unirse al servidor de Discord
+            </a>
+        </div>
+    </div>
+
+    <div class="card p-4 mt-4">
+        <h3 class="subtitle">Requisitos</h3>
+        <ul class="mt-3">
+            <li>La máquina debe ser original.</li>
+            <li>Debe incluir un archivo README explicando su funcionamiento general.</li>
+            <li>Debe contener al menos una vulnerabilidad explotable.</li>
+            <li>Debe enviarse en formato ZIP o TAR.</li>
+        </ul>
+    </div>
+
+    <div class="card p-4 mt-4 mb-5">
+        <h3 class="subtitle">Proceso de Envío</h3>
+        <p class="mt-3">
+            Para aportar tu máquina, súbela a cualquier servicio de alojamiento (Drive, Mega, etc.)
+            y comparte el enlace con el equipo a través de Discord o LinkedIn. Una vez revisada,
+            será añadida a la plataforma manualmente.
+        </p>
+    </div>
+</div>
+{% endblock %}

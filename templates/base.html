@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}DockerLabs{% endblock %}</title>
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;700&display=swap">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <meta name="csrf-token" content="{{ csrf_token }}">
+
+    {% if not no_default_styles %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    {% endif %}
+
+    <link rel="icon" href="{{ url_for('static', filename='images/logos/logo.png') }}" type="image/png">
+
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag() { dataLayer.push(arguments); }
+        gtag('js', new Date());
+        gtag('config', 'G-ZBED41BLPR');
+    </script>
+
+    <script>
+        function getCsrfToken() {
+            const meta = document.querySelector('meta[name="csrf-token"]');
+            return meta ? meta.getAttribute('content') : '';
+        }
+    </script>
+
+    {% block extra_head %}{% endblock %}
+</head>
+
+<body class="{% if no_default_styles %}no-default-styles{% endif %}">
+
+    <header class="position-fixed fixed-top {% if no_default_styles %}custom-header{% endif %}"
+        style="display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:15px;">
+
+        <div style="display:flex;align-items:center;gap:15px;">
+            <div class="logo-container">
+                <a href="https://dockerlabs.es">
+                    <img src="{{ url_for('static', filename='images/logos/logo.png') }}" alt="DockerLabs" width="60"
+                        height="55">
+                </a>
+            </div>
+
+            <div class="raiola-container">
+                <a href="https://raiolanetworks.com/landing/hosting-...io/?utm_medium=affiliate&utm_source=5855&utm_campaign=Afiliados"
+                    target="_blank">
+                    <img src="{{ url_for('static', filename='images/raiola.png') }}" alt="Raiola Networks" width="290"
+                        height="50">
+                </a>
+            </div>
+        </div>
+
+        <h1 style="margin:0;text-align:center;">
+            <a href="{{ url_for('bunkerlabs.bunkerlabs_home') }}" id="dockerlabs-link"
+                onmouseover="this.innerText='BunkerLabs'" onmouseout="this.innerText='DockerLabs'">
+                DockerLabs
+            </a>
+        </h1>
+
+        <div class="auth-buttons" style="justify-self:end;display:flex;gap:0.75rem;align-items:center;">
+            <button type="button" onclick="openMenuModal()" class="btn-auth">
+                <i class="bi bi-list"></i>
+                Menú
+            </button>
+
+            {% if session.get('user_id') %}
+            <button type="button" onclick="openGestionWriteupsModal()" class="btn-auth">
+                <i class="bi bi-file-text"></i>
+                Gestión writeups
+            </button>
+
+            <button type="button" onclick="openDashboardModal()" class="btn-auth">
+                <i class="bi bi-speedometer2"></i>
+                Dashboard
+            </button>
+
+            <a href="{{ url_for('auth.logout') }}"><button class="btn-auth btn-logout">
+                    <i class="bi bi-box-arrow-right"></i>
+                    Cerrar sesión
+                </button></a>
+            {% else %}
+            <button onclick="window.location.href='{{ url_for('auth.login') }}'" class="btn-auth">
+                <i class="bi bi-box-arrow-in-right"></i>
+                Iniciar sesión
+            </button>
+            <button onclick="window.location.href='{{ url_for('auth.register') }}'" class="btn-auth">
+                <i class="bi bi-person-plus"></i>
+                Registro
+            </button>
+            {% endif %}
+        </div>
+
+    </header>
+
+    <div id="gestionWriteupsModal" class="{% if no_default_styles %}custom-modal{% endif %}">
+        <div class="gestion-writeups-popup">
+            <button class="boton-cerrar-modal" type="button" onclick="closeGestionWriteupsModal()">&times;</button>
+            <h2>Gestión writeups</h2>
+            <ul>
+                <li>
+                    <a href="{{ url_for('writeups_publicados') }}">
+                        Writeups publicados
+                    </a>
+                </li>
+                {% if current_user_role in ['admin', 'moderador'] %}
+                <li>
+                    <a href="{{ url_for('writeups_recibidos') }}">
+                        Writeups recibidos
+                    </a>
+                </li>
+                {% endif %}
+            </ul>
+        </div>
+    </div>
+
+    <div id="menuModal" class="{% if no_default_styles %}custom-modal{% endif %}">
+        <div class="gestion-writeups-popup">
+            <button class="boton-cerrar-modal" type="button" onclick="closeMenuModal()">&times;</button>
+            <h2>Menú</h2>
+            <ul>
+                <li><a href="{{ url_for('bug_bounty') }}">Programa VDP</a></li>
+                <li><a href="{{ url_for('static', filename='instrucciones_de_uso.pdf') }}" target="_blank">Instrucciones
+                        de Uso</a></li>
+                <li><a href="{{ url_for('enviar_maquina') }}">Enviar Máquina</a></li>
+                <li><a href="{{ url_for('como_se_crea') }}">Cómo se Crea una Máquina</a></li>
+                <li><a href="{{ url_for('agradecimientos') }}">Agradecimientos</a></li>
+            </ul>
+        </div>
+    </div>
+
+    <div id="dashboardModal" class="{% if no_default_styles %}custom-modal{% endif %}">
+        <div class="gestion-writeups-popup">
+            <button class="boton-cerrar-modal" type="button" onclick="closeDashboardModal()">&times;</button>
+            <h2>Opciones de Dashboard</h2>
+            <ul>
+                <li><a href="{{ url_for('dashboard') }}">Ir al Dashboard</a></li>
+                <li><a href="{{ url_for('maquinas_hechas') }}"><i class="bi bi-check-circle"></i> Máquinas
+                        Completadas</a></li>
+                {% if current_user_role in ['admin', 'moderador'] %}
+                <li><a href="{{ url_for('peticiones') }}">Peticiones</a></li>
+                {% endif %}
+                <li><a href="{{ url_for('maquinas.gestion_maquinas') }}">Gestión Máquinas</a></li>
+                {% if current_user_role == 'admin' %}
+                <li><a href="{{ url_for('maquinas.add_maquina_page') }}">Añadir Máquina</a></li>
+                <li><a href="{{ url_for('auth.gestion_usuarios') }}">Gestión Usuarios</a></li>
+                <li><a href="{{ url_for('bunkerlabs.accesos_bunkerlabs') }}">Accesos Bunkerlabs</a></li>
+
+                {% endif %}
+            </ul>
+        </div>
+    </div>
+
+    {% block content %}{% endblock %}
+
+    <footer class="{% if no_default_styles %}custom-footer{% endif %}">
+        <div class="footer-content">
+            <p class="copyright">
+                <i class="bi bi-c-circle"></i> Copyright DockerLabs ·
+                <a href="{{ url_for('politica_privacidad') }}" class="footer-link">Política de Privacidad</a> ·
+                <a href="{{ url_for('politica_cookies') }}" class="footer-link">Cookies</a> ·
+                <a href="{{ url_for('condiciones_uso') }}" class="footer-link">Condiciones de Uso</a>
+            </p>
+
+            <div class="footer-icons">
+                <a href="https://discord.gg/dD3yVejBUR" class="footer-icon" target="_blank"><i
+                        class="bi bi-discord"></i></a>
+                <a href="https://es.linkedin.com/in/maalfer1" class="footer-icon" target="_blank"><i
+                        class="bi bi-linkedin"></i></a>
+                <a href="https://t.me/elpinguinohack" class="footer-icon" target="_blank"><i
+                        class="bi bi-telegram"></i></a>
+            </div>
+
+            <p>
+                <a href="https://www.youtube.com/@ElPinguinoDeMario" class="footer-link" target="_blank">
+                    By El Pingüino de Mario 🐧
+                </a>
+            </p>
+        </div>
+
+        <div class="wave-container">
+            <div class="wave wave1"></div>
+            <div class="wave wave2"></div>
+        </div>
+    </footer>
+
+    <script>
+        function openGestionWriteupsModal() { document.getElementById('gestionWriteupsModal').classList.add('visible'); }
+        function closeGestionWriteupsModal() { document.getElementById('gestionWriteupsModal').classList.remove('visible'); }
+        function openDashboardModal() { document.getElementById('dashboardModal').classList.add('visible'); }
+        function closeDashboardModal() { document.getElementById('dashboardModal').classList.remove('visible'); }
+        function openMenuModal() { document.getElementById('menuModal').classList.add('visible'); }
+        function closeMenuModal() { document.getElementById('menuModal').classList.remove('visible'); }
+
+        document.addEventListener('DOMContentLoaded', function () {
+
+            const gestionModal = document.getElementById('gestionWriteupsModal');
+            if (gestionModal) {
+                gestionModal.addEventListener('click', function (e) {
+                    if (e.target === gestionModal) closeGestionWriteupsModal();
+                });
+            }
+
+            const dashboardModal = document.getElementById('dashboardModal');
+            if (dashboardModal) {
+                dashboardModal.addEventListener('click', function (e) {
+                    if (e.target === dashboardModal) closeDashboardModal();
+                });
+            }
+
+            const menuModal = document.getElementById('menuModal');
+            if (menuModal) {
+                menuModal.addEventListener('click', function (e) {
+                    if (e.target === menuModal) closeMenuModal();
+                });
+            }
+
+        });
+    </script>
+
+    {% block scripts %}{% endblock %}
+</body>
+
+</html>

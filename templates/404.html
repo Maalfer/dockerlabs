@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Página no encontrada</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Outfit', sans-serif;
+    }
+
+    body {
+      background-color: #0d1117;
+      color: #f0f6fc;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      text-align: center;
+      padding: 1rem;
+    }
+
+    .container {
+      max-width: 600px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid #30363d;
+      border-radius: 20px;
+      padding: 2rem;
+      box-shadow: 0 0 15px rgba(255, 255, 255, 0.05);
+      backdrop-filter: blur(8px);
+    }
+
+    h1 {
+      font-size: 3rem;
+      color: #ffa657;
+      margin-bottom: 0.5rem;
+    }
+
+    p {
+      font-size: 1.2rem;
+      margin-bottom: 1.5rem;
+    }
+
+    img {
+      width: 100%;
+      max-width: 300px;
+      border-radius: 15px;
+      margin-bottom: 1.5rem;
+    }
+
+    a {
+      display: inline-block;
+      padding: 0.75rem 1.5rem;
+      background-color: #ffa657;
+      color: #000;
+      text-decoration: none;
+      border-radius: 10px;
+      font-weight: bold;
+      transition: background 0.3s;
+    }
+
+    a:hover {
+      background-color: #ffb770;
+    }
+
+    @media (max-width: 500px) {
+      h1 {
+        font-size: 2.2rem;
+      }
+
+      p {
+        font-size: 1rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <img src="/static/images/logos/perrito.png" alt="Perro cocker buscando" />
+    <h1>404 - ¡Ups!</h1>
+    <p>Un cocker adorable ha estado buscando por todas partes, pero no ha encontrado lo que buscas.</p>
+    <a href="/">Volver al inicio</a>
+  </div>
+</body>
+</html>

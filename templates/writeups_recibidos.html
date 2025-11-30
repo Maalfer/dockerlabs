@@ -1,0 +1,226 @@
+{% extends "base.html" %}
+
+{% block title %}Writeups recibidos - DockerLabs{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='writeups_recibidos.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1 class="mb-3">Writeups recibidos</h1>
+    <p class="text-secondary mb-4">
+        Aquí se muestran todos los writeups enviados por los usuarios.
+        Puedes editar los datos de cada uno, aprobarlos para pasarlos a publicados,
+        o eliminarlos individualmente.
+    </p>
+
+    <div id="alert-container"></div>
+
+    <div class="table-responsive">
+        <table class="table table-dark table-striped table-hover align-middle" id="tabla-writeups-recibidos">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Máquina</th>
+                    <th>Autor</th>
+                    <th>URL</th>
+                    <th>Tipo</th>
+                    <th>Fecha recepción</th>
+                    <th style="width: 220px;">Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script>
+    const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
+
+    function escapeHTML(str) {
+        if (typeof str !== "string") return "";
+        return str
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#39;");
+    }
+
+    function showAlert(message, type = "success") {
+        const container = document.getElementById("alert-container");
+        const alert = document.createElement("div");
+        alert.className = `alert alert-${type} alert-dismissible fade show`;
+        alert.role = "alert";
+        alert.innerHTML = `
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        `;
+        container.appendChild(alert);
+        setTimeout(() => {
+            alert.classList.remove("show");
+            setTimeout(() => alert.remove(), 150);
+        }, 4000);
+    }
+
+
+    function renderRow(writeup) {
+        const id = escapeHTML(String(writeup.id));
+        const maquina = escapeHTML(writeup.maquina || "");
+        const autor = escapeHTML(writeup.autor || "");
+        const url = escapeHTML(writeup.url || "");
+        const tipo = escapeHTML(writeup.tipo || "");
+        const created_at = escapeHTML(writeup.created_at || "");
+
+        const tr = document.createElement("tr");
+        tr.dataset.id = writeup.id;
+
+        tr.innerHTML = `
+            <td>${id}</td>
+            <td>${maquina}</td>
+            <td>${autor}</td>
+            <td>
+                <input type="text" class="form-control form-control-sm input-url" value="${url}">
+            </td>
+            <td>
+                <select class="form-select form-select-sm input-tipo">
+                    <option value="video" ${tipo.toLowerCase() === "video" ? "selected" : ""}>video</option>
+                    <option value="texto" ${tipo.toLowerCase() !== "video" ? "selected" : ""}>texto</option>
+                </select>
+            </td>
+            <td>${created_at}</td>
+            <td>
+                <div class="d-flex flex-wrap gap-1">
+                    <button class="btn btn-sm btn-success btn-aprobar">Aprobar</button>
+                    <button class="btn btn-sm btn-danger btn-eliminar">Eliminar</button>
+                </div>
+            </td>
+        `;
+
+        const selectTipo = tr.querySelector(".input-tipo");
+
+
+        const btnAprobar = tr.querySelector(".btn-aprobar");
+        btnAprobar.addEventListener("click", () => handleAprobar(tr));
+
+        const btnEliminar = tr.querySelector(".btn-eliminar");
+        btnEliminar.addEventListener("click", () => handleEliminar(tr));
+
+        return tr;
+    }
+
+
+    function handleAprobar(row) {
+        const id = row.dataset.id;
+        if (!confirm(`¿Seguro que quieres aprobar el writeup con ID ${id} y moverlo a publicados?`)) {
+            return;
+        }
+
+        fetch(`/api/writeups_recibidos/${id}/aprobar`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "X-CSRFToken": csrfToken
+            }
+        })
+            .then(response => response.json().then(data => ({ ok: response.ok, status: response.status, data })))
+            .then(result => {
+                if (!result.ok) {
+                    const msg = result.data && result.data.error ? result.data.error : `Error HTTP ${result.status}`;
+                    showAlert(msg, "danger");
+                    return;
+                }
+                row.remove();
+                const msg = result.data && result.data.message
+                    ? result.data.message
+                    : "Writeup aprobado y movido a publicados.";
+                showAlert(msg, "success");
+            })
+            .catch(err => {
+                console.error(err);
+                showAlert("Error al aprobar el writeup.", "danger");
+            });
+    }
+
+    function handleEliminar(row) {
+        const id = row.dataset.id;
+        if (!confirm(`¿Seguro que quieres eliminar el writeup con ID ${id}?`)) {
+            return;
+        }
+
+        fetch(`/api/writeups_recibidos/${id}`, {
+            method: "DELETE",
+            headers: {
+                "X-CSRFToken": csrfToken
+            }
+        })
+            .then(response => response.json().then(data => ({ ok: response.ok, status: response.status, data })))
+            .then(result => {
+                if (!result.ok) {
+                    const msg = result.data && result.data.error ? result.data.error : `Error HTTP ${result.status}`;
+                    showAlert(msg, "danger");
+                    return;
+                }
+                row.remove();
+                showAlert("Writeup eliminado correctamente.", "success");
+            })
+            .catch(err => {
+                console.error(err);
+                showAlert("Error al eliminar el writeup.", "danger");
+            });
+    }
+
+    function cargarWriteups() {
+        const tbody = document.querySelector("#tabla-writeups-recibidos tbody");
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="7" class="text-center text-muted">
+                    Cargando writeups recibidos...
+                </td>
+            </tr>
+        `;
+
+        fetch("/api/writeups_recibidos")
+            .then(response => response.json().then(data => ({ ok: response.ok, status: response.status, data })))
+            .then(result => {
+                tbody.innerHTML = "";
+
+                if (!result.ok) {
+                    const msg = result.data && result.data.error ? result.data.error : `Error HTTP ${result.status}`;
+                    showAlert(msg, "danger");
+                    return;
+                }
+
+                const writeups = result.data;
+                if (!Array.isArray(writeups) || writeups.length === 0) {
+                    const tr = document.createElement("tr");
+                    tr.innerHTML = `
+                        <td colspan="7" class="text-center text-muted">
+                            No hay writeups recibidos.
+                        </td>
+                    `;
+                    tbody.appendChild(tr);
+                    return;
+                }
+
+                writeups.forEach(w => {
+                    const row = renderRow(w);
+                    tbody.appendChild(row);
+                });
+            })
+            .catch(err => {
+                console.error(err);
+                showAlert("Error al cargar los writeups recibidos.", "danger");
+            });
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+        cargarWriteups();
+    });
+</script>
+{% endblock %}

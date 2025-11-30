@@ -1,0 +1,139 @@
+{% extends "bunkerlabs/base-bunkerlabs.html" %}
+
+{% block title %}BunkerLabs - Acceso{% endblock %}
+
+{% block content %}
+<style>
+    .bunker-box {
+        max-width: 950px !important;
+        display: grid !important;
+        grid-template-columns: 1fr 1fr;
+        gap: 3rem;
+        align-items: center;
+        padding: 3rem !important;
+    }
+
+    .login-section {
+        display: flex;
+        flex-direction: column;
+        gap: 1.5rem;
+        width: 100%;
+    }
+
+    .info-section {
+        display: flex;
+        flex-direction: column;
+        gap: 1.5rem;
+        width: 100%;
+        border-left: 1px solid rgba(148, 163, 184, 0.2);
+        padding-left: 3rem;
+    }
+
+    @media (max-width: 900px) {
+        .bunker-box {
+            grid-template-columns: 1fr !important;
+            max-width: 450px !important;
+            gap: 2rem;
+            padding: 2rem !important;
+        }
+
+        .info-section {
+            border-left: none;
+            border-top: 1px solid rgba(148, 163, 184, 0.2);
+            padding-left: 0;
+            padding-top: 2rem;
+        }
+    }
+</style>
+
+<div class="bunker-container">
+    <div class="bunker-box">
+        <!-- Columna Izquierda: Login -->
+        <div class="login-section">
+            <div class="bunker-header">
+                <div class="bunker-icon">
+                    <i class="bi bi-shield-lock"></i>
+                </div>
+                <h2>Acceso BunkerLabs</h2>
+                <p class="bunker-subtitle">Área restringida - Acceso autorizado</p>
+            </div>
+
+            {% if error %}
+            <div class="alert alert-danger bunker-alert">
+                <i class="bi bi-exclamation-triangle"></i>
+                {{ error }}
+            </div>
+            {% endif %}
+
+            <form method="post" class="bunker-form">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                <div class="form-group">
+                    <label for="password" class="bunker-label">
+                        <i class="bi bi-key"></i>
+                        Contraseña de acceso
+                    </label>
+                    <input type="password" id="password" name="password" class="bunker-input" required
+                        placeholder="Ingresa la contraseña de BunkerLabs">
+                </div>
+
+                <button type="submit" class="bunker-btn">
+                    <i class="bi bi-door-open"></i>
+                    Acceder a BunkerLabs
+                </button>
+            </form>
+
+            <div class="bunker-footer">
+                <p class="bunker-warning">
+                    <i class="bi bi-info-circle"></i>
+                    Esta área contiene información sensible. Acceso restringido al personal autorizado.
+                </p>
+            </div>
+        </div>
+
+        <!-- Columna Derecha: Info + Video -->
+        <div class="info-section">
+            <div style="text-align: center; color: #cbd5e1; font-size: 0.95rem; line-height: 1.6;">
+                <p style="margin-bottom: 1rem;">
+                    Quienes formen parte de la membresía <strong style="color: #fff;">'El Búnker del Pinguino'</strong>
+                    tendrán acceso a BunkerLabs, donde se crean laboratorios a medida para los alumnos.
+                </p>
+                <p>
+                    Para más información, aquí pueden acceder al Búnker:<br>
+                    <a href="https://www.skool.com/bunkerpinguino" target="_blank"
+                        style="color: #60a5fa; text-decoration: none; font-weight: 500; display: inline-block; margin-top: 0.5rem;">
+                        skool.com/bunkerpinguino <i class="bi bi-box-arrow-up-right" style="font-size: 0.8em;"></i>
+                    </a>
+                </p>
+            </div>
+
+            <div style="width: 100%; border-radius: 12px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.4);">
+                <div style="position: relative; padding-bottom: 56.25%; height: 0;">
+                    <iframe src="https://www.youtube.com/embed/cJS0IewSuRU?si=JHNkCl2uBuZFS2KG"
+                        title="YouTube video player" frameborder="0"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                        referrerpolicy="strict-origin-when-cross-origin" allowfullscreen
+                        style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;"></iframe>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const passwordInput = document.getElementById('password');
+        const bunkerBox = document.querySelector('.bunker-box');
+
+        passwordInput.addEventListener('focus', function () {
+            bunkerBox.classList.add('input-focused');
+        });
+
+        passwordInput.addEventListener('blur', function () {
+            bunkerBox.classList.remove('input-focused');
+        });
+    });
+</script>
+{% endblock %}

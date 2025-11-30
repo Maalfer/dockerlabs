@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>403 Forbidden - Rate Limit Exceeded</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Arial', sans-serif;
+            background-color: #121212;
+            color: #e0e0e0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            text-align: center;
+        }
+
+        .container {
+            max-width: 600px;
+            padding: 30px;
+            background-color: #1e1e1e;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+            border: 1px solid #333;
+        }
+
+        .error-image {
+            width: 250px;
+            height: auto;
+            margin: 20px auto;
+            filter: drop-shadow(0 0 5px rgba(220, 53, 69, 0.5));
+        }
+
+        h1 {
+            color: #ff4d4d;
+            font-size: 2.5rem;
+            margin-bottom: 15px;
+            text-shadow: 0 0 8px rgba(220, 53, 69, 0.3);
+        }
+
+        .warning-text {
+            font-size: 1.4rem;
+            font-weight: bold;
+            color: #ff6b6b;
+            margin: 20px 0;
+            line-height: 1.4;
+            text-shadow: 0 0 5px rgba(255, 107, 107, 0.2);
+        }
+
+        p {
+            font-size: 1.1rem;
+            line-height: 1.6;
+            margin-bottom: 20px;
+        }
+
+        .code {
+            font-family: monospace;
+            background-color: #2a2a2a;
+            color: #f8f9fa;
+            padding: 3px 8px;
+            border-radius: 4px;
+            border: 1px solid #444;
+        }
+
+        a {
+            color: #4dabf7;
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+
+        a:hover {
+            color: #74c0fc;
+            text-decoration: underline;
+        }
+
+        .footer {
+            margin-top: 30px;
+            font-size: 0.9rem;
+            color: #aaa;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>403 Forbidden</h1>
+        <p class="warning-text">¡Cuidadito cuidadín!<br>Te pillé haciendo el pillín,<br>demasiadas peticiones...</p>
+        
+        <p>Has excedido el límite de solicitudes permitidas...</p>
+        <p>Por favor, espera un momento antes de intentar nuevamente o <a href="{{ url_for('index') }}">vuelve a la página principal</a>.</p>
+        <p>Si crees que esto es un error, por favor contacta al administrador.</p>
+        <p><small>Código de error: <span class="code">RATE_LIMIT_EXCEEDED</span></small></p>
+        <div class="footer">Sistema de pinguprotección anti-abuso activado</div>
+    </div>
+</body>
+</html>

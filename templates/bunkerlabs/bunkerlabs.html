@@ -1,0 +1,124 @@
+{% extends "bunkerlabs/base-bunkerlabs.html" %}
+
+{% block title %}BunkerLabs{% endblock %}
+
+{% block content %}
+
+<div class="bunker-user-banner">
+    {% if session.get('bunkerlabs_nombre') %}
+    <span>
+        Acceso concedido para:
+        <strong>{{ session.get('bunkerlabs_nombre') }}</strong>
+    </span>
+    {% else %}
+    <span>Acceso concedido.</span>
+    {% endif %}
+</div>
+
+<div class="container">
+
+    <div class="header d-flex align-items-center flex-wrap gap-2">
+
+        <input type="text" id="search" class="form-control-sm" placeholder="Buscar en BunkerLabs...">
+
+        <a href="https://elrincondelhacker.es" target="_blank">
+            <button id="academia" class="btn btn-sm">Academia🧠</button>
+        </a>
+
+        <button id="ranking" class="btn btn-sm" onclick="ranking()">Ranking👑</button>
+
+        <button id="botonmuyfacil" class="btn btn-sm" onclick="botonmuyfacil()">Muy Fácil</button>
+        <button id="botonfacil" class="btn btn-sm" onclick="botonfacil()">Fácil</button>
+        <button id="botonmedio" class="btn btn-sm" onclick="botonmedio()">Medio</button>
+        <button id="botondificil" class="btn btn-sm" onclick="botondificil()">Difícil</button>
+        <button id="botontodos" class="btn btn-sm selected" onclick="botontodos()">Todos</button>
+
+    </div>
+
+    <div class="list">
+
+        <div class="columnaizquierda">
+            {% for maquina in maquinas %}
+            {% if maquina.posicion == 'izquierda' %}
+            <div class="item {{ maquina.clase }}"
+                onclick="presentacion('{{ maquina.nombre }}','{{ maquina.dificultad }}','{{ maquina.tamaño }}','{{ maquina.clase }}','{{ maquina.color }}','{{ maquina.autor }}','{{ maquina.enlace_autor }}','{{ maquina.fecha }}','{{ maquina.imagen }}')">
+
+                <span><strong>{{ maquina.nombre }}</strong></span>
+                <span class="badge {{ maquina.clase }}">{{ maquina.dificultad }}</span>
+
+                <div class="actions icon-container">
+                    <button class="upload"
+                        onclick="descripcion('{{ maquina.nombre }}','{{ maquina.dificultad }}','{{ maquina.tamaño }}','{{ maquina.clase }}','{{ maquina.color }}','{{ maquina.autor }}','{{ maquina.enlace_autor }}','{{ maquina.fecha }}','{{ maquina.descripcion }}'); event.stopPropagation();">
+                        Descripción
+                    </button>
+                </div>
+
+                <div class="actions icon-container">
+                    <button class="download"
+                        onclick="window.open('{{ maquina.link_descarga }}','_blank'); event.stopPropagation();">
+                        <i class="bi bi-cloud-arrow-down-fill"></i>
+                    </button>
+                    <button class="upload" onclick="subir_flag('{{ maquina.nombre }}'); event.stopPropagation();"
+                        title="Subir Flag">
+                        <i class="bi bi-flag-fill"></i>
+                    </button>
+                    <button onclick="showEnlaces('{{ maquina.nombre }}'); event.stopPropagation();">
+                        <i class="bi bi-book"></i>
+                    </button>
+                </div>
+
+            </div>
+            {% endif %}
+            {% endfor %}
+        </div>
+
+        <div class="columnaderecha">
+            {% for maquina in maquinas %}
+            {% if maquina.posicion == 'derecha' %}
+            <div class="item {{ maquina.clase }}"
+                onclick="presentacion('{{ maquina.nombre }}','{{ maquina.dificultad }}','{{ maquina.tamaño }}','{{ maquina.clase }}','{{ maquina.color }}','{{ maquina.autor }}','{{ maquina.enlace_autor }}','{{ maquina.fecha }}','{{ maquina.imagen }}')">
+
+                <span><strong>{{ maquina.nombre }}</strong></span>
+                <span class="badge {{ maquina.clase }}">{{ maquina.dificultad }}</span>
+
+                <div class="actions icon-container">
+                    <button class="upload"
+                        onclick="descripcion('{{ maquina.nombre }}','{{ maquina.dificultad }}','{{ maquina.tamaño }}','{{ maquina.clase }}','{{ maquina.color }}','{{ maquina.autor }}','{{ maquina.enlace_autor }}','{{ maquina.fecha }}','{{ maquina.descripcion }}'); event.stopPropagation();">
+                        Descripción
+                    </button>
+                </div>
+
+                <div class="actions icon-container">
+                    <button class="download"
+                        onclick="window.open('{{ maquina.link_descarga }}','_blank'); event.stopPropagation();">
+                        <i class="bi bi-cloud-arrow-down-fill"></i>
+                    </button>
+                    <button class="upload" onclick="subir_flag('{{ maquina.nombre }}'); event.stopPropagation();"
+                        title="Subir Flag">
+                        <i class="bi bi-flag-fill"></i>
+                    </button>
+                    <button onclick="showEnlaces('{{ maquina.nombre }}'); event.stopPropagation();">
+                        <i class="bi bi-book"></i>
+                    </button>
+                </div>
+
+            </div>
+            {% endif %}
+            {% endfor %}
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script src="{{ url_for('static', filename='js/script_bunkerlabs.js') }}"></script>
+<script src="{{ url_for('static', filename='js/presentacionmaquina_bunkerlabs.js') }}"></script>
+<script src="{{ url_for('static', filename='js/descripciones_bunkerlabs.js') }}"></script>
+<script src="{{ url_for('static', filename='js/writeups_bunkerlabs.js') }}"></script>
+<script src="{{ url_for('static', filename='js/ranking_bunkerlabs.js') }}"></script>
+<script src="{{ url_for('static', filename='js/subirwriteup_bunkerlabs.js') }}"></script>
+{% endblock %}

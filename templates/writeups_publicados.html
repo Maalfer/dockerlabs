@@ -1,0 +1,322 @@
+{% extends "base.html" %}
+
+{% block title %}Writeups publicados - DockerLabs{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/writeups_publicados.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h2 class="text-center mb-3">Writeups Publicados</h2>
+
+    <p class="text-center text-muted mb-4">
+        Explora y gestiona todos los writeups publicados organizados por máquina
+    </p>
+
+    <div id="alert-container"></div>
+
+    <!-- Search bar -->
+    <div class="search-container mb-4">
+        <input type="text" id="search-input" class="search-input" placeholder="🔍 Buscar máquina por nombre..."
+            autocomplete="off">
+    </div>
+
+    <!-- Machines grid -->
+    <div id="machines-grid" class="machines-grid">
+        <!-- Machines will be loaded here -->
+    </div>
+
+    <!-- Machine detail modal -->
+    <div id="machine-modal" class="machine-modal" style="display: none;">
+        <div class="machine-modal-overlay" onclick="closeMachineModal()"></div>
+        <div class="machine-modal-content">
+            <button class="machine-modal-close" onclick="closeMachineModal()">&times;</button>
+            <h3 id="modal-machine-name" class="modal-machine-name"></h3>
+            <div id="modal-writeups-container" class="modal-writeups-container">
+                <!-- Writeups will be loaded here -->
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script>
+    const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
+
+    function escapeHTML(str) {
+        if (typeof str !== "string") return "";
+        return str
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#39;");
+    }
+
+    function showAlert(message, type = "success") {
+        const container = document.getElementById("alert-container");
+        const alert = document.createElement("div");
+        alert.className = `alert alert-${type} alert-dismissible fade show`;
+        alert.role = "alert";
+        alert.innerHTML = `
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        `;
+        container.appendChild(alert);
+        setTimeout(() => {
+            alert.classList.remove("show");
+            setTimeout(() => alert.remove(), 150);
+        }, 4000);
+    }
+
+    let allMachines = [];
+
+    function renderMachineCard(machine) {
+        const card = document.createElement("div");
+        card.className = "machine-card";
+        card.dataset.machine = machine.maquina.toLowerCase();
+
+        const imageHTML = machine.imagen
+            ? `<img src="${escapeHTML(machine.imagen)}" alt="${escapeHTML(machine.maquina)}" class="machine-card-image">`
+            : `<div class="machine-card-placeholder">📝</div>`;
+
+        card.innerHTML = `
+            <div class="machine-card-icon">${imageHTML}</div>
+            <h4 class="machine-card-title">${escapeHTML(machine.maquina)}</h4>
+            <div class="machine-card-count">${machine.total} writeup${machine.total !== 1 ? 's' : ''}</div>
+        `;
+
+        card.addEventListener("click", () => openMachineModal(machine.maquina));
+
+        return card;
+    }
+
+    function filterMachines() {
+        const searchTerm = document.getElementById("search-input").value.toLowerCase().trim();
+        const cards = document.querySelectorAll(".machine-card");
+
+        let visibleCount = 0;
+        cards.forEach(card => {
+            const machineName = card.dataset.machine;
+            if (machineName.includes(searchTerm)) {
+                card.style.display = "";
+                visibleCount++;
+            } else {
+                card.style.display = "none";
+            }
+        });
+
+        // Show "no results" message if needed
+        const grid = document.getElementById("machines-grid");
+        let noResults = grid.querySelector(".no-results");
+
+        if (visibleCount === 0 && searchTerm) {
+            if (!noResults) {
+                noResults = document.createElement("div");
+                noResults.className = "no-results";
+                noResults.textContent = `No se encontraron máquinas con "${searchTerm}"`;
+                grid.appendChild(noResults);
+            }
+        } else {
+            if (noResults) {
+                noResults.remove();
+            }
+        }
+    }
+
+    function loadMachines() {
+        const grid = document.getElementById("machines-grid");
+        grid.innerHTML = '<div class="loading">Cargando máquinas...</div>';
+
+        fetch("/api/writeups_subidos/maquinas")
+            .then(response => response.json().then(data => ({ ok: response.ok, data })))
+            .then(result => {
+                if (!result.ok) {
+                    grid.innerHTML = '<div class="error-message">Error al cargar las máquinas</div>';
+                    return;
+                }
+
+                allMachines = result.data;
+
+                if (!Array.isArray(allMachines) || allMachines.length === 0) {
+                    grid.innerHTML = '<div class="empty-state">No hay writeups publicados todavía</div>';
+                    return;
+                }
+
+                grid.innerHTML = "";
+                allMachines.forEach(machine => {
+                    const card = renderMachineCard(machine);
+                    grid.appendChild(card);
+                });
+            })
+            .catch(err => {
+                console.error(err);
+                grid.innerHTML = '<div class="error-message">Error al cargar las máquinas</div>';
+            });
+    }
+
+    function openMachineModal(machineName) {
+        const modal = document.getElementById("machine-modal");
+        const modalTitle = document.getElementById("modal-machine-name");
+        const container = document.getElementById("modal-writeups-container");
+
+        modalTitle.textContent = machineName;
+        container.innerHTML = '<div class="loading">Cargando writeups...</div>';
+
+        modal.style.display = "flex";
+        document.body.style.overflow = "hidden";
+
+        const params = new URLSearchParams({ maquina: machineName });
+        fetch(`/api/writeups_subidos?${params.toString()}`)
+            .then(response => response.json().then(data => ({ ok: response.ok, data })))
+            .then(result => {
+                if (!result.ok) {
+                    container.innerHTML = '<div class="error-message">Error al cargar writeups</div>';
+                    return;
+                }
+
+                const writeups = result.data;
+                if (!Array.isArray(writeups) || writeups.length === 0) {
+                    container.innerHTML = '<div class="empty-state">No hay writeups para esta máquina</div>';
+                    return;
+                }
+
+                container.innerHTML = "";
+                writeups.forEach(writeup => {
+                    const card = renderWriteupCard(writeup);
+                    container.appendChild(card);
+                });
+            })
+            .catch(err => {
+                console.error(err);
+                container.innerHTML = '<div class="error-message">Error al cargar writeups</div>';
+            });
+    }
+
+    function closeMachineModal() {
+        const modal = document.getElementById("machine-modal");
+        modal.style.display = "none";
+        document.body.style.overflow = "";
+    }
+
+    function renderWriteupCard(writeup) {
+        const card = document.createElement("div");
+        card.className = "writeup-detail-card";
+        card.dataset.id = writeup.id;
+
+        const typeIcon = writeup.tipo.toLowerCase() === "video" ? "🎥" : "📝";
+        const typeBadge = writeup.tipo.toLowerCase() === "video"
+            ? '<span class="type-badge type-video">Video</span>'
+            : '<span class="type-badge type-text">Texto</span>';
+
+        card.innerHTML = `
+            <div class="writeup-detail-header">
+                <div class="writeup-detail-icon">${typeIcon}</div>
+                <div class="writeup-detail-info">
+                    <div class="writeup-detail-author">${escapeHTML(writeup.autor)}</div>
+                    ${typeBadge}
+                </div>
+            </div>
+            <div class="writeup-detail-body">
+                <label class="form-label-sm">URL</label>
+                <input type="text" class="form-control-sm input-url" value="${escapeHTML(writeup.url)}">
+                <label class="form-label-sm mt-2">Tipo</label>
+                <select class="form-select-sm input-tipo">
+                    <option value="video" ${writeup.tipo.toLowerCase() === "video" ? "selected" : ""}>Video</option>
+                    <option value="texto" ${writeup.tipo.toLowerCase() !== "video" ? "selected" : ""}>Texto</option>
+                </select>
+            </div>
+            <div class="writeup-detail-footer">
+                <button class="btn-action btn-save" onclick="handleSaveWriteup(${writeup.id})">
+                    <span>💾</span> Guardar
+                </button>
+                <button class="btn-action btn-delete" onclick="handleDeleteWriteup(${writeup.id})">
+                    <span>🗑️</span> Eliminar
+                </button>
+            </div>
+        `;
+
+        return card;
+    }
+
+    function handleSaveWriteup(id) {
+        const card = document.querySelector(`.writeup-detail-card[data-id="${id}"]`);
+        const url = card.querySelector(".input-url").value.trim();
+        const tipo = card.querySelector(".input-tipo").value.trim();
+
+        if (!url || !tipo) {
+            showAlert("URL y tipo son obligatorios", "warning");
+            return;
+        }
+
+        fetch(`/api/writeups_subidos/${id}`, {
+            method: "PUT",
+            headers: {
+                "Content-Type": "application/json",
+                "X-CSRFToken": csrfToken
+            },
+            body: JSON.stringify({ url, tipo })
+        })
+            .then(response => response.json().then(data => ({ ok: response.ok, data })))
+            .then(result => {
+                if (!result.ok) {
+                    showAlert(result.data?.error || "Error al guardar", "danger");
+                    return;
+                }
+                showAlert("Writeup actualizado correctamente", "success");
+            })
+            .catch(err => {
+                console.error(err);
+                showAlert("Error al actualizar el writeup", "danger");
+            });
+    }
+
+    function handleDeleteWriteup(id) {
+        if (!confirm("¿Seguro que quieres eliminar este writeup?")) {
+            return;
+        }
+
+        fetch(`/api/writeups_subidos/${id}`, {
+            method: "DELETE",
+            headers: { "X-CSRFToken": csrfToken }
+        })
+            .then(response => response.json().then(data => ({ ok: response.ok, data })))
+            .then(result => {
+                if (!result.ok) {
+                    showAlert(result.data?.error || "Error al eliminar", "danger");
+                    return;
+                }
+                const card = document.querySelector(`.writeup-detail-card[data-id="${id}"]`);
+                if (card) card.remove();
+                showAlert("Writeup eliminado correctamente", "success");
+
+                // Reload machines to update counts
+                setTimeout(() => {
+                    closeMachineModal();
+                    loadMachines();
+                }, 1000);
+            })
+            .catch(err => {
+                console.error(err);
+                showAlert("Error al eliminar el writeup", "danger");
+            });
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+        const searchInput = document.getElementById("search-input");
+        searchInput.addEventListener("input", filterMachines);
+
+        loadMachines();
+    });
+
+    // Close modal on ESC key
+    document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape") {
+            closeMachineModal();
+        }
+    });
+</script>
+{% endblock %}

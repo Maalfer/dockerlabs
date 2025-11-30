@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-5">
+
+    <h1 class="title">Instrucciones de Uso</h1>
+
+    <p class="mt-4">
+        En esta página encontrarás una guía detallada para descargar, ejecutar y eliminar las máquinas
+        de DockerLabs, así como una sección de solución de errores. Estas instrucciones están basadas
+        en la guía oficial de DockerLabs contenida en el PDF incluido en la plataforma.
+    </p>
+
+    <!-- REQUISITOS PREVIOS -->
+    <div class="card p-4 mt-5">
+        <h3 class="subtitle">Requisitos Previos</h3>
+        <p class="mt-3">
+            Para que las máquinas de DockerLabs puedan funcionar, es necesario tener Docker instalado.
+        </p>
+
+        <pre class="mt-3"><code>sudo apt install docker.io</code></pre>
+    </div>
+
+    <!-- CÓMO EJECUTAR LAS MÁQUINAS -->
+    <div class="card p-4 mt-4">
+        <h3 class="subtitle">Cómo ejecutar las máquinas</h3>
+
+        <p class="mt-3">
+            Una vez descargues una máquina en formato <strong>.tar</strong>, verás que incluye un script llamado
+            <strong>auto_deploy.sh</strong>. Solo tienes que ejecutarlo para desplegar o eliminar la máquina.
+        </p>
+
+        <pre class="mt-3"><code>sudo bash auto_deploy.sh laboratorio.tar</code></pre>
+    </div>
+
+    <!-- CÓMO EJECUTAR MÁQUINAS DE PIVOTING -->
+    <div class="card p-4 mt-4">
+        <h3 class="subtitle">Cómo ejecutar las máquinas de Pivoting</h3>
+
+        <p class="mt-3">
+            Si has descargado una máquina de pivoting y la has descomprimido, verás varios archivos
+            <strong>.tar</strong> etiquetados como:
+        </p>
+
+        <ul class="mt-2">
+            <li>máquina1.tar</li>
+            <li>máquina2.tar</li>
+            <li>máquina3.tar</li>
+            <li>máquina4.tar</li>
+        </ul>
+
+        <p class="mt-3">
+            Junto a estos archivos encontrarás el script <strong>auto_deploy.sh</strong>, encargado de montar la red
+            de pivoting automáticamente.
+        </p>
+
+        <pre class="mt-3"><code>sudo bash auto_deploy.sh máquina1.tar máquina2.tar máquina3.tar máquina4.tar</code></pre>
+    </div>
+
+    <!-- CÓMO ELIMINAR LAS MÁQUINAS -->
+    <div class="card p-4 mt-4">
+        <h3 class="subtitle">Cómo eliminar las máquinas</h3>
+
+        <p class="mt-3">
+            Para eliminar cualquier máquina, simplemente presiona:
+        </p>
+
+        <pre class="mt-3"><code>Ctrl + C</code></pre>
+
+        <p class="mt-3">
+            Esto borrará automáticamente los contenedores y redes creadas por el laboratorio.
+        </p>
+    </div>
+
+    <!-- MENSAJE DE CONFIRMACIÓN EN MÁQUINAS DE PIVOTING -->
+    <div class="card p-4 mt-4">
+        <h3 class="subtitle">Mensaje de confirmación en máquinas de Pivoting</h3>
+
+        <p class="mt-3">
+            En las máquinas de pivoting, al eliminarlas se te hará una pregunta adicional:
+        </p>
+
+        <pre class="mt-3"><code>¿Quieres eliminar también todas las imágenes de Docker? (Si|No)</code></pre>
+
+        <p class="mt-3">
+            Si no te preocupa perder imágenes que ya tengas en tu sistema, selecciona <strong>Sí</strong>.
+            Si tienes imágenes que deseas conservar, responde <strong>No</strong> y podrás eliminarlas manualmente más tarde.
+        </p>
+    </div>
+
+    <!-- SOLUCIÓN DE ERRORES -->
+    <div class="card p-4 mt-5 mb-5">
+        <h3 class="subtitle">Solución de errores</h3>
+
+        <p class="mt-3">
+            En algunos casos puede que experimentes errores durante la ejecución de las máquinas.
+            Aquí tienes algunos comandos que resuelven la mayoría de los problemas comunes:
+        </p>
