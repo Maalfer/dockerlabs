@@ -86,6 +86,7 @@ function presentacion(nombre, dificultad, color, autor_nombre, autor_enlace, fec
     const escapedColor = escapeHtml(color);
     const escapedAutorNombre = escapeHtml(autor_nombre);
     const escapedFecha = escapeHtml(fecha);
+    const escapedImagen = escapeHtml(imagen);
 
     // Crear el título
     var titulo = document.createElement('h1');
@@ -286,8 +287,26 @@ function presentacion(nombre, dificultad, color, autor_nombre, autor_enlace, fec
     infoContainer.style.marginTop = '4px';
     infoContainer.style.gap = '18px';
 
-    // Obtener la URL base de Flask para imágenes
-    var imagenUrl = "/static/images/" + imagen;
+    // Sanitizar y validar la ruta de la imagen para prevenir LFI y XSS
+    function sanitizeImagePath(path) {
+        if (!path) return 'logos/default.png';
+
+        // Eliminar cualquier intento de directory traversal
+        path = path.replace(/\.\./g, '');
+
+        // Eliminar paths absolutos
+        path = path.replace(/^\/+/, '');
+
+        // Asegurarse de que solo contiene caracteres seguros
+        // Permitir letras, números, guiones, guiones bajos, puntos y barras
+        path = path.replace(/[^a-zA-Z0-9\-_./]/g, '');
+
+        return path;
+    }
+
+    // Obtener la URL base de Flask para imágenes con sanitización
+    var sanitizedImagePath = sanitizeImagePath(escapedImagen);
+    var imagenUrl = "/static/images/" + sanitizedImagePath;
 
     // Crear la imagen
     var imagenElem = document.createElement('img');

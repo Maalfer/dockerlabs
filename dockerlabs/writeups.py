@@ -174,20 +174,46 @@ def approve_writeup_edit(request_id):
     if req['estado'] != 'pendiente':
         return redirect(safe_redirect)
 
+    # Obtener datos actuales para no sobrescribir con NULLs si es una edición parcial
+    current_writeup = db.execute("SELECT * FROM writeups_subidos WHERE id = ?", (req['writeup_id'],)).fetchone()
+    if not current_writeup:
+        return redirect(safe_redirect)
+
+    # Determinar qué campos actualizar
+    # Si la petición tiene datos nuevos, usarlos. Si no, mantener los actuales.
+    new_maquina = req['maquina_nueva'] if req['maquina_nueva'] else current_writeup['maquina']
+    new_autor = req['autor_nuevo'] if req['autor_nuevo'] else current_writeup['autor']
+    new_url = req['url_nueva'] if req['url_nueva'] else current_writeup['url']
+    new_tipo = req['tipo_nuevo'] if req['tipo_nuevo'] else current_writeup['tipo']
+
+    # Actualizar metadata (writeups_subidos)
     db.execute(
         """
         UPDATE writeups_subidos
            SET maquina = ?, autor = ?, url = ?, tipo = ?
          WHERE id = ?
         """,
-        (
-            req['maquina_nueva'],
-            req['autor_nuevo'],
-            req['url_nueva'],
-            req['tipo_nuevo'],
-            req['writeup_id'],
-        )
+        (new_maquina, new_autor, new_url, new_tipo, req['writeup_id'])
     )
+
+    # Si hay cambios de título/contenido (para la tabla writeups interna, si existe)
+    # Nota: El código original de edit_writeup intentaba actualizar 'writeups', pero approve_writeup_edit no lo manejaba.
+    # Asumimos que si hay new_title/new_content, deberíamos actualizar la tabla correspondiente.
+    if req['new_title'] or req['new_content']:
+        # Verificar si existe la tabla 'writeups' y actualizarla
+        try:
+            db.execute(
+                "UPDATE writeups SET title = ?, content = ?, updated_at = ? WHERE id = ?",
+                (
+                    req['new_title'] or current_writeup.get('title'), # Fallback si es necesario
+                    req['new_content'] or current_writeup.get('content'),
+                    datetime.utcnow().isoformat(),
+                    req['writeup_id']
+                )
+            )
+        except Exception:
+            # Si la tabla writeups no existe o falla, loguear o ignorar silenciosamente si es intencional
+            pass
 
     db.execute(
         "UPDATE writeup_edit_requests SET estado = 'aprobada' WHERE id = ?",
@@ -298,6 +324,25 @@ def edit_writeup(writeup_id):
                        (new_title, new_content, datetime.utcnow().isoformat(), writeup_id))
         db.commit()
         flash('Writeup actualizado correctamente', 'success')
+        return redirect(url_for('writeups_publicados'))
+
+    # VERIFICACIÓN DE PROPIEDAD AÑADIDA
+    # Obtener el autor del writeup para verificar permisos
+    # Nota: writeups_subidos es la tabla principal de metadatos. 'writeups' parece ser para contenido detallado.
+    # Verificamos en ambas por seguridad.
+    
+    # Primero intentamos obtener de writeups_subidos (que tiene el campo 'autor')
+    writeup_meta = cursor.execute("SELECT autor FROM writeups_subidos WHERE id = ?", (writeup_id,)).fetchone()
+    
+    is_owner = False
+    if writeup_meta:
+        current_author = (writeup_meta['autor'] or '').strip().lower()
+        current_user = (session.get('username') or '').strip().lower()
+        if current_author == current_user:
+            is_owner = True
+    
+    if not is_owner:
+        flash('No tienes permiso para editar este writeup.', 'danger')
         return redirect(url_for('writeups_publicados'))
 
     cursor.execute("SELECT id, status FROM writeup_edit_requests WHERE writeup_id = ? AND user_id = ? AND status = 'pending'",

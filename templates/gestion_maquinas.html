@@ -130,7 +130,7 @@
                             <input type="hidden" name="imagen" value="{{ m.imagen }}" class="imagen-field-{{ m.id }}">
                             <div class="d-flex align-items-center gap-2">
                                 {% if m.imagen %}
-                                <img src="{{ url_for('static', filename='images/' + m.imagen) }}" alt="Logo"
+                                <img src="{{ url_for('static', filename='images/' + m.imagen) }}" alt="Logo" loading="lazy"
                                     class="machine-logo-preview" id="preview-docker-{{ m.id }}"
                                     style="width: 30px; height: 30px; object-fit: contain; border: 1px solid #444; border-radius: 4px;">
                                 {% else %}
@@ -260,7 +260,7 @@
                             <input type="hidden" name="imagen" value="{{ m.imagen }}" class="imagen-field-{{ m.id }}">
                             <div class="d-flex align-items-center gap-2">
                                 {% if m.imagen %}
-                                <img src="{{ url_for('static', filename='images/' + m.imagen) }}" alt="Logo"
+                                <img src="{{ url_for('static', filename='images/' + m.imagen) }}" alt="Logo" loading="lazy"
                                     class="machine-logo-preview" id="preview-bunker-{{ m.id }}"
                                     style="width: 30px; height: 30px; object-fit: contain; border: 1px solid #444; border-radius: 4px;">
                                 {% else %}

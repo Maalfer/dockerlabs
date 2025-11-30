@@ -27,7 +27,7 @@ auth = HTTPBasicAuth()
 app.config['SESSION_COOKIE_SECURE'] = False
 app.config['SESSION_COOKIE_HTTPONLY'] = True
 app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
-app.config['SECRET_KEY'] = "PAAS" # Esta no es la que está en producción claramente
+app.config['SECRET_KEY'] = "PASSSSSWORD" # Esta no es la que está en producción claramente
 
 from bunkerlabs.extensions import limiter
 limiter.init_app(app)
@@ -548,7 +548,12 @@ def revert_claim(claim_id):
 def index():
     db = get_db()
     all_maquinas = db.execute(
-        "SELECT * FROM maquinas ORDER BY id ASC"
+        """
+        SELECT m.*, c.categoria
+        FROM maquinas m
+        LEFT JOIN categorias c ON m.id = c.machine_id AND c.origen = 'docker'
+        ORDER BY m.id ASC
+        """
     ).fetchall()
     
     # Encontrar la máquina más reciente por fecha
@@ -590,11 +595,8 @@ def index():
     # Fetch categories for machines
     categorias_map = {}
     for m in maquinas:
-        cat = db.execute(
-            "SELECT categoria FROM categorias WHERE machine_id = ? AND origen = 'docker'",
-            (m['id'],)
-        ).fetchone()
-        categorias_map[m['id']] = cat['categoria'] if cat else ''
+        # La categoría ya viene en la consulta principal
+        categorias_map[m['id']] = m['categoria'] if m['categoria'] else ''
 
     return render_template('home.html', maquinas=maquinas, completed_machines=completed_machines, most_recent_id=most_recent['id'] if most_recent else None, single_machine=single_machine, categorias_map=categorias_map)
 

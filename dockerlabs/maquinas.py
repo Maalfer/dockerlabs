@@ -58,7 +58,12 @@ def gestion_maquinas():
 
     if role in ('admin', 'moderador'):
         maquinas_docker = db.execute(
-            "SELECT * FROM maquinas ORDER BY id ASC"
+            """
+            SELECT m.*, c.categoria
+            FROM maquinas m
+            LEFT JOIN categorias c ON m.id = c.machine_id AND c.origen = 'docker'
+            ORDER BY m.id ASC
+            """
         ).fetchall()
 
         maquinas_bunker = bunker_db.execute(
@@ -71,10 +76,11 @@ def gestion_maquinas():
         else:
             maquinas_docker = db.execute(
                 """
-                SELECT *
-                FROM maquinas
-                WHERE autor = ?
-                ORDER BY id ASC
+                SELECT m.*, c.categoria
+                FROM maquinas m
+                LEFT JOIN categorias c ON m.id = c.machine_id AND c.origen = 'docker'
+                WHERE m.autor = ?
+                ORDER BY m.id ASC
                 """,
                 (current_username,)
             ).fetchall()
@@ -92,22 +98,27 @@ def gestion_maquinas():
     # Fetch categories for machines
     categorias_map = {}
     if maquinas_docker:
-        db_main = get_db()
         for m in maquinas_docker:
-            cat = db_main.execute(
-                "SELECT categoria FROM categorias WHERE machine_id = ? AND origen = 'docker'",
-                (m['id'],)
-            ).fetchone()
-            categorias_map[('docker', m['id'])] = cat['categoria'] if cat else ''
+            categorias_map[('docker', m['id'])] = m['categoria'] if m['categoria'] else ''
     
     if maquinas_bunker:
         db_main = get_db()
-        for m in maquinas_bunker:
-            cat = db_main.execute(
-                "SELECT categoria FROM categorias WHERE machine_id = ? AND origen = 'bunker'",
-                (m['id'],)
-            ).fetchone()
-            categorias_map[('bunker', m['id'])] = cat['categoria'] if cat else ''
+        # Fetch all bunker categories in one go to avoid N+1
+        # We can fetch all categories for 'bunker' origin, or filter by the IDs we have.
+        # Given the number of machines is likely manageable, fetching all bunker categories is efficient enough.
+        
+        bunker_ids = [m['id'] for m in maquinas_bunker]
+        if bunker_ids:
+            placeholders = ','.join('?' * len(bunker_ids))
+            cats = db_main.execute(
+                f"SELECT machine_id, categoria FROM categorias WHERE origen = 'bunker' AND machine_id IN ({placeholders})",
+                bunker_ids
+            ).fetchall()
+            
+            bunker_cats_lookup = {c['machine_id']: c['categoria'] for c in cats}
+            
+            for m in maquinas_bunker:
+                categorias_map[('bunker', m['id'])] = bunker_cats_lookup.get(m['id'], '')
 
     return render_template(
         'gestion_maquinas.html',
@@ -519,7 +530,7 @@ def add_maquina_page():
                         INSERT INTO maquinas
                         (nombre, dificultad, clase, color, autor, enlace_autor,
                          fecha, imagen, descripcion, link_descarga, pin)
-                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                         """,
                         (
                             nombre,
