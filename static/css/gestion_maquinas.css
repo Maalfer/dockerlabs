@@ -1,0 +1,322 @@
+:root {
+    --primary-color: #3b82f6;
+    --accent-bunker: #6f42c1;
+    --bg-dark: #0f172a;
+    --bg-card: rgba(30, 41, 59, 0.7);
+    --glass-bg: rgba(30, 41, 59, 0.7);
+    --glass-border: 1px solid rgba(255, 255, 255, 0.1);
+    --text-main: #f1f5f9;
+    --text-muted: #94a3b8;
+    --border-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Page Container */
+/* Page Container */
+.gestion-maquinas-container {
+    padding: 120px 20px 40px;
+    /* Increased padding to clear header */
+    max-width: 95%;
+    margin: 0 auto;
+}
+
+/* Header Section */
+.page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--border-color);
+    position: relative;
+    /* Ensure z-index works */
+    z-index: 10;
+    /* Reset styles that might leak from global header tag */
+    background: transparent !important;
+    backdrop-filter: none !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+    /* Reset global header padding */
+    padding-bottom: 1rem !important;
+    /* Keep our bottom padding */
+    display: flex !important;
+    /* Force flex over grid */
+}
+
+.page-title {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #ffffff;
+    /* White text */
+    background: none;
+    /* Remove gradient */
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: initial;
+    /* Reset text fill */
+    text-shadow: 0 0 10px rgba(255, 255, 255, 0.1);
+}
+
+/* Platform Switcher (Tabs) */
+.platform-switcher {
+    display: inline-flex;
+    background: rgba(30, 41, 59, 0.7);
+    /* Hardcoded fallback */
+    padding: 4px;
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    /* Explicit border */
+}
+
+.platform-btn {
+    padding: 10px 20px;
+    border: none;
+    background: rgba(255, 255, 255, 0.05);
+    /* Default visible background */
+    color: #cbd5e1;
+    /* High contrast text */
+    font-weight: 600;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.platform-btn.active {
+    background: #3b82f6;
+    /* Hardcoded blue */
+    color: white;
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+}
+
+.platform-btn.active.bunker-active {
+    background: #6f42c1;
+    /* Hardcoded purple */
+    box-shadow: 0 4px 12px rgba(111, 66, 193, 0.4);
+}
+
+/* Glassmorphism Table Card */
+.table-card {
+    background: var(--glass-bg);
+    backdrop-filter: blur(12px);
+    border-radius: 16px;
+    border: var(--glass-border);
+    padding: 1.5rem;
+    /* Increased padding */
+    overflow: hidden;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+}
+
+/* Table Styles */
+.custom-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+}
+
+.custom-table th {
+    background: rgba(30, 41, 59, 0.8);
+    /* Darker header */
+    color: #94a3b8;
+    font-weight: 700;
+    text-transform: uppercase;
+    font-size: 0.85rem;
+    padding: 1.2rem 1rem;
+    text-align: left;
+    border-bottom: 2px solid var(--border-color);
+    white-space: nowrap;
+    letter-spacing: 0.5px;
+}
+
+.custom-table td {
+    padding: 1rem;
+    vertical-align: middle;
+    border-bottom: 1px solid rgba(51, 65, 85, 0.5);
+    color: var(--text-main);
+    font-size: 0.95rem;
+}
+
+.custom-table tr:hover td {
+    background: rgba(59, 130, 246, 0.05);
+    /* Blue tint on hover */
+}
+
+/* Form Inputs within Table */
+.input-minimal {
+    background: rgba(255, 255, 255, 0.03);
+    /* Slight background */
+    border: 1px solid transparent;
+    border-radius: 6px;
+    color: var(--text-main);
+    padding: 8px 10px;
+    width: 100%;
+    transition: all 0.2s ease;
+}
+
+.input-minimal:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    background: rgba(255, 255, 255, 0.08);
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+}
+
+.select-minimal {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid transparent;
+    border-radius: 6px;
+    color: var(--text-main);
+    cursor: pointer;
+    padding: 8px 10px;
+    transition: all 0.2s;
+}
+
+.select-minimal:focus {
+    border-color: var(--primary-color);
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.select-minimal option {
+    background: var(--bg-card);
+    color: var(--text-main);
+}
+
+/* Difficulty Colors */
+.text-green {
+    color: #4ade80 !important;
+    font-weight: 700;
+    border-left: 3px solid #4ade80;
+}
+
+.text-blue {
+    color: #60a5fa !important;
+    font-weight: 700;
+    border-left: 3px solid #60a5fa;
+}
+
+.text-yellow {
+    color: #facc15 !important;
+    font-weight: 700;
+    border-left: 3px solid #facc15;
+}
+
+.text-red {
+    color: #f87171 !important;
+    font-weight: 700;
+    border-left: 3px solid #f87171;
+}
+
+/* Image Upload & Preview */
+.logo-upload-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.logo-preview {
+    width: 42px;
+    height: 42px;
+    border-radius: 8px;
+    object-fit: contain;
+    /* Changed to contain for logos */
+    border: 1px solid var(--border-color);
+    background: rgba(0, 0, 0, 0.2);
+    padding: 2px;
+}
+
+.btn-upload-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    /* Squared slightly */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--border-color);
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-upload-icon:hover {
+    background: var(--primary-color);
+    color: white;
+    border-color: var(--primary-color);
+    transform: translateY(-1px);
+}
+
+/* Action Buttons */
+.btn-action {
+    width: 36px;
+    height: 36px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    border: 1px solid transparent;
+    /* Added border */
+    cursor: pointer;
+    transition: all 0.2s;
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--text-muted);
+}
+
+.btn-action.save {
+    color: #10b981;
+    background: rgba(16, 185, 129, 0.1);
+}
+
+.btn-action.save:hover {
+    background: #10b981;
+    color: white;
+    box-shadow: 0 0 10px rgba(16, 185, 129, 0.3);
+}
+
+.btn-action.delete {
+    color: #ef4444;
+    background: rgba(239, 68, 68, 0.1);
+}
+
+.btn-action.delete:hover {
+    background: #ef4444;
+    color: white;
+    box-shadow: 0 0 10px rgba(239, 68, 68, 0.3);
+}
+
+/* Filters */
+.filter-row th {
+    background: rgba(15, 23, 42, 0.6);
+    padding: 0.8rem;
+    border-bottom: 2px solid var(--primary-color);
+    /* Colorful separator */
+}
+
+.filter-input {
+    width: 100%;
+    background: rgba(30, 41, 59, 1);
+    border: 1px solid var(--border-color);
+    color: var(--text-main);
+    padding: 6px 10px;
+    border-radius: 6px;
+    font-size: 0.85rem;
+}
+
+.filter-input:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
+    outline: none;
+}
+
+/* Responsive adjustments */
+@media (max-width: 1200px) {
+    .custom-table {
+        min-width: 1000px;
+    }
+}
+
+/* Force header logo visibility */
+header .logo-container img {
+    visibility: visible !important;
+    opacity: 1 !important;
+    display: block !important;
+    z-index: 1050;
+    /* Ensure it is above other elements */
+    position: relative;
+}

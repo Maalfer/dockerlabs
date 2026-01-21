@@ -1,0 +1,157 @@
+{% extends "bunkerlabs/base-bunkerlabs.html" %}
+
+{% block title %}BunkerLabs{% endblock %}
+
+{% block content %}
+
+<style>
+    /* Estilos para máquinas bloqueadas en modo invitado */
+    .locked-guest-item {
+        position: relative;
+        filter: grayscale(1);
+        opacity: 0.8;
+    }
+
+    .locked-guest-item::after {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(128, 128, 128, 0.3);
+        /* Capa gris */
+        z-index: 5;
+        border-radius: inherit;
+        pointer-events: none;
+        /* Permite clic en elementos debajo si se desea, o 'auto' para bloquear */
+    }
+
+    /* Icono de candado superpuesto */
+    .guest-lock-overlay {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        z-index: 10;
+        color: #333;
+        font-size: 3rem;
+        pointer-events: none;
+        text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+    }
+</style>
+
+<div class="container">
+
+    <div class="header d-flex flex-wrap gap-3" style="justify-content: space-between; align-items: center;">
+
+        <!-- Left Section: Search & Actions -->
+        <div class="header-left d-flex align-items-center gap-2">
+            <input type="text" id="search" class="form-control-sm" placeholder="Buscar en BunkerLabs...">
+
+            <button id="btn-ranking" class="btn btn-sm btn-action">Ranking👑</button>
+        </div>
+
+        <!-- Right Section: Filters -->
+        <div class="header-right d-flex align-items-center gap-1 flex-wrap justify-content-end">
+            <button class="btn-filter active" data-difficulty="all">Todos</button>
+            <button class="btn-filter" data-difficulty="muy-facil">Muy Fácil</button>
+            <button class="btn-filter" data-difficulty="facil">Fácil</button>
+            <button class="btn-filter" data-difficulty="medio">Medio</button>
+            <button class="btn-filter" data-difficulty="dificil">Difícil</button>
+            <button class="btn-filter" data-difficulty="real">Entornos Reales</button>
+        </div>
+
+
+    </div>
+
+    <!-- Banner informativo para Entornos Reales -->
+    <div id="real-env-banner" class="alert alert-info real-env-info" style="display: none;">
+        <div class="d-flex align-items-start">
+            <i class="bi bi-info-circle-fill me-3 mt-1" style="font-size: 1.5rem;"></i>
+            <div>
+                <h6 class="mb-2 fw-bold">Entornos Reales</h6>
+                <p class="mb-0">
+                    Estos laboratorios son entornos reales donde se han encontrado vulnerabilidades,
+                    se han reportado y a su vez se han convertido en máquinas para que puedas practicar
+                    hacking ético en entornos reales.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    {% if is_guest %}
+    <div class="alert alert-warning text-center">
+        Estas máquinas son de acceso exclusivo para los miembros del <a href="https://skool.com/bunkerpinguino"
+            target="_blank" class="fw-bold">bunker</a>
+    </div>
+    {% endif %}
+
+    <div class="machines-grid" data-is-guest="{{ is_guest | lower }}">
+
+        {% for maquina in maquinas %}
+        {% set is_locked_for_guest = is_guest and not maquina.guest_access %}
+        <div class="item {{ maquina.clase }} item-selectable {% if is_locked_for_guest %}locked-guest-item{% endif %}"
+            data-nombre="{{ maquina.nombre }}" data-tamanio="{{ maquina.tamaño }}" data-clase="{{ maquina.clase }}"
+            data-color="{{ maquina.color }}" data-autor="{{ maquina.autor }}"
+            data-enlace-autor="{{ maquina.enlace_autor }}" data-fecha="{{ maquina.fecha }}"
+            data-imagen="{{ maquina.imagen }}" data-descripcion="{{ maquina.descripcion }}" {% if is_locked_for_guest
+            %}onclick="window.open('https://skool.com/bunkerpinguino', '_blank')" style="cursor: pointer;" {% endif %}>
+
+            {% if is_locked_for_guest %}
+            <div class="guest-lock-overlay">
+                <i class="bi bi-lock-fill"></i>
+            </div>
+            {% endif %}
+
+            <span><strong>{{ maquina.nombre }}</strong></span>
+            <!-- Difficulty badge removed -->
+
+            <div class="actions icon-container">
+                <button class="download btn-download" {% if not is_locked_for_guest
+                    %}data-link="{{ maquina.link_descarga }}" {% endif %}>
+                    <i class="bi bi-cloud-arrow-down-fill"></i>
+                </button>
+                {% if maquina.clase != 'real' %}
+                <button class="upload btn-upload" data-nombre="{{ maquina.nombre }}" title="Subir Flag" {% if
+                    is_locked_for_guest %}disabled{% endif %}>
+                    <i class="bi bi-flag-fill"></i>
+                </button>
+                {% endif %}
+                {% if maquina.clase == 'real' %}
+                <button class="btn-writeup" data-nombre="{{ maquina.nombre }}" title="Ver Writeups">
+                    <i class="bi bi-book-fill"></i>
+                </button>
+                {% endif %}
+            </div>
+
+        </div>
+        {% endfor %}
+
+    </div>
+    <!-- END OF MACHINES GRID -->
+
+</div>
+
+<!-- Modal de Writeups -->
+<div id="writeupModal" class="modal-writeup" style="display: none;">
+    <div class="modal-writeup-content">
+        <span class="close-writeup" onclick="closeWriteupModal()">&times;</span>
+        <h3 id="writeup-machine-title">Writeups</h3>
+        <div id="writeup-content">
+            <p class="loading-text">Cargando writeups...</p>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script nonce="{{ csp_nonce }}" src="{{ url_for('bunkerlabs.static', filename='js/script_bunkerlabs.js') }}"></script>
+<script nonce="{{ csp_nonce }}"
+    src="{{ url_for('bunkerlabs.static', filename='js/presentacionmaquina_bunkerlabs.js') }}"></script>
+<!-- description script removed -->
+<script nonce="{{ csp_nonce }}" src="{{ url_for('bunkerlabs.static', filename='js/ranking_bunkerlabs.js') }}"></script>
+<script nonce="{{ csp_nonce }}" src="{{ url_for('bunkerlabs.static', filename='js/flag_bunkerlabs.js') }}"></script>
+{% endblock %}

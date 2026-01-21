@@ -1,0 +1,627 @@
+{% extends "base.html" %}
+
+{% block title %}Accesos BunkerLabs - DockerLabs{% endblock %}
+
+{% block content %}
+<style>
+    .glass-card {
+        background: rgba(15, 23, 42, 0.8);
+        border: 1px solid var(--border-strong);
+        border-radius: 12px;
+        padding: 2rem;
+        backdrop-filter: blur(10px);
+        margin-bottom: 2rem;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    }
+
+    .glass-header {
+        background: rgba(30, 41, 59, 0.5);
+        border-bottom: 1px solid var(--border-strong);
+        padding: 1rem 1.5rem;
+        margin: -2rem -2rem 2rem -2rem;
+        border-top-left-radius: 12px;
+        border-top-right-radius: 12px;
+    }
+
+    .glass-header h5 {
+        margin: 0;
+        color: var(--accent-cyan);
+        font-weight: 700;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+        font-size: 0.9rem;
+    }
+
+    .custom-table {
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 0;
+    }
+
+    .custom-table th {
+        background: rgba(15, 23, 42, 0.6);
+        color: var(--text-secondary);
+        font-weight: 600;
+        text-transform: uppercase;
+        font-size: 0.75rem;
+        letter-spacing: 0.05em;
+        padding: 1rem;
+        border-bottom: 2px solid var(--border-strong);
+    }
+
+    .custom-table td {
+        padding: 1rem;
+        border-bottom: 1px solid var(--border-subtle);
+        color: var(--text-primary);
+        font-size: 0.85rem;
+    }
+
+    .custom-table tr:hover td {
+        background: rgba(59, 130, 246, 0.05);
+    }
+
+    .form-label {
+        color: var(--text-secondary) !important;
+    }
+
+    .form-text {
+        color: var(--text-muted) !important;
+    }
+
+    .form-control-dark {
+        background: rgba(2, 6, 23, 0.6) !important;
+        border: 1px solid var(--border-strong) !important;
+        color: var(--text-primary) !important;
+        border-radius: 6px !important;
+        padding: 0.6rem 1rem !important;
+    }
+
+    .form-control-dark:focus {
+        border-color: var(--primary-blue) !important;
+        box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2) !important;
+        background: rgba(2, 6, 23, 0.8) !important;
+    }
+
+    .form-control-dark::placeholder {
+        color: var(--text-muted) !important;
+        opacity: 0.7;
+    }
+
+    .custom-h1 {
+        font-weight: 800;
+        letter-spacing: -0.02em;
+        margin-bottom: 2rem;
+        background: linear-gradient(135deg, #fff 0%, #94a3b8 100%);
+        -webkit-background-clip: text;
+        background-clip: text;
+        -webkit-text-fill-color: transparent;
+        display: inline-block;
+    }
+
+    .badge-active {
+        background: rgba(16, 185, 129, 0.1);
+        color: var(--accent-green);
+        border: 1px solid rgba(16, 185, 129, 0.2);
+        padding: 0.25rem 0.6rem;
+        border-radius: 4px;
+        font-size: 0.7rem;
+        font-weight: 700;
+    }
+
+    .badge-inactive {
+        background: rgba(100, 116, 139, 0.1);
+        color: var(--text-secondary);
+        border: 1px solid rgba(100, 116, 139, 0.2);
+        padding: 0.25rem 0.6rem;
+        border-radius: 4px;
+        font-size: 0.7rem;
+        font-weight: 700;
+    }
+
+    /* Modal Styling */
+    .modal-content-dark {
+        background: rgba(15, 23, 42, 0.98);
+        border: 1px solid var(--border-strong);
+        border-radius: 14px;
+        backdrop-filter: blur(20px);
+    }
+
+    .modal-header-dark {
+        border-bottom: 1px solid var(--border-strong);
+        padding: 1.5rem;
+    }
+
+    .modal-footer-dark {
+        border-top: 1px solid var(--border-strong);
+        padding: 1.25rem;
+    }
+
+    .text-accent-cyan {
+        color: var(--accent-cyan) !important;
+    }
+</style>
+
+<div class="container my-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="custom-h1">Accesos BunkerLabs</h1>
+        <a href="{{ url_for('bunkerlabs.bunkerlabs_home') }}" class="btn-hack">
+            <i class="bi bi-arrow-left"></i> Volver al Bunker
+        </a>
+    </div>
+
+    {% if error %}
+    <div class="alert border-0 bg-danger bg-opacity-10 text-white mb-4"
+        style="border-left: 4px solid var(--accent-red) !important;">
+        <i class="bi bi-exclamation-triangle me-2 text-danger"></i> {{ error }}
+    </div>
+    {% endif %}
+
+    {% if success %}
+    <div class="alert border-0 bg-success bg-opacity-10 text-white mb-4"
+        style="border-left: 4px solid var(--accent-green) !important;">
+        <i class="bi bi-check-circle me-2 text-success"></i> {{ success }}
+        {% if nuevo_token %}
+        <div class="mt-2 text-white bg-dark bg-opacity-25 p-3 rounded border border-success border-opacity-25">
+            <strong>Contraseña generada:</strong>
+            <code class="text-accent-cyan fs-5 ms-2">{{ nuevo_token }}</code>
+            <small class="text-secondary d-block mt-1">
+                Entrega esta contraseña al usuario (debe estar registrado en DockerLabs).
+            </small>
+        </div>
+        {% endif %}
+    </div>
+    {% endif %}
+
+    <div class="row">
+        <div class="col-lg-4">
+            <div class="glass-card">
+                <div class="glass-header">
+                    <h5>Nuevo acceso</h5>
+                </div>
+                <form method="post">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+                    <div class="mb-3">
+                        <label for="nombre" class="form-label small uppercase fw-bold">Nombre del usuario</label>
+                        <input type="text" class="form-control form-control-dark" id="nombre" name="nombre"
+                            placeholder="Ej: Pepe" required>
+                        <div class="form-text mt-1 smaller">
+                            Identificador informativo.
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label for="password" class="form-label small uppercase fw-bold">Contraseña de acceso</label>
+                        <input type="text" class="form-control form-control-dark" id="password" name="password"
+                            placeholder="Ej: bunker123" required>
+                    </div>
+
+                    <button type="submit" class="btn-hack w-100 justify-content-center">
+                        <i class="bi bi-key"></i> Crear acceso
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <div class="col-lg-8">
+            <div class="glass-card">
+                <div class="glass-header">
+                    <h5>Tokens existentes</h5>
+                </div>
+
+                {% if tokens|length == 0 %}
+                <div class="text-center py-5">
+                    <i class="bi bi-shield-lock fs-1 text-secondary opacity-25 d-block mb-3"></i>
+                    <p class="text-secondary">Todavía no hay tokens creados.</p>
+                </div>
+                {% else %}
+                <div class="table-responsive">
+                    <table class="custom-table align-middle">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Usuario</th>
+                                <th>Contraseña</th>
+                                <th>Estado</th>
+                                <th class="text-end">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for t in tokens %}
+                            <tr>
+                                <td class="text-secondary small">#{{ t.id }}</td>
+                                <td>
+                                    {% if t.nombre %}
+                                    <div class="d-flex flex-column">
+                                        <span class="fw-bold text-white">{{ t.nombre }}</span>
+                                        <a href="#" class="view-logs text-secondary smaller text-decoration-none"
+                                            data-token-id="{{ t.id }}" data-bs-toggle="modal"
+                                            data-bs-target="#logsModal" style="opacity: 0.8;">
+                                            <i class="bi bi-clock-history"></i> Ver historial
+                                        </a>
+                                    </div>
+                                    {% else %}
+                                    <span class="text-secondary">-</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <code
+                                            class="px-2 py-1 rounded bg-dark border border-secondary border-opacity-25 text-accent-cyan">{{ t.token }}</code>
+                                        <button class="btn btn-sm text-secondary ms-2 p-0 border-0"
+                                            onclick="copyToClipboard('{{ t.token }}', this)" data-bs-toggle="tooltip"
+                                            title="Copiar Token">
+                                            <i class="bi bi-clipboard"></i>
+                                        </button>
+                                        <button class="btn btn-sm text-accent-cyan ms-2 p-0 border-0"
+                                            onclick="copyDirectLink('{{ t.token }}', this)" data-bs-toggle="tooltip"
+                                            title="Copiar Enlace Directo">
+                                            <i class="bi bi-link-45deg"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                                <td>
+                                    {% if t.activo %}
+                                    <span class="badge-active">ACTIVO</span>
+                                    {% else %}
+                                    <span class="badge-inactive">INACTIVO</span>
+                                    {% endif %}
+                                </td>
+                                <td class="text-end">
+                                    <form method="post"
+                                        action="{{ url_for('bunkerlabs.delete_bunker_token', token_id=t.id) }}"
+                                        class="d-inline">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                        <button type="submit" class="btn btn-sm border-danger text-danger"
+                                            style="padding: 2px 8px; font-size: 0.7rem; background: rgba(239, 68, 68, 0.1);"
+                                            onclick="return confirm('¿Eliminar este acceso?')">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Gestión de Writeups para Entornos Reales -->
+    <div class="row mt-5">
+        <div class="col-12">
+            <h2 class="custom-h1 mb-4">
+                <i class="bi bi-book-fill me-2"></i>Gestión de Writeups
+            </h2>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="glass-card">
+                <div class="glass-header">
+                    <h5>Añadir Writeup</h5>
+                </div>
+
+                <form method="post" action="/bunkerlabs/admin/writeups/add" id="addWriteupForm">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+                    <div class="mb-3">
+                        <label for="writeup_maquina" class="form-label">Máquina</label>
+                        <select name="maquina" id="writeup_maquina" class="form-control form-control-dark" required>
+                            <option value="">Selecciona una máquina</option>
+                            {% for maquina in real_machines %}
+                            <option value="{{ maquina.nombre }}">{{ maquina.nombre }}</option>
+                            {% endfor %}
+                        </select>
+                        <div class="form-text">Solo máquinas de Entornos Reales</div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="writeup_autor" class="form-label">Autor</label>
+                        <input type="text" name="autor" id="writeup_autor" class="form-control form-control-dark"
+                            placeholder="Nombre del autor" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="writeup_url" class="form-label">URL</label>
+                        <input type="url" name="url" id="writeup_url" class="form-control form-control-dark"
+                            placeholder="https://..." required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="writeup_tipo" class="form-label">Tipo</label>
+                        <select name="tipo" id="writeup_tipo" class="form-control form-control-dark" required>
+                            <option value="">Selecciona tipo</option>
+                            <option value="texto">📄 Texto/Blog</option>
+                            <option value="video">🎥 Vídeo</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3 form-check">
+                        <input type="checkbox" class="form-check-input" id="writeup_locked" name="locked">
+                        <label class="form-check-label text-secondary" for="writeup_locked">
+                            <i class="bi bi-lock-fill"></i> Bloqueado (Candado)
+                        </label>
+                    </div>
+
+                    <button type="submit" class="btn-hack w-100">
+                        <i class="bi bi-plus-circle"></i> Añadir Writeup
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <div class="col-lg-8">
+            <div class="glass-card">
+                <div class="glass-header">
+                    <h5>Writeups Existentes</h5>
+                </div>
+
+                {% if writeups|length == 0 %}
+                <div class="text-center py-5">
+                    <i class="bi bi-book fs-1 text-secondary opacity-25 d-block mb-3"></i>
+                    <p class="text-secondary">Todavía no hay writeups añadidos.</p>
+                </div>
+                {% else %}
+                <div class="table-responsive">
+                    <table class="custom-table align-middle">
+                        <thead>
+                            <tr>
+                                <th>Máquina</th>
+                                <th>Autor</th>
+                                <th>Tipo</th>
+                                <th>URL</th>
+                                <th class="text-end">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for w in writeups %}
+                            <tr>
+                                <td>
+                                    <span class="fw-bold text-white">{{ w.maquina }}</span>
+                                </td>
+                                <td>{{ w.autor }}</td>
+                                <td>
+                                    {% if w.tipo == 'texto' %}
+                                    <span class="badge bg-primary">📄 Texto</span>
+                                    {% else %}
+                                    <span class="badge bg-danger">🎥 Vídeo</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <a href="{{ w.url }}" target="_blank" class="text-accent-cyan text-decoration-none">
+                                        <i class="bi bi-link-45deg"></i> Ver
+                                    </a>
+                                </td>
+                                <td class="text-end">
+                                    <button class="btn btn-sm border-0 me-1" onclick="toggleLock({{ w.id }}, this)"
+                                        title="{{ 'Desbloquear' if w.locked else 'Bloquear' }}">
+                                        <i
+                                            class="bi bi-{{ 'lock-fill text-danger' if w.locked else 'unlock-fill text-success' }}"></i>
+                                    </button>
+                                    <form method="post" action="/bunkerlabs/admin/writeups/delete/{{ w.id }}"
+                                        class="d-inline" onsubmit="return confirm('¿Eliminar este writeup?');">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                        <button type="submit" class="btn btn-sm btn-outline-danger border-0">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Historial -->
+<div class="modal fade" id="logsModal" tabindex="-1" aria-labelledby="logsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content modal-content-dark border-0 shadow-lg">
+            <div class="modal-header modal-header-dark">
+                <h5 class="modal-title fw-bold text-white" id="logsModalLabel">
+                    <i class="bi bi-clock-history me-2 text-primary"></i>Historial de Accesos
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                    aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-0">
+                <div id="logsLoading" class="text-center p-5">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Cargando...</span>
+                    </div>
+                </div>
+
+                <div class="table-responsive" id="logsContainer" style="max-height: 400px; overflow-y: auto;">
+                    <table class="custom-table mb-0">
+                        <thead class="sticky-top" style="z-index: 10;">
+                            <tr>
+                                <th class="ps-4">Usuario</th>
+                                <th class="text-end pe-4">Fecha de Acceso</th>
+                            </tr>
+                        </thead>
+                        <tbody id="logsList">
+                            <!-- Logs loaded here -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <div id="logsEmpty" class="text-center text-secondary p-5 d-none">
+                    <i class="bi bi-inbox fs-1 d-block mb-3 opacity-25"></i>
+                    No hay registros de acceso.
+                </div>
+            </div>
+            <div class="modal-footer modal-footer-dark">
+                <button type="button" class="btn btn-sm btn-outline-danger border-0" id="btnClearHistory">
+                    <i class="bi bi-trash"></i> Limpiar Historial
+                </button>
+                <button type="button" class="btn-hack" data-bs-dismiss="modal">Cerrar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        var logsModal = document.getElementById('logsModal');
+        var logsList = document.getElementById('logsList');
+        var logsLoading = document.getElementById('logsLoading');
+        var logsEmpty = document.getElementById('logsEmpty');
+        var logsContainer = document.getElementById('logsContainer');
+        var btnClearHistory = document.getElementById('btnClearHistory');
+
+        var currentTokenId = null;
+
+        logsModal.addEventListener('show.bs.modal', function (event) {
+            var button = event.relatedTarget;
+            var tokenId = button.getAttribute('data-token-id');
+            currentTokenId = tokenId;
+
+            logsList.innerHTML = '';
+            logsLoading.classList.remove('d-none');
+            logsEmpty.classList.add('d-none');
+            logsContainer.classList.add('d-none');
+            btnClearHistory.disabled = true;
+
+            fetch('/bunkerlabs/api/logs/' + tokenId)
+                .then(response => response.json())
+                .then(data => {
+                    logsLoading.classList.add('d-none');
+                    if (data.length > 0) {
+                        logsContainer.classList.remove('d-none');
+                        btnClearHistory.disabled = false;
+
+                        data.forEach(log => {
+                            var tr = document.createElement('tr');
+                            tr.innerHTML = `
+                            <td class="ps-4">
+                                <i class="bi bi-person-circle text-secondary me-2"></i>
+                                <span class="fw-medium text-white">${log.nombre}</span>
+                            </td>
+                            <td class="text-end pe-4 text-secondary small">
+                                ${log.fecha}
+                            </td>
+                        `;
+                            logsList.appendChild(tr);
+                        });
+                    } else {
+                        logsEmpty.classList.remove('d-none');
+                    }
+                })
+                .catch(error => {
+                    logsLoading.classList.add('d-none');
+                    logsEmpty.classList.remove('d-none');
+                    logsEmpty.innerHTML = '<span class="text-danger p-4 d-block">Error al cargar historial.</span>';
+                    console.error('Error:', error);
+                });
+        });
+
+        btnClearHistory.addEventListener('click', function () {
+            if (!currentTokenId) return;
+
+            if (confirm('¿Estás seguro de que quieres eliminar TODO el historial de accesos para este usuario? Esta acción no se puede deshacer.')) {
+                var csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+
+                fetch('/bunkerlabs/api/logs/' + currentTokenId + '/delete', {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': csrfToken
+                    }
+                })
+                    .then(response => {
+                        if (response.ok) {
+                            logsList.innerHTML = '';
+                            logsContainer.classList.add('d-none');
+                            logsEmpty.classList.remove('d-none');
+                            btnClearHistory.disabled = true;
+                        } else {
+                            alert('Error al eliminar el historial.');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        alert('Error al eliminar el historial.');
+                    });
+            }
+        });
+    });
+
+    function toggleLock(id, btn) {
+        const icon = btn.querySelector('i');
+        const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+
+        // Disable button strictly during request
+        btn.disabled = true;
+
+        fetch(`/bunkerlabs/admin/writeups/toggle_lock/${id}`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': csrfToken
+            }
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    alert('Error: ' + data.error);
+                } else {
+                    if (data.locked) {
+                        icon.className = 'bi bi-lock-fill text-danger';
+                        btn.title = 'Desbloquear';
+                    } else {
+                        icon.className = 'bi bi-unlock-fill text-success';
+                        btn.title = 'Bloquear';
+                    }
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error de conexión');
+            })
+            .finally(() => {
+                btn.disabled = false;
+            });
+    }
+
+    function copyToClipboard(text, btn) {
+        if (navigator.clipboard && window.isSecureContext) {
+            navigator.clipboard.writeText(text);
+        } else {
+            const textArea = document.createElement("textarea");
+            textArea.value = text;
+            textArea.style.position = "fixed";
+            textArea.style.left = "-9999px";
+            document.body.appendChild(textArea);
+            textArea.focus();
+            textArea.select();
+            try {
+                document.execCommand('copy');
+            } catch (err) {
+                console.error('Error al copiar', err);
+            }
+            document.body.removeChild(textArea);
+        }
+
+        // Feedback visual
+        if (btn) {
+            const originalIcon = btn.innerHTML;
+            btn.innerHTML = '<i class="bi bi-check2"></i>';
+            setTimeout(() => {
+                btn.innerHTML = originalIcon;
+            }, 2000);
+        }
+    }
+
+    function copyDirectLink(token, btn) {
+        // window.location.origin incluye protocolo, dominio y puerto
+        const url = window.location.origin + "/bunkerlabs/?token=" + token;
+        copyToClipboard(url, btn);
+    }
+</script>
+{% endblock %}

@@ -1,0 +1,39 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Environments
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Flask
+instance/
+.webassets-cache
+
+# Database
+*.db
+*.sqlite3
+*.db-shm
+*.db-wal
+*.db-shm
+*.db-wal
+
+# IDEs
+.vscode/
+.idea/
+.DS_Store
+
+# Logs
+*.log
+
+# Dockerlabs specific
+dockerlabs/static/images/perfiles/*
+!dockerlabs/static/images/perfiles/.gitkeep
+dockerlabs/static/images/logos/*
+!dockerlabs/static/images/logos/.gitkeep

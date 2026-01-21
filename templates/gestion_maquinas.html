@@ -1,0 +1,345 @@
+{% extends "base.html" %}
+
+{% block title %}Gestión de Máquinas - DockerLabs{% endblock %}
+
+{% block extra_head %}
+<!-- Custom CSS for this page -->
+<link rel="stylesheet" href="{{ url_for('static', filename='css/gestion_maquinas.css') }}?v=2">
+{% endblock %}
+
+{% block content %}
+<div class="gestion-maquinas-container">
+
+    <!-- Header: Title & Switcher -->
+    <header class="page-header">
+        <h2 class="page-title">Gestión de Máquinas</h2>
+
+        <div class="platform-switcher">
+            <button type="button" id="btn-docker" class="platform-btn active" onclick="mostrarPanelMaquinas('docker')">
+                <i class="bi bi-box-seam"></i> DockerLabs
+            </button>
+            <button type="button" id="btn-bunker" class="platform-btn" onclick="mostrarPanelMaquinas('bunker')">
+                <i class="bi bi-shield-lock"></i> BunkerLabs
+            </button>
+        </div>
+    </header>
+
+    <!-- PANEL DOCKER -->
+    <div id="panel-docker" class="platform-panel">
+
+        {% if maquinas_docker|length == 0 %}
+        <div class="alert alert-info">No hay máquinas registradas en DockerLabs.</div>
+        {% else %}
+
+        <div class="table-card">
+            <div class="table-responsive">
+                <table class="custom-table" id="tablaDocker">
+                    <thead>
+                        <tr>
+                            <th style="width: 50px;">ID</th>
+                            <th onclick="toggleFilters('tablaDocker')" style="cursor: pointer;">Nombre ▼</th>
+                            <th onclick="toggleFilters('tablaDocker')" style="cursor: pointer;">Dificultad ▼</th>
+                            <th onclick="toggleFilters('tablaDocker')" style="cursor: pointer;">Autor ▼</th>
+                            <th>Enlace Autor</th>
+                            <th onclick="toggleFilters('tablaDocker')" style="cursor: pointer;">Fecha ▼</th>
+                            <th>Imagen</th>
+                            <th>Descripción</th>
+                            <th>Link Descarga</th>
+                            <th>Categoría</th>
+                            <th style="width: 100px;">Acciones</th>
+                        </tr>
+                        <!-- Filter Row -->
+                        <tr class="filter-row" style="display: none;">
+                            <th></th>
+                            <th><input type="text" class="filter-input column-filter" data-column="nombre"
+                                    data-table="tablaDocker" placeholder="Buscar..."></th>
+                            <th>
+                                <select class="filter-input column-filter" data-column="dificultad"
+                                    data-table="tablaDocker">
+                                    <option value="">Todas</option>
+                                    <option value="muy fácil">Muy Fácil</option>
+                                    <option value="fácil">Fácil</option>
+                                    <option value="medio">Medio</option>
+                                    <option value="difícil">Difícil</option>
+                                </select>
+                            </th>
+                            <th><input type="text" class="filter-input column-filter" data-column="autor"
+                                    data-table="tablaDocker" placeholder="Autor..."></th>
+                            <th></th>
+                            <th><input type="text" class="filter-input column-filter" data-column="fecha"
+                                    data-table="tablaDocker" placeholder="Fecha..."></th>
+                            <th colspan="5"></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for m in maquinas_docker %}
+                        <tr>
+                            <td>{{ m.id }}</td>
+                            <td>
+                                <form method="post" action="{{ url_for('maquinas.actualizar_maquina') }}"
+                                    class="d-contents">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                    <input type="hidden" name="origen" value="docker">
+                                    <input type="hidden" name="id" value="{{ m.id }}">
+
+                                    <input type="text" name="nombre" value="{{ m.nombre }}" class="input-minimal"
+                                        placeholder="Nombre">
+                            </td>
+                            <td>
+                                <select name="dificultad" class="select-minimal">
+                                    <option value="Muy Fácil" {% if m.dificultad=='Muy Fácil' %}selected{% endif %}>Muy
+                                        Fácil</option>
+                                    <option value="Fácil" {% if m.dificultad=='Fácil' %}selected{% endif %}>Fácil
+                                    </option>
+                                    <option value="Medio" {% if m.dificultad=='Medio' %}selected{% endif %}>Medio
+                                    </option>
+                                    <option value="Difícil" {% if m.dificultad=='Difícil' %}selected{% endif %}>Difícil
+                                    </option>
+                                </select>
+                            </td>
+                            <td>
+                                <input type="text" name="autor" value="{{ m.autor }}" class="input-minimal" readonly
+                                    style="opacity: 0.7; cursor: not-allowed;">
+                            </td>
+                            <td>
+                                <input type="text" name="enlace_autor" value="{{ m.enlace_autor }}"
+                                    class="input-minimal" placeholder="https://...">
+                            </td>
+                            <td>
+                                <input type="text" name="fecha" value="{{ m.fecha }}" class="input-minimal"
+                                    placeholder="DD-MM-YYYY">
+                            </td>
+                            <td style="min-width: 180px;">
+                                <input type="hidden" name="imagen" value="{{ m.imagen }}"
+                                    class="imagen-field-{{ m.id }}">
+                                <div class="logo-upload-wrapper">
+                                    {% if m.imagen %}
+                                    <img src="{{ url_for('static', filename='images/' + m.imagen) }}"
+                                        id="preview-docker-{{ m.id }}" class="logo-preview">
+                                    {% else %}
+                                    <img src="" id="preview-docker-{{ m.id }}" class="logo-preview"
+                                        style="display:none"> <!-- Placeholder logic could be improved -->
+                                    <div id="placeholder-docker-{{ m.id }}" class="logo-preview"
+                                        style="display: flex; align-items: center; justify-content: center; color: #666;">
+                                        ?</div>
+                                    {% endif %}
+
+                                    <label class="btn-upload-icon" title="Subir logo">
+                                        <i class="bi bi-upload"></i>
+                                        <input type="file" id="logo-input-docker-{{ m.id }}" class="d-none"
+                                            accept="image/*" onchange="uploadMachineLogo({{ m.id }}, 'docker')">
+                                    </label>
+                                    <small class="text-muted d-none" id="filename-docker-{{ m.id }}"></small>
+                                </div>
+                            </td>
+                            <td style="min-width: 250px;">
+                                <textarea name="descripcion" rows="1" class="input-minimal"
+                                    style="resize: vertical; min-height: 2.5rem;">{{ m.descripcion }}</textarea>
+                            </td>
+                            <td>
+                                <input type="text" name="link_descarga" value="{{ m.link_descarga }}"
+                                    class="input-minimal">
+                            </td>
+                            <td>
+                                <select name="categoria" class="select-minimal">
+                                    <option value="" {% if categorias_map.get(('docker', m.id))=='' %}selected{% endif
+                                        %}>-</option>
+                                    <option value="Hacking Web" {% if categorias_map.get(('docker',
+                                        m.id))=='Hacking Web' %}selected{% endif %}>Web</option>
+                                    <option value="Bug Bounty" {% if categorias_map.get(('docker', m.id))=='Bug Bounty'
+                                        %}selected{% endif %}>Bug Bounty</option>
+                                    <option value="Hacking CMS" {% if categorias_map.get(('docker',
+                                        m.id))=='Hacking CMS' %}selected{% endif %}>CMS</option>
+                                    <option value="Hacking Infraestructura" {% if categorias_map.get(('docker',
+                                        m.id))=='Hacking Infraestructura' %}selected{% endif %}>Infra</option>
+                                    <option value="Pivoting" {% if categorias_map.get(('docker', m.id))=='Pivoting'
+                                        %}selected{% endif %}>Pivoting</option>
+                                </select>
+                            </td>
+                            <td>
+                                <div class="d-flex gap-2">
+                                    <button type="submit" class="btn-action save" title="Guardar cambios">
+                                        <i class="bi bi-check-lg"></i>
+                                    </button>
+                                    </form>
+                                    <form method="post" action="{{ url_for('maquinas.eliminar_maquina') }}"
+                                        onsubmit="return confirm('¿Seguro que quieres eliminar esta máquina?');"
+                                        class="d-contents">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                        <input type="hidden" name="origen" value="docker">
+                                        <input type="hidden" name="id" value="{{ m.id }}">
+                                        <button type="submit" class="btn-action delete" title="Eliminar máquina">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- PANEL BUNKER -->
+    <div id="panel-bunker" class="platform-panel" style="display: none;">
+
+        {% if maquinas_bunker|length == 0 %}
+        <div class="alert alert-info">No hay máquinas registradas en BunkerLabs.</div>
+        {% else %}
+
+        <div class="table-card">
+            <div class="table-responsive">
+                <table class="custom-table" id="tablaBunker">
+                    <thead>
+                        <tr>
+                            <th style="width: 50px;">ID</th>
+                            <th onclick="toggleFilters('tablaBunker')" style="cursor: pointer;">Nombre ▼</th>
+                            <th onclick="toggleFilters('tablaBunker')" style="cursor: pointer;">Dificultad ▼</th>
+                            <th onclick="toggleFilters('tablaBunker')" style="cursor: pointer;">Autor ▼</th>
+                            <th>Enlace Autor</th>
+                            <th onclick="toggleFilters('tablaBunker')" style="cursor: pointer;">Fecha ▼</th>
+                            <th>Imagen</th>
+                            <th>Descripción</th>
+                            <th>Link Descarga</th>
+                            <th style="width: 50px;">Guest</th>
+                            <th style="width: 100px;">Acciones</th>
+                        </tr>
+                        <!-- Filter Row -->
+                        <tr class="filter-row" style="display: none;">
+                            <th></th>
+                            <th><input type="text" class="filter-input column-filter" data-column="nombre"
+                                    data-table="tablaBunker" placeholder="Buscar..."></th>
+                            <th>
+                                <select class="filter-input column-filter" data-column="dificultad"
+                                    data-table="tablaBunker">
+                                    <option value="">Todas</option>
+                                    <option value="muy fácil">Muy Fácil</option>
+                                    <option value="fácil">Fácil</option>
+                                    <option value="medio">Medio</option>
+                                    <option value="difícil">Difícil</option>
+                                </select>
+                            </th>
+                            <th><input type="text" class="filter-input column-filter" data-column="autor"
+                                    data-table="tablaBunker" placeholder="Autor..."></th>
+                            <th></th>
+                            <th><input type="text" class="filter-input column-filter" data-column="fecha"
+                                    data-table="tablaBunker" placeholder="Fecha..."></th>
+                            <th colspan="4"></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for m in maquinas_bunker %}
+                        <tr>
+                            <td>{{ m.id }}</td>
+                            <td>
+                                <form method="post" action="{{ url_for('maquinas.actualizar_maquina') }}"
+                                    class="d-contents">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                    <input type="hidden" name="origen" value="bunker">
+                                    <input type="hidden" name="id" value="{{ m.id }}">
+
+                                    <input type="text" name="nombre" value="{{ m.nombre }}" class="input-minimal"
+                                        placeholder="Nombre">
+                            </td>
+                            <td>
+                                <select name="dificultad" class="select-minimal">
+                                    <option value="Muy Fácil" {% if m.dificultad=='Muy Fácil' %}selected{% endif %}>Muy
+                                        Fácil</option>
+                                    <option value="Fácil" {% if m.dificultad=='Fácil' %}selected{% endif %}>Fácil
+                                    </option>
+                                    <option value="Medio" {% if m.dificultad=='Medio' %}selected{% endif %}>Medio
+                                    </option>
+                                    <option value="Difícil" {% if m.dificultad=='Difícil' %}selected{% endif %}>Difícil
+                                    </option>
+                                </select>
+                            </td>
+                            <td>
+                                <input type="text" name="autor" value="{{ m.autor }}" class="input-minimal" readonly
+                                    style="opacity: 0.7; cursor: not-allowed;">
+                            </td>
+                            <td>
+                                <input type="text" name="enlace_autor" value="{{ m.enlace_autor }}"
+                                    class="input-minimal" placeholder="https://...">
+                            </td>
+                            <td>
+                                <input type="text" name="fecha" value="{{ m.fecha }}" class="input-minimal"
+                                    placeholder="DD-MM-YYYY">
+                            </td>
+                            <td style="min-width: 180px;">
+                                <input type="hidden" name="imagen" value="{{ m.imagen }}"
+                                    class="imagen-field-{{ m.id }}">
+                                <div class="logo-upload-wrapper">
+                                    {% if m.imagen %}
+                                    <img src="{{ url_for('static', filename='images/' + m.imagen) }}"
+                                        id="preview-bunker-{{ m.id }}" class="logo-preview">
+                                    {% else %}
+                                    <img src="" id="preview-bunker-{{ m.id }}" class="logo-preview"
+                                        style="display:none">
+                                    <div id="placeholder-bunker-{{ m.id }}" class="logo-preview"
+                                        style="display: flex; align-items: center; justify-content: center; color: #666;">
+                                        ?</div>
+                                    {% endif %}
+
+                                    <label class="btn-upload-icon" title="Subir logo">
+                                        <i class="bi bi-upload"></i>
+                                        <input type="file" id="logo-input-bunker-{{ m.id }}" class="d-none"
+                                            accept="image/*" onchange="uploadMachineLogo({{ m.id }}, 'bunker')">
+                                    </label>
+                                    <small class="text-muted d-none" id="filename-bunker-{{ m.id }}"></small>
+                                </div>
+                            </td>
+                            <td style="min-width: 250px;">
+                                <textarea name="descripcion" rows="1" class="input-minimal"
+                                    style="resize: vertical; min-height: 2.5rem;">{{ m.descripcion }}</textarea>
+                            </td>
+                            <td>
+                                <input type="text" name="link_descarga" value="{{ m.link_descarga }}"
+                                    class="input-minimal">
+                            </td>
+                            <td class="text-center">
+                                <button type="button" class="btn-action guest-toggle"
+                                    onclick="toggleGuestAccess({{ m.id }}, this)"
+                                    data-active="{{ 'true' if m.guest_access else 'false' }}"
+                                    title="{{ 'Acceso permitido a invitados' if m.guest_access else 'Acceso bloqueado a invitados' }}">
+                                    {% if m.guest_access %}
+                                    <i class="bi bi-unlock-fill text-success"></i>
+                                    {% else %}
+                                    <i class="bi bi-lock-fill text-danger"></i>
+                                    {% endif %}
+                                </button>
+                            </td>
+                            <td>
+                                <div class="d-flex gap-2">
+                                    <button type="submit" class="btn-action save" title="Guardar cambios">
+                                        <i class="bi bi-check-lg"></i>
+                                    </button>
+                                    </form>
+                                    <form method="post" action="{{ url_for('maquinas.eliminar_maquina') }}"
+                                        onsubmit="return confirm('¿Seguro que quieres eliminar esta máquina?');"
+                                        class="d-contents">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                        <input type="hidden" name="origen" value="bunker">
+                                        <input type="hidden" name="id" value="{{ m.id }}">
+                                        <button type="submit" class="btn-action delete" title="Eliminar máquina">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/gestion_maquinas.js') }}"></script>
+{% endblock %}

@@ -1,0 +1,339 @@
+/* Register Page Styles - DockerLabs - Minimalist Version */
+
+/* Register Container */
+.register-container {
+    min-height: calc(100vh - 150px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem 1rem;
+}
+
+.register-box {
+    background: #0f172a;
+    border: 1px solid rgba(34, 211, 238, 0.5);
+    border-radius: 16px;
+    padding: 2.5rem;
+    max-width: 480px;
+    width: 100%;
+    box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5), 0 0 20px rgba(34, 211, 238, 0.15);
+}
+
+/* Register Header */
+.register-header {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.register-header h2 {
+    font-size: 1.75rem;
+    margin: 0 0 0.5rem 0;
+    color: var(--text-primary);
+    font-weight: 600;
+    letter-spacing: 0.02em;
+}
+
+.register-header p {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    margin: 0;
+}
+
+/* Register Form */
+.register-form {
+    margin-top: 1.5rem;
+}
+
+.form-group {
+    margin-bottom: 1.25rem;
+}
+
+.form-group label {
+    display: block;
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    font-weight: 500;
+    margin-bottom: 0.5rem;
+}
+
+.form-group label i {
+    margin-right: 0.5rem;
+    color: var(--primary-blue);
+}
+
+.form-group input {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    background: #1e293b;
+    border: 1px solid #334155;
+    border-radius: 8px;
+    color: var(--text-primary);
+    font-family: 'Fira Code', monospace;
+    font-size: 0.95rem;
+    transition: all 0.2s ease;
+}
+
+.form-group input:focus {
+    outline: none;
+    border-color: var(--primary-blue);
+    background: rgba(15, 23, 42, 0.7);
+}
+
+.form-group input::placeholder {
+    color: var(--text-muted);
+}
+
+/* Register Button */
+.btn-register {
+    width: 100%;
+    padding: 0.85rem 1.5rem;
+    background: var(--accent-green);
+    border: none;
+    border-radius: 6px;
+    color: #ffffff;
+    font-family: 'Fira Code', monospace;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-register:hover {
+    background: #059669;
+    transform: translateY(-1px);
+}
+
+.btn-register:active {
+    transform: translateY(0);
+}
+
+.btn-register i {
+    margin-right: 0.5rem;
+}
+
+/* Links */
+.register-links {
+    margin-top: 1.25rem;
+    text-align: center;
+}
+
+.register-links a {
+    color: var(--primary-blue-light);
+    text-decoration: none;
+    font-size: 0.9rem;
+    transition: color 0.2s ease;
+}
+
+.register-links a:hover {
+    color: var(--accent-cyan);
+}
+
+.register-links a i {
+    margin-right: 0.35rem;
+}
+
+/* Divider */
+.register-divider {
+    margin: 1.5rem 0;
+    text-align: center;
+    position: relative;
+}
+
+.register-divider::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: var(--border-subtle);
+}
+
+.register-divider span {
+    background: rgba(15, 23, 42, 0.95);
+    padding: 0 1rem;
+    color: var(--text-muted);
+    font-size: 0.85rem;
+    position: relative;
+}
+
+/* Alerts */
+.alert {
+    padding: 0.85rem 1rem;
+    border-radius: 6px;
+    margin-bottom: 1.25rem;
+    font-size: 0.9rem;
+    border: 1px solid;
+    display: flex;
+    align-items: start;
+    gap: 0.5rem;
+}
+
+.alert-danger {
+    background: rgba(239, 68, 68, 0.1);
+    border-color: rgba(239, 68, 68, 0.3);
+    color: #fca5a5;
+}
+
+.alert-warning {
+    background: rgba(245, 158, 11, 0.1);
+    border-color: rgba(245, 158, 11, 0.3);
+    color: #fcd34d;
+}
+
+.alert-success {
+    background: rgba(16, 185, 129, 0.1);
+    border-color: rgba(16, 185, 129, 0.3);
+    color: #6ee7b7;
+}
+
+.alert-info {
+    background: rgba(59, 130, 246, 0.1);
+    border-color: rgba(59, 130, 246, 0.3);
+    color: #93c5fd;
+}
+
+/* PIN Display */
+.pin-display {
+    font-size: 1.6rem;
+    font-weight: 700;
+    margin: 1rem 0;
+    padding: 1rem;
+    background: rgba(16, 185, 129, 0.15);
+    border: 2px dashed var(--accent-green);
+    border-radius: 6px;
+    text-align: center;
+    color: var(--accent-green);
+    letter-spacing: 0.1em;
+    font-family: 'Fira Code', monospace;
+}
+
+.pin-warning {
+    margin-top: 0.75rem;
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    font-style: italic;
+}
+
+/* Rate Limit Timer */
+#rl-seconds {
+    font-weight: 700;
+    color: var(--accent-yellow);
+}
+
+/* Password Requirements */
+.password-requirements {
+    margin-top: 0.75rem;
+    padding: 0.75rem;
+    background: rgba(15, 23, 42, 0.5);
+    border: 1px solid var(--border-subtle);
+    border-radius: 6px;
+}
+
+.password-requirements h6 {
+    font-size: 0.85rem;
+    margin: 0 0 0.5rem 0;
+    color: var(--text-secondary);
+}
+
+.password-requirements ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.password-requirements li {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    margin-bottom: 0.35rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.password-requirements li i {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+}
+
+/* Terms and Conditions Checkbox */
+.terms-checkbox {
+    margin: 1.5rem 0;
+    padding: 1rem;
+    background: rgba(15, 23, 42, 0.5);
+    border: 1px solid var(--border-subtle);
+    border-radius: 6px;
+}
+
+.terms-checkbox label {
+    display: flex;
+    align-items: start;
+    gap: 0.75rem;
+    cursor: pointer;
+    margin: 0;
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    font-weight: 400;
+}
+
+.terms-checkbox input[type="checkbox"] {
+    width: auto;
+    margin-top: 0.2rem;
+    cursor: pointer;
+    flex-shrink: 0;
+}
+
+.terms-checkbox span {
+    line-height: 1.5;
+}
+
+.terms-checkbox a {
+    color: var(--primary-blue-light);
+    text-decoration: none;
+    font-weight: 500;
+    transition: color 0.2s ease;
+}
+
+.terms-checkbox a:hover {
+    color: var(--accent-cyan);
+    text-decoration: underline;
+}
+
+/* Security Badge */
+.security-badge {
+    text-align: center;
+    margin-top: 1.5rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--border-subtle);
+}
+
+.security-badge i {
+    color: var(--accent-green);
+    font-size: 1rem;
+    margin-right: 0.5rem;
+}
+
+.security-badge span {
+    color: var(--text-muted);
+    font-size: 0.8rem;
+}
+
+/* Responsive */
+@media (max-width: 576px) {
+    .register-box {
+        padding: 2rem 1.5rem;
+    }
+
+    .register-header h2 {
+        font-size: 1.5rem;
+    }
+
+    .btn-register {
+        padding: 0.75rem 1.2rem;
+        font-size: 0.9rem;
+    }
+
+    .pin-display {
+        font-size: 1.3rem;
+    }
+}

@@ -1,0 +1,233 @@
+{% extends "base.html" %}
+
+{% block title %}Writeups publicados - DockerLabs{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/writeups_publicados.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h2 class="text-center mb-3">Writeups Publicados</h2>
+
+    <p class="text-center text-muted mb-4">
+        Explora y gestiona todos los writeups publicados organizados por máquina
+    </p>
+
+    <div id="alert-container"></div>
+
+    <!-- Search bar & Filter -->
+    <div class="search-container mb-4 d-flex gap-3 align-items-center flex-wrap">
+        <input type="text" id="search-input" class="search-input flex-grow-1"
+            placeholder="🔍 Buscar máquina por nombre..." autocomplete="off">
+
+        <div class="form-check form-switch custom-filter-toggle text-nowrap">
+            <input class="form-check-input" type="checkbox" id="filterOwnWriteups">
+            <label class="form-check-label text-white ms-2" for="filterOwnWriteups">Ver solo mis writeups</label>
+        </div>
+    </div>
+
+    <!-- Machines grid -->
+    <div id="machines-grid" class="machines-grid">
+        <!-- Machines will be loaded here -->
+    </div>
+
+    <!-- Machine detail modal -->
+    <div id="machine-modal" class="machine-modal" style="display: none;">
+        <div class="machine-modal-overlay" onclick="closeMachineModal()"></div>
+        <div class="machine-modal-content">
+            <button class="machine-modal-close" onclick="closeMachineModal()">&times;</button>
+            <h3 id="modal-machine-name" class="modal-machine-name"></h3>
+            <div id="modal-writeups-container" class="modal-writeups-container">
+                <!-- Writeups will be loaded here -->
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script>
+    const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
+
+    function escapeHTML(str) {
+        if (typeof str !== "string") return "";
+        return str
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#39;");
+    }
+
+    function showAlert(message, type = "success") {
+        const container = document.getElementById("alert-container");
+        const alert = document.createElement("div");
+        alert.className = `alert alert-${type} alert-dismissible fade show`;
+        alert.role = "alert";
+        alert.innerHTML = `
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        `;
+        container.appendChild(alert);
+        setTimeout(() => {
+            alert.classList.remove("show");
+            setTimeout(() => alert.remove(), 150);
+        }, 4000);
+    }
+
+    let allMachines = [];
+
+    function renderMachineCard(machine) {
+        const card = document.createElement("div");
+        card.className = "machine-card";
+        card.dataset.machine = machine.maquina.toLowerCase();
+
+        const imageHTML = machine.imagen
+            ? `<img src="${escapeHTML(machine.imagen)}" alt="${escapeHTML(machine.maquina)}" class="machine-card-image">`
+            : `<div class="machine-card-placeholder">📝</div>`;
+
+        card.innerHTML = `
+            <div class="machine-card-icon">${imageHTML}</div>
+            <h4 class="machine-card-title">${escapeHTML(machine.maquina)}</h4>
+            <div class="machine-card-count">${machine.total} writeup${machine.total !== 1 ? 's' : ''}</div>
+        `;
+
+        card.addEventListener("click", () => openMachineModal(machine.maquina));
+
+        return card;
+    }
+
+    function filterMachines() {
+        const searchTerm = document.getElementById("search-input").value.toLowerCase().trim();
+        const cards = document.querySelectorAll(".machine-card");
+
+        let visibleCount = 0;
+        cards.forEach(card => {
+            const machineName = card.dataset.machine;
+            if (machineName.includes(searchTerm)) {
+                card.style.display = "";
+                visibleCount++;
+            } else {
+                card.style.display = "none";
+            }
+        });
+
+        // Show "no results" message if needed
+        const grid = document.getElementById("machines-grid");
+        let noResults = grid.querySelector(".no-results");
+
+        if (visibleCount === 0 && searchTerm) {
+            if (!noResults) {
+                noResults = document.createElement("div");
+                noResults.className = "no-results";
+                noResults.textContent = `No se encontraron máquinas con "${searchTerm}"`;
+                grid.appendChild(noResults);
+            }
+        } else {
+            if (noResults) {
+                noResults.remove();
+            }
+        }
+    }
+
+    function loadMachines() {
+        const grid = document.getElementById("machines-grid");
+        const filterCheckbox = document.getElementById('filterOwnWriteups');
+        const filter = filterCheckbox && filterCheckbox.checked ? 'mine' : 'all';
+
+        grid.innerHTML = '<div class="loading">Cargando máquinas...</div>';
+
+        fetch(`/api/writeups_subidos/maquinas?filter=${filter}`)
+            .then(response => response.json().then(data => ({ ok: response.ok, data })))
+            .then(result => {
+                if (!result.ok) {
+                    grid.innerHTML = '<div class="error-message">Error al cargar las máquinas</div>';
+                    return;
+                }
+
+                allMachines = result.data;
+
+                if (!Array.isArray(allMachines) || allMachines.length === 0) {
+                    grid.innerHTML = '<div class="empty-state">No hay writeups publicados todavía</div>';
+                    return;
+                }
+
+                grid.innerHTML = "";
+                allMachines.forEach(machine => {
+                    const card = renderMachineCard(machine);
+                    grid.appendChild(card);
+                });
+
+                // Re-apply search filter if any
+                filterMachines();
+            })
+            .catch(err => {
+                console.error(err);
+                grid.innerHTML = '<div class="error-message">Error al cargar las máquinas</div>';
+            });
+    }
+
+    function openMachineModal(machineName) {
+        const modal = document.getElementById("machine-modal");
+        const modalTitle = document.getElementById("modal-machine-name");
+        const container = document.getElementById("modal-writeups-container");
+        const filterCheckbox = document.getElementById('filterOwnWriteups');
+        const filter = filterCheckbox && filterCheckbox.checked ? 'mine' : 'all';
+
+        modalTitle.textContent = machineName;
+        container.innerHTML = '<div class="loading">Cargando writeups...</div>';
+
+        modal.style.display = "flex";
+        document.body.style.overflow = "hidden";
+
+        const params = new URLSearchParams({ maquina: machineName, filter: filter });
+        fetch(`/api/writeups_subidos?${params.toString()}`)
+            .then(response => response.json().then(data => ({ ok: response.ok, data })))
+            .then(result => {
+                if (!result.ok) {
+                    container.innerHTML = '<div class="error-message">Error al cargar writeups</div>';
+                    return;
+                }
+
+                const writeups = result.data;
+                if (!Array.isArray(writeups) || writeups.length === 0) {
+                    container.innerHTML = '<div class="empty-state">No hay writeups para esta máquina</div>';
+                    return;
+                }
+
+                container.innerHTML = "";
+                writeups.forEach(writeup => {
+                    const card = renderWriteupCard(writeup);
+                    container.appendChild(card);
+                });
+            })
+            .catch(err => {
+                console.error(err);
+                container.innerHTML = '<div class="error-message">Error al cargar writeups</div>';
+            });
+    }
+
+    // ... (closeMachineModal, renderWriteupCard, etc. remain unchanged)
+
+    document.addEventListener("DOMContentLoaded", () => {
+        const searchInput = document.getElementById("search-input");
+        searchInput.addEventListener("input", filterMachines);
+
+        const filterCheckbox = document.getElementById('filterOwnWriteups');
+        if (filterCheckbox) {
+            filterCheckbox.addEventListener('change', loadMachines);
+        }
+
+        loadMachines();
+    });
+
+    // Close modal on ESC key
+    document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape") {
+            closeMachineModal();
+        }
+    });
+</script>
+{% endblock %}

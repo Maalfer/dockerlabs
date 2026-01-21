@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}BunkerLabs{% endblock %}</title>
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet"
+        href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <link rel="stylesheet" href="{{ url_for('bunkerlabs.static', filename='css/bunkerlabs.css') }}">
+    <link rel="icon" href="{{ url_for('static', filename='images/logos/logo.png') }}" type="image/png">
+
+    <script nonce="{{ csp_nonce }}">
+        window.dataLayer = window.dataLayer || [];
+        function gtag() { dataLayer.push(arguments); }
+        gtag('js', new Date());
+        gtag('config', 'G-XXXXXXXXXX');
+    </script>
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+</head>
+
+<body>
+    <header>
+        <a href="{{ url_for('bunkerlabs.bunkerlabs_home') }}" class="logo">
+            <div class="logo-container">
+                <img src="{{ url_for('static', filename='images/logos/logo.png') }}" alt="Logo">
+            </div>
+            <span class="logo-text">BunkerLabs</span>
+        </a>
+
+        <nav class="nav-links">
+            <a href="{{ url_for('index') }}">DockerLabs</a>
+            <a href="{{ url_for('bunkerlabs.bunkerlabs_home') }}" class="active">Bunker</a>
+        </nav>
+
+        <div class="nav-actions">
+            {% if session.get('bunkerlabs_nombre') %}
+            <div class="user-dropdown">
+                <div class="user-pill">
+                    <i class="bi bi-person-badge"></i>
+                    <span>{{ session.get('bunkerlabs_nombre') }}</span>
+                    <i class="bi bi-chevron-down" style="font-size: 0.7rem; margin-left: 0.3rem;"></i>
+                </div>
+                <div class="dropdown-menu">
+                    <a href="{{ url_for('bunkerlabs.bunkerlabs_logout') }}" class="dropdown-item">
+                        <i class="bi bi-box-arrow-right"></i>
+                        Salir de BunkerLabs
+                    </a>
+                </div>
+            </div>
+            {% else %}
+            <div class="user-pill user-pill-anon">
+                <i class="bi bi-shield-lock"></i>
+                <span>Acceso Token</span>
+            </div>
+            {% endif %}
+        </div>
+    </header>
+
+    <main>
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer class="bunker-footer">
+        <div class="footer-content">
+            <p class="copyright">
+                <i class="bi bi-c-circle"></i> Copyright BunkerLabs ·
+                <a href="{{ url_for('main.politica_privacidad') }}" class="footer-link">Política de Privacidad</a> ·
+                <a href="{{ url_for('main.politica_cookies') }}" class="footer-link">Cookies</a> ·
+                <a href="{{ url_for('main.condiciones_uso') }}" class="footer-link">Condiciones de Uso</a>
+            </p>
+
+            <div class="footer-icons">
+                <a href="https://discord.gg/dD3yVejBUR" class="footer-icon" target="_blank"><i
+                        class="bi bi-discord"></i></a>
+                <a href="https://es.linkedin.com/in/maalfer1" class="footer-icon" target="_blank"><i
+                        class="bi bi-linkedin"></i></a>
+                <a href="https://t.me/elpinguinohack" class="footer-icon" target="_blank"><i
+                        class="bi bi-telegram"></i></a>
+            </div>
+
+            <p>
+                <a href="https://www.youtube.com/@ElPinguinoDeMario" class="footer-link" target="_blank">
+                    By El Pingüino de Mario 🐧
+                </a>
+            </p>
+        </div>
+
+        <div class="wave-container">
+            <div class="wave wave1"></div>
+            <div class="wave wave2"></div>
+        </div>
+    </footer>
+
+    <script nonce="{{ csp_nonce }}"
+        src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script nonce="{{ csp_nonce }}" src="{{ url_for('bunkerlabs.static', filename='js/dropdown.js') }}"></script>
+
+    <script nonce="{{ csp_nonce }}">
+        function openGestionWriteupsModal() {
+            const modal = document.getElementById('gestionWriteupsModal');
+            if (modal) {
+                modal.style.display = 'flex';
+            }
+        }
+
+        function closeGestionWriteupsModal() {
+            const modal = document.getElementById('gestionWriteupsModal');
+            if (modal) {
+                modal.style.display = 'none';
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            const modal = document.getElementById('gestionWriteupsModal');
+            if (modal) {
+                modal.addEventListener('click', function (e) {
+                    if (e.target === modal) closeGestionWriteupsModal();
+                });
+            }
+        });
+    </script>
+
+    {% block scripts %}{% endblock %}
+</body>
+
+</html>

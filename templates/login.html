@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+
+{% block title %}Iniciar sesión - DockerLabs{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/login.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="login-container">
+    <div class="login-box">
+        <div class="login-header">
+            <h2>Iniciar Sesión</h2>
+            <p>Accede a tu cuenta de DockerLabs</p>
+        </div>
+
+        {% if error %}
+        <div class="alert alert-danger">
+            <i class="fas fa-exclamation-circle"></i> {{ error }}
+        </div>
+        {% endif %}
+
+        {% if success %}
+        <div class="alert alert-success">
+            <i class="fas fa-check-circle"></i> {{ success }}
+        </div>
+        {% endif %}
+
+        {% if remaining %}
+        <div class="alert alert-warning" id="rl-warning">
+            <i class="fas fa-clock"></i>
+            Debes esperar <span id="rl-seconds">{{ remaining }}</span> segundos antes de volver a intentarlo.
+        </div>
+
+        <script nonce="{{ g.csp_nonce }}">
+            (function () {
+                var secondsEl = document.getElementById("rl-seconds");
+                var sec = parseInt(secondsEl.textContent, 10) || 0;
+                function tick() {
+                    if (sec <= 0) {
+                        var warn = document.getElementById("rl-warning");
+                        if (warn) { warn.style.display = "none"; }
+                        return;
+                    }
+                    sec -= 1;
+                    secondsEl.textContent = sec;
+                    setTimeout(tick, 1000);
+                }
+                setTimeout(tick, 1000);
+            })();
+        </script>
+        {% endif %}
+
+        <form method="post" class="login-form">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+            <div class="form-group">
+                <label for="username"><i class="fas fa-user"></i> Usuario</label>
+                <input type="text" name="username" id="username" placeholder="Ingresa tu usuario" required
+                    autocomplete="username" autofocus>
+            </div>
+
+            <div class="form-group">
+                <label for="password"><i class="fas fa-lock"></i> Contraseña</label>
+                <input type="password" name="password" id="password" placeholder="Ingresa tu contraseña" required
+                    autocomplete="current-password">
+            </div>
+
+            <button type="submit" class="btn-login">
+                <i class="fas fa-sign-in-alt"></i> Entrar
+            </button>
+        </form>
+
+        <div class="login-links">
+            <a href="{{ url_for('auth.recover') }}">
+                <i class="fas fa-key"></i> ¿Olvidaste tu contraseña?
+            </a>
+        </div>
+
+        <div class="login-divider">
+            <span>¿No tienes cuenta?</span>
+        </div>
+
+        <div class="login-links">
+            <a href="{{ url_for('auth.register') }}">
+                <i class="fas fa-user-plus"></i> Crear cuenta nueva
+            </a>
+        </div>
+
+        <div class="security-badge">
+            <i class="fas fa-shield-alt"></i>
+            <span>Conexión segura</span>
+        </div>
+    </div>
+</div>
+{% endblock %}

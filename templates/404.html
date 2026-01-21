@@ -1,0 +1,168 @@
+{% extends "base.html" %}
+
+{% block title %}Página no encontrada - DockerLabs{% endblock %}
+
+{% block extra_head %}
+<style>
+  /* Local styles for 404 page leveraging base variables if available, 
+       but defining fallbacks to ensure standalone look if needed */
+  :root {
+    --primary-color: #3b82f6;
+    --glass-bg: rgba(30, 41, 59, 0.7);
+    --glass-border: 1px solid rgba(255, 255, 255, 0.1);
+    --text-main: #f8fafc;
+    --text-muted: #94a3b8;
+  }
+
+  .error-page-container {
+    min-height: 80vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+  }
+
+  .error-card {
+    max-width: 900px;
+    width: 100%;
+    background: var(--glass-bg);
+    backdrop-filter: blur(12px);
+    border: var(--glass-border);
+    border-radius: 24px;
+    padding: 3rem;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+    position: relative;
+    overflow: hidden;
+  }
+
+  /* Glow effect */
+  .error-card::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle, rgba(59, 130, 246, 0.1) 0%, transparent 70%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .error-content-flex {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    gap: 3rem;
+    text-align: left;
+  }
+
+  .error-image-wrapper {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+  }
+
+  .error-text-wrapper {
+    flex: 1.2;
+  }
+
+  .error-image {
+    width: 100%;
+    max-width: 320px;
+    border-radius: 16px;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    transition: transform 0.3s ease;
+  }
+
+  .error-image:hover {
+    transform: scale(1.02);
+  }
+
+  @media (max-width: 768px) {
+    .error-content-flex {
+      flex-direction: column;
+      text-align: center;
+    }
+
+    .error-content-flex {
+      gap: 2rem;
+    }
+  }
+
+  .error-title {
+    font-size: 4rem;
+    font-weight: 800;
+    line-height: 1;
+    margin-bottom: 0.5rem;
+    background: linear-gradient(to right, #facc15, #f97316);
+    /* Yellow/Orange for warning/error */
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .error-subtitle {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: var(--text-main);
+    margin-bottom: 1rem;
+  }
+
+  .error-text {
+    color: var(--text-muted);
+    font-size: 1.1rem;
+    margin-bottom: 2rem;
+    line-height: 1.6;
+  }
+
+  .btn-home {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.8rem 2rem;
+    background: rgba(59, 130, 246, 0.1);
+    color: #60a5fa;
+    border: 1px solid rgba(59, 130, 246, 0.2);
+    border-radius: 12px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: all 0.3s ease;
+  }
+
+  .btn-home:hover {
+    background: #3b82f6;
+    color: white;
+    box-shadow: 0 0 20px rgba(59, 130, 246, 0.4);
+    transform: translateY(-2px);
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="error-page-container">
+  <div class="error-card">
+    <div class="error-content-flex">
+      <div class="error-image-wrapper">
+        <img src="{{ url_for('static', filename='images/errores/balu.webp') }}" alt="Balu no encontró la página"
+          class="error-image" />
+      </div>
+
+      <div class="error-text-wrapper">
+        <h1 class="error-title">404</h1>
+        <h2 class="error-subtitle">¡Ups! Página no encontrada</h2>
+
+        <p class="error-text">
+          Un cocker adorable ha estado buscando por todas partes,<br>
+          pero no ha encontrado lo que buscas.
+        </p>
+
+        <a href="/" class="btn-home">
+          <i class="bi bi-house-door"></i> Volver al inicio
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
