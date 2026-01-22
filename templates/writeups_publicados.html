@@ -21,10 +21,13 @@
         <input type="text" id="search-input" class="search-input flex-grow-1"
             placeholder="🔍 Buscar máquina por nombre..." autocomplete="off">
 
-        <div class="form-check form-switch custom-filter-toggle text-nowrap">
-            <input class="form-check-input" type="checkbox" id="filterOwnWriteups">
-            <label class="form-check-label text-white ms-2" for="filterOwnWriteups">Ver solo mis writeups</label>
-        </div>
+        {% if user.role in ['admin', 'moderador'] %}
+            <div class="form-check form-switch custom-filter-toggle text-nowrap">
+                <input class="form-check-input" type="checkbox" id="filterOwnWriteups">
+
+                <label class="form-check-label text-white ms-2" for="filterOwnWriteups">Ver solo mis writeups</label>
+            </div>
+        {% endif %}
     </div>
 
     <!-- Machines grid -->

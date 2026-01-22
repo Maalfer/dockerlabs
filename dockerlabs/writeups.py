@@ -781,6 +781,8 @@ def api_delete_writeup_recibido(writeup_id):
 @writeups_bp.route('/writeups-publicados')
 @role_required('admin', 'moderador', 'jugador')
 def writeups_publicados():
+    user_id = session.get('user_id')
+    user = User.query.get(user_id)
     """
     Published writeups page.
     ---
@@ -790,7 +792,7 @@ def writeups_publicados():
       200:
         description: Published writeups page.
     """
-    return render_template('writeups_publicados.html')
+    return render_template('writeups_publicados.html',user=user)
 
 @writeups_bp.route('/api/writeups_subidos', methods=['GET'])
 @role_required('admin', 'moderador', 'jugador')
