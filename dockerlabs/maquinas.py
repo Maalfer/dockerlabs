@@ -573,7 +573,7 @@ def add_maquina_page():
                 enlace_autor = user_obj.linkedin_url
         
         if not enlace_autor:
-            enlace_autor = current_user.youtube_url or current_user.github_url or current_user.linkedin_url or ''
+            enlace_autor = ''
 
         # Validación de campos obligatorios
         # Si es entorno real (bunker + entorno_real marcado), no se requiere dificultad
