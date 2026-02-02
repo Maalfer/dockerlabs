@@ -60,7 +60,6 @@ class BunkerSolve(db.Model):
     __table_args__ = (
         db.UniqueConstraint('user_id', 'machine_id', name='unique_user_machine_solve'),
         db.Index('idx_bunker_solves_user', 'user_id'),
-        db.Index('idx_bunker_solves_user', 'user_id'),
         db.Index('idx_bunker_solves_machine', 'machine_id'),
     )
 

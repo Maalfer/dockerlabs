@@ -55,12 +55,122 @@ function presentacion(nombre, dificultad, color, autor_nombre, autor_enlace, fec
                 margin: 0;
             }
 
+
             @media (max-width: 768px) {
                 .popup {
                     grid-template-columns: 1fr;
                     width: 95vw;
-                    max-height: 85vh;
+                    max-height: 90vh;
                     overflow-y: auto;
+                    border-radius: 16px;
+                }
+                
+                .popup-image-container {
+                    padding: 1.5rem !important;
+                    min-height: 250px;
+                    max-height: 300px;
+                }
+                
+                .popup-content {
+                    padding: 1.5rem !important;
+                }
+                
+                .machine-title {
+                    font-size: 1.75rem !important;
+                    line-height: 1.2 !important;
+                }
+                
+                .header-row {
+                    padding-right: 2.5rem !important;
+                    flex-wrap: wrap;
+                    gap: 0.5rem;
+                }
+                
+                .rating-badge {
+                    font-size: 0.85rem !important;
+                }
+                
+                .difficulty-pill {
+                    font-size: 0.7rem !important;
+                    padding: 0.3rem 0.8rem !important;
+                }
+                
+                .creator-card {
+                    margin-top: 1.5rem !important;
+                    padding: 0.875rem !important;
+                    flex-wrap: wrap;
+                }
+                
+                .creation-date {
+                    width: 100%;
+                    margin-left: 0 !important;
+                    margin-top: 0.5rem;
+                    justify-content: flex-start;
+                }
+                
+                .action-area {
+                    margin-top: 1.5rem !important;
+                }
+                
+                .btn-mark-completed {
+                    padding: 0.875rem !important;
+                    font-size: 0.95rem !important;
+                }
+                
+                .modal-footer {
+                    padding-top: 1.5rem !important;
+                    flex-direction: column;
+                    gap: 1rem;
+                    align-items: flex-start;
+                }
+                
+                .user-rating-stars {
+                    font-size: 1.2rem !important;
+                }
+            }
+
+            @media (max-width: 480px) {
+                .popup {
+                    width: 100vw;
+                    max-height: 100vh;
+                    border-radius: 0;
+                }
+                
+                .popup-image-container {
+                    padding: 1rem !important;
+                    min-height: 200px;
+                    max-height: 250px;
+                }
+                
+                .popup-content {
+                    padding: 1rem !important;
+                }
+                
+                .machine-title {
+                    font-size: 1.5rem !important;
+                }
+                
+                .modal-close-button {
+                    top: 1rem !important;
+                    right: 1rem !important;
+                }
+                
+                .creator-card {
+                    padding: 0.75rem !important;
+                }
+                
+                .creator-avatar {
+                    width: 40px !important;
+                    height: 40px !important;
+                }
+                
+                .creator-name {
+                    font-size: 0.9rem !important;
+                }
+                
+                .rating-modal-v2 {
+                    padding: 1.5rem !important;
+                    border-radius: 12px !important;
                 }
             }
 

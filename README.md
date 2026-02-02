@@ -140,6 +140,43 @@ def make_me_admin():
     return "Ahora eres admin."
 ```
 
+### 🧪 Poblar Datos de Prueba
+
+Para facilitar el desarrollo y pruebas locales, hemos incluido un script que **crea automáticamente máquinas, usuarios, writeups y valoraciones de prueba**. Este script es especialmente útil cuando quieres probar funcionalidades sin tener que crear manualmente los datos.
+
+**¿Qué crea el script?**
+
+- **5 máquinas** con diferentes niveles de dificultad:
+  - TestVeryEasy (Muy Fácil)
+  - TestEasy (Fácil)
+  - TestMedium (Medio)
+  - TestHard (Difícil)
+  - TestInsane (Difícil)
+
+- **3 usuarios** con roles distintos:
+  - `admin_test` / `Admin123!` (Rol: admin)
+  - `creator_test` / `Creator123!` (Rol: creador)
+  - `player_test` / `Player123!` (Rol: jugador)
+
+- **11 writeups** de ejemplo (tanto texto como video) distribuidos entre las máquinas
+
+- **10 valoraciones** realistas con diferentes puntuaciones por criterio (dificultad, aprendizaje, recomendación, diversión)
+
+**Uso:**
+
+```bash
+# Asegúrate de tener el entorno virtual activado
+source venv/bin/activate
+
+# Ejecuta el script
+python3 populate_test_data.py
+```
+
+El script detectará automáticamente si los datos ya existen y evitará duplicados.
+
+> [!TIP]
+> Este script es ideal para entornos de desarrollo. **No lo ejecutes en producción** a menos que sepas exactamente lo que estás haciendo.
+
 ## 🐳 DESPLIEGUE EN DOCKER
 
 Para construir una imagen de Docker y lanzar la aplicación contenizada, ejecutaremos los siguientes comandos:
