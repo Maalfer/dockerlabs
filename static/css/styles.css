@@ -1825,3 +1825,127 @@ footer {
     transform: translate(-50%, -50%) scale(1);
     pointer-events: auto;
 }
+
+.colaboradores-card {
+    background: #020617;
+    border: 1px solid #0f172a;
+    border-radius: 20px;
+}
+
+.colaboradores-grid {
+    margin-top: 2.5rem;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 2.25rem;
+}
+
+.colaborador {
+    position: relative;
+    background: #020617;
+    border: 1px solid #0f172a;
+    border-radius: 24px;
+
+    padding: 3rem 2.5rem;
+    min-height: 280px;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 1.4rem;
+
+    text-decoration: none;
+    color: #e5e7eb;
+
+    transition:
+        transform 0.45s cubic-bezier(0.22, 1, 0.36, 1),
+        box-shadow 0.45s cubic-bezier(0.22, 1, 0.36, 1),
+        border-color 0.3s ease;
+}
+
+.colaborador img {
+    width: 96px;
+    height: 96px;
+    border-radius: 999px;
+    object-fit: cover;
+    background: #020617;
+    border: 1px solid #0f172a;
+
+    transition: transform 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.colaborador span {
+    font-size: 1rem;
+    font-weight: 500;
+    letter-spacing: 0.02em;
+    opacity: 0.9;
+}
+
+.colaborador:hover {
+    transform: translateY(-10px);
+    border-color: #1f2937;
+    box-shadow:
+        0 28px 60px rgba(0, 0, 0, 0.7);
+}
+
+.colaborador:hover img {
+    transform: scale(1.12);
+}
+
+.colaborador:focus-visible {
+    outline: none;
+    box-shadow:
+        0 0 0 3px rgba(59, 130, 246, 0.35),
+        0 28px 60px rgba(0, 0, 0, 0.7);
+}
+
+.colaborador {
+    position: relative;
+    border: 2px solid #0f172a;
+    border-radius: 24px;
+    padding: 3rem 2.5rem;
+    min-height: 280px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 1.4rem;
+    text-decoration: none;
+    color: #e5e7eb;
+    transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+    overflow: visible; 
+}
+
+.colaborador::after {
+    content: "";
+    position: absolute;
+    top: -2px;
+    left: -2px;
+    right: -2px;
+    bottom: -2px;
+    border-radius: 24px;
+    border: 2px solid transparent;
+    pointer-events: none;
+
+    box-shadow: 0 0 4px var(--glow-color),
+                0 0 8px var(--glow-color),
+                0 0 12px var(--glow-color);
+    opacity: 0;
+    transition: opacity 0.4s ease, transform 0.4s ease;
+}
+
+.colaborador:hover::after {
+    opacity: 1;
+    transform: scale(1.03);
+}
+
+.colaborador:hover {
+    transform: translateY(-4px);
+}
+
+.glow-dise0 { --glow-color: #232223; }
+.glow-thl { --glow-color: #fe9400; }
+.glow-hackmyvm { --glow-color: #f35c8e; }
+.glow-pylon { --glow-color: #ffffff; }
+.glow-santitub { --glow-color: #ffffff; }
+.glow-maciferna { --glow-color: #663c98; }
