@@ -1949,3 +1949,17 @@ footer {
 .glow-pylon { --glow-color: #ffffff; }
 .glow-santitub { --glow-color: #ffffff; }
 .glow-maciferna { --glow-color: #663c98; }
+
+/* ===== New Card ===== */
+
+.como_se_crea_una_maquina-card {
+    background: #020617;
+    border: 1px solid #0f172a;
+    border-radius: 20px;
+}
+
+.enviar_maquina-card {
+    background: #020617;
+    border: 1px solid #0f172a;
+    border-radius: 20px;
+}
