@@ -764,11 +764,11 @@ def approve_claim(claim_id):
       - Admin
     responses:
       302:
-        description: Redirect to dashboard.
+        description: Redirect to peticiones.
     """
     claim = MachineClaim.query.get(claim_id)
     if not claim:
-        return redirect(url_for('dashboard'))
+        return redirect(url_for('peticiones'))
 
     try:
         maquina = Machine.query.filter_by(nombre=claim.maquina_nombre).first()
@@ -797,7 +797,7 @@ def reject_claim(claim_id):
       - Admin
     responses:
       302:
-        description: Redirect to dashboard.
+        description: Redirect to peticiones.
     """
     claim = MachineClaim.query.get(claim_id)
     if claim:
@@ -807,7 +807,7 @@ def reject_claim(claim_id):
         except:
             alchemy_db.session.rollback()
 
-    return redirect(url_for('dashboard'))
+    return redirect(url_for('peticiones'))
 
 @maquinas_bp.route('/claims/<int:claim_id>/revert', methods=['POST'])
 @role_required('admin', 'moderador')
