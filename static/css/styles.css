@@ -1949,3 +1949,81 @@ footer {
 .glow-pylon { --glow-color: #ffffff; }
 .glow-santitub { --glow-color: #ffffff; }
 .glow-maciferna { --glow-color: #663c98; }
+
+/* ===== New Card ===== */
+
+.como_se_crea_una_maquina-card {
+    background: #020617;
+    border: 1px solid #0f172a;
+    border-radius: 20px;
+}
+
+.enviar_maquina-card {
+    background: #020617;
+    border: 1px solid #0f172a;
+    border-radius: 20px;
+}
+
+.soporte-card {
+    background: #020617;
+    border: 1px solid #0f172a;
+    border-radius: 20px;
+}
+
+.intrucciones_de_uso-card {
+    background: #020617;
+    border: 1px solid #0f172a;
+    border-radius: 20px;
+}
+
+/* ===== Alertas ===== */
+
+.alert-warning {
+    background: rgba(251, 146, 60, 0.08);
+    color: #fbbf24;
+    padding: 16px 20px;
+    border-radius: 12px;
+    border: 1px solid rgba(251, 191, 36, 0.6);
+    font-weight: 500;
+    backdrop-filter: blur(6px);
+    box-shadow:
+        0 0 6px rgba(251, 191, 36, 0.4),
+        0 0 12px rgba(251, 191, 36, 0.25);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 15px 0;
+    transition: 0.3s ease;
+}
+
+.alert-warning:hover {
+    border-color: #fbbf24;
+    box-shadow:
+        0 0 10px rgba(251, 191, 36, 0.7),
+        0 0 20px rgba(251, 191, 36, 0.5);
+}
+
+.alert-hint {
+    background: rgba(59, 130, 246, 0.08);
+    color: #60a5fa;
+    padding: 16px 20px;
+    border-radius: 12px;
+    border: 1px solid rgba(96, 165, 250, 0.6);
+    font-weight: 500;
+    backdrop-filter: blur(6px);
+    box-shadow:
+        0 0 6px rgba(96, 165, 250, 0.4),
+        0 0 12px rgba(96, 165, 250, 0.25);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 15px 0;
+    transition: 0.3s ease;
+}
+
+.alert-hint:hover {
+    border-color: #60a5fa;
+    box-shadow:
+        0 0 10px rgba(96, 165, 250, 0.7),
+        0 0 20px rgba(96, 165, 250, 0.5);
+}
