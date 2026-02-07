@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="static/images/repo/portada.png" alt="DockerLabs Banner" width="100%">
+  <img src="static/dockerlabs/images/repo/portada.png" alt="DockerLabs Banner" width="100%">
 
   # DockerLabs
   
@@ -36,7 +36,7 @@ Olvídate de descargas de 4GB. DockerLabs levanta máquinas en milisegundos.
 | Entornos ultraligeros que consumen recursos mínimos. Levanta 10 laboratorios donde antes solo cabía una VM. | Desde máquinas *Very Easy* hasta retos *Hard*. Filtra por dificultad, fecha, creador y mucho más. | Sube tus propios **Writeups**, valora las máquinas y compite en el ranking global. |
 
 <div align="center">
-  <img src="static/images/repo/presentacionmaquina.webp" alt="Presentación Máquina" width="80%" style="border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
+  <img src="static/dockerlabs/images/repo/presentacionmaquina.webp" alt="Presentación Máquina" width="80%" style="border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
   <p><em>Interfaz moderna para la gestión de máquinas y writeups</em></p>
 </div>
 
@@ -87,7 +87,7 @@ Un stack robusto y moderno para garantizar rendimiento y escalabilidad.
     ```
 
 <div align="center">
-  <img src="static/images/repo/lanzar_maquina.png" alt="Lanzar Máquina" width="70%" style="border-radius: 8px;">
+  <img src="static/dockerlabs/images/repo/lanzar_maquina.png" alt="Lanzar Máquina" width="70%" style="border-radius: 8px;">
 </div>
 
 ---
@@ -104,8 +104,9 @@ sudo chown -R www-data:www-data /var/www/dockerlabs
 sudo find /var/www/dockerlabs -type d -exec chmod 755 {} \;
 sudo find /var/www/dockerlabs -type f -exec chmod 644 {} \;
 sudo chmod 775 /var/www/dockerlabs
-sudo chmod 664 /var/www/dockerlabs/bunkerlabs.db
-sudo chmod 664 /var/www/dockerlabs/dockerlabs.db
+sudo chmod 775 /var/www/dockerlabs/database
+sudo chmod 664 /var/www/dockerlabs/database/bunkerlabs.db
+sudo chmod 664 /var/www/dockerlabs/database/dockerlabs.db
 sudo chmod +x /var/www/dockerlabs/venv/bin/uvicorn
 sudo systemctl restart dockerlabs.service
 ```
@@ -267,7 +268,7 @@ def create_test_machines():
             'autor': 'admin_test',
             'enlace_autor': 'https://github.com/admin_test',
             'fecha': '15/01/2026',
-            'imagen': 'logos/logo.png',
+            'imagen': 'dockerlabs/images/logos/logo.png',
             'descripcion': 'Máquina de prueba de nivel muy fácil ideal para principiantes. Incluye vulnerabilidades básicas de enumeración y explotación.',
             'link_descarga': 'https://github.com/Maalfer/dockerlabs',
             'posicion': 'izquierda',
@@ -281,7 +282,7 @@ def create_test_machines():
             'autor': 'creator_test',
             'enlace_autor': 'https://github.com/creator_test',
             'fecha': '20/01/2026',
-            'imagen': 'logos/logo.png',
+            'imagen': 'dockerlabs/images/logos/logo.png',
             'descripcion': 'Máquina de prueba de nivel fácil. Requiere conocimientos básicos de reconocimiento web y escalada de privilegios.',
             'link_descarga': 'https://github.com/Maalfer/dockerlabs',
             'posicion': 'derecha',
@@ -295,7 +296,7 @@ def create_test_machines():
             'autor': 'admin_test',
             'enlace_autor': 'https://github.com/admin_test',
             'fecha': '25/01/2026',
-            'imagen': 'logos/logo.png',
+            'imagen': 'dockerlabs/images/logos/logo.png',
             'descripcion': 'Máquina de prueba de dificultad media. Combina técnicas de reconocimiento, explotación web y escalada de privilegios.',
             'link_descarga': 'https://github.com/Maalfer/dockerlabs',
             'posicion': 'izquierda',
@@ -309,7 +310,7 @@ def create_test_machines():
             'autor': 'creator_test',
             'enlace_autor': 'https://github.com/creator_test',
             'fecha': '30/01/2026',
-            'imagen': 'logos/logo.png',
+            'imagen': 'dockerlabs/images/logos/logo.png',
             'descripcion': 'Máquina de prueba avanzada. Requiere conocimientos profundos de seguridad y técnicas avanzadas de explotación.',
             'link_descarga': 'https://github.com/Maalfer/dockerlabs',
             'posicion': 'derecha',
@@ -323,7 +324,7 @@ def create_test_machines():
             'autor': 'admin_test',
             'enlace_autor': 'https://github.com/admin_test',
             'fecha': '01/02/2026',
-            'imagen': 'logos/logo.png',
+            'imagen': 'dockerlabs/images/logos/logo.png',
             'descripcion': 'Máquina de prueba extremadamente difícil. Solo para expertos en pentesting y hacking ético.',
             'link_descarga': 'https://github.com/Maalfer/dockerlabs',
             'posicion': 'izquierda',
@@ -350,7 +351,7 @@ def create_test_machines():
         # Crear la categoría asociada
         category = Category(
             machine_id=machine.id,
-            origen='dockerlabs',
+            origen='docker',
             categoria=categoria
         )
         db.session.add(category)
