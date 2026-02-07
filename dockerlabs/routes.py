@@ -6,11 +6,11 @@ main_bp = Blueprint('main', __name__)
 
 @main_bp.app_errorhandler(403)
 def forbidden_error(error):
-    return render_template('403.html'), 403
+    return render_template('dockerlabs/403.html'), 403
 
 @main_bp.app_errorhandler(404)
 def not_found_error(error):
-    return render_template('404.html'), 404
+    return render_template('dockerlabs/404.html'), 404
 
 @main_bp.app_errorhandler(RateLimitExceeded)
 def handle_rate_limit(e):
@@ -41,7 +41,7 @@ def error_403_page():
       200:
         description: Página de error 403.
     """
-    return render_template('403.html')
+    return render_template('dockerlabs/403.html')
 
 @main_bp.route('/instrucciones-uso')
 def instrucciones_uso():
@@ -54,7 +54,7 @@ def instrucciones_uso():
       200:
         description: Instrucciones.
     """
-    return render_template('instrucciones_uso.html')
+    return render_template('dockerlabs/instrucciones_uso.html')
 
 @main_bp.route('/enviar-maquina')
 def enviar_maquina():
@@ -67,7 +67,7 @@ def enviar_maquina():
       200:
         description: Página para enviar máquina.
     """
-    return render_template('enviar_maquina.html')
+    return render_template('dockerlabs/enviar_maquina.html')
 
 @main_bp.route('/como-se-crea-una-maquina')
 def como_se_crea():
@@ -80,7 +80,7 @@ def como_se_crea():
       200:
         description: Página de tutorial.
     """
-    return render_template('como_se_crea_una_maquina.html')
+    return render_template('dockerlabs/como_se_crea_una_maquina.html')
 
 @main_bp.route('/agradecimientos')
 def agradecimientos():
@@ -93,7 +93,7 @@ def agradecimientos():
       200:
         description: Agradecimientos.
     """
-    return render_template('agradecimientos.html')
+    return render_template('dockerlabs/agradecimientos.html')
 
 @main_bp.route('/politica-privacidad')
 def politica_privacidad():

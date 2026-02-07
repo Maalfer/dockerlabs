@@ -36,11 +36,11 @@ def csrf_protect(view_func):
             if not session_token or not token:
                 if request.accept_mimetypes['application/json'] >= request.accept_mimetypes['text/html']:
                     return jsonify({'error': 'CSRF token missing'}), 400
-                return render_template('403.html'), 403
+                return render_template('dockerlabs/403.html'), 403
             if not secrets.compare_digest(str(session_token), str(token)):
                 if request.accept_mimetypes['application/json'] >= request.accept_mimetypes['text/html']:
                     return jsonify({'error': 'CSRF token invalid'}), 400
-                return render_template('403.html'), 403
+                return render_template('dockerlabs/403.html'), 403
         return view_func(*args, **kwargs)
     return wrapped_view
 
@@ -50,11 +50,11 @@ def role_required(*roles_permitidos):
         def wrapped_view(*args, **kwargs):
             if session.get('user_id') is None:
                                                                         
-                return render_template('403.html'), 403
+                return render_template('dockerlabs/403.html'), 403
             
             role = get_current_role()
             if role not in roles_permitidos:
-                return render_template('403.html'), 403
+                return render_template('dockerlabs/403.html'), 403
             return view_func(*args, **kwargs)
         return wrapped_view
     return decorator

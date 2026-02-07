@@ -37,6 +37,9 @@ class Machine(db.Model):
     descripcion = db.Column(db.Text, nullable=False)
     link_descarga = db.Column(db.String, nullable=False)
     posicion = db.Column(db.String, nullable=False, default='izquierda')
+    pin = db.Column(db.String, nullable=True)
+    guest_access = db.Column(db.Boolean, default=False)
+    origen = db.Column(db.String, nullable=False, default='docker')
 
     __table_args__ = (
         db.Index('idx_maquinas_autor', 'autor'),

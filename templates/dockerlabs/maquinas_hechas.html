@@ -1,0 +1,488 @@
+{% extends "dockerlabs/base.html" %}
+
+{% block title %}Máquinas Completadas - DockerLabs{% endblock %}
+
+{% block content %}
+
+<style>
+    .completed-machines-container {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 120px 20px 40px;
+        min-height: 100vh;
+    }
+
+    .completed-header {
+        text-align: center;
+        margin-bottom: 50px;
+    }
+
+    .completed-header h1 {
+        font-size: 2.5rem;
+        font-weight: 700;
+        background: linear-gradient(135deg, var(--primary-blue-light), var(--accent-cyan));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        margin-bottom: 10px;
+        letter-spacing: 0.05em;
+    }
+
+    .completed-header p {
+        color: var(--text-muted);
+        font-size: 1.1rem;
+        margin-bottom: 0;
+    }
+
+    .progress-section {
+        max-width: 700px;
+        margin: 30px auto 50px;
+        text-align: center;
+    }
+
+    .progress-label {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 12px;
+        font-size: 0.95rem;
+        color: var(--text-muted);
+    }
+
+    .progress-percentage {
+        font-size: 1.8rem;
+        font-weight: 700;
+        background: linear-gradient(135deg, var(--primary-blue-light), var(--accent-cyan));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+
+    .progress-bar-container {
+        width: 100%;
+        height: 30px;
+        background: rgba(15, 23, 42, 0.6);
+        border-radius: 50px;
+        overflow: hidden;
+        border: 2px solid rgba(59, 130, 246, 0.3);
+        position: relative;
+        box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.4);
+    }
+
+    .progress-bar-fill {
+        height: 100%;
+        background: linear-gradient(90deg,
+                var(--primary-blue-light) 0%,
+                var(--accent-cyan) 50%,
+                #8b5cf6 100%);
+        border-radius: 50px;
+        position: relative;
+        transition: width 1.5s cubic-bezier(0.4, 0, 0.2, 1);
+        box-shadow: 0 0 20px rgba(59, 130, 246, 0.6);
+        animation: pulse-glow 2s ease-in-out infinite;
+    }
+
+    .progress-bar-fill::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: linear-gradient(90deg,
+                transparent 0%,
+                rgba(255, 255, 255, 0.3) 50%,
+                transparent 100%);
+        animation: shimmer 2s infinite;
+    }
+
+    @keyframes pulse-glow {
+
+        0%,
+        100% {
+            box-shadow: 0 0 20px rgba(59, 130, 246, 0.6);
+        }
+
+        50% {
+            box-shadow: 0 0 30px rgba(59, 130, 246, 0.9);
+        }
+    }
+
+    @keyframes shimmer {
+        0% {
+            transform: translateX(-100%);
+        }
+
+        100% {
+            transform: translateX(100%);
+        }
+    }
+
+    .progress-text {
+        margin-top: 10px;
+        font-size: 0.9rem;
+        color: var(--text-muted);
+    }
+
+    .completed-stats {
+        display: flex;
+        justify-content: center;
+        gap: 30px;
+        margin-bottom: 40px;
+        flex-wrap: wrap;
+    }
+
+    .stat-card {
+        background: radial-gradient(circle at top left, rgba(59, 130, 246, 0.15), rgba(59, 130, 246, 0.05));
+        border: 1px solid rgba(59, 130, 246, 0.3);
+        border-radius: 12px;
+        padding: 20px 30px;
+        text-align: center;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .stat-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 30px rgba(59, 130, 246, 0.2);
+    }
+
+    .stat-card .stat-number {
+        font-size: 2.5rem;
+        font-weight: 700;
+        color: var(--primary-blue-light);
+        margin-bottom: 5px;
+    }
+
+    .stat-card .stat-label {
+        color: var(--text-muted);
+        font-size: 0.9rem;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+    }
+
+    .machines-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 30px;
+        margin-top: 40px;
+    }
+
+    .machine-card {
+        background: linear-gradient(135deg, rgba(15, 23, 42, 0.95) 0%, rgba(2, 6, 23, 0.98) 100%);
+        border: 2px solid rgba(59, 130, 246, 0.25);
+        border-radius: 16px;
+        padding: 0;
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        cursor: pointer;
+        position: relative;
+        overflow: hidden;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    }
+
+    .machine-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: radial-gradient(circle at top right, rgba(59, 130, 246, 0.1), transparent 70%);
+        opacity: 0;
+        transition: opacity 0.4s ease;
+        z-index: 0;
+    }
+
+    .machine-card::after {
+        content: '';
+        position: absolute;
+        top: -2px;
+        left: -2px;
+        right: -2px;
+        bottom: -2px;
+        background: linear-gradient(135deg, var(--primary-blue-light), var(--accent-cyan), #8b5cf6);
+        border-radius: 16px;
+        opacity: 0;
+        z-index: -1;
+        transition: opacity 0.4s ease;
+    }
+
+    .machine-card:hover {
+        transform: translateY(-10px) scale(1.02);
+        box-shadow: 0 20px 50px rgba(59, 130, 246, 0.4);
+        border-color: rgba(59, 130, 246, 0.5);
+    }
+
+    .machine-card:hover::before {
+        opacity: 1;
+    }
+
+    .machine-card:hover::after {
+        opacity: 0.5;
+    }
+
+    .machine-card-content {
+        position: relative;
+        z-index: 1;
+    }
+
+    .machine-image-container {
+        position: relative;
+        overflow: hidden;
+        border-radius: 16px 16px 0 0;
+    }
+
+    .machine-image {
+        width: 100%;
+        height: 200px;
+        object-fit: cover;
+        transition: transform 0.4s ease;
+        display: block;
+    }
+
+    .machine-card:hover .machine-image {
+        transform: scale(1.1);
+    }
+
+    .machine-image-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: linear-gradient(to bottom, transparent 40%, rgba(0, 0, 0, 0.7) 100%);
+        pointer-events: none;
+    }
+
+    .machine-card-body {
+        padding: 20px;
+    }
+
+    .machine-name {
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin-bottom: 15px;
+        text-align: center;
+        line-height: 1.3;
+    }
+
+    .machine-info {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        margin-bottom: 12px;
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+
+    .difficulty-badge {
+        display: inline-block;
+        padding: 6px 14px;
+        border-radius: 999px;
+        font-weight: 700;
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        box-shadow: 0 3px 12px rgba(0, 0, 0, 0.3);
+    }
+
+    .completed-date {
+        color: var(--text-muted);
+        font-size: 0.85rem;
+        text-align: center;
+        margin-top: 10px;
+        padding-top: 10px;
+        border-top: 1px solid rgba(51, 65, 85, 0.5);
+    }
+
+    .completed-date i {
+        color: #22c55e;
+        margin-right: 5px;
+    }
+
+    .author-info {
+        color: var(--text-muted);
+        font-size: 0.85rem;
+        text-align: center;
+        margin-top: 5px;
+    }
+
+    .author-info i {
+        color: var(--primary-blue-light);
+        margin-right: 5px;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 80px 20px;
+    }
+
+    .empty-state i {
+        font-size: 5rem;
+        color: rgba(59, 130, 246, 0.3);
+        margin-bottom: 20px;
+    }
+
+    .empty-state h2 {
+        font-size: 1.8rem;
+        color: var(--text-primary);
+        margin-bottom: 10px;
+    }
+
+    .empty-state p {
+        color: var(--text-muted);
+        font-size: 1.1rem;
+        margin-bottom: 30px;
+    }
+
+    .btn-primary {
+        background: linear-gradient(135deg, var(--primary-blue-light), var(--accent-cyan));
+        border: none;
+        padding: 12px 30px;
+        border-radius: 8px;
+        color: #000;
+        font-weight: 600;
+        text-decoration: none;
+        display: inline-block;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(59, 130, 246, 0.4);
+        color: #000;
+    }
+
+    /* Responsive breakpoints */
+    @media (max-width: 1400px) {
+        .machines-grid {
+            grid-template-columns: repeat(3, 1fr);
+        }
+    }
+
+    @media (max-width: 1024px) {
+        .machines-grid {
+            grid-template-columns: repeat(2, 1fr);
+            gap: 25px;
+        }
+
+        .machine-image {
+            height: 180px;
+        }
+    }
+
+    @media (max-width: 768px) {
+        .completed-header h1 {
+            font-size: 2rem;
+        }
+
+        .machines-grid {
+            grid-template-columns: 1fr;
+            gap: 20px;
+        }
+
+        .stat-card {
+            padding: 15px 20px;
+        }
+
+        .stat-card .stat-number {
+            font-size: 2rem;
+        }
+
+        .machine-image {
+            height: 160px;
+        }
+
+        .machine-name {
+            font-size: 1.1rem;
+        }
+    }
+</style>
+
+<div class="completed-machines-container">
+    <div class="completed-header">
+        <h1><i class="bi bi-check-circle-fill"></i> Máquinas Completadas</h1>
+        <p>Tu progreso en DockerLabs</p>
+    </div>
+
+    <!-- Progress Bar Section -->
+    <div class="progress-section">
+        <div class="progress-label">
+            <span>Progreso Total</span>
+            <span class="progress-percentage">{{ completion_percentage }}%</span>
+        </div>
+        <div class="progress-bar-container">
+            <div class="progress-bar-fill" style="width: {{ completion_percentage }}%;"></div>
+        </div>
+        <div class="progress-text">
+            {{ completed_count }} de {{ total_machines }} máquinas completadas
+        </div>
+    </div>
+
+    {% if completed_machines %}
+    <div class="completed-stats">
+        <div class="stat-card">
+            <div class="stat-number">{{ completed_machines|length }}</div>
+            <div class="stat-label">Máquinas Completadas</div>
+        </div>
+    </div>
+
+    <div class="machines-grid">
+        {% for machine in completed_machines %}
+        <div class="machine-card" onclick="window.location.href='{{ url_for('index') }}'">
+            <div class="machine-card-content">
+                <div class="machine-image-container">
+                    {% if machine.imagen %}
+                    <img src="{{ url_for('static', filename=machine.imagen) }}" alt="{{ machine.machine_name }}"
+                        class="machine-image">
+                    {% else %}
+                    <img src="{{ url_for('static', filename='dockerlabs/images/logos/logo.png') }}"
+                        alt="{{ machine.machine_name }}" class="machine-image">
+                    {% endif %}
+                    <div class="machine-image-overlay"></div>
+                </div>
+
+                <div class="machine-card-body">
+                    <div class="machine-name">{{ machine.machine_name }}</div>
+
+                    <div class="machine-info">
+                        {% if machine.dificultad %}
+                        <span class="difficulty-badge {{ machine.clase }}"
+                            style="background: {{ machine.color }}; color: #000;">
+                            {{ machine.dificultad }}
+                        </span>
+                        {% endif %}
+                    </div>
+
+                    {% if machine.autor %}
+                    <div class="author-info">
+                        <i class="bi bi-person-fill"></i>{{ machine.autor }}
+                    </div>
+                    {% endif %}
+
+                    <div class="completed-date">
+                        <i class="bi bi-check-circle-fill"></i>
+                        {% if '.' in machine.completed_at %}
+                        Completada el {{ machine.completed_at.split('.')[0] }}
+                        {% else %}
+                        Completada el {{ machine.completed_at }}
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <i class="bi bi-inbox"></i>
+        <h2>No has completado ninguna máquina todavía</h2>
+        <p>Explora el catálogo de máquinas y marca las que completes</p>
+        <a href="{{ url_for('index') }}" class="btn-primary">
+            <i class="bi bi-grid-3x3-gap-fill"></i> Ver Máquinas
+        </a>
+    </div>
+    {% endif %}
+</div>
+
+{% endblock %}

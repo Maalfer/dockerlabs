@@ -9,14 +9,14 @@ from .decorators import role_required, csrf_protect, get_current_role
 from bunkerlabs.extensions import limiter
 from . import validators
 from .models import Machine, Category, CreatorRanking, MachineClaim, MachineEditRequest, Rating, CompletedMachine
-from bunkerlabs.models import BunkerMachine
+
 from .extensions import db as alchemy_db
 
 maquinas_bp = Blueprint('maquinas', __name__)
 
 BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 MACHINE_LOGOS_FOLDER = os.path.join(BASE_DIR, 'static', 'images', 'logos')
-LOGO_UPLOAD_FOLDER = os.path.join(BASE_DIR, 'static', 'images', 'logos')
+LOGO_UPLOAD_FOLDER = os.path.join(BASE_DIR, 'static', 'dockerlabs', 'images', 'logos')
 ALLOWED_LOGO_EXTENSIONS = {'.jpg', '.jpeg', '.png', '.gif', '.webp', '.svg'}
 ALLOWED_PROFILE_EXTENSIONS = {'.jpg', '.jpeg', '.png', '.gif', '.webp'}
 
@@ -58,17 +58,15 @@ def gestion_maquinas():
     role = get_current_role()
 
     if role in ('admin', 'moderador'):
-        maquinas_docker = Machine.query.order_by(Machine.id.asc()).all()
-                                     
-        maquinas_bunker = BunkerMachine.query.order_by(BunkerMachine.id.asc()).all()
+        maquinas_docker = Machine.query.filter_by(origen='docker').order_by(Machine.id.asc()).all()
+        maquinas_bunker = Machine.query.filter_by(origen='bunker').order_by(Machine.id.asc()).all()
     else:
         if not current_username:
             maquinas_docker = []
             maquinas_bunker = []
         else:
-            maquinas_docker = Machine.query.filter_by(autor=current_username).order_by(Machine.id.asc()).all()
-                                                     
-            maquinas_bunker = BunkerMachine.query.filter_by(autor=current_username).order_by(BunkerMachine.id.asc()).all()
+            maquinas_docker = Machine.query.filter_by(origen='docker', autor=current_username).order_by(Machine.id.asc()).all()
+            maquinas_bunker = Machine.query.filter_by(origen='bunker', autor=current_username).order_by(Machine.id.asc()).all()
 
     categorias_map = {}
     if maquinas_docker:
@@ -94,7 +92,7 @@ def gestion_maquinas():
                 categorias_map[('bunker', m.id)] = bunker_cats_lookup.get(m.id, '')
 
     return render_template(
-        'gestion_maquinas.html',
+        'dockerlabs/gestion_maquinas.html',
         maquinas_docker=maquinas_docker,
         maquinas_bunker=maquinas_bunker,
         current_username=current_username,
@@ -151,7 +149,7 @@ def actualizar_maquina():
         maquina = Machine.query.get(maquina_id)
     else:
                             
-        maquina = BunkerMachine.query.get(maquina_id)
+        maquina = Machine.query.get(maquina_id)
 
     if maquina is None:
         return redirect(url_for('maquinas.gestion_maquinas'))
@@ -193,7 +191,7 @@ def actualizar_maquina():
 
             return redirect(url_for('maquinas.gestion_maquinas'))
 
-        return render_template('403.html'), 403
+        return render_template('dockerlabs/403.html'), 403
 
     try:
         if origen == 'docker':
@@ -290,7 +288,7 @@ def eliminar_maquina():
                                                                          
     else:
                             
-        maquina = BunkerMachine.query.get(maquina_id)
+        maquina = Machine.query.get(maquina_id)
 
     if maquina is None:
         return redirect(url_for('maquinas.gestion_maquinas'))
@@ -299,7 +297,7 @@ def eliminar_maquina():
     maquina_autor = maquina.autor
     
     if role not in ('admin', 'moderador') and not (role == 'jugador' and maquina_autor == username):
-        return render_template('403.html'), 403
+        return render_template('dockerlabs/403.html'), 403
 
     try:
         if origen == 'bunker':
@@ -352,7 +350,7 @@ def toggle_guest_access():
         
     try:
         maquina_id = int(maquina_id)
-        maquina = BunkerMachine.query.get(maquina_id)
+        maquina = Machine.query.get(maquina_id)
         
         if not maquina:
             return jsonify({'error': 'Máquina no encontrada'}), 404
@@ -431,7 +429,7 @@ def upload_machine_logo():
 
     if origen == 'bunker':
                             
-        maquina = BunkerMachine.query.get(machine_id)
+        maquina = Machine.query.get(machine_id)
         if maquina:
             nombre_seguro = secure_filename(maquina.nombre)
             final_filename = f"{nombre_seguro}{ext}"
@@ -540,11 +538,11 @@ def add_maquina_page():
                     final_filename = f"{nombre_seguro}{ext}"
                     
                     if destino == 'bunker':
-                        upload_folder = os.path.join(BASE_DIR, 'static', 'images', 'logos-bunkerlabs')
-                        db_path_prefix = "logos-bunkerlabs"
+                        upload_folder = os.path.join(BASE_DIR, 'static', 'bunkerlabs', 'images', 'logos-bunkerlabs')
+                        db_path_prefix = "bunkerlabs/images/logos-bunkerlabs"
                     else:
                         upload_folder = LOGO_UPLOAD_FOLDER
-                        db_path_prefix = "logos"
+                        db_path_prefix = "dockerlabs/images/logos"
 
                     os.makedirs(upload_folder, exist_ok=True)
                     save_path = os.path.join(upload_folder, final_filename)
@@ -555,9 +553,9 @@ def add_maquina_page():
         else:
             if not imagen:
                 if destino == 'bunker':
-                     imagen = "logos/logo.png"                                  
+                     imagen = "dockerlabs/images/logos/logo.png"                                  
                 else:
-                     imagen = "logos/logo.png"
+                     imagen = "dockerlabs/images/logos/logo.png"
 
         # Obtener enlace_autor desde el perfil del usuario
         user_id = session.get('user_id')
@@ -637,8 +635,7 @@ def add_maquina_page():
                     color = "#ffffff"  # Blanco para entornos reales
                 
                 try:
-                                        
-                    new_bunker_machine = BunkerMachine(
+                    new_bunker_machine = Machine(
                         nombre=nombre,
                         dificultad=dificultad_texto,
                         clase=clase,
@@ -649,7 +646,8 @@ def add_maquina_page():
                         imagen=imagen,
                         descripcion=descripcion,
                         link_descarga=link_descarga,
-                        pin=pin
+                        pin=pin,
+                        origen='bunker'
                     )
                     alchemy_db.session.add(new_bunker_machine)
                     alchemy_db.session.commit()
@@ -658,7 +656,6 @@ def add_maquina_page():
                     error = "Ya existe una máquina con ese nombre."
 
             else:
-                                      
                 try:
                     new_machine = Machine(
                         nombre=nombre,
@@ -670,7 +667,8 @@ def add_maquina_page():
                         fecha=fecha,
                         imagen=imagen,
                         descripcion=descripcion,
-                        link_descarga=link_descarga
+                        link_descarga=link_descarga,
+                        origen='docker'  # Explicitly set, though it's default
                     )
                     alchemy_db.session.add(new_machine)
                     alchemy_db.session.commit()
@@ -685,7 +683,7 @@ def add_maquina_page():
             else:
                 return redirect(url_for('index'))
 
-    return render_template('add-maquina.html', error=error)
+    return render_template('dockerlabs/add-maquina.html', error=error)
 
 @maquinas_bp.route('/api/get_users', methods=['GET'])
 @role_required('admin')
@@ -875,7 +873,7 @@ def approve_machine_edit(request_id):
 
     else:
                                       
-        maquina = BunkerMachine.query.get(machine_id)
+        maquina = Machine.query.get(machine_id)
         if maquina:
             if novos_nombre := nuevos.get("nombre"): maquina.nombre = novos_nombre
             if novos_diff := nuevos.get("dificultad"): maquina.dificultad = novos_diff
@@ -1148,12 +1146,12 @@ def maquinas_hechas():
             "autor": row.autor
         })
     
-    total_machines = Machine.query.count()
+    total_machines = Machine.query.filter_by(origen='docker').count()
     completed_count = len(completed_machines)
     completion_percentage = round((completed_count / total_machines * 100), 1) if total_machines > 0 else 0
     
     return render_template(
-        'maquinas_hechas.html', 
+        'dockerlabs/maquinas_hechas.html', 
         completed_machines=completed_machines,
         total_machines=total_machines,                                                                                             
         completed_count=completed_count,

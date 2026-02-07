@@ -20,7 +20,7 @@ def api_summary():
     from .models import Machine, CreatorRanking, WriteupRanking, Writeup
     from sqlalchemy import func
 
-    maquinas_objs = Machine.query.order_by(Machine.id.asc()).all()
+    maquinas_objs = Machine.query.filter_by(origen='docker').order_by(Machine.id.asc()).all()
     info_maquinas = []
     maquinas_names = []
     for m in maquinas_objs:
@@ -38,7 +38,7 @@ def api_summary():
             'link_descarga': m.link_descarga
         }
         if d['imagen']:
-             d['imagen_url'] = url_for('static', filename=d['imagen'], _external=True)
+             d['imagen_url'] = url_for('static', filename=f"dockerlabs/{d['imagen']}", _external=True)
         info_maquinas.append(d)
         maquinas_names.append(d['nombre'])
 
@@ -129,7 +129,7 @@ def api_user_info():
 
     static_path = get_profile_image_static_path(user.username, user_id=user.id)
     if static_path is None:
-        static_path = 'images/balu.webp'
+        static_path = 'dockerlabs/images/balu.webp'
     
     user_data['profile_image_url'] = url_for('static', filename=static_path, _external=True)
 
@@ -189,7 +189,7 @@ def api_ranking_autores():
         if static_path:
              r['imagen'] = url_for('static', filename=static_path, _external=True)
         else:
-             r['imagen'] = url_for('static', filename='images/balu.webp', _external=True)
+             r['imagen'] = url_for('static', filename='dockerlabs/images/balu.webp', _external=True)
 
         response_list.append(r)
 
@@ -232,9 +232,9 @@ def api_ranking_writeups():
             if static_path:
                 r['imagen_url'] = url_for('static', filename=static_path, _external=True)
             else:
-                r['imagen_url'] = url_for('static', filename='images/balu.webp', _external=True)
+                r['imagen_url'] = url_for('static', filename='dockerlabs/images/balu.webp', _external=True)
         else:
-             r['imagen_url'] = url_for('static', filename='images/balu.webp', _external=True)
+             r['imagen_url'] = url_for('static', filename='dockerlabs/images/balu.webp', _external=True)
 
         response_list.append(r)
 

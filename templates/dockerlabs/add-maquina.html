@@ -1,0 +1,360 @@
+{% extends "dockerlabs/base.html" %}
+
+{% block title %}Añadir máquina - DockerLabs{% endblock %}
+
+{% block content %}
+<div class="container" style="padding-top: 80px; max-width: 600px;">
+    <h2>Añadir nueva máquina</h2>
+
+    {% if error %}
+    <div class="alert alert-danger mt-3">{{ error }}</div>
+    {% endif %}
+
+    <form method="post" enctype="multipart/form-data" class="mt-3">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+        <div class="mb-3">
+            <label for="destino" class="form-label">Enviar a</label>
+            <select name="destino" id="destino" class="form-select" onchange="toggleDestino()">
+                <option value="docker">DockerLabs (página principal)</option>
+                <option value="bunker">BunkerLabs (zona protegida)</option>
+            </select>
+        </div>
+
+        <div class="mb-3" id="pin-container" style="display: none;">
+            <label for="pin" class="form-label">PIN de la máquina (Flag)</label>
+            <input type="text" name="pin" id="pin" class="form-control"
+                placeholder="Introduce el PIN/Flag para esta máquina">
+        </div>
+
+        <div class="mb-3" id="entorno-real-container" style="display: none;">
+            <div class="form-check">
+                <input class="form-check-input" type="checkbox" name="entorno_real" id="entorno_real" value="1">
+                <label class="form-check-label" for="entorno_real">
+                    <strong>Marcar como Entorno Real</strong>
+                    <br>
+                    <small style="color: #ffffff;">Esta máquina simula un entorno de producción real</small>
+                </label>
+            </div>
+        </div>
+
+        <div class="mb-3">
+            <label for="nombre" class="form-label">Nombre de la máquina</label>
+            <input type="text" name="nombre" id="nombre" class="form-control" required>
+        </div>
+
+        <div class="mb-3" id="dificultad-container">
+            <label for="dificultad" class="form-label">Dificultad</label>
+            <select name="dificultad" id="dificultad" class="form-select" required>
+                <option value="">Selecciona una dificultad</option>
+                <option value="Muy Fácil">Muy fácil</option>
+                <option value="Fácil">Fácil</option>
+                <option value="Medio">Medio</option>
+                <option value="Difícil">Difícil</option>
+            </select>
+        </div>
+
+
+        <div class="mb-3">
+            <label for="autor" class="form-label">Autor</label>
+            <div class="custom-select-wrapper">
+                <input type="text" id="autor-search" class="form-control" placeholder="Buscar usuario..."
+                    autocomplete="off">
+                <input type="hidden" name="autor" id="autor" required>
+                <div class="custom-select-dropdown" id="autor-dropdown">
+                    <div class="custom-select-loading">Cargando usuarios...</div>
+                </div>
+            </div>
+            <small class="form-text text-muted">Selecciona un usuario registrado como autor de la máquina</small>
+        </div>
+
+
+        <div class="mb-3">
+            <label for="fecha" class="form-label">Fecha</label>
+            <input type="date" name="fecha" id="fecha" class="form-control" required>
+        </div>
+
+        <div class="mb-3">
+            <label for="imagen" class="form-label">Imagen de la máquina (subir archivo)</label>
+            <input type="file" name="imagen" id="imagen" class="form-control" accept="image/*">
+        </div>
+
+        <div class="mb-3">
+            <label for="descripcion" class="form-label">Descripción</label>
+            <textarea name="descripcion" id="descripcion" class="form-control" rows="4"
+                placeholder="Descripción de lo que se aprende en esta máquina" required></textarea>
+        </div>
+
+        <div class="mb-3">
+            <label for="link_descarga" class="form-label">Link de descarga</label>
+            <input type="url" name="link_descarga" id="link_descarga" class="form-control" placeholder="https://..."
+                required>
+        </div>
+
+
+
+
+        <button type="submit" class="btn btn-primary">Guardar máquina</button>
+    </form>
+</div>
+
+<style>
+    .custom-select-wrapper {
+        position: relative;
+    }
+
+    .custom-select-dropdown {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        background: white;
+        border: 1px solid #ced4da;
+        border-top: none;
+        border-radius: 0 0 0.375rem 0.375rem;
+        max-height: 250px;
+        overflow-y: auto;
+        display: none;
+        z-index: 1000;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    .custom-select-dropdown.show {
+        display: block;
+    }
+
+    .custom-select-option {
+        padding: 10px 15px;
+        cursor: pointer;
+        transition: background-color 0.2s;
+        border-bottom: 1px solid #f0f0f0;
+        color: #212529;
+    }
+
+    .custom-select-option:hover {
+        background-color: #f8f9fa;
+    }
+
+    .custom-select-option.selected {
+        background-color: #e7f3ff;
+        color: #0056b3;
+        font-weight: 500;
+    }
+
+    .custom-select-option.active {
+        background-color: #0d6efd;
+        color: white;
+    }
+
+    .custom-select-loading,
+    .custom-select-no-results {
+        padding: 15px;
+        text-align: center;
+        color: #6c757d;
+        font-style: italic;
+    }
+
+    #autor-search.has-value {
+        border-color: #198754;
+        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='%23198754' d='M12.736 3.97a.733.733 0 0 1 1.047 0c.286.289.29.756.01 1.05L7.88 12.01a.733.733 0 0 1-1.065.02L3.217 8.384a.757.757 0 0 1 0-1.06.733.733 0 0 1 1.047 0l3.052 3.093 5.4-6.425a.247.247 0 0 1 .02-.022Z'/%3e%3c/svg%3e");
+        background-repeat: no-repeat;
+        background-position: right calc(0.375em + 0.1875rem) center;
+        background-size: calc(0.75em + 0.375rem) calc(0.75em + 0.375rem);
+        padding-right: calc(1.5em + 0.75rem);
+    }
+</style>
+
+<script>
+    let allUsers = [];
+    let selectedUserIndex = -1;
+
+    // Cargar usuarios desde la API
+    document.addEventListener('DOMContentLoaded', function () {
+        const searchInput = document.getElementById('autor-search');
+        const hiddenInput = document.getElementById('autor');
+        const dropdown = document.getElementById('autor-dropdown');
+
+        // Cargar usuarios
+        fetch('/api/get_users')
+            .then(response => response.json())
+            .then(data => {
+                allUsers = data.users;
+                renderUsers(allUsers);
+            })
+            .catch(error => {
+                console.error('Error al cargar usuarios:', error);
+                dropdown.innerHTML = '<div class="custom-select-no-results">Error al cargar usuarios</div>';
+            });
+
+        // Mostrar dropdown al hacer clic o focus
+        searchInput.addEventListener('focus', function () {
+            if (allUsers.length > 0) {
+                dropdown.classList.add('show');
+            }
+        });
+
+        // Filtrar usuarios mientras escribe
+        searchInput.addEventListener('input', function () {
+            const searchTerm = this.value.toLowerCase();
+            const filteredUsers = allUsers.filter(user =>
+                user.username.toLowerCase().includes(searchTerm)
+            );
+            renderUsers(filteredUsers);
+            dropdown.classList.add('show');
+            selectedUserIndex = -1;
+        });
+
+        // Navegación con teclado
+        searchInput.addEventListener('keydown', function (e) {
+            const options = dropdown.querySelectorAll('.custom-select-option');
+
+            if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                selectedUserIndex = Math.min(selectedUserIndex + 1, options.length - 1);
+                updateActiveOption(options);
+            } else if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                selectedUserIndex = Math.max(selectedUserIndex - 1, 0);
+                updateActiveOption(options);
+            } else if (e.key === 'Enter' && selectedUserIndex >= 0) {
+                e.preventDefault();
+                options[selectedUserIndex].click();
+            } else if (e.key === 'Escape') {
+                dropdown.classList.remove('show');
+                selectedUserIndex = -1;
+            }
+        });
+
+        // Cerrar dropdown al hacer clic fuera
+        document.addEventListener('click', function (e) {
+            if (!searchInput.contains(e.target) && !dropdown.contains(e.target)) {
+                dropdown.classList.remove('show');
+                selectedUserIndex = -1;
+            }
+        });
+    });
+
+    function renderUsers(users) {
+        const dropdown = document.getElementById('autor-dropdown');
+
+        if (users.length === 0) {
+            dropdown.innerHTML = '<div class="custom-select-no-results">No se encontraron usuarios</div>';
+            return;
+        }
+
+        dropdown.innerHTML = users.map(user =>
+            `<div class="custom-select-option" data-username="${user.username}">
+                <i class="bi bi-person-circle"></i> ${user.username}
+            </div>`
+        ).join('');
+
+        // Añadir evento click a cada opción
+        dropdown.querySelectorAll('.custom-select-option').forEach(option => {
+            option.addEventListener('click', function () {
+                selectUser(this.dataset.username);
+            });
+        });
+    }
+
+    function selectUser(username) {
+        const searchInput = document.getElementById('autor-search');
+        const hiddenInput = document.getElementById('autor');
+        const dropdown = document.getElementById('autor-dropdown');
+
+        searchInput.value = username;
+        searchInput.classList.add('has-value');
+        hiddenInput.value = username;
+        dropdown.classList.remove('show');
+        selectedUserIndex = -1;
+
+        // Marcar como seleccionado
+        dropdown.querySelectorAll('.custom-select-option').forEach(opt => {
+            opt.classList.remove('selected');
+            if (opt.dataset.username === username) {
+                opt.classList.add('selected');
+            }
+        });
+    }
+
+    function updateActiveOption(options) {
+        options.forEach((opt, idx) => {
+            opt.classList.remove('active');
+            if (idx === selectedUserIndex) {
+                opt.classList.add('active');
+                opt.scrollIntoView({ block: 'nearest' });
+            }
+        });
+    }
+
+    function toggleDestino() {
+        const destino = document.getElementById('destino').value;
+        const pinContainer = document.getElementById('pin-container');
+        const pinInput = document.getElementById('pin');
+        const entornoRealContainer = document.getElementById('entorno-real-container');
+        const entornoRealCheckbox = document.getElementById('entorno_real');
+        const dificultadContainer = document.getElementById('dificultad-container');
+        const dificultadSelect = document.getElementById('dificultad');
+
+        if (destino === 'bunker') {
+            // Mostrar campos de BunkerLabs
+            entornoRealContainer.style.display = 'block';
+
+            // Establecer visibilidad inicial antes de aplicar lógica de entorno real
+            pinContainer.style.display = 'block';
+
+            // Aplicar lógica de entorno real para ajustar PIN y Dificultad
+            toggleEntornoReal();
+        } else {
+            // Mostrar campos de DockerLabs
+            pinContainer.style.display = 'none';
+            pinInput.required = false;
+            pinInput.value = '';
+            entornoRealContainer.style.display = 'none';
+            entornoRealCheckbox.checked = false;
+
+            // Siempre mostrar dificultad en DockerLabs
+            dificultadContainer.style.display = 'block';
+            dificultadSelect.required = true;
+        }
+    }
+
+    function toggleEntornoReal() {
+        const entornoRealCheckbox = document.getElementById('entorno_real');
+        const dificultadContainer = document.getElementById('dificultad-container');
+        const dificultadSelect = document.getElementById('dificultad');
+
+        const pinContainer = document.getElementById('pin-container');
+        const pinInput = document.getElementById('pin');
+
+        if (entornoRealCheckbox.checked) {
+            // Ocultar dificultad y PIN si es Entorno Real
+            dificultadContainer.style.display = 'none';
+            dificultadSelect.required = false;
+            dificultadSelect.value = '';
+
+            if (pinContainer && pinInput) {
+                pinContainer.style.display = 'none';
+                pinInput.required = false;
+                pinInput.value = '';
+            }
+        } else {
+            // Mostrar dificultad y PIN si no es Entorno Real (y estamos en Bunker)
+            dificultadContainer.style.display = 'block';
+            dificultadSelect.required = true;
+
+            if (pinContainer && pinInput) {
+                pinContainer.style.display = 'block';
+                pinInput.required = true;
+            }
+        }
+    }
+
+    // Añadir listener al checkbox de Entorno Real
+    document.addEventListener('DOMContentLoaded', function () {
+        const entornoRealCheckbox = document.getElementById('entorno_real');
+        if (entornoRealCheckbox) {
+            entornoRealCheckbox.addEventListener('change', toggleEntornoReal);
+        }
+    });
+</script>
+{% endblock %}

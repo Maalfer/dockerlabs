@@ -15,7 +15,6 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
 
 from bunkerlabs.extensions import limiter
-from bunkerlabs.database import init_bunker_db
 import bunkerlabs.decorators as decorators
 
 from .extensions import db as alchemy_db
@@ -101,19 +100,15 @@ def apply_security_headers(response):
 
     return response
 
-app.config['DATABASE'] = os.path.join(BASE_DIR, 'dockerlabs.db')
+app.config['DATABASE'] = os.path.join(BASE_DIR, 'database', 'dockerlabs.db')
 app.config['SQLALCHEMY_DATABASE_URI'] = f"sqlite:///{app.config['DATABASE']}"
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-app.config['BUNKER_DATABASE'] = os.path.join(BASE_DIR, 'bunkerlabs.db')
-app.config['SQLALCHEMY_BINDS'] = {
-    'bunker': f"sqlite:///{app.config['BUNKER_DATABASE']}"
-}
 
 alchemy_db.init_app(app)
 
 with app.app_context():
     init_db()
-    init_bunker_db()
+
 
 @app.before_request
 def load_logged_in_user():
@@ -150,7 +145,7 @@ def obtener_dificultades():
     from .models import Machine
     dificultades = {}
 
-    maquinas = Machine.query.with_entities(Machine.nombre, Machine.dificultad).all()
+    maquinas = Machine.query.filter_by(origen='docker').with_entities(Machine.nombre, Machine.dificultad).all()
     
     for m in maquinas:
         if m.nombre and m.dificultad:
@@ -169,7 +164,7 @@ def terminos_condiciones():
       200:
         description: Página de términos.
     """
-    return render_template('terminos-condiciones.html')
+    return render_template('dockerlabs/terminos-condiciones.html')
 
 @app.route('/bug-bounty')
 def bug_bounty():
@@ -182,7 +177,7 @@ def bug_bounty():
       200:
         description: Página de Bug Bounty.
     """
-    return render_template('bug_bounty.html')
+    return render_template('dockerlabs/bug_bounty.html')
 
 @app.route('/dashboard')
 @role_required('admin', 'moderador', 'jugador')
@@ -198,7 +193,7 @@ def dashboard():
     """
     from .models import Machine
 
-    maquinas = Machine.query.with_entities(Machine.id, Machine.nombre, Machine.autor).order_by(Machine.nombre.asc()).all()
+    maquinas = Machine.query.filter_by(origen='docker').with_entities(Machine.id, Machine.nombre, Machine.autor).order_by(Machine.nombre.asc()).all()
 
     current_username = session.get('username') or (current_user.username if current_user.is_authenticated else None)
     current_user_id = session.get('user_id') or (current_user.id if current_user.is_authenticated else None)
@@ -206,12 +201,12 @@ def dashboard():
     static_path = get_profile_image_static_path(current_username, user_id=current_user_id)
 
     if static_path is None:
-        static_path = 'images/balu.webp'
+        static_path = 'dockerlabs/images/balu.webp'
 
     profile_image_url = url_for('static', filename=static_path)
 
     return render_template(
-        'dashboard.html',
+        'dockerlabs/dashboard.html',
         maquinas=maquinas,
         profile_image_url=profile_image_url,
         user=g.user
@@ -291,7 +286,7 @@ def peticiones():
     username_change_requests = load_username_change_requests()
 
     return render_template(
-        'peticiones.html',
+        'dockerlabs/peticiones.html',
         claims=claims,
         envios_maquinas=envios_maquinas,
         peticiones_nombres=peticiones_nombres,
@@ -434,7 +429,9 @@ def index():
     from sqlalchemy import func
     from .extensions import db as alchemy_db
 
-    query = alchemy_db.session.query(Machine, Category.categoria).outerjoin(
+    query = alchemy_db.session.query(Machine, Category.categoria).filter(
+        Machine.origen == 'docker'
+    ).outerjoin(
         Category, (Machine.id == Category.machine_id) & (Category.origen == 'docker')
     ).order_by(Machine.id.asc()).all()
     
@@ -494,11 +491,11 @@ def index():
     for m in maquinas:
         categorias_map[m['id']] = m['categoria'] if m['categoria'] else ''
 
-    return render_template('home.html', maquinas=maquinas, completed_machines=completed_machines, machine_ranks=machine_ranks, single_machine=single_machine, categorias_map=categorias_map)
+    return render_template('dockerlabs/home.html', maquinas=maquinas, completed_machines=completed_machines, machine_ranks=machine_ranks, single_machine=single_machine, categorias_map=categorias_map)
 
 @app.errorhandler(404)
 def page_not_found(e):
-    return render_template('404.html'), 404
+    return render_template('dockerlabs/404.html'), 404
 
 from bunkerlabs import bunkerlabs_bp
 app.register_blueprint(bunkerlabs_bp, url_prefix='/bunkerlabs')

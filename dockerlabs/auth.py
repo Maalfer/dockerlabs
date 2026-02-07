@@ -17,20 +17,20 @@ from bunkerlabs.extensions import limiter
 from .models import User, NameClaim, UsernameChangeRequest, Writeup, CreatorRanking, PendingWriteup, WriteupRanking
 
 BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
-PROFILE_UPLOAD_FOLDER = os.path.join(BASE_DIR, 'static', 'images', 'perfiles')
+PROFILE_UPLOAD_FOLDER = os.path.join(BASE_DIR, 'static', 'dockerlabs',  'images', 'perfiles')
 ALLOWED_PROFILE_EXTENSIONS = {'.jpg', '.jpeg', '.png', '.gif', '.webp'}
 
 auth_bp = Blueprint('auth', __name__)
 
 def get_profile_image_static_path(username, user_id=None):
 
-    default_image = "images/balu.webp"
+    default_image = "dockerlabs/images/balu.webp"
 
     if user_id:
         for ext in ALLOWED_PROFILE_EXTENSIONS:
             candidate = os.path.join(PROFILE_UPLOAD_FOLDER, f"{user_id}{ext}")
             if os.path.exists(candidate):
-                return f"images/perfiles/{user_id}{ext}"
+                return f"dockerlabs/images/perfiles/{user_id}{ext}"
 
     if not username:
         return default_image
@@ -38,10 +38,24 @@ def get_profile_image_static_path(username, user_id=None):
     if '/' in username or '\\' in username or '..' in username:
         return default_image
 
-    for ext in ALLOWED_PROFILE_EXTENSIONS:
-        candidate = os.path.join(PROFILE_UPLOAD_FOLDER, f"{username}{ext}")
-        if os.path.exists(candidate):
-            return f"images/perfiles/{username}{ext}"
+    # Candidatos a comprobar: nombre original, minusculas, seguro, seguro minusculas
+    candidates_names = []
+    candidates_names.append(username)
+    candidates_names.append(username.lower())
+    
+    s_name = secure_filename(username)
+    if s_name != username:
+         candidates_names.append(s_name)
+         candidates_names.append(s_name.lower())
+    
+    # Eliminar duplicados preservando orden
+    candidates_names = list(dict.fromkeys(candidates_names))
+
+    for name in candidates_names:
+        for ext in ALLOWED_PROFILE_EXTENSIONS:
+            candidate = os.path.join(PROFILE_UPLOAD_FOLDER, f"{name}{ext}")
+            if os.path.exists(candidate):
+                return f"dockerlabs/images/perfiles/{name}{ext}"
 
     return default_image
 
@@ -203,7 +217,7 @@ def register():
                         error = f"Error al crear usuario: {str(e)}"
 
     remaining = session.pop('rate_limit_remaining', None)
-    return render_template('register.html', error=error, pending_message=pending_message, recovery_pin=recovery_pin)
+    return render_template('dockerlabs/register.html', error=error, pending_message=pending_message, recovery_pin=recovery_pin)
 
 @auth_bp.route('/recover', methods=['GET', 'POST'])
 @csrf_protect
@@ -257,7 +271,7 @@ def recover():
                     else:
                          error = "Error en la fecha de emisión del PIN. Contacta al soporte."
 
-    return render_template('recover.html', error=error)
+    return render_template('dockerlabs/recover.html', error=error)
 
 @auth_bp.route('/login', methods=['GET', 'POST'])
 @csrf_protect
@@ -294,7 +308,7 @@ def login():
             return redirect(url_for('dashboard'))
 
     remaining = session.pop('rate_limit_remaining', None)
-    return render_template('login.html', error=error, success=success)
+    return render_template('dockerlabs/login.html', error=error, success=success)
 
 @auth_bp.route('/logout')
 
@@ -614,7 +628,7 @@ def upload_profile_photo():
         return jsonify({'error': 'Error al guardar la imagen en el servidor'}), 500
 
     ts = int(time.time())
-    image_url = url_for('static', filename=f'images/perfiles/{final_filename}') + f"?t={ts}"
+    image_url = url_for('static', filename=f'dockerlabs/images/perfiles/{final_filename}') + f"?t={ts}"
 
     return jsonify({
         'message': 'Foto de perfil actualizada correctamente.',
@@ -636,7 +650,7 @@ def gestion_usuarios():
     """
     usuarios = User.query.order_by(User.id.asc()).all()
 
-    return render_template('gestion_usuarios.html', usuarios=usuarios)
+    return render_template('dockerlabs/gestion_usuarios.html', usuarios=usuarios)
 
 @auth_bp.route('/update_user_role/<int:user_id>', methods=['POST'])
 @role_required('admin')

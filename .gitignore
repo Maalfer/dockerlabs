@@ -4,28 +4,24 @@ __pycache__/
 *$py.class
 *test_data.py
 
-# Environments
-.env
-.venv
-env/
+# Virtual Environment
 venv/
-ENV/
-env.bak/
-venv.bak/
-
-# Flask
-instance/
-.webassets-cache
+env/
+.venv/
+.env
+.env.local
+.env.*.local
 
 # Database
 *.db
 *.sqlite3
-*.db-shm
-*.db-wal
-*.db-shm
-*.db-wal
+instance/
+database/*.db
+database/*.sqlite3
+database/*.db-shm
+database/*.db-wal
 
-# IDEs
+# IDE
 .vscode/
 .idea/
 .DS_Store
@@ -33,8 +29,9 @@ instance/
 # Logs
 *.log
 
-# Dockerlabs specific
-dockerlabs/static/images/perfiles/*
-!dockerlabs/static/images/perfiles/.gitkeep
-dockerlabs/static/images/logos/*
-!dockerlabs/static/images/logos/.gitkeep
+# User Uploads (Allowed)
+# static/dockerlabs/images/perfiles/*
+
+
+# OS
+thumbs.db

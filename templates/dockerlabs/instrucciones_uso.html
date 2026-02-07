@@ -1,0 +1,73 @@
+{% extends "dockerlabs/base.html" %}
+
+{% block content %}
+<div class="container mt-5">
+    <h1>Instrucciones de uso</h1>
+    <div class="intrucciones_de_uso-card p-4 mt-4">
+        <h2 class="subtitle" style="text-align: center;">REQUISITOS PREVIOS</h2>
+        <p>Para que las máquinas de DockerLabs puedan funcionar, Docker debe estar instalado en tu sistema:</p>
+        <ul>
+            <li>Debian:
+                <a href="https://docs.docker.com/engine/install/debian/">Instalar Docker Debian</a>
+            </li>
+            <li>Arch Linux:
+                <a href="https://docs.docker.com/desktop/setup/install/linux/archlinux/">Instalar Docker Arch Linux</a>
+            </li>
+            <li>Fedora:
+                <a href="https://docs.docker.com/engine/install/fedora/">Instalar Docker Fedora</a>
+            </li>
+        </ul>
+        <div class="alert-hint"><i class="bi bi-exclamation-circle-fill"></i> El <code>auto_deploy.sh</code> detecta si no tenemos Docker instalado y lo instalará automáticamente.</div>
+
+        <h2 class="subtitle" style="text-align: center; margin-top: 20px;">CÓMO EJECUTAR LAS MÁQUINAS</h2>
+
+        <p>Una vez hayamos descargado una máquina en formato <code>.tar</code>, veremos que hay un script llamado <code>auto_deploy.sh</code> junto con cada máquina,por lo que solamente tendremos que ejecutar ese script para desplegar o borrar el laboratorio</p>
+
+        <div style="text-align: center;">
+            <img src="/static/dockerlabs/images/instrucciones/1.png" style="display: block; margin: 0 auto;" />
+        
+            <code style="display: block; margin-top: 10px;">
+                ❯ sudo bash auto_deploy.sh laboratorio.tar
+            </code>
+        </div>
+
+
+        <h2 class="subtitle" style="text-align: center; margin-top: 20px;">CÓMO EJECUTAR LAS MÁQUINAS DE PIVOTING</h2>
+
+        <p>Una vez que hayamos descargado y descomprimido una máquina de pivoting veremos varios <code>.tar</code> que estarán etiquetadas en orden <code>máquina1.tar máquina2.tar máquina3.tar</code> y su respectivo script <code>auto_deploy.sh</code> que se encargará de montar la red pivoting automáticamente, vamos a iniciar la máquina:</p>
+
+        <div style="text-align: center;">
+            <img src="/static/dockerlabs/images/instrucciones/2.png" style="display: block; margin: 0 auto;" />
+            <code>❯ sudo bash auto_deploy.sh máquina1.tar máquina2.tar máquina3.tar máquina4.tar</code>
+        </div>
+
+        <h2 class="subtitle" style="text-align: center; margin-top: 20px;">CÓMO ELIMINAR LAS MÁQUINAS</h2>
+
+        <p>Una vez hayamos terminado con el laboratorio, simplemente pulsamos <code>control + C</code> y todo el laboratorio se habrá eliminado del sistema.</p>
+
+        <img src="/static/dockerlabs/images/instrucciones/3.png" style="display: block; margin: 0 auto;" />
+
+        <p>En el caso de una máquina de pivoting nos preguntará lo siguiente:</p>
+
+        <img src="/static/dockerlabs/images/instrucciones/4.png" style="display: block; margin: 0 auto; width: 100%;" />
+
+        <p>Si estamos de acuerdo y no nos preocupa perder otras imágenes docker que podamos tener le indicaremos que <b>Si</b>. Si tiene imágenes de docker que le interesa mantener le indican que <b>No</b> y podrán borrar las imágenes manualmente. </p>
+
+        <div style="text-align: center;">
+            <img src="/static/dockerlabs/images/instrucciones/5.png"  style="display: block; margin: 0 auto; width: 100%;"/>
+
+            <i>(Ejemplo con la opción Sí)</i>
+        </div>
+        <h2 class="subtitle" style="text-align: center; margin-top: 20px;">SOLUCIÓN DE ERRORES</h2>
+
+        <p>Es posible que en algunos casos puntuales se pueda experimentar algún error. Es por ello que proporcionamos una serie de comandos para solucionar la mayoría de errores o problemas que se puedan experimentar:</p>
+
+        <ul>
+            <li>1. <code>❯ sudo systemctl restart docker</code></li>
+            <li>2. <code>❯ sudo docker stop $(docker ps -q)</code></li>
+            <li>3. <code>❯ sudo docker container prune force</code></li>
+        </ul>
+
+    </div>
+</div>
+{% endblock %}

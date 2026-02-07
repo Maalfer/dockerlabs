@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DockerLabs</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;700&display=swap">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='dockerlabs/styles.css') }}">
+    <link rel="icon" href="{{ url_for('static', filename='dockerlabs/images/logos/logo.png') }}" type="image/png">
+
+</head>
+<body>
+    <header class="position-fixed fixed-top">
+                
+        <h1><a href="https://ko-fi.com/elpinguinodemario" target="_blank" id="dockerlabs-link"
+                style="color: #fff; text-decoration: none;">DockerLabs</a></h1>
+       
+    </header>
+
+    <div style="height: 30px;"></div>
+
+    <main>
+        <!-- Contenedor para centrado y margen -->
+        <div style="margin: 0 auto; max-width: 1200px; padding: 0 15px;">
+            
+            <section>
+                <h2>Uso de DockerLabs</h2>
+                <p>DockerLabs está diseñado como una plataforma educativa que puede ser utilizada para enseñar y aprender en diversas instituciones, tanto comerciales como gratuitas. Sin embargo, es fundamental reconocer la autoría de los laboratorios tanto a DockerLabs como a los creadores de cada uno de ellos.</a></p>
+                <p>Al utilizar DockerLabs, te comprometes a respetar esta atribución y a promover su uso en contextos que fomenten el aprendizaje y la colaboración.</p>
+		<p>Cada uno de los laboratorios de dockerlabs pertenecen a dicha plataforma, en ningún caso se permite que dichos laboratorios se utilicen para otras plataformas de CTF o similares ni ningún proyecto en cloud que aloje las máquinas ya existentes de la plataforma.</p>
+            </section>
+            
+            <section>
+	        <h2>Apertura de Plataformas Similares a DockerLabs</h2>
+    		<p>El script <code>auto_deploy.sh</code> está destinado exclusivamente para el uso en proyectos personales y con fines educativos. En caso de utilizarse para fines comerciales, se deberá hacer mención a DockerLabs en todo momento.</p>
+		<p><strong>Advertencia:</strong> Queda estrictamente prohibido el uso del <code>auto_deploy.sh</code> para crear plataformas similares a <em>dockerlabs</em> con la intención de plagiar o realizar actividades fraudulentas. No obstante, en caso de creación, se propone y se agradece que se trate de innovar aprovechando la versatilidad de Docker.</p>
+    		<p>Desde DockerLabs se propone que, en caso de abrir una plataforma similar, se enfoque la misma de las siguientes formas, con el fin de proporcionar un aporte más a la comunidad y no un plagio de la misma:</p>
+    		<ul>
+        		<li><strong>Alojar los laboratorios vulnerables en DockerHub:</strong> Automatizar la descarga de cada laboratorio utilizando un script que ejecute los comandos <code>docker pull</code> y <code>docker run</code>. Esto permite a los usuarios acceder fácilmente a los laboratorios desde un repositorio centralizado.</li>
+        		<li><strong>Utilizar Dockerfile en distintas ubicaciones:</strong> Alojar los diferentes laboratorios vulnerables en forma de <code>Dockerfile</code> en plataformas como GitHub o en un VPS. A través de un script automático, se construirá la imagen en local y se desplegará el laboratorio correspondiente, facilitando la personalización y el control.</li>
+        		<li><strong>Implementar docker-compose:</strong> Realizar cualquiera de las acciones anteriores utilizando <code>docker-compose</code>, lo que simplifica la gestión de múltiples contenedores y mejora la orquestación de los laboratorios.</li>
+    		</ul>
+            </section>
+
+        </div>
+    </main>    
+
+    <div style="height: 80px;"></div> 
+
+    <footer>
+        <div class="footer-content">
+            <p class="copyright"><i class="bi bi-c-circle"></i> Copyright DockerLabs</p>
+            <div class="footer-icons">
+                <a href="https://discord.gg/dD3yVejBUR" class="footer-icon" target="_blank">
+                    <i class="bi bi-discord"></i>
+                </a>
+                <a href="https://es.linkedin.com/in/maalfer1" class="footer-icon" target="_blank">
+                    <i class="bi bi-linkedin"></i>
+                </a>
+                <a href="https://t.me/elpinguinohack" class="footer-icon" target="_blank">
+                    <i class="bi bi-telegram"></i>
+                </a>
+            </div>
+            <p>
+                <a href="https://www.youtube.com/@ElPinguinoDeMario" class="footer-link" target="_blank">
+                    By El Pingüino de Mario 🐧
+                </a>
+            </p>
+        </div>
+        <div class="wave-container">
+            <div class="wave wave1"></div>
+            <div class="wave wave2"></div>
+        </div>
+    </footer>
+
+    <script src="js/agradecimientos.js"></script>
+</body>
+</html>

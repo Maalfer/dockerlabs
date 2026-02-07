@@ -1,0 +1,84 @@
+{% extends "dockerlabs/base.html" %}
+
+{% block title %}Programa VDP / Bug Bounty - DockerLabs{% endblock %}
+
+{% block content %}
+<div class="container" style="margin-top: 120px; margin-bottom: 40px; max-width: 900px;">
+    <h1 class="mb-4">Programa de Divulgación de Vulnerabilidades (VDP) – DockerLabs</h1>
+
+    <p>
+        En <strong>dockerlabs.es</strong> creemos en la importancia de la seguridad y en la
+        colaboración con la comunidad. Por ello contamos con un
+        <strong>Programa de Divulgación de Vulnerabilidades (VDP)</strong>, donde los usuarios
+        pueden ayudarnos a identificar y reportar posibles fallos de seguridad en la plataforma.
+    </p>
+
+    <h2 class="mt-4 mb-3">Alcance del programa</h2>
+    <p>
+        El programa está enfocado en vulnerabilidades que afecten a la plataforma
+        <strong>dockerlabs.es</strong> y sus servicios asociados.
+    </p>
+
+    <h3 class="mt-3 mb-2">En scope</h3>
+    <p>Se consideran dentro del alcance, de forma orientativa, los siguientes activos y tipos de fallos:</p>
+    <ul>
+        <li>Aplicación web principal: <strong>https://dockerlabs.es</strong> y subdominios oficiales gestionados por el equipo de DockerLabs.</li>
+        <li>Fallas de autenticación o gestión de sesiones (login, registro, recuperación de contraseña, tokens, cookies, etc.).</li>
+        <li>Vulnerabilidades de inyección (SQLi, XSS almacenado/reflejado, template injection, command injection, etc.).</li>
+        <li>Problemas de control de acceso (IDOR, escalado horizontal o vertical de privilegios, bypass de controles de rol, etc.).</li>
+        <li>Exposición de información sensible (datos de usuarios, secretos, claves, configuraciones internas, etc.).</li>
+        <li>Subida insegura de ficheros (RCE, ejecución de scripts, evasión de validaciones, etc.).</li>
+        <li>Vulnerabilidades que permitan suplantación de identidad o acción en nombre de otros usuarios.</li>
+        <li>Configuraciones de seguridad defectuosas que tengan un impacto claro y demostrable en la confidencialidad, integridad o disponibilidad.</li>
+    </ul>
+
+    <h3 class="mt-4 mb-2">Fuera de alcance (Out of scope)</h3>
+    <p>
+        Para optimizar el tiempo de revisión y centrarnos en problemas con impacto real,
+        se consideran <strong>fuera de alcance</strong> los siguientes puntos:
+    </p>
+    <ul>
+        <li>Ataques de <strong>DoS / DDoS</strong>, pruebas de carga o cualquier acción que afecte a la disponibilidad del servicio.</li>
+        <li>Problemas puramente visuales o cosméticos (CSS, maquetación, texto, ortografía, etc.).</li>
+        <li>Vulnerabilidades que requieran un dispositivo comprometido o malware en el equipo de la víctima para ser explotadas.</li>
+        <li>Supuestos sin un escenario de explotación realista o con impacto insignificante.</li>
+        <li>Enumeración de usuarios sin impacto adicional (por ejemplo, mensajes de error que indiquen si un usuario existe o no).</li>
+        <li>Falta de cabeceras de seguridad sin un vector de explotación claro (por ejemplo, ausencia aislada de <code>X-Frame-Options</code> o <code>X-Content-Type-Options</code>).</li>
+        <li>Clickjacking sobre páginas sin acciones sensibles.</li>
+        <li>Problemas derivados exclusivamente de servicios de terceros o integraciones externas fuera del control de DockerLabs.</li>
+        <li>Vulnerabilidades que solo afectan a navegadores muy obsoletos o configuraciones no estándar.</li>
+        <li>Uso de credenciales filtradas de otras brechas externas o ataques de fuerza bruta masivos.</li>
+    </ul>
+
+    <h2 class="mt-4 mb-3">Normas de comportamiento</h2>
+    <p>Para participar en el programa, te pedimos que sigas estas reglas básicas:</p>
+    <ul>
+        <li>No realizar ataques de <strong>DoS / DDoS</strong> ni afectar a la disponibilidad del servicio.</li>
+        <li>No explotar vulnerabilidades más allá de lo necesario para demostrar el fallo.</li>
+        <li>No acceder, modificar ni eliminar datos de otros usuarios.</li>
+        <li>No utilizar las vulnerabilidades encontradas para fines maliciosos.</li>
+    </ul>
+
+    <h2 class="mt-4 mb-3">Cómo reportar una vulnerabilidad</h2>
+    <p>
+        Si encuentras una vulnerabilidad en la plataforma, por favor envía un informe con el máximo
+        detalle posible (pasos para reproducir, impacto, pruebas realizadas, etc.).
+    </p>
+    <p>
+        Puedes reportar la vulnerabilidad contactando directamente a través de mi perfil de LinkedIn:
+    </p>
+    <p>
+        <a href="https://www.linkedin.com/in/maalfer1"
+           target="_blank"
+           rel="noopener noreferrer"
+           class="btn btn-primary">
+            Reportar vulnerabilidad por LinkedIn
+        </a>
+    </p>
+
+    <p class="mt-3">
+        Agradecemos enormemente la colaboración de la comunidad y el tiempo invertido en ayudarnos
+        a mejorar la seguridad de DockerLabs.
+    </p>
+</div>
+{% endblock %}

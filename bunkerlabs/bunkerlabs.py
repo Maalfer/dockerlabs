@@ -6,11 +6,12 @@ from sqlalchemy import func
 from sqlalchemy.exc import IntegrityError
 
 from dockerlabs.extensions import db as alchemy_db
+from dockerlabs.models import Machine
 from . import extensions
 from .decorators import csrf_protect, role_required
-from .models import BunkerAccessToken, BunkerMachine, BunkerSolve, BunkerAccessLog
+from .models import BunkerAccessToken, BunkerSolve, BunkerAccessLog
 
-bunkerlabs_bp = Blueprint('bunkerlabs', __name__, template_folder='templates', static_folder='static')
+bunkerlabs_bp = Blueprint('bunkerlabs', __name__)
 
 PUNTOS_MAP = {
     'Muy Fácil': 1,
@@ -86,7 +87,7 @@ def bunkerlabs_login():
             else:
                 error = "Contraseña incorrecta o inactiva."
 
-    return render_template('bunkerlabs/bunkerlabs-login.html', error=error)
+    return render_template('bunkerlabs/login.html', error=error)
 
 
 @bunkerlabs_bp.route('/guest')
@@ -153,11 +154,19 @@ def bunkerlabs_home():
         
         if token_obj:
             docker_username = session.get('username')
-            if docker_username:
+            docker_user_id = session.get('user_id')
+            
+            # Si el usuario está autenticado en DockerLabs, usar su nombre
+            if docker_username and docker_user_id:
                 token_obj.nombre = docker_username
                 session['bunkerlabs_nombre'] = docker_username
+                session['bunkerlabs_anonymous'] = False
             else:
-                session['bunkerlabs_nombre'] = token_obj.nombre
+                # Usuario anónimo - no autenticado en DockerLabs
+                session['bunkerlabs_nombre'] = 'Anónimo'
+                session['bunkerlabs_anonymous'] = True
+                session['username'] = 'Anónimo'
+                session['user_id'] = None
             
             # Marcar sesión como OK para el login de BunkerLabs
             session['bunkerlabs_ok'] = True
@@ -180,18 +189,20 @@ def bunkerlabs_home():
 
     if 'bunkerlabs_nombre' not in session:
         return redirect(url_for('bunkerlabs.bunkerlabs_login'))
-                                       
-    if session.get('user_id') is None:
-        return redirect(url_for('auth.login'))
-
+    
+    # Permitir acceso anónimo si tienen token válido (bunkerlabs_ok = True)
+    # ya no requiere user_id de DockerLabs
     if not session.get('bunkerlabs_ok'):
         return redirect(url_for('bunkerlabs.bunkerlabs_login'))
 
-    maquinas = BunkerMachine.query.order_by(BunkerMachine.id.asc()).all()
+    maquinas = Machine.query.filter_by(origen='bunker').order_by(Machine.id.asc()).all()
+    
+    is_anonymous = session.get('bunkerlabs_anonymous', False)
 
-    return render_template('bunkerlabs/bunkerlabs.html', 
+    return render_template('bunkerlabs/home.html', 
                            maquinas=maquinas, 
-                           is_guest=session.get('bunkerlabs_guest', False))
+                           is_guest=session.get('bunkerlabs_guest', False),
+                           is_anonymous=is_anonymous)
 
 
 @bunkerlabs_bp.route('/accesos', methods=['GET', 'POST'])
@@ -240,17 +251,21 @@ def accesos_bunkerlabs():
 
     # Obtener máquinas de Entornos Reales y todos los writeups
     from .models import BunkerWriteup
-    real_machines = BunkerMachine.query.filter_by(clase='real').order_by(BunkerMachine.nombre.asc()).all()
+    real_machines = Machine.query.filter_by(origen='bunker', clase='real').order_by(Machine.nombre.asc()).all()
     writeups = BunkerWriteup.query.order_by(BunkerWriteup.created_at.desc()).all()
+    
+    # Obtener todas las máquinas de bunker para gestión de flags
+    bunker_machines = Machine.query.filter_by(origen='bunker').order_by(Machine.nombre.asc()).all()
 
     return render_template(
-        'bunkerlabs/accesos-bunkerlabs.html',
+        'bunkerlabs/accesos.html',
         tokens=tokens,
         error=error,
         success=success,
         nuevo_token=nuevo_token,
         real_machines=real_machines,
-        writeups=writeups
+        writeups=writeups,
+        bunker_machines=bunker_machines
     )
 
 
@@ -296,7 +311,7 @@ def subir_flag():
     if not maquina_nombre or not pin_introducido:
         return jsonify({'error': 'Faltan datos'}), 400
 
-    maquina = BunkerMachine.query.filter_by(nombre=maquina_nombre).first()
+    maquina = Machine.query.filter_by(nombre=maquina_nombre, origen='bunker').first()
 
     if not maquina:
         return jsonify({'error': 'Máquina no encontrada'}), 404
@@ -551,3 +566,32 @@ def delete_writeup(writeup_id):
         flash(f'Error al eliminar writeup: {str(e)}', 'error')
     
     return redirect(url_for('bunkerlabs.accesos_bunkerlabs'))
+
+
+@bunkerlabs_bp.route('/admin/machines/update_flag/<int:machine_id>', methods=['POST'])
+@role_required('admin')
+@csrf_protect
+def update_machine_flag(machine_id):
+    """Update flag (pin) for a BunkerLabs machine"""
+    try:
+        machine = Machine.query.get(machine_id)
+        if not machine or machine.origen != 'bunker':
+            return jsonify({'error': 'Máquina no encontrada'}), 404
+        
+        new_flag = request.json.get('flag', '').strip()
+        
+        if not new_flag:
+            return jsonify({'error': 'La flag no puede estar vacía'}), 400
+        
+        machine.pin = new_flag
+        alchemy_db.session.commit()
+        
+        return jsonify({
+            'success': True,
+            'message': f'Flag actualizada para {machine.nombre}',
+            'machine_id': machine_id,
+            'machine_name': machine.nombre
+        })
+    except Exception as e:
+        alchemy_db.session.rollback()
+        return jsonify({'error': str(e)}), 500

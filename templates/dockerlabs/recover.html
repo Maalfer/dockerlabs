@@ -1,0 +1,43 @@
+{% extends "dockerlabs/base.html" %}
+
+{% block title %}Recuperar contraseña - DockerLabs{% endblock %}
+
+{% block content %}
+<div class="container" style="padding-top: 80px; max-width: 500px;">
+    <h2>Recuperar contraseña</h2>
+
+    {% if error %}
+    <div class="alert alert-danger mt-3">{{ error }}</div>
+    {% endif %}
+    {% if success %}
+    <div class="alert alert-success mt-3">{{ success }}</div>
+    <a href="{{ url_for('auth.login') }}" class="btn btn-primary mt-3">Ir a Iniciar sesión</a>
+    {% else %}
+    <form method="post" action="{{ url_for('auth.recover') }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+        <div class="mb-3">
+            <label for="username" class="form-label">Usuario</label>
+            <input type="text" name="username" id="username" class="form-control" required>
+        </div>
+
+        <div class="mb-3">
+            <label for="pin" class="form-label">PIN de recuperación</label>
+            <input type="text" name="pin" id="pin" class="form-control" required autocomplete="off">
+        </div>
+
+        <div class="mb-3">
+            <label for="password" class="form-label">Nueva contraseña</label>
+            <input type="password" name="password" id="password" class="form-control" required>
+        </div>
+
+        <div class="mb-3">
+            <label for="password2" class="form-label">Repetir nueva contraseña</label>
+            <input type="password" name="password2" id="password2" class="form-control" required>
+        </div>
+
+        <button type="submit" class="btn btn-primary">Restablecer contraseña</button>
+    </form>
+    {% endif %}
+</div>
+{% endblock %}
