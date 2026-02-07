@@ -105,7 +105,6 @@ sudo find /var/www/dockerlabs -type d -exec chmod 755 {} \;
 sudo find /var/www/dockerlabs -type f -exec chmod 644 {} \;
 sudo chmod 775 /var/www/dockerlabs
 sudo chmod 775 /var/www/dockerlabs/database
-sudo chmod 664 /var/www/dockerlabs/database/bunkerlabs.db
 sudo chmod 664 /var/www/dockerlabs/database/dockerlabs.db
 sudo chmod +x /var/www/dockerlabs/venv/bin/uvicorn
 sudo systemctl restart dockerlabs.service
