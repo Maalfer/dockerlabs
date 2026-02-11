@@ -272,3 +272,29 @@
     transform: scale(1.1);
     transition: all 0.3s ease;
 }
+
+/* --- Modal Grid Layout --- */
+.ranking-list.two-columns {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    padding: 1rem;
+}
+
+/* Center last item if odd */
+.ranking-list.two-columns> :last-child:nth-child(odd) {
+    grid-column: span 2;
+    width: calc(50% - 0.5rem);
+    margin: 0 auto;
+}
+
+@media (max-width: 600px) {
+    .ranking-list.two-columns {
+        grid-template-columns: 1fr;
+    }
+
+    .ranking-list.two-columns> :last-child:nth-child(odd) {
+        grid-column: span 1;
+        width: 100%;
+    }
+}
