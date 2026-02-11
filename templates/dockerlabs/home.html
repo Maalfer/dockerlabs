@@ -59,16 +59,16 @@
                         <li>
                             <hr class="dropdown-divider">
                         </li>
-                        <li><a class="dropdown-item" href="#" onclick="sortByDate('reset'); return false;">Sin ordenar</a>
+                        <li><a class="dropdown-item" href="#" onclick="sortByDate('reset'); return false;">Sin
+                                ordenar</a>
                         </li>
                     </ul>
 
                     <!-- Category Button Moved Inside Search -->
-                    <button class="btn btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false"
-                        title="Filtrar por categoría"
+                    <button class="btn btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown"
+                        aria-expanded="false" title="Filtrar por categoría"
                         style="border: none; color: #ffc107; transition: all 0.3s ease; right: 35px;"
-                        onmouseover="this.style.color='#fff';"
-                        onmouseout="this.style.color='#ffc107';">
+                        onmouseover="this.style.color='#fff';" onmouseout="this.style.color='#ffc107';">
                         <i class="bi bi-tags"></i>
                     </button>
                     <ul class="dropdown-menu dropdown-menu-end">
@@ -77,16 +77,21 @@
                         <li>
                             <hr class="dropdown-divider">
                         </li>
-                        <li><a class="dropdown-item" href="#" onclick="filterByCategory('Hacking Web'); return false;">Hacking
+                        <li><a class="dropdown-item" href="#"
+                                onclick="filterByCategory('Hacking Web'); return false;">Hacking
                                 Web</a></li>
-                        <li><a class="dropdown-item" href="#" onclick="filterByCategory('Bug Bounty'); return false;">Bug
+                        <li><a class="dropdown-item" href="#"
+                                onclick="filterByCategory('Bug Bounty'); return false;">Bug
                                 Bounty</a></li>
-                        <li><a class="dropdown-item" href="#" onclick="filterByCategory('Hacking CMS'); return false;">Hacking
+                        <li><a class="dropdown-item" href="#"
+                                onclick="filterByCategory('Hacking CMS'); return false;">Hacking
                                 CMS</a></li>
                         <li><a class="dropdown-item" href="#"
-                                onclick="filterByCategory('Hacking Infraestructura'); return false;">Hacking Infraestructura</a>
+                                onclick="filterByCategory('Hacking Infraestructura'); return false;">Hacking
+                                Infraestructura</a>
                         </li>
-                        <li><a class="dropdown-item" href="#" onclick="filterByCategory('Pivoting'); return false;">Pivoting</a>
+                        <li><a class="dropdown-item" href="#"
+                                onclick="filterByCategory('Pivoting'); return false;">Pivoting</a>
                         </li>
                     </ul>
                 </div>
@@ -96,7 +101,7 @@
                 <button id="ranking" class="btn btn-sm" onclick="ranking()">Writeups👑</button>
                 <button id="autores" class="btn btn-sm" onclick="rankingautores()">Autores👑</button>
                 <span class="filters-divider" aria-hidden="true"></span>
-                <div class="d-flex flex-wrap gap-2" id="filtro-dificultad">
+                <div class="d-flex flex-wrap gap-2 ms-auto" id="filtro-dificultad">
                     <button id="boton-muy-facil" class="btn btn-sm" onclick="botonmuyfacil()">Muy Fácil</button>
                     <button id="boton-facil" class="btn btn-sm" onclick="botonfacil()">Fácil</button>
                     <button id="boton-medio" class="btn btn-sm" onclick="botonmedio()">Medio</button>
