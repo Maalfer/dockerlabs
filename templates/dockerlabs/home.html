@@ -10,8 +10,8 @@
         display: inline-block;
     }
 
-    .search-with-filter .form-control {
-        padding-right: 40px;
+    .busqueda-con-filtro .form-control {
+        padding-right: 75px;
     }
 
     .search-with-filter .btn {
@@ -62,32 +62,35 @@
                         <li><a class="dropdown-item" href="#" onclick="sortByDate('reset'); return false;">Sin ordenar</a>
                         </li>
                     </ul>
+
+                    <!-- Category Button Moved Inside Search -->
+                    <button class="btn btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false"
+                        title="Filtrar por categoría"
+                        style="border: none; color: #ffc107; transition: all 0.3s ease; right: 35px;"
+                        onmouseover="this.style.color='#fff';"
+                        onmouseout="this.style.color='#ffc107';">
+                        <i class="bi bi-tags"></i>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end">
+                        <li><a class="dropdown-item" href="#" onclick="filterByCategory(''); return false;">Todas las
+                                categorías</a></li>
+                        <li>
+                            <hr class="dropdown-divider">
+                        </li>
+                        <li><a class="dropdown-item" href="#" onclick="filterByCategory('Hacking Web'); return false;">Hacking
+                                Web</a></li>
+                        <li><a class="dropdown-item" href="#" onclick="filterByCategory('Bug Bounty'); return false;">Bug
+                                Bounty</a></li>
+                        <li><a class="dropdown-item" href="#" onclick="filterByCategory('Hacking CMS'); return false;">Hacking
+                                CMS</a></li>
+                        <li><a class="dropdown-item" href="#"
+                                onclick="filterByCategory('Hacking Infraestructura'); return false;">Hacking Infraestructura</a>
+                        </li>
+                        <li><a class="dropdown-item" href="#" onclick="filterByCategory('Pivoting'); return false;">Pivoting</a>
+                        </li>
+                    </ul>
                 </div>
-                <button class="btn btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false"
-                    title="Filtrar por categoría"
-                    style="border: 1px solid #ffc107; color: #ffc107; transition: all 0.3s ease;"
-                    onmouseover="this.style.backgroundColor='#ffc107'; this.style.color='#000';"
-                    onmouseout="this.style.backgroundColor='transparent'; this.style.color='#ffc107';">
-                    <i class="bi bi-tags"></i>
-                </button>
-                <ul class="dropdown-menu dropdown-menu-end">
-                    <li><a class="dropdown-item" href="#" onclick="filterByCategory(''); return false;">Todas las
-                            categorías</a></li>
-                    <li>
-                        <hr class="dropdown-divider">
-                    </li>
-                    <li><a class="dropdown-item" href="#" onclick="filterByCategory('Hacking Web'); return false;">Hacking
-                            Web</a></li>
-                    <li><a class="dropdown-item" href="#" onclick="filterByCategory('Bug Bounty'); return false;">Bug
-                            Bounty</a></li>
-                    <li><a class="dropdown-item" href="#" onclick="filterByCategory('Hacking CMS'); return false;">Hacking
-                            CMS</a></li>
-                    <li><a class="dropdown-item" href="#"
-                            onclick="filterByCategory('Hacking Infraestructura'); return false;">Hacking Infraestructura</a>
-                    </li>
-                    <li><a class="dropdown-item" href="#" onclick="filterByCategory('Pivoting'); return false;">Pivoting</a>
-                    </li>
-                </ul>
+
                 <button id="academia" class="btn btn-sm"
                     onclick="window.open('https://elrincondelhacker.es', '_blank')">Academia🧠</button>
                 <button id="ranking" class="btn btn-sm" onclick="ranking()">Writeups👑</button>
@@ -102,11 +105,6 @@
                 </div>
             </div>
         </div>
-        {% if not single_machine %}
-        <div class="col-12 header-pagination-row">
-            <div id="pagination-container" class="pagination-container" style="display: none;"></div>
-        </div>
-        {% endif %}
     </div>
 
     {% if single_machine %}
@@ -180,6 +178,13 @@
             </div>
         </div>
         {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- Pagination moved to bottom -->
+    {% if not single_machine %}
+    <div class="header-pagination-row" style="margin-top: 2rem;">
+        <div id="pagination-container" class="pagination-container" style="display: none;"></div>
     </div>
     {% endif %}
 </div>

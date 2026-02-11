@@ -15,7 +15,7 @@ from .extensions import db as alchemy_db
 maquinas_bp = Blueprint('maquinas', __name__)
 
 BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
-MACHINE_LOGOS_FOLDER = os.path.join(BASE_DIR, 'static', 'images', 'logos')
+MACHINE_LOGOS_FOLDER = os.path.join(BASE_DIR, 'static', 'dockerlabs', 'images', 'logos')
 LOGO_UPLOAD_FOLDER = os.path.join(BASE_DIR, 'static', 'dockerlabs', 'images', 'logos')
 ALLOWED_LOGO_EXTENSIONS = {'.jpg', '.jpeg', '.png', '.gif', '.webp', '.svg'}
 ALLOWED_PROFILE_EXTENSIONS = {'.jpg', '.jpeg', '.png', '.gif', '.webp'}
@@ -311,7 +311,10 @@ def eliminar_maquina():
             # Verificar que no sea logo.png (con o sin ruta)
             nombre_archivo = os.path.basename(imagen_path) if imagen_path else ''
             if nombre_archivo and nombre_archivo.lower() != 'logo.png':
-                full_image_path = os.path.join(BASE_DIR, 'static', 'images', imagen_path)
+                if imagen_path.startswith('bunkerlabs/') or imagen_path.startswith('dockerlabs/'):
+                    full_image_path = os.path.join(BASE_DIR, 'static', imagen_path)
+                else:
+                    full_image_path = os.path.join(BASE_DIR, 'static', 'images', imagen_path)
                 if os.path.exists(full_image_path):
                     try:
                         os.remove(full_image_path)
@@ -441,11 +444,11 @@ def upload_machine_logo():
         final_filename = f"{origen}_{machine_id}_{timestamp}{ext}"
     
     if origen == 'bunker':
-        upload_folder = os.path.join(BASE_DIR, 'static', 'images', 'logos-bunkerlabs')
-        db_path_prefix = "logos-bunkerlabs"
+        upload_folder = os.path.join(BASE_DIR, 'static', 'bunkerlabs', 'images', 'logos-bunkerlabs')
+        db_path_prefix = "bunkerlabs/images/logos-bunkerlabs"
     else:
-        upload_folder = MACHINE_LOGOS_FOLDER
-        db_path_prefix = "logos"
+        upload_folder = LOGO_UPLOAD_FOLDER
+        db_path_prefix = "dockerlabs/images/logos"
 
     os.makedirs(upload_folder, exist_ok=True)
     

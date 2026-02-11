@@ -62,7 +62,9 @@ app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY')
 
 if not app.config['SECRET_KEY']:
-     raise RuntimeError("La variable de entorno SECRET_KEY no está configurada.")                                                  
+    # Generar una clave segura aleatoria si no está configurada (útil para desarrollo/scripts)
+    app.config['SECRET_KEY'] = secrets.token_hex(32)
+    print("WARNING: SECRET_KEY not set. Using a temporary generated key.")                                                  
 
 login_manager = LoginManager()
 login_manager.login_view = 'auth.login'
