@@ -624,7 +624,14 @@ def api_author_profile():
     for m in maquinas_orm:
         imagen_url = None
         if m.imagen:
-             imagen_url = url_for('static', filename=f'dockerlabs/images/{m.imagen}')
+            img = (m.imagen or "").strip()
+            if img.startswith('dockerlabs/') or img.startswith('bunkerlabs/'):
+                static_path = img
+            elif '/' in img:
+                static_path = f'dockerlabs/images/{img}'
+            else:
+                static_path = f'dockerlabs/images/logos/{img}'
+            imagen_url = url_for('static', filename=static_path)
         
         maquinas.append({
             "nombre": m.nombre,
@@ -882,7 +889,13 @@ def api_list_maquinas_writeups_subidos():
         imagen_rel = (imagen or "").strip()
         imagen_url = None
         if imagen_rel:
-            imagen_url = url_for('static', filename=f'dockerlabs/images/{imagen_rel}')
+            if imagen_rel.startswith('dockerlabs/') or imagen_rel.startswith('bunkerlabs/'):
+                static_path = imagen_rel
+            elif '/' in imagen_rel:
+                static_path = f'dockerlabs/images/{imagen_rel}'
+            else:
+                static_path = f'dockerlabs/images/logos/{imagen_rel}'
+            imagen_url = url_for('static', filename=static_path)
         
         maquinas.append({
             "maquina": maquina_nombre,

@@ -284,6 +284,27 @@ header h1 a:hover {
     flex: 1;
 }
 
+.header-filters-row {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.filters-divider {
+    width: 1px;
+    height: 24px;
+    background: rgba(51, 65, 85, 0.6);
+    margin: 0 0.15rem;
+    flex-shrink: 0;
+}
+
+@media (max-width: 575px) {
+    .filters-divider {
+        display: none;
+    }
+}
+
 #buscador {
     background: rgba(15, 23, 42, 0.96);
     border: 1px solid var(--border-strong);
@@ -503,7 +524,79 @@ header h1 a:hover {
     justify-self: center;
 }
 
-
+/* Pagination */
+.header-pagination-row {
+    width: 100%;
+    margin-top: 0.1rem;
+    padding-top: 0.1rem;
+}
+.pagination-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+    padding: 0;
+}
+.pagination-wrapper {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    padding: 0.25rem 0.5rem;
+    background: rgba(15, 23, 42, 0.4);
+    border: 1px solid rgba(51, 65, 85, 0.4);
+    border-radius: 6px;
+}
+.pagination-info {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    font-weight: 500;
+}
+.pagination-nav {
+    display: flex;
+    align-items: center;
+    gap: 0.2rem;
+}
+.pagination-btn {
+    min-width: 28px;
+    height: 28px;
+    padding: 0 0.45rem;
+    font-size: 0.8rem;
+    border: 1px solid transparent;
+    background: transparent;
+    color: var(--text-secondary);
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-family: inherit;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+.pagination-btn:hover:not(:disabled) {
+    background: rgba(51, 65, 85, 0.5);
+    color: var(--accent-cyan);
+}
+.pagination-btn:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+}
+.pagination-btn.active {
+    background: var(--accent-cyan);
+    color: var(--background-dark);
+    font-weight: 600;
+}
+.pagination-pages {
+    display: flex;
+    align-items: center;
+    gap: 0.15rem;
+}
+.pagination-pages .pagination-btn {
+    min-width: 26px;
+    height: 26px;
+}
 
 /* Centered layout for single machine */
 .lista-unica-centrada {

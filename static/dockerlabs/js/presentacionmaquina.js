@@ -59,46 +59,75 @@ function presentacion(nombre, dificultad, color, autor_nombre, autor_enlace, fec
             @media (max-width: 768px) {
                 .popup {
                     grid-template-columns: 1fr;
+                    grid-template-rows: auto 1fr;
                     width: 95vw;
+                    max-width: 95vw;
                     max-height: 90vh;
-                    overflow-y: auto;
+                    min-height: 0;
+                    overflow: hidden;
                     border-radius: 16px;
+                    top: 50%;
+                    left: 50%;
+                    transform: translate(-50%, -50%) scale(0.95);
+                }
+                
+                .popup.visible {
+                    transform: translate(-50%, -50%) scale(1);
                 }
                 
                 .popup-image-container {
-                    padding: 1.5rem !important;
-                    min-height: 250px;
-                    max-height: 300px;
+                    padding: 1rem !important;
+                    min-height: 180px;
+                    max-height: 220px;
+                    flex-shrink: 0;
+                }
+                
+                .popup-machine-image {
+                    max-height: 200px;
+                    object-fit: contain;
+                }
+                
+                .image-sparkle {
+                    display: none;
                 }
                 
                 .popup-content {
-                    padding: 1.5rem !important;
+                    padding: 1.25rem 1rem 1.5rem !important;
+                    overflow-y: auto;
+                    -webkit-overflow-scrolling: touch;
+                    min-height: 0;
                 }
                 
                 .machine-title {
-                    font-size: 1.75rem !important;
-                    line-height: 1.2 !important;
+                    font-size: 1.5rem !important;
+                    line-height: 1.25 !important;
+                    word-break: break-word;
                 }
                 
                 .header-row {
-                    padding-right: 2.5rem !important;
+                    padding-right: 2.75rem !important;
                     flex-wrap: wrap;
                     gap: 0.5rem;
                 }
                 
                 .rating-badge {
-                    font-size: 0.85rem !important;
+                    font-size: 0.8rem !important;
                 }
                 
                 .difficulty-pill {
-                    font-size: 0.7rem !important;
-                    padding: 0.3rem 0.8rem !important;
+                    font-size: 0.65rem !important;
+                    padding: 0.25rem 0.65rem !important;
                 }
                 
                 .creator-card {
-                    margin-top: 1.5rem !important;
-                    padding: 0.875rem !important;
+                    margin-top: 1rem !important;
+                    padding: 0.75rem !important;
                     flex-wrap: wrap;
+                }
+                
+                .creator-avatar {
+                    width: 40px !important;
+                    height: 40px !important;
                 }
                 
                 .creation-date {
@@ -109,68 +138,110 @@ function presentacion(nombre, dificultad, color, autor_nombre, autor_enlace, fec
                 }
                 
                 .action-area {
-                    margin-top: 1.5rem !important;
+                    margin-top: 1rem !important;
                 }
                 
                 .btn-mark-completed {
-                    padding: 0.875rem !important;
-                    font-size: 0.95rem !important;
+                    padding: 0.75rem 1rem !important;
+                    font-size: 0.9rem !important;
+                    min-height: 44px;
                 }
                 
                 .modal-footer {
-                    padding-top: 1.5rem !important;
-                    flex-direction: column;
-                    gap: 1rem;
-                    align-items: flex-start;
+                    padding-top: 1rem !important;
+                    flex-direction: row;
+                    flex-wrap: wrap;
+                    gap: 0.5rem;
+                    align-items: center;
                 }
                 
                 .user-rating-stars {
-                    font-size: 1.2rem !important;
+                    font-size: 1.25rem !important;
+                }
+                
+                .modal-close-button {
+                    width: 40px !important;
+                    height: 40px !important;
+                    min-width: 40px;
+                    min-height: 40px;
+                    top: 1rem !important;
+                    right: 1rem !important;
                 }
             }
 
             @media (max-width: 480px) {
                 .popup {
                     width: 100vw;
-                    max-height: 100vh;
-                    border-radius: 0;
+                    max-width: 100vw;
+                    max-height: 100dvh;
+                    border-radius: 12px;
                 }
                 
                 .popup-image-container {
-                    padding: 1rem !important;
-                    min-height: 200px;
-                    max-height: 250px;
+                    padding: 0.75rem !important;
+                    min-height: 150px;
+                    max-height: 180px;
+                }
+                
+                .popup-machine-image {
+                    max-height: 160px;
                 }
                 
                 .popup-content {
-                    padding: 1rem !important;
+                    padding: 1rem 0.75rem 1.25rem !important;
                 }
                 
                 .machine-title {
-                    font-size: 1.5rem !important;
+                    font-size: 1.35rem !important;
                 }
                 
                 .modal-close-button {
-                    top: 1rem !important;
-                    right: 1rem !important;
+                    top: 0.75rem !important;
+                    right: 0.75rem !important;
+                    width: 44px !important;
+                    height: 44px !important;
+                    min-width: 44px;
+                    min-height: 44px;
                 }
                 
                 .creator-card {
-                    padding: 0.75rem !important;
+                    padding: 0.65rem !important;
                 }
                 
                 .creator-avatar {
-                    width: 40px !important;
-                    height: 40px !important;
+                    width: 36px !important;
+                    height: 36px !important;
                 }
                 
                 .creator-name {
                     font-size: 0.9rem !important;
                 }
                 
+                .user-rating-stars {
+                    font-size: 1.35rem !important;
+                }
+                
                 .rating-modal-v2 {
-                    padding: 1.5rem !important;
+                    padding: 1.25rem !important;
                     border-radius: 12px !important;
+                    width: min(360px, 92vw) !important;
+                    max-height: 90vh;
+                    overflow-y: auto;
+                }
+                
+                .rating-modal-v2 .rating-row {
+                    flex-direction: column;
+                    align-items: flex-start;
+                    gap: 0.5rem;
+                }
+                
+                .rating-modal-v2 .rating-actions {
+                    flex-direction: column;
+                }
+                
+                .rating-modal-v2 .primary-btn,
+                .rating-modal-v2 .secondary-btn {
+                    width: 100%;
                 }
             }
 

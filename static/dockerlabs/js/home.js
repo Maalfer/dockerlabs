@@ -1,3 +1,7 @@
+const ITEMS_PER_PAGE = 50;
+let currentPage = 1;
+let currentFilter = { difficulty: 'todos', category: '', completed: null }; // null = all, true = completed, false = uncompleted
+
 function updateGridLayout() {
     const items = document.querySelectorAll('.maquina-item');
     const visibleItems = Array.from(items).filter(item => item.style.display !== 'none');
@@ -11,30 +15,117 @@ function updateGridLayout() {
     }
 }
 
-function updateButtonCount(buttonId, filterClass) {
-    document.querySelectorAll('#filtro-dificultad > button').forEach((e) => e.classList.remove('selected'));
-    document.querySelector('#filtro-dificultad > button#' + buttonId).classList.add('selected');
+function getFilteredItems() {
     const searchInput = document.getElementById('buscador');
+    const searchTerm = (searchInput?.value || '').toLowerCase();
     const items = document.querySelectorAll('.maquina-item');
-    const buttons = document.querySelectorAll('#filtro-dificultad button');
-    let itemCount = 0;
-    items.forEach(item => {
-        const itemName = item.querySelector('span').textContent.toLowerCase();
-        const isVisible = item.classList.contains(filterClass) || filterClass === 'todos';
+    return Array.from(items).filter(item => {
+        const itemName = item.querySelector('span')?.textContent?.toLowerCase() || '';
+        const itemCategory = item.getAttribute('data-category') || '';
+        const isCompleted = item.classList.contains('completada');
+        const difficultyClass = ['muy-facil', 'facil', 'medio', 'dificil'].find(c => item.classList.contains(c)) || 'todos';
 
-        if (itemName.includes(searchInput.value.toLowerCase()) && isVisible) {
-            item.style.display = 'flex';
-            itemCount++;
-        } else {
-            item.style.display = 'none';
-        }
+        const matchSearch = itemName.includes(searchTerm);
+        const matchDifficulty = currentFilter.difficulty === 'todos' || difficultyClass === currentFilter.difficulty;
+        const matchCategory = !currentFilter.category || itemCategory === currentFilter.category;
+        const matchCompleted = currentFilter.completed === null || (currentFilter.completed === true && isCompleted) || (currentFilter.completed === false && !isCompleted);
+
+        return matchSearch && matchDifficulty && matchCategory && matchCompleted;
+    });
+}
+
+function renderPagination(filteredItems) {
+    const totalItems = filteredItems.length;
+    const totalPages = Math.max(1, Math.ceil(totalItems / ITEMS_PER_PAGE));
+    const container = document.getElementById('pagination-container');
+    if (!container) return;
+
+    container.innerHTML = '';
+    container.style.display = 'flex';
+
+    const start = (currentPage - 1) * ITEMS_PER_PAGE;
+    const end = Math.min(start + ITEMS_PER_PAGE, totalItems);
+    const wrapper = document.createElement('div');
+    wrapper.className = 'pagination-wrapper';
+
+    const info = document.createElement('span');
+    info.className = 'pagination-info';
+    info.textContent = `${start + 1}-${end} de ${totalItems}`;
+    wrapper.appendChild(info);
+
+    const nav = document.createElement('nav');
+    nav.className = 'pagination-nav';
+    nav.setAttribute('aria-label', 'Paginación');
+
+    const prevBtn = document.createElement('button');
+    prevBtn.className = 'pagination-btn';
+    prevBtn.innerHTML = '&laquo; Anterior';
+    prevBtn.disabled = currentPage <= 1;
+    prevBtn.onclick = () => { if (currentPage > 1) goToPage(currentPage - 1); };
+    nav.appendChild(prevBtn);
+
+    const pagesWrap = document.createElement('span');
+    pagesWrap.className = 'pagination-pages';
+    const maxVisible = 5;
+    let pageStart = Math.max(1, currentPage - Math.floor(maxVisible / 2));
+    let pageEnd = Math.min(totalPages, pageStart + maxVisible - 1);
+    if (pageEnd - pageStart < maxVisible - 1) pageStart = Math.max(1, pageEnd - maxVisible + 1);
+    for (let i = pageStart; i <= pageEnd; i++) {
+        const btn = document.createElement('button');
+        btn.className = 'pagination-btn' + (i === currentPage ? ' active' : '');
+        btn.textContent = i;
+        btn.onclick = () => goToPage(i);
+        pagesWrap.appendChild(btn);
+    }
+    nav.appendChild(pagesWrap);
+
+    const nextBtn = document.createElement('button');
+    nextBtn.className = 'pagination-btn';
+    nextBtn.innerHTML = 'Siguiente &raquo;';
+    nextBtn.disabled = currentPage >= totalPages;
+    nextBtn.onclick = () => { if (currentPage < totalPages) goToPage(currentPage + 1); };
+    nav.appendChild(nextBtn);
+
+    wrapper.appendChild(nav);
+    container.appendChild(wrapper);
+}
+
+function goToPage(page) {
+    const filtered = getFilteredItems();
+    const totalPages = Math.max(1, Math.ceil(filtered.length / ITEMS_PER_PAGE));
+    if (page < 1 || page > totalPages) return;
+    currentPage = page;
+    applyPagination();
+}
+
+function applyPagination() {
+    const filtered = getFilteredItems();
+    const start = (currentPage - 1) * ITEMS_PER_PAGE;
+    const end = start + ITEMS_PER_PAGE;
+    const pageItems = filtered.slice(start, end);
+
+    const allItems = document.querySelectorAll('.maquina-item');
+    const pageSet = new Set(pageItems);
+    allItems.forEach(item => {
+        item.style.display = pageSet.has(item) ? 'flex' : 'none';
     });
 
-    const button = document.getElementById(buttonId);
-    button.textContent = `${button.textContent.split(' (')[0]} (${itemCount})`;
-
-    // Update grid layout after filtering
     updateGridLayout();
+    renderPagination(filtered);
+}
+
+function updateButtonCount(buttonId, filterClass) {
+    document.querySelectorAll('#filtro-dificultad > button').forEach((e) => e.classList.remove('selected'));
+    const btn = document.querySelector('#filtro-dificultad > button#' + buttonId);
+    if (btn) btn.classList.add('selected');
+    currentFilter.difficulty = filterClass;
+    currentFilter.completed = null;
+    currentPage = 1;
+    applyPagination();
+
+    const filtered = getFilteredItems();
+    const button = document.getElementById(buttonId);
+    if (button) button.textContent = `${button.textContent.split(' (')[0]} (${filtered.length})`;
 }
 
 function botonmuyfacil() {
@@ -58,33 +149,19 @@ function botontodos() {
 }
 
 function filterByCompleted() {
-    const items = document.querySelectorAll('.maquina-item');
-    let count = 0;
-    items.forEach(item => {
-        if (item.classList.contains('completada')) {
-            item.style.display = 'flex';
-            count++;
-        } else {
-            item.style.display = 'none';
-        }
-    });
+    currentFilter.completed = true;
+    currentFilter.difficulty = 'todos';
+    currentPage = 1;
     document.querySelectorAll('#filtro-dificultad > button').forEach((e) => e.classList.remove('selected'));
-    updateGridLayout();
+    applyPagination();
 }
 
 function filterByUncompleted() {
-    const items = document.querySelectorAll('.maquina-item');
-    let count = 0;
-    items.forEach(item => {
-        if (!item.classList.contains('completada')) {
-            item.style.display = 'flex';
-            count++;
-        } else {
-            item.style.display = 'none';
-        }
-    });
+    currentFilter.completed = false;
+    currentFilter.difficulty = 'todos';
+    currentPage = 1;
     document.querySelectorAll('#filtro-dificultad > button').forEach((e) => e.classList.remove('selected'));
-    updateGridLayout();
+    applyPagination();
 }
 
 function updateAllButtonCounts() {
@@ -164,45 +241,35 @@ function sortByDate(order) {
         }
 
         items.forEach(item => list.appendChild(item));
+        currentPage = 1;
+        applyPagination();
+        updateAllButtonCounts();
         return;
     }
-
-
-
     updateAllButtonCounts();
 }
 
 document.addEventListener('DOMContentLoaded', () => {
     updateAllButtonCounts();
+    applyPagination();
 });
 
-document.getElementById('buscador').addEventListener('input', () => {
-    updateAllButtonCounts();
-
-    // Re-apply the current filter to update grid visibility
-    const selectedBtn = document.querySelector('#filtro-dificultad > button.selected');
-    if (selectedBtn) {
-        switch (selectedBtn.id) {
-            case 'boton-muy-facil': botonmuyfacil(); break;
-            case 'boton-facil': botonfacil(); break;
-            case 'boton-medio': botonmedio(); break;
-            case 'boton-dificil': botondificil(); break;
-            case 'boton-todos': botontodos(); break;
-        }
-    }
-});
+const buscador = document.getElementById('buscador');
+if (buscador) {
+    buscador.addEventListener('input', () => {
+        currentPage = 1;
+        applyPagination();
+        updateAllButtonCounts();
+    });
+}
 
 function filterByCategory(category) {
-    const items = document.querySelectorAll('.maquina-item');
-    items.forEach(item => {
-        const itemCategory = item.getAttribute('data-category');
-        if (category === '' || itemCategory === category) {
-            item.style.display = 'flex';
-        } else {
-            item.style.display = 'none';
-        }
-    });
+    currentFilter.category = category;
+    currentFilter.difficulty = 'todos';
+    currentFilter.completed = null;
+    currentPage = 1;
     document.querySelectorAll('#filtro-dificultad button').forEach(btn => btn.classList.remove('selected'));
-    document.getElementById('boton-todos').classList.add('selected');
-    updateGridLayout();
+    const todosBtn = document.getElementById('boton-todos');
+    if (todosBtn) todosBtn.classList.add('selected');
+    applyPagination();
 }

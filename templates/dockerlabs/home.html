@@ -39,70 +39,75 @@
 
 <div class="container">
     <div class="header row align-items-center" style="position: relative; z-index: 1000;">
-        <div class="col-md-6 d-flex align-items-center flex-nowrap gap-2">
-            <div class="busqueda-con-filtro" style="max-width: 250px;">
-                <input type="text" id="buscador" class="form-control form-control-sm" placeholder="Busca algo.">
-                <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false"
-                    title="Ordenar por fecha">
-                    <i class="bi bi-funnel"></i>
+        <div class="col-12">
+            <div class="header-filters-row">
+                <div class="busqueda-con-filtro" style="max-width: 250px;">
+                    <input type="text" id="buscador" class="form-control form-control-sm" placeholder="Busca algo.">
+                    <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false"
+                        title="Ordenar por fecha">
+                        <i class="bi bi-funnel"></i>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end">
+                        <li><a class="dropdown-item" href="#" onclick="sortByDate('recent'); return false;">Fecha
+                                Reciente</a></li>
+                        <li><a class="dropdown-item" href="#" onclick="sortByDate('oldest'); return false;">Fecha
+                                Antiguos</a></li>
+                        <li><a class="dropdown-item" href="#" onclick="filterByCompleted(); return false;">Máquinas
+                                Resueltas</a></li>
+                        <li><a class="dropdown-item" href="#" onclick="filterByUncompleted(); return false;">Máquinas
+                                Sin Resolver</a></li>
+                        <li>
+                            <hr class="dropdown-divider">
+                        </li>
+                        <li><a class="dropdown-item" href="#" onclick="sortByDate('reset'); return false;">Sin ordenar</a>
+                        </li>
+                    </ul>
+                </div>
+                <button class="btn btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false"
+                    title="Filtrar por categoría"
+                    style="border: 1px solid #ffc107; color: #ffc107; transition: all 0.3s ease;"
+                    onmouseover="this.style.backgroundColor='#ffc107'; this.style.color='#000';"
+                    onmouseout="this.style.backgroundColor='transparent'; this.style.color='#ffc107';">
+                    <i class="bi bi-tags"></i>
                 </button>
                 <ul class="dropdown-menu dropdown-menu-end">
-                    <li><a class="dropdown-item" href="#" onclick="sortByDate('recent'); return false;">Fecha
-                            Reciente</a></li>
-                    <li><a class="dropdown-item" href="#" onclick="sortByDate('oldest'); return false;">Fecha
-                            Antiguos</a></li>
-                    <li><a class="dropdown-item" href="#" onclick="filterByCompleted(); return false;">Máquinas
-                            Resueltas</a></li>
-                    <li><a class="dropdown-item" href="#" onclick="filterByUncompleted(); return false;">Máquinas
-                            Sin Resolver</a></li>
+                    <li><a class="dropdown-item" href="#" onclick="filterByCategory(''); return false;">Todas las
+                            categorías</a></li>
                     <li>
                         <hr class="dropdown-divider">
                     </li>
-                    <li><a class="dropdown-item" href="#" onclick="sortByDate('reset'); return false;">Sin ordenar</a>
+                    <li><a class="dropdown-item" href="#" onclick="filterByCategory('Hacking Web'); return false;">Hacking
+                            Web</a></li>
+                    <li><a class="dropdown-item" href="#" onclick="filterByCategory('Bug Bounty'); return false;">Bug
+                            Bounty</a></li>
+                    <li><a class="dropdown-item" href="#" onclick="filterByCategory('Hacking CMS'); return false;">Hacking
+                            CMS</a></li>
+                    <li><a class="dropdown-item" href="#"
+                            onclick="filterByCategory('Hacking Infraestructura'); return false;">Hacking Infraestructura</a>
+                    </li>
+                    <li><a class="dropdown-item" href="#" onclick="filterByCategory('Pivoting'); return false;">Pivoting</a>
                     </li>
                 </ul>
+                <button id="academia" class="btn btn-sm"
+                    onclick="window.open('https://elrincondelhacker.es', '_blank')">Academia🧠</button>
+                <button id="ranking" class="btn btn-sm" onclick="ranking()">Writeups👑</button>
+                <button id="autores" class="btn btn-sm" onclick="rankingautores()">Autores👑</button>
+                <span class="filters-divider" aria-hidden="true"></span>
+                <div class="d-flex flex-wrap gap-2" id="filtro-dificultad">
+                    <button id="boton-muy-facil" class="btn btn-sm" onclick="botonmuyfacil()">Muy Fácil</button>
+                    <button id="boton-facil" class="btn btn-sm" onclick="botonfacil()">Fácil</button>
+                    <button id="boton-medio" class="btn btn-sm" onclick="botonmedio()">Medio</button>
+                    <button id="boton-dificil" class="btn btn-sm" onclick="botondificil()">Difícil</button>
+                    <button id="boton-todos" class="btn btn-sm selected" onclick="botontodos()">Todos</button>
+                </div>
             </div>
-            <button class="btn btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false"
-                title="Filtrar por categoría"
-                style="border: 1px solid #ffc107; color: #ffc107; transition: all 0.3s ease;"
-                onmouseover="this.style.backgroundColor='#ffc107'; this.style.color='#000';"
-                onmouseout="this.style.backgroundColor='transparent'; this.style.color='#ffc107';">
-                <i class="bi bi-tags"></i>
-            </button>
-            <ul class="dropdown-menu dropdown-menu-end">
-                <li><a class="dropdown-item" href="#" onclick="filterByCategory(''); return false;">Todas las
-                        categorías</a></li>
-                <li>
-                    <hr class="dropdown-divider">
-                </li>
-                <li><a class="dropdown-item" href="#" onclick="filterByCategory('Hacking Web'); return false;">Hacking
-                        Web</a></li>
-                <li><a class="dropdown-item" href="#" onclick="filterByCategory('Bug Bounty'); return false;">Bug
-                        Bounty</a></li>
-                <li><a class="dropdown-item" href="#" onclick="filterByCategory('Hacking CMS'); return false;">Hacking
-                        CMS</a></li>
-                <li><a class="dropdown-item" href="#"
-                        onclick="filterByCategory('Hacking Infraestructura'); return false;">Hacking Infraestructura</a>
-                </li>
-                <li><a class="dropdown-item" href="#" onclick="filterByCategory('Pivoting'); return false;">Pivoting</a>
-                </li>
-            </ul>
-            <button id="academia" class="btn btn-sm"
-                onclick="window.open('https://elrincondelhacker.es', '_blank')">Academia🧠</button>
-            <button id="ranking" class="btn btn-sm" onclick="ranking()">Writeups👑</button>
-            <button id="autores" class="btn btn-sm" onclick="rankingautores()">Autores👑</button>
         </div>
-
-        <div class="col-md-6 d-flex justify-content-md-end justify-content-start flex-wrap gap-2 py-2"
-            id="filtro-dificultad">
-            <button id="boton-muy-facil" class="btn btn-sm" onclick="botonmuyfacil()">Muy Fácil</button>
-            <button id="boton-facil" class="btn btn-sm" onclick="botonfacil()">Fácil</button>
-            <button id="boton-medio" class="btn btn-sm" onclick="botonmedio()">Medio</button>
-            <button id="boton-dificil" class="btn btn-sm" onclick="botondificil()">Difícil</button>
-            <button id="boton-todos" class="btn btn-sm selected" onclick="botontodos()">Todos</button>
+        {% if not single_machine %}
+        <div class="col-12 header-pagination-row">
+            <div id="pagination-container" class="pagination-container" style="display: none;"></div>
         </div>
+        {% endif %}
     </div>
-
 
     {% if single_machine %}
     <div class="lista-unica-centrada">
