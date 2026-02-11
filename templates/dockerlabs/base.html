@@ -13,195 +13,8 @@
 
     {% if not no_default_styles %}
     <link rel="stylesheet" href="{{ url_for('static', filename='dockerlabs/css/styles.css') }}">
-    <!-- Messaging CSS -->
-    <style>
-        .msg-badge {
-            position: absolute;
-            top: -5px;
-            right: -5px;
-            background-color: #ef4444;
-            color: white;
-            border-radius: 50%;
-            padding: 2px 6px;
-            font-size: 0.7rem;
-            display: none;
-        }
-
-        .msg-btn {
-            position: relative;
-        }
-
-        /* Messaging Modal Styles */
-        #messagingModal .modal-body {
-            padding: 0;
-            display: flex;
-            height: 500px;
-            overflow: hidden;
-            background: #1e293b;
-        }
-
-        .msg-sidebar {
-            width: 35%;
-            border-right: 1px solid #334155;
-            display: flex;
-            flex-direction: column;
-            background: #0f172a;
-        }
-
-        .msg-content {
-            width: 65%;
-            display: flex;
-            flex-direction: column;
-            background: #1e293b;
-        }
-
-        .msg-list {
-            overflow-y: auto;
-            flex: 1;
-        }
-
-        .msg-contact {
-            padding: 1rem;
-            border-bottom: 1px solid #334155;
-            cursor: pointer;
-            transition: background 0.2s;
-        }
-
-        .msg-contact:hover,
-        .msg-contact.active {
-            background: #334155;
-        }
-
-        .msg-contact .name {
-            font-weight: bold;
-            color: #f8fafc;
-            display: block;
-        }
-
-        .msg-contact .last-msg {
-            color: #94a3b8;
-            font-size: 0.85rem;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-
-        .msg-chat-header {
-            padding: 1rem;
-            border-bottom: 1px solid #334155;
-            background: #0f172a;
-            color: #f8fafc;
-            font-weight: bold;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .msg-chat-messages {
-            flex: 1;
-            padding: 1rem;
-            overflow-y: auto;
-            display: flex;
-            flex-direction: column;
-            gap: 0.5rem;
-        }
-
-        .msg-message {
-            max-width: 80%;
-            padding: 0.5rem 1rem;
-            border-radius: 12px;
-            font-size: 0.95rem;
-            word-wrap: break-word;
-        }
-
-        .msg-message.sent {
-            align-self: flex-end;
-            background: #3b82f6;
-            color: white;
-            border-bottom-right-radius: 2px;
-        }
-
-        .msg-message.received {
-            align-self: flex-start;
-            background: #334155;
-            color: #f8fafc;
-            border-bottom-left-radius: 2px;
-        }
-
-        .msg-input-area {
-            padding: 1rem;
-            border-top: 1px solid #334155;
-            background: #0f172a;
-            display: flex;
-            gap: 0.5rem;
-        }
-
-        .msg-input {
-            flex: 1;
-            background: #1e293b;
-            border: 1px solid #334155;
-            color: white;
-            padding: 0.5rem;
-            border-radius: 6px;
-        }
-
-        .msg-send-btn {
-            background: #3b82f6;
-            color: white;
-            border: none;
-            padding: 0.5rem 1rem;
-            border-radius: 6px;
-            cursor: pointer;
-        }
-
-        .msg-new-btn {
-            margin: 1rem;
-            width: calc(100% - 2rem);
-            background: #3b82f6;
-            border: none;
-            color: white;
-            padding: 0.5rem;
-            border-radius: 6px;
-        }
-
-        /* Mobile handling */
-        @media (max-width: 768px) {
-            #messagingModal .modal-body {
-                flex-direction: column;
-            }
-
-            .msg-sidebar {
-                width: 100%;
-                height: 100%;
-                border-right: none;
-            }
-
-            .msg-content {
-                width: 100%;
-                height: 100%;
-                display: none;
-            }
-
-            .msg-content.active {
-                display: flex;
-            }
-
-            .msg-sidebar.hidden {
-                display: none;
-            }
-
-            .msg-back-btn {
-                display: inline-block !important;
-                margin-right: 10px;
-                cursor: pointer;
-            }
-        }
-
-        .msg-back-btn {
-            display: none;
-        }
-    </style>
     {% endif %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='dockerlabs/css/base.css') }}">
 
     <link rel="icon" href="{{ url_for('static', filename='dockerlabs/images/logos/logo.png') }}" type="image/png">
 
@@ -219,94 +32,7 @@
         }
     </script>
 
-    <style>
-        /* GitHub Support Tooltip */
-        .support-tooltip {
-            position: relative;
-        }
 
-        .support-tooltip::before {
-            content: attr(data-tooltip);
-            position: absolute;
-            bottom: 100%;
-            left: 50%;
-            transform: translateX(-50%);
-            margin-bottom: 8px;
-            padding: 4px 8px;
-            background: #eab308;
-            /* Yellow/Gold for star */
-            color: #0f172a;
-            font-size: 0.75rem;
-            font-weight: 600;
-            border-radius: 4px;
-            white-space: nowrap;
-            opacity: 0;
-            visibility: hidden;
-            transition: all 0.2s ease;
-            pointer-events: none;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-        }
-
-        .support-tooltip::after {
-            content: '';
-            position: absolute;
-            bottom: 100%;
-            left: 50%;
-            transform: translateX(-50%);
-            margin-bottom: 4px;
-            border: 4px solid transparent;
-            border-top-color: #eab308;
-            opacity: 0;
-            visibility: hidden;
-            transition: all 0.2s ease;
-        }
-
-        .support-tooltip:hover::before,
-        .support-tooltip:hover::after {
-            opacity: 1;
-            visibility: visible;
-            transform: translateX(-50%) translateY(-2px);
-        }
-
-        @keyframes heartbeat {
-            0% {
-                transform: scale(1);
-            }
-
-            14% {
-                transform: scale(1.1);
-                text-shadow: 0 0 10px rgba(251, 191, 36, 0.6);
-            }
-
-            28% {
-                transform: scale(1);
-            }
-
-            42% {
-                transform: scale(1.1);
-                text-shadow: 0 0 10px rgba(251, 191, 36, 0.6);
-            }
-
-            70% {
-                transform: scale(1);
-            }
-        }
-
-        .github-pulse {
-            color: #fbbf24 !important;
-            /* Gold color */
-            animation: heartbeat 3s infinite;
-            display: inline-block;
-        }
-
-        .github-pulse:hover {
-            animation: none;
-            /* Stop pulsing on hover so tooltip is stable */
-            text-shadow: 0 0 15px rgba(251, 191, 36, 0.8);
-            transform: scale(1.1);
-            transition: all 0.3s ease;
-        }
-    </style>
     {% block extra_head %}{% endblock %}
 </head>
 
@@ -318,16 +44,16 @@
         <div style="display:flex;align-items:center;gap:15px;">
             <div class="logo-container">
                 <a href="https://dockerlabs.es">
-                    <img src="{{ url_for('static', filename='dockerlabs/images/logos/logo.png') }}" alt="DockerLabs" width="60"
-                        height="55">
+                    <img src="{{ url_for('static', filename='dockerlabs/images/logos/logo.png') }}" alt="DockerLabs"
+                        width="60" height="55">
                 </a>
             </div>
 
             <div class="raiola-container">
                 <a href="https://raiolanetworks.com/landing/hosting-...io/?utm_medium=affiliate&utm_source=5855&utm_campaign=Afiliados"
                     target="_blank">
-                    <img src="{{ url_for('static', filename='dockerlabs/images/raiola.png') }}" alt="Raiola Networks" width="290"
-                        height="50">
+                    <img src="{{ url_for('static', filename='dockerlabs/images/raiola.png') }}" alt="Raiola Networks"
+                        width="290" height="50">
                 </a>
             </div>
         </div>
@@ -416,8 +142,7 @@
                     <div class="user-info"><span class="user-name">Programa VDP</span></div>
                     <i class="bi bi-box-arrow-up-right" style="color: #64748b; font-size: 0.9rem;"></i>
                 </a>
-                <a href="{{ url_for('main.instrucciones_uso') }}" target="_blank"
-                    class="ranking-item">
+                <a href="{{ url_for('main.instrucciones_uso') }}" target="_blank" class="ranking-item">
                     <div class="user-info"><span class="user-name">Instrucciones de Uso</span></div>
                     <i class="bi bi-file-earmark-pdf" style="color: #64748b;"></i>
                 </a>
