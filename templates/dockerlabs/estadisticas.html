@@ -1,0 +1,223 @@
+{% extends 'dockerlabs/base.html' %}
+
+{% block title %}Estadísticas - DockerLabs{% endblock %}
+
+{% block extra_head %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+    .stats-container {
+        padding: 80px 20px 40px;
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+
+    .stats-header {
+        text-align: center;
+        margin-bottom: 3rem;
+    }
+
+    .stats-header h1 {
+        font-weight: 700;
+        color: #f8fafc;
+        margin-bottom: 0.5rem;
+    }
+
+    .stats-header p {
+        color: #94a3b8;
+        font-size: 1.1rem;
+    }
+
+    .charts-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+        gap: 2rem;
+    }
+
+    .chart-card {
+        background: #1e293b;
+        border: 1px solid #334155;
+        border-radius: 12px;
+        padding: 1.5rem;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        transition: transform 0.2s;
+    }
+
+    .chart-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    }
+
+    .chart-title {
+        color: #f8fafc;
+        font-size: 1.25rem;
+        font-weight: 600;
+        margin-bottom: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .chart-container {
+        position: relative;
+        height: 300px;
+        width: 100%;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="stats-container">
+    <div class="stats-header">
+        <h1>Estadísticas de la Plataforma</h1>
+        <p>Crecimiento y métricas anuales de DockerLabs</p>
+    </div>
+
+    <div class="charts-grid">
+        <!-- Máquinas -->
+        <div class="chart-card">
+            <div class="chart-title">
+                <i class="bi bi-pc-display-horizontal" style="color: #3b82f6;"></i>
+                Máquinas Subidas
+            </div>
+            <div class="chart-container">
+                <canvas id="machinesChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Writeups -->
+        <div class="chart-card">
+            <div class="chart-title">
+                <i class="bi bi-file-text" style="color: #10b981;"></i>
+                Writeups Publicados
+            </div>
+            <div class="chart-container">
+                <canvas id="writeupsChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Usuarios -->
+        <div class="chart-card">
+            <div class="chart-title">
+                <i class="bi bi-people" style="color: #f59e0b;"></i>
+                Usuarios Registrados
+            </div>
+            <div class="chart-container">
+                <canvas id="usersChart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    Chart.defaults.color = '#94a3b8';
+    Chart.defaults.borderColor = '#334155';
+    Chart.defaults.font.family = "'Fira Code', monospace";
+
+    const commonOptions = {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                display: false
+            },
+            tooltip: {
+                backgroundColor: '#0f172a',
+                titleColor: '#f8fafc',
+                bodyColor: '#cbd5e1',
+                borderColor: '#334155',
+                borderWidth: 1,
+                callbacks: {
+                    label: function (context) {
+                        return context.parsed.y + '%';
+                    }
+                }
+            }
+        },
+        scales: {
+            y: {
+                beginAtZero: true,
+                max: 100,
+                ticks: {
+                    callback: function (value) {
+                        return value + '%';
+                    }
+                },
+                grid: {
+                    color: '#334155'
+                }
+            },
+            x: {
+                grid: {
+                    display: false
+                }
+            }
+        },
+        animation: {
+            duration: 1500,
+            easing: 'easeOutQuart'
+        }
+    };
+
+    // Data from Backend
+    const machineStats = {{ machine_stats | tojson }};
+    const writeupStats = {{ writeup_stats | tojson }};
+    const userStats = {{ user_stats | tojson }};
+
+    // Helper to extract keys and values
+    const getLabels = (stats) => Object.keys(stats);
+    const getData = (stats) => Object.values(stats);
+
+    // --- Machines Chart ---
+    new Chart(document.getElementById('machinesChart'), {
+        type: 'bar',
+        data: {
+            labels: getLabels(machineStats),
+            datasets: [{
+                label: 'Máquinas (%)',
+                data: getData(machineStats),
+                backgroundColor: 'rgba(59, 130, 246, 0.5)', // Blue
+                borderColor: '#3b82f6',
+                borderWidth: 1,
+                borderRadius: 4
+            }]
+        },
+        options: commonOptions
+    });
+
+    // --- Writeups Chart ---
+    new Chart(document.getElementById('writeupsChart'), {
+        type: 'bar', // Using Bar for consistency, could be Line
+        data: {
+            labels: getLabels(writeupStats),
+            datasets: [{
+                label: 'Writeups (%)',
+                data: getData(writeupStats),
+                backgroundColor: 'rgba(16, 185, 129, 0.5)', // Emerald
+                borderColor: '#10b981',
+                borderWidth: 1,
+                borderRadius: 4
+            }]
+        },
+        options: commonOptions
+    });
+
+    // --- Users Chart ---
+    new Chart(document.getElementById('usersChart'), {
+        type: 'bar',
+        data: {
+            labels: getLabels(userStats),
+            datasets: [{
+                label: 'Usuarios (%)',
+                data: getData(userStats),
+                backgroundColor: 'rgba(245, 158, 11, 0.5)', // Amber
+                borderColor: '#f59e0b',
+                borderWidth: 1,
+                borderRadius: 4
+            }]
+        },
+        options: commonOptions
+    });
+</script>
+{% endblock %}
