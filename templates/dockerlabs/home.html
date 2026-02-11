@@ -124,7 +124,7 @@
             </span>
             <span class="badge {{ maquina.clase }}">{{ maquina.dificultad }}</span>
             <div class="actions icon-container">
-                <button class="upload" style="font-size: 1em;"
+                <button class="btn-descripcion" style="font-size: 1em;"
                     onclick="descripcion({{ maquina.nombre | tojson | forceescape }}, {{ maquina.descripcion | tojson | forceescape }}); event.stopPropagation();">
                     Descripción
                 </button>
@@ -159,7 +159,7 @@
             </span>
             <span class="etiqueta {{ maquina.clase }}">{{ maquina.dificultad }}</span>
             <div class="acciones">
-                <button class="subir" style="font-size: 1em;"
+                <button class="btn-descripcion" style="font-size: 0.9em;"
                     onclick="descripcion({{ maquina.nombre | tojson | forceescape }}, {{ maquina.descripcion | tojson | forceescape }}); event.stopPropagation();">
                     Descripción
                 </button>

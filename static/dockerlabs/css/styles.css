@@ -530,6 +530,7 @@ header h1 a:hover {
     margin-top: 0.1rem;
     padding-top: 0.1rem;
 }
+
 .pagination-container {
     display: flex;
     align-items: center;
@@ -538,6 +539,7 @@ header h1 a:hover {
     gap: 0.35rem;
     padding: 0;
 }
+
 .pagination-wrapper {
     display: flex;
     align-items: center;
@@ -549,16 +551,19 @@ header h1 a:hover {
     border: 1px solid rgba(51, 65, 85, 0.4);
     border-radius: 6px;
 }
+
 .pagination-info {
     font-size: 0.75rem;
     color: var(--text-muted);
     font-weight: 500;
 }
+
 .pagination-nav {
     display: flex;
     align-items: center;
     gap: 0.2rem;
 }
+
 .pagination-btn {
     min-width: 28px;
     height: 28px;
@@ -575,24 +580,29 @@ header h1 a:hover {
     align-items: center;
     justify-content: center;
 }
+
 .pagination-btn:hover:not(:disabled) {
     background: rgba(51, 65, 85, 0.5);
     color: var(--accent-cyan);
 }
+
 .pagination-btn:disabled {
     opacity: 0.35;
     cursor: not-allowed;
 }
+
 .pagination-btn.active {
     background: var(--accent-cyan);
     color: var(--background-dark);
     font-weight: 600;
 }
+
 .pagination-pages {
     display: flex;
     align-items: center;
     gap: 0.15rem;
 }
+
 .pagination-pages .pagination-btn {
     min-width: 26px;
     height: 26px;
@@ -2006,7 +2016,7 @@ footer {
     text-decoration: none;
     color: #e5e7eb;
     transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1);
-    overflow: visible; 
+    overflow: visible;
 }
 
 .colaborador::after {
@@ -2021,8 +2031,8 @@ footer {
     pointer-events: none;
 
     box-shadow: 0 0 4px var(--glow-color),
-                0 0 8px var(--glow-color),
-                0 0 12px var(--glow-color);
+        0 0 8px var(--glow-color),
+        0 0 12px var(--glow-color);
     opacity: 0;
     transition: opacity 0.4s ease, transform 0.4s ease;
 }
@@ -2036,12 +2046,29 @@ footer {
     transform: translateY(-4px);
 }
 
-.glow-dise0 { --glow-color: #232223; }
-.glow-thl { --glow-color: #fe9400; }
-.glow-hackmyvm { --glow-color: #f35c8e; }
-.glow-pylon { --glow-color: #ffffff; }
-.glow-santitub { --glow-color: #ffffff; }
-.glow-maciferna { --glow-color: #663c98; }
+.glow-dise0 {
+    --glow-color: #232223;
+}
+
+.glow-thl {
+    --glow-color: #fe9400;
+}
+
+.glow-hackmyvm {
+    --glow-color: #f35c8e;
+}
+
+.glow-pylon {
+    --glow-color: #ffffff;
+}
+
+.glow-santitub {
+    --glow-color: #ffffff;
+}
+
+.glow-maciferna {
+    --glow-color: #663c98;
+}
 
 /* ===== New Card ===== */
 
@@ -2119,4 +2146,40 @@ footer {
     box-shadow:
         0 0 10px rgba(96, 165, 250, 0.7),
         0 0 20px rgba(96, 165, 250, 0.5);
+}
+
+.acciones button.btn-descripcion {
+    background: rgba(148, 163, 184, 0.1) !important;
+    border-color: rgba(148, 163, 184, 0.4) !important;
+    color: var(--text-secondary) !important;
+}
+
+.acciones button.btn-descripcion:hover {
+    background: rgba(148, 163, 184, 0.2) !important;
+    color: #ffffff !important;
+    box-shadow: 0 0 15px rgba(148, 163, 184, 0.3) !important;
+    border-color: var(--text-secondary) !important;
+}
+
+.actions button.btn-descripcion {
+    background: rgba(148, 163, 184, 0.1) !important;
+    border-color: rgba(148, 163, 184, 0.4) !important;
+    color: var(--text-secondary) !important;
+    border: 1px solid var(--border-strong) !important;
+    border-radius: 10px;
+    padding: 0.18rem 0.4rem;
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.actions button.btn-descripcion:hover {
+    transform: translateY(-1px) scale(1.04);
+    background: rgba(148, 163, 184, 0.2) !important;
+    color: #ffffff !important;
+    box-shadow: 0 8px 18px rgba(148, 163, 184, 0.3) !important;
+    border-color: var(--text-secondary) !important;
 }
