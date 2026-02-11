@@ -1,15 +1,5 @@
 const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
 
-function escapeHTML(str) {
-    if (typeof str !== "string") return "";
-    return str
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/"/g, "&quot;")
-        .replace(/'/g, "&#39;");
-}
-
 function formatDate(dateStr) {
     if (!dateStr) return "-";
     // If it's already a clean string, return it, or try to format JS Date
@@ -50,11 +40,11 @@ if (!document.getElementById('toast-keyframes')) {
 }
 
 function renderRow(writeup) {
-    const id = escapeHTML(String(writeup.id));
-    const maquina = escapeHTML(writeup.maquina || "");
-    const autor = escapeHTML(writeup.autor || "");
-    const url = escapeHTML(writeup.url || "");
-    const tipo = escapeHTML(writeup.tipo || "");
+    const id = escapeHtml(String(writeup.id));
+    const maquina = escapeHtml(writeup.maquina || "");
+    const autor = escapeHtml(writeup.autor || "");
+    const url = escapeHtml(writeup.url || "");
+    const tipo = escapeHtml(writeup.tipo || "");
     const created_at = formatDate(writeup.created_at);
 
     const imagen = writeup.imagen ? `/static/dockerlabs/images/${writeup.imagen}` : '/static/dockerlabs/images/logos/logo.png';
@@ -285,10 +275,10 @@ function renderReportRow(report) {
     const tr = document.createElement("tr");
     tr.dataset.id = report.id;
 
-    const maquina = escapeHTML(report.writeup.maquina || "Desconocida");
-    const autor = escapeHTML(report.writeup.autor || "Desconocido");
-    const reporter = escapeHTML(report.reporter_name || "Desconocido");
-    const reason = escapeHTML(report.reason || "");
+    const maquina = escapeHtml(report.writeup.maquina || "Desconocida");
+    const autor = escapeHtml(report.writeup.autor || "Desconocido");
+    const reporter = escapeHtml(report.reporter_name || "Desconocido");
+    const reason = escapeHtml(report.reason || "");
     const date = formatDate(report.created_at);
 
     const writeupId = report.writeup.id;
@@ -308,7 +298,7 @@ function renderReportRow(report) {
                     <i class="bi bi-x-lg"></i>
                 </button>
                 ${writeupId ? `
-                <a href="${escapeHTML(report.writeup.url)}" target="_blank" class="btn-action" style="background: rgba(59, 130, 246, 0.1); color: #60a5fa;" title="Ver Writeup">
+                <a href="${escapeHtml(report.writeup.url)}" target="_blank" class="btn-action" style="background: rgba(59, 130, 246, 0.1); color: #60a5fa;" title="Ver Writeup">
                     <i class="bi bi-box-arrow-up-right"></i>
                 </a>` : ''}
             </div>

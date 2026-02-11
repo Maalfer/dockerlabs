@@ -656,6 +656,7 @@
         });
     </script>
 
+    <script src="{{ url_for('static', filename='dockerlabs/js/utils.js') }}"></script>
     {% if session.get('user_id') %}
     <script src="{{ url_for('static', filename='dockerlabs/js/messaging.js') }}"></script>
     {% endif %}

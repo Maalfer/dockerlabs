@@ -1,11 +1,3 @@
-// Utility function to escape HTML and prevent XSS attacks
-function escapeHtml(text) {
-    if (!text) return text;
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
-}
-
 function descripcion(nombre, descripcionTexto) {
     // Inject Styles (if not already present)
     const styleId = 'minimal-modal-styles-desc';

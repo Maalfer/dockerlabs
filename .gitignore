@@ -29,9 +29,5 @@ database/*.db-wal
 # Logs
 *.log
 
-# User Uploads (Allowed)
-# static/dockerlabs/images/perfiles/*
-
-
 # OS
 thumbs.db

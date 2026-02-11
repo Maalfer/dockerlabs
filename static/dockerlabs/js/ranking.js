@@ -1,11 +1,4 @@
 // Utility function to escape HTML and prevent XSS attacks
-function escapeHtml(text) {
-    if (!text) return text;
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
-}
-
 // Inject Shared Styles
 function injectRankingStyles() {
     const styleId = 'minimal-ranking-styles-v2';

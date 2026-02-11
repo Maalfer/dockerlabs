@@ -54,16 +54,6 @@
 <script>
     const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
 
-    function escapeHTML(str) {
-        if (typeof str !== "string") return "";
-        return str
-            .replace(/&/g, "&amp;")
-            .replace(/</g, "&lt;")
-            .replace(/>/g, "&gt;")
-            .replace(/"/g, "&quot;")
-            .replace(/'/g, "&#39;");
-    }
-
     function showAlert(message, type = "success") {
         const container = document.getElementById("alert-container");
         const alert = document.createElement("div");
@@ -88,12 +78,12 @@
         card.dataset.machine = machine.maquina.toLowerCase();
 
         const imageHTML = machine.imagen
-            ? `<img src="${escapeHTML(machine.imagen)}" alt="${escapeHTML(machine.maquina)}" class="machine-card-image">`
+            ? `<img src="${escapeHtml(machine.imagen)}" alt="${escapeHtml(machine.maquina)}" class="machine-card-image">`
             : `<div class="machine-card-placeholder">📝</div>`;
 
         card.innerHTML = `
             <div class="machine-card-icon">${imageHTML}</div>
-            <h4 class="machine-card-title">${escapeHTML(machine.maquina)}</h4>
+            <h4 class="machine-card-title">${escapeHtml(machine.maquina)}</h4>
             <div class="machine-card-count">${machine.total} writeup${machine.total !== 1 ? 's' : ''}</div>
         `;
 

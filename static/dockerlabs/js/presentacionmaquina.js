@@ -1,11 +1,3 @@
-// Utility function to escape HTML and prevent XSS attacks
-function escapeHtml(text) {
-    if (!text) return text;
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
-}
-
 function presentacion(nombre, dificultad, color, autor_nombre, autor_enlace, fecha, imagen, categoria = '', isMostRecent = false) {
     // Inject Styles for the new design
     const styleId = 'modern-modal-styles-v2';
@@ -24,7 +16,6 @@ function presentacion(nombre, dificultad, color, autor_nombre, autor_enlace, fec
                 background: rgba(15, 23, 42, 0.85);
                 backdrop-filter: blur(8px);
                 z-index: 9998;
-                opacity: 0;
                 opacity: 0;
                 transition: opacity 0.3s ease;
             }
@@ -268,7 +259,6 @@ function presentacion(nombre, dificultad, color, autor_nombre, autor_enlace, fec
                 aspect-ratio: 1/1;
                 object-fit: cover;
                 border-radius: 16px;
-                /* box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3); */
             }
             
             /* Decorative sparkle or overlay on image if needed */
@@ -845,8 +835,7 @@ function presentacion(nombre, dificultad, color, autor_nombre, autor_enlace, fec
         popupDiv.classList.remove('visible');
         overlayDiv.classList.remove('visible');
         setTimeout(() => {
-            if (popupDiv.parentNode) document.body.removeChild(popupDiv);
-            if (overlayDiv.parentNode) document.body.removeChild(overlayDiv);
+            if (overlayDiv.parentNode) overlayDiv.remove();
         }, 300);
     }
 }

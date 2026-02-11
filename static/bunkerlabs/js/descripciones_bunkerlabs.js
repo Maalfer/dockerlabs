@@ -1,11 +1,4 @@
 // Utility function to escape HTML and prevent XSS attacks
-function escapeHtml(text) {
-    if (!text) return text;
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
-}
-
 function descripcion(nombre, descripcionTexto) {
     // Crear el contenedor del overlay
     var overlayDiv = document.createElement('div');

@@ -1,11 +1,4 @@
 // Utility function to escape HTML and prevent XSS attacks
-function escapeHtml(text) {
-    if (!text) return text;
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
-}
-
 function presentacion(nombre, dificultad, tamaño, clase, color, autor_nombre, autor_enlace, fecha, imagen, descripcion) {
     // Escapar variables
     const escapedNombre = escapeHtml(nombre);
