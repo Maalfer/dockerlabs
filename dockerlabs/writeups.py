@@ -126,6 +126,22 @@ def subir_writeups():
 
         return jsonify({"error": "La máquina especificada no existe"}), 400
 
+    writeup_exist = PendingWriteup.query.filter_by(
+        autor=autor,
+        maquina=maquina
+    ).first()
+
+    if writeup_exist:
+        return jsonify({"error": "Writeup ya está en pendiente de revisión."}), 400
+
+    writeup_publicado = Writeup.query.filter_by(
+        autor=autor,
+        maquina=maquina
+    ).first()
+
+    if writeup_publicado:
+        return jsonify({"error": "Writeup ya publicado."}), 400
+
     try:
         new_pending = PendingWriteup(
             maquina=maquina,
