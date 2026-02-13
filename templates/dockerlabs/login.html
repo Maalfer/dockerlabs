@@ -65,8 +65,8 @@
 
                     <div class="form-group">
                         <label for="password"><i class="fas fa-lock"></i> Contraseña</label>
-                        <input type="password" name="password" id="password" placeholder="Ingresa tu contraseña" required
-                            autocomplete="current-password">
+                        <input type="password" name="password" id="password" placeholder="Ingresa tu contraseña"
+                            required autocomplete="current-password">
                     </div>
                 </div>
 
@@ -76,28 +76,24 @@
                         <i class="fas fa-sign-in-alt"></i> Entrar
                     </button>
 
-                    <div class="login-links">
-                        <a href="{{ url_for('auth.recover') }}">
-                            <i class="fas fa-key"></i> ¿Olvidaste tu contraseña?
-                        </a>
-                    </div>
-
-                    <div class="login-divider">
-                        <span>O</span>
-                    </div>
-
-                    <div class="login-links">
-                        <a href="{{ url_for('auth.register') }}">
-                            <i class="fas fa-user-plus"></i> Crear cuenta
-                        </a>
+                    <div class="logo-display">
+                        <img src="{{ url_for('static', filename='dockerlabs/images/logos/logo.png') }}"
+                            alt="DockerLabs Logo" class="auth-logo">
                     </div>
                 </div>
             </div>
         </form>
 
-        <div class="security-badge">
-            <i class="fas fa-shield-alt"></i>
-            <span>Conexión segura</span>
+        <div class="auth-footer-actions">
+            <a href="{{ url_for('auth.recover') }}" class="footer-link">
+                <i class="fas fa-key"></i> ¿Olvidaste tu contraseña?
+            </a>
+
+            <span class="auth-separator">/</span>
+
+            <a href="{{ url_for('auth.register') }}" class="footer-link">
+                <i class="fas fa-user-plus"></i> Crear cuenta nueva
+            </a>
         </div>
     </div>
 </div>

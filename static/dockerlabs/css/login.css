@@ -405,4 +405,74 @@
         padding: 0.875rem 1.25rem;
         font-size: 0.95rem;
     }
+
+    .logo-display {
+        display: none;
+        /* Hide logo on mobile if space is tight, or make it smaller */
+    }
+}
+
+/* Logo Styles */
+.logo-display {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-top: 1rem;
+}
+
+.auth-logo {
+    max-width: 150px;
+    height: auto;
+    filter: drop-shadow(0 0 10px rgba(59, 130, 246, 0.3));
+    transition: transform 0.3s ease;
+}
+
+.auth-logo:hover {
+    transform: scale(1.05);
+}
+
+/* Footer Actions */
+.auth-footer-actions {
+    margin-top: 2rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+    display: flex;
+    flex-direction: row;
+    /* Change to row */
+    justify-content: center;
+    align-items: center;
+    gap: 1rem;
+    /* Space around separator */
+    flex-wrap: wrap;
+    /* Allow wrapping on small screens */
+}
+
+.auth-separator {
+    color: var(--text-muted);
+    font-size: 1.1rem;
+    font-weight: 300;
+}
+
+.footer-link {
+    color: var(--text-secondary);
+    text-decoration: none;
+    font-size: 0.9rem;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    padding: 0.3rem 0;
+}
+
+.footer-link:hover {
+    color: var(--accent-cyan);
+}
+
+.footer-link i {
+    margin-right: 0.5rem;
+    font-size: 0.85rem;
+    color: var(--primary-blue-light);
+}
+
+.footer-link:hover i {
+    color: var(--accent-cyan);
 }

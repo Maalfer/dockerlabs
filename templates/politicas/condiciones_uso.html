@@ -1,100 +1,85 @@
-{% extends "base.html" %}
+{% extends "dockerlabs/base.html" %}
+
+{% block title %}Condiciones de Uso - DockerLabs{% endblock %}
 
 {% block content %}
-<div class="container mt-5 mb-5">
-    <h1 class="title">Condiciones de Uso</h1>
+<div class="container mt-5 pt-5 mb-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card bg-dark text-white border-secondary shadow-lg">
+                <div class="card-body p-5">
+                    <h1 class="mb-4 text-center text-primary">Condiciones de Uso</h1>
 
-    <p class="mt-4">
-        El acceso y uso de DockerLabs implica la aceptación plena de las presentes Condiciones de Uso. 
-        Si no estás de acuerdo con alguno de los puntos expuestos a continuación, deberás abstenerte 
-        de utilizar la plataforma.
-    </p>
+                    <div class="policy-content">
+                        <p class="lead mb-4">Bienvenido a <strong>DockerLabs</strong>. Al acceder y utilizar nuestro
+                            sitio web, aceptas cumplir con los siguientes términos y condiciones. Si no estás de acuerdo
+                            con alguna parte de estos términos, no debes utilizar nuestra plataforma.</p>
 
-    <!-- Sección: Normas Generales -->
-    <div class="card p-4 mt-4">
-        <h3 class="subtitle">Normas Generales</h3>
-        <ul class="mt-3">
-            <li>DockerLabs es una plataforma educativa diseñada exclusivamente para el aprendizaje seguro de ciberseguridad y hacking ético.</li>
-            <li>El contenido, retos y máquinas virtuales deben ser utilizados únicamente dentro del entorno controlado de DockerLabs.</li>
-            <li>Queda terminantemente prohibido utilizar los conocimientos adquiridos para realizar acciones ilegales, intrusiones no autorizadas o ataques a sistemas de terceros.</li>
-            <li>No está permitido escanear, atacar o interactuar con infraestructuras ajenas a DockerLabs.</li>
-            <li>Respeta a los creadores del contenido, desafíos y máquinas publicadas, así como al resto de la comunidad.</li>
-            <li>No está permitido compartir soluciones completas o exploits que comprometan el aprendizaje progresivo del resto de usuarios.</li>
-            <li>El usuario debe mantener un comportamiento adecuado, respetuoso y acorde con los principios del hacking ético.</li>
-        </ul>
-    </div>
+                        <h3 class="mt-4 mb-3 text-info">1. Titularidad del Sitio Web</h3>
+                        <p>En cumplimiento con el deber de información recogido en el artículo 10 de la Ley 34/2002, de
+                            11 de julio, de Servicios de la Sociedad de la Información y del Comercio Electrónico, se
+                            indican los siguientes datos:</p>
+                        <ul>
+                            <li><strong>Titular:</strong> Mario Álvarez Fernandez</li>
+                            <li><strong>Email:</strong> info@elrincondelhacker.es</li>
+                            <li><strong>Sitio Web:</strong> DockerLabs.es</li>
+                            <li><strong>Actividad:</strong> Plataforma educativa de ciberseguridad y despliegue de
+                                laboratorios vulnerables.</li>
+                        </ul>
 
-    <!-- Sección: Uso Aceptable -->
-    <div class="card p-4 mt-4">
-        <h3 class="subtitle">Uso Aceptable de la Plataforma</h3>
-        <p class="mt-3">
-            Todo usuario se compromete a:
-        </p>
-        <ul class="mt-3">
-            <li>Usar la plataforma de forma responsable y con fines exclusivamente formativos.</li>
-            <li>No intentar explotar vulnerabilidades o fallos de la plataforma con el fin de dañarla o alterar su funcionamiento.</li>
-            <li>No realizar ataques de denegación de servicio, fuerza bruta, scraping masivo ni cualquier acción que comprometa la estabilidad de DockerLabs.</li>
-            <li>No crear múltiples cuentas sin autorización ni suplantar la identidad de otros usuarios.</li>
-        </ul>
-    </div>
+                        <h3 class="mt-4 mb-3 text-info">2. Objeto y Uso de la Plataforma</h3>
+                        <p>DockerLabs es una plataforma diseñada exclusivamente con fines <strong>educativos y de
+                                aprendizaje</strong> en el ámbito de la ciberseguridad. Proporcionamos entornos
+                            controlados (laboratorios vulnerables basados en Docker) para que los usuarios puedan
+                            practicar y mejorar sus habilidades de hacking ético.</p>
+                        <p><strong>Queda terminantemente prohibido:</strong></p>
+                        <ul>
+                            <li>Utilizar los conocimientos adquiridos en esta plataforma para realizar ataques a
+                                sistemas reales sin autorización, actividades delictivas o cualquier acción que vulnere
+                                la ley vigente.</li>
+                            <li>Realizar ataques de denegación de servicio (DoS/DDoS) o cualquier acción que comprometa
+                                la integridad, disponibilidad o seguridad de la infraestructura de DockerLabs.</li>
+                            <li>Intentar acceder a cuentas de otros usuarios o extraer información de la base de datos
+                                de la plataforma.</li>
+                        </ul>
 
-    <!-- Sección: Contenido y Propiedad Intelectual -->
-    <div class="card p-4 mt-4">
-        <h3 class="subtitle">Contenido y Propiedad Intelectual</h3>
-        <p class="mt-3">
-            Todo el contenido disponible en DockerLabs (máquinas, retos, materiales educativos, laboratorios, código, imágenes, etc.) 
-            pertenece a sus autores o a DockerLabs y está protegido por derechos de propiedad intelectual.
-        </p>
-        <ul class="mt-3">
-            <li>No está permitido distribuir, replicar o alojar contenido de DockerLabs fuera de la plataforma sin autorización expresa.</li>
-            <li>El usuario puede utilizar los materiales únicamente para su aprendizaje personal.</li>
-        </ul>
-    </div>
+                        <h3 class="mt-4 mb-3 text-info">3. Exención de Responsabilidad</h3>
+                        <p>DockerLabs proporciona laboratorios intencionalmente vulnerables. El usuario reconoce que el
+                            uso de estas herramientas y entornos conlleva riesgos inherentes. <strong>Mario Álvarez
+                                Fernandez</strong> no se hace responsable del mal uso que los usuarios puedan dar a la
+                            información o herramientas proporcionadas, ni de los daños que puedan causar a sus propios
+                            sistemas o a terceros derivados de la práctica fuera de los entornos controlados.</p>
 
-    <!-- Sección: Responsabilidad -->
-    <div class="card p-4 mt-4">
-        <h3 class="subtitle">Responsabilidad</h3>
-        <p class="mt-3">
-            DockerLabs ofrece un entorno aislado y seguro para el aprendizaje, pero no se hace responsable del uso indebido 
-            que los usuarios realicen fuera de la plataforma.
-        </p>
-        <p class="mt-3">
-            El usuario es el único responsable de las acciones que realice y de las consecuencias legales derivadas de un mal uso 
-            de las técnicas aprendidas.
-        </p>
-        <p class="mt-3">
-            DockerLabs no garantiza la disponibilidad continua del servicio y podrá suspenderlo temporal o permanentemente 
-            por motivos técnicos, de mantenimiento o seguridad.
-        </p>
-    </div>
+                        <h3 class="mt-4 mb-3 text-info">4. Propiedad Intelectual</h3>
+                        <p>Todos los contenidos del sitio web (textos, logotipos, laboratorios, código fuente) son
+                            propiedad de DockerLabs o de sus respectivos autores si se trata de contribuciones de la
+                            comunidad, y están protegidos por las leyes de propiedad intelectual.</p>
 
-    <!-- Sección: Privacidad -->
-    <div class="card p-4 mt-4">
-        <h3 class="subtitle">Privacidad y Datos Personales</h3>
-        <p class="mt-3">
-            DockerLabs respeta la privacidad de los usuarios. La información proporcionada será tratada de acuerdo con la normativa 
-            vigente en materia de protección de datos y utilizada únicamente para el funcionamiento de la plataforma.
-        </p>
-        <p class="mt-3">
-            No se compartirán datos personales con terceros salvo obligación legal o por necesidades técnicas del servicio.
-        </p>
-    </div>
+                        <h3 class="mt-4 mb-3 text-info">5. Modificaciones</h3>
+                        <p>Nos reservamos el derecho de modificar estos términos en cualquier momento. Las
+                            modificaciones entrarán en vigor desde su publicación en este sitio web.</p>
+                    </div>
 
-    <!-- Sección: Modificaciones -->
-    <div class="card p-4 mt-4">
-        <h3 class="subtitle">Modificaciones de las Condiciones</h3>
-        <p class="mt-3">
-            DockerLabs se reserva el derecho a modificar estas Condiciones de Uso en cualquier momento. Las nuevas versiones serán publicadas 
-            en esta misma página y entrarán en vigor inmediatamente tras su publicación.
-        </p>
-    </div>
-
-    <!-- Sección: Aceptación Final -->
-    <div class="card p-4 mt-4">
-        <h3 class="subtitle">Aceptación</h3>
-        <p class="mt-3">
-            Al utilizar DockerLabs confirmas que has leído, comprendido y aceptas todas las condiciones aquí descritas.
-        </p>
+                    <div class="text-center mt-5">
+                        <a href="{{ url_for('bunkerlabs.bunkerlabs_home') }}" class="btn btn-primary">
+                            <i class="bi bi-arrow-left"></i> Volver al Inicio
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
+
+<style>
+    .policy-content {
+        line-height: 1.8;
+        color: #cbd5e1;
+    }
+
+    .policy-content h3 {
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        padding-bottom: 0.5rem;
+    }
+</style>
 {% endblock %}

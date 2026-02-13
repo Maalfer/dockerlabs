@@ -1,95 +1,64 @@
-{% extends "base.html" %}
+{% extends "dockerlabs/base.html" %}
+
+{% block title %}Política de Cookies - DockerLabs{% endblock %}
 
 {% block content %}
-<div class="container mt-5 mb-5">
-    <h1 class="title">Política de Cookies</h1>
+<div class="container mt-5 pt-5 mb-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card bg-dark text-white border-secondary shadow-lg">
+                <div class="card-body p-5">
+                    <h1 class="mb-4 text-center text-primary">Política de Cookies</h1>
 
-    <p class="mt-4">
-        DockerLabs utiliza cookies propias y de terceros con fines técnicos, de personalización y analíticos. 
-        Las cookies permiten el funcionamiento correcto de la plataforma, mejoran la experiencia de uso y 
-        ayudan a analizar la actividad con el fin de optimizar el servicio.  
-        A continuación, se detalla qué son las cookies, qué tipos utilizamos y cómo gestionarlas.
-    </p>
+                    <div class="policy-content">
+                        <p class="lead mb-4">En <strong>DockerLabs</strong> utilizamos cookies para facilitar el uso de
+                            nuestra página web y mejorar la experiencia del usuario. A continuación, detallamos qué son
+                            las cookies, cuáles utilizamos y cómo puedes gestionarlas.</p>
 
-    <!-- Qué son las cookies -->
-    <div class="card p-4 mt-4">
-        <h3 class="subtitle">¿Qué son las cookies?</h3>
-        <p class="mt-3">
-            Las cookies son pequeños archivos que se almacenan en tu dispositivo al acceder a determinadas páginas web.
-            Permiten, entre otras cosas, recordar tus preferencias, mantener sesiones iniciadas o recopilar información estadística.
-        </p>
-    </div>
+                        <h3 class="mt-4 mb-3 text-info">1. ¿Qué son las Cookies?</h3>
+                        <p>Las cookies son pequeños archivos de texto que los sitios web almacenan en su ordenador o
+                            dispositivo móvil cuando los visita. Permiten que el sitio web recuerde sus acciones y
+                            preferencias (como el inicio de sesión) durante un período de tiempo, para que no tenga que
+                            volver a introducirlas cada vez que vuelve al sitio o navega de una página a otra.</p>
 
-    <!-- Tipos de cookies utilizadas -->
-    <div class="card p-4 mt-4">
-        <h3 class="subtitle">Tipos de cookies utilizadas en DockerLabs</h3>
-        <ul class="mt-3">
-            <li>
-                <strong>Cookies técnicas (obligatorias):</strong>
-                necesarias para el funcionamiento básico del sitio, el inicio de sesión, carga de recursos
-                y la correcta interacción con la plataforma.  
-                Sin estas cookies, el servicio no puede funcionar correctamente.
-            </li>
-            <li class="mt-2">
-                <strong>Cookies de personalización:</strong>
-                permiten recordar ajustes como idioma, modo oscuro o preferencias del usuario dentro de la plataforma.
-            </li>
-            <li class="mt-2">
-                <strong>Cookies de análisis:</strong>
-                utilizadas para obtener estadísticas anónimas sobre el uso del sitio, detectar errores,
-                mejorar el rendimiento y optimizar la experiencia del usuario.
-                <br>Ejemplo: Google Analytics (si está activado).
-            </li>
-            <li class="mt-2">
-                <strong>Cookies de terceros:</strong>
-                son establecidas por proveedores externos cuando se utilizan servicios adicionales, 
-                como herramientas de análisis, reCAPTCHA, recursos CDN o contenido embebido.
-            </li>
-        </ul>
-    </div>
+                        <h3 class="mt-4 mb-3 text-info">2. Cookies que Utilizamos</h3>
+                        <p>DockerLabs utiliza únicamente <strong>cookies técnicas y de sesión</strong>, necesarias para
+                            el correcto funcionamiento de la plataforma:</p>
+                        <ul>
+                            <li><strong>session:</strong> Una cookie esencial para gestionar su sesión de usuario una
+                                vez ha iniciado sesión. Nos permite identificarle mientras navega por la plataforma para
+                                que no tenga que autenticarse en cada página.</li>
+                        </ul>
+                        <p>No utilizamos cookies de terceros, publicitarias ni de rastreo de comportamiento para fines
+                            comerciales.</p>
 
-    <!-- Finalidad -->
-    <div class="card p-4 mt-4">
-        <h3 class="subtitle">¿Para qué utilizamos las cookies?</h3>
-        <p class="mt-3">
-            Las cookies utilizadas en DockerLabs sirven para:
-        </p>
-        <ul class="mt-3">
-            <li>Garantizar el funcionamiento seguro y estable de la plataforma.</li>
-            <li>Recordar configuraciones y preferencias del usuario.</li>
-            <li>Mejorar el rendimiento y la velocidad de carga.</li>
-            <li>Analizar el comportamiento de uso para mejorar laboratorios y funcionalidades.</li>
-        </ul>
-    </div>
+                        <h3 class="mt-4 mb-3 text-info">3. Gestión de Cookies</h3>
+                        <p>Dado que nuestras cookies son estrictamente necesarias para el funcionamiento del área de
+                            usuarios (login y registro), si decide bloquearlas a través de la configuración de su
+                            navegador, es posible que no pueda iniciar sesión o utilizar correctamente la plataforma.
+                        </p>
+                    </div>
 
-    <!-- Gestión de cookies -->
-    <div class="card p-4 mt-4">
-        <h3 class="subtitle">Cómo desactivar o eliminar las cookies</h3>
-        <p class="mt-3">
-            Puedes configurar tu navegador para rechazar, bloquear o eliminar las cookies en cualquier momento.
-            Ten en cuenta que, si desactivas las cookies técnicas, algunas funciones de DockerLabs podrían dejar de funcionar correctamente.
-        </p>
-
-        <p class="mt-3">
-            Aquí tienes enlaces a las instrucciones de configuración de los navegadores más habituales:
-        </p>
-
-        <ul class="mt-3">
-            <li><strong>Google Chrome:</strong> Configuración → Privacidad y seguridad → Cookies y otros datos.</li>
-            <li><strong>Mozilla Firefox:</strong> Opciones → Privacidad y seguridad → Cookies y datos del sitio.</li>
-            <li><strong>Safari:</strong> Preferencias → Privacidad → Gestionar datos de sitios web.</li>
-            <li><strong>Microsoft Edge:</strong> Configuración → Cookies y permisos del sitio.</li>
-            <li><strong>Opera:</strong> Configuración → Privacidad y seguridad → Cookies.</li>
-        </ul>
-    </div>
-
-    <!-- Aceptación -->
-    <div class="card p-4 mt-4">
-        <h3 class="subtitle">Aceptación de la Política de Cookies</h3>
-        <p class="mt-3">
-            Al continuar utilizando DockerLabs, se considera que aceptas esta Política de Cookies.
-            Puedes modificar tus preferencias en cualquier momento desde los ajustes de tu navegador.
-        </p>
+                    <div class="text-center mt-5">
+                        <a href="{{ url_for('bunkerlabs.bunkerlabs_home') }}" class="btn btn-primary">
+                            <i class="bi bi-arrow-left"></i> Volver al Inicio
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
+
+<style>
+    .policy-content {
+        line-height: 1.8;
+        color: #cbd5e1;
+    }
+
+    .policy-content h3 {
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        padding-bottom: 0.5rem;
+    }
+</style>
 {% endblock %}

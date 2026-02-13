@@ -127,22 +127,22 @@
                         <i class="fas fa-user-plus"></i> Crear cuenta
                     </button>
 
-                    <div class="register-divider">
-                        <span>O</span>
-                    </div>
-
-                    <div class="register-links">
-                        <a href="{{ url_for('auth.login') }}">
-                            <i class="fas fa-sign-in-alt"></i> Iniciar sesión
-                        </a>
+                    <div class="logo-display">
+                        <img src="{{ url_for('static', filename='dockerlabs/images/logos/logo.png') }}"
+                            alt="DockerLabs Logo" class="auth-logo">
                     </div>
                 </div>
             </div>
         </form>
 
-        <div class="security-badge">
-            <i class="fas fa-shield-alt"></i>
-            <span>Registro seguro y encriptado</span>
+        <div class="auth-footer-actions">
+            <span class="text-muted">¿Ya tienes cuenta?</span>
+
+            <span class="auth-separator">/</span>
+
+            <a href="{{ url_for('auth.login') }}" class="footer-link">
+                <i class="fas fa-sign-in-alt"></i> Iniciar sesión
+            </a>
         </div>
     </div>
 </div>
