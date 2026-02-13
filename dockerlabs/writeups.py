@@ -137,7 +137,7 @@ def subir_writeups():
     writeup_publicado = Writeup.query.filter_by(
         autor=autor,
         maquina=maquina
-    )
+    ).first()
 
     if writeup_publicado:
         return jsonify({"error": "Writeup ya publicado."}), 400
