@@ -72,64 +72,73 @@
         <form method="post" class="register-form">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
-            <div class="form-group">
-                <label for="username"><i class="fas fa-user"></i> Nombre de usuario</label>
-                <input type="text" name="username" id="username" placeholder="Elige tu nombre de usuario" required
-                    autocomplete="username" autofocus minlength="3" maxlength="20">
-            </div>
+            <div class="auth-grid">
+                <!-- Left Column: Inputs -->
+                <div class="auth-column-left">
+                    <div class="form-group">
+                        <label for="username"><i class="fas fa-user"></i> Nombre de usuario</label>
+                        <input type="text" name="username" id="username" placeholder="Elige tu nombre de usuario"
+                            required autocomplete="username" autofocus minlength="3" maxlength="20">
+                    </div>
 
-            <div class="form-group">
-                <label for="email"><i class="fas fa-envelope"></i> Correo electrónico</label>
-                <input type="email" name="email" id="email" placeholder="tu@correo.com" required autocomplete="email"
-                    maxlength="35">
-            </div>
+                    <div class="form-group">
+                        <label for="email"><i class="fas fa-envelope"></i> Correo electrónico</label>
+                        <input type="email" name="email" id="email" placeholder="tu@correo.com" required
+                            autocomplete="email" maxlength="35">
+                    </div>
 
-            <div class="form-group">
-                <label for="password"><i class="fas fa-lock"></i> Contraseña</label>
-                <input type="password" name="password" id="password" placeholder="Crea una contraseña segura" required
-                    autocomplete="new-password">
-            </div>
+                    <div class="form-group">
+                        <label for="password"><i class="fas fa-lock"></i> Contraseña</label>
+                        <input type="password" name="password" id="password" placeholder="Crea una contraseña segura"
+                            required autocomplete="new-password">
+                    </div>
 
-            <div class="form-group">
-                <label for="password2"><i class="fas fa-lock"></i> Confirmar contraseña</label>
-                <input type="password" name="password2" id="password2" placeholder="Repite tu contraseña" required
-                    autocomplete="new-password">
-            </div>
+                    <div class="form-group">
+                        <label for="password2"><i class="fas fa-lock"></i> Confirmar contraseña</label>
+                        <input type="password" name="password2" id="password2" placeholder="Repite tu contraseña"
+                            required autocomplete="new-password">
+                    </div>
 
-            <div class="password-requirements">
-                <h6><i class="fas fa-info-circle"></i> Requisitos de la contraseña:</h6>
-                <ul>
-                    <li><i class="fas fa-check-circle"></i> Mínimo 8 caracteres</li>
-                    <li><i class="fas fa-check-circle"></i> Al menos una mayúscula</li>
-                    <li><i class="fas fa-check-circle"></i> Al menos un número</li>
-                    <li><i class="fas fa-check-circle"></i> Al menos un carácter especial</li>
-                </ul>
-            </div>
+                    <div class="password-requirements">
+                        <h6><i class="fas fa-info-circle"></i> Requisitos de la contraseña:</h6>
+                        <ul>
+                            <li><i class="fas fa-check-circle"></i> Mínimo 8 caracteres</li>
+                            <li><i class="fas fa-check-circle"></i> Al menos una mayúscula</li>
+                            <li><i class="fas fa-check-circle"></i> Al menos un número</li>
+                            <li><i class="fas fa-check-circle"></i> Al menos un carácter especial</li>
+                        </ul>
+                    </div>
 
-            <div class="terms-checkbox">
-                <label>
-                    <input type="checkbox" id="terms" name="terms" required>
-                    <span>
-                        Al registrarme acepto los
-                        <a href="{{ url_for('main.condiciones_uso') }}" target="_blank">Términos y Condiciones</a>
-                    </span>
-                </label>
-            </div>
+                    <div class="terms-checkbox">
+                        <label>
+                            <input type="checkbox" id="terms" name="terms" required>
+                            <span>
+                                Al registrarme acepto los
+                                <a href="{{ url_for('main.condiciones_uso') }}" target="_blank">Términos y
+                                    Condiciones</a>
+                            </span>
+                        </label>
+                    </div>
+                </div>
 
-            <button type="submit" class="btn-register">
-                <i class="fas fa-user-plus"></i> Crear cuenta
-            </button>
+                <!-- Right Column: Actions -->
+                <div class="auth-column-right">
+                    <button type="submit" class="btn-register">
+                        <i class="fas fa-user-plus"></i> Crear cuenta
+                    </button>
+
+                    <div class="register-divider">
+                        <span>O</span>
+                    </div>
+
+                    <div class="register-links">
+                        <a href="{{ url_for('auth.login') }}">
+                            <i class="fas fa-sign-in-alt"></i> Iniciar sesión
+                        </a>
+                    </div>
+                </div>
+            </div>
         </form>
-
-        <div class="register-divider">
-            <span>¿Ya tienes cuenta?</span>
-        </div>
-
-        <div class="register-links">
-            <a href="{{ url_for('auth.login') }}">
-                <i class="fas fa-sign-in-alt"></i> Iniciar sesión
-            </a>
-        </div>
 
         <div class="security-badge">
             <i class="fas fa-shield-alt"></i>
