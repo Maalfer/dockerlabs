@@ -33,7 +33,14 @@ LOGO_UPLOAD_FOLDER = os.path.join(BASE_DIR, 'static', 'images', 'logos')
 ALLOWED_PROFILE_EXTENSIONS = {'.jpg', '.jpeg', '.png', '.gif', '.webp'}
 ALLOWED_LOGO_EXTENSIONS = {'.jpg', '.jpeg', '.png', '.gif', '.webp', '.svg'}
 
-app = Flask(__name__, static_folder=os.path.join(BASE_DIR, 'static'), template_folder=os.path.join(BASE_DIR, 'templates'))
+# Serve templates and static assets from the sibling `frontend/` folder so React assets
+# and original templates are available after the repo reorganization.
+FRONTEND_DIR = os.path.abspath(os.path.join(BASE_DIR, '..', 'frontend'))
+app = Flask(
+    __name__,
+    static_folder=os.path.join(FRONTEND_DIR, 'static'),
+    template_folder=os.path.join(FRONTEND_DIR, 'templates')
+)
 auth = HTTPBasicAuth()
 
 from dotenv import load_dotenv
@@ -416,84 +423,22 @@ def revert_nombre_claim(claim_id):
         alchemy_db.session.commit()
     return redirect(url_for('peticiones'))
 
+from flask import abort
+
+
 @app.route('/')
 def index():
-    """
-    Página de inicio.
-    ---
-    tags:
-      - Páginas
-    responses:
-      200:
-        description: Página de bienvenida.
-    """
-    from .models import Machine, Category, CompletedMachine, User
-    from sqlalchemy import func
-    from .extensions import db as alchemy_db
+    """Serve the React frontend `index.html` as the application root."""
+    return send_from_directory(FRONTEND_DIR, 'index.html')
 
-    query = alchemy_db.session.query(Machine, Category.categoria).filter(
-        Machine.origen == 'docker'
-    ).outerjoin(
-        Category, (Machine.id == Category.machine_id) & (Category.origen == 'docker')
-    ).order_by(Machine.id.asc()).all()
-    
-    all_maquinas = []
-    for m, cat_name in query:
-                        
-        d = {
-            'id': m.id,
-            'nombre': m.nombre,
-            'dificultad': m.dificultad,
-            'clase': m.clase,
-            'color': m.color,
-            'autor': m.autor,
-            'enlace_autor': m.enlace_autor,
-            'fecha': m.fecha,
-            'imagen': m.imagen,
-            'descripcion': m.descripcion,
-            'link_descarga': m.link_descarga,
-            'posicion': m.posicion,
-            'categoria': cat_name
-        }
-        all_maquinas.append(d)
 
-    maquinas_con_fecha = []
-    for m_dict in all_maquinas:
-        fecha_str = m_dict['fecha']                     
-        try:
-            parts = fecha_str.split('/')
-            if len(parts) == 3:
-                            
-                fecha_iso = f"{parts[2]}-{parts[1]}-{parts[0]}"
-                maquinas_con_fecha.append((m_dict, fecha_iso))
-        except Exception:
-            pass
-
-    maquinas_con_fecha.sort(key=lambda x: x[1], reverse=True)
-
-    machine_ranks = {}
-    top_2_items = maquinas_con_fecha[:2]
-    for idx, (m, _) in enumerate(top_2_items):
-        machine_ranks[m['id']] = idx + 1
-    
-    top_2_ids = {m['id'] for m, _ in top_2_items}
-    top_2 = [m for m, _ in top_2_items]
-    rest = [m for m in all_maquinas if m['id'] not in top_2_ids]
-    maquinas = top_2 + rest
-
-    completed_machines = []
-    if current_user.is_authenticated:
-                                        
-        comp_objs = CompletedMachine.query.filter_by(user_id=current_user.id).all()
-        completed_machines = [c.machine_name.strip() for c in comp_objs]
-
-    single_machine = len(maquinas) == 1
-
-    categorias_map = {}
-    for m in maquinas:
-        categorias_map[m['id']] = m['categoria'] if m['categoria'] else ''
-
-    return render_template('dockerlabs/home.html', maquinas=maquinas, completed_machines=completed_machines, machine_ranks=machine_ranks, single_machine=single_machine, categorias_map=categorias_map)
+# Catch-all for client-side routes: serve the React app for unknown paths
+@app.route('/<path:unknown>')
+def catch_all(unknown):
+    # Do not interfere with API or static routes
+    if unknown.startswith('api') or unknown.startswith('static') or unknown.startswith('docs') or unknown.startswith('flasgger_static'):
+        return abort(404)
+    return send_from_directory(FRONTEND_DIR, 'index.html')
 
 @app.errorhandler(404)
 def page_not_found(e):

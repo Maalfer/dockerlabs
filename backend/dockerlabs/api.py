@@ -239,3 +239,40 @@ def api_ranking_writeups():
         response_list.append(r)
 
     return jsonify(response_list), 200
+
+
+@api_bp.route('/api/maquinas', methods=['GET'])
+@limiter.limit("60 per minute", methods=["GET"])
+def api_maquinas():
+        """
+        Devuelve la lista de máquinas en formato JSON (info_maquinas).
+        ---
+        tags:
+            - API Pública
+        responses:
+            200:
+                description: Lista de máquinas con metadatos.
+        """
+        from .models import Machine
+
+        maquinas_objs = Machine.query.filter_by(origen='docker').order_by(Machine.id.asc()).all()
+        info_maquinas = []
+        for m in maquinas_objs:
+                d = {
+                        'id': m.id,
+                        'nombre': m.nombre,
+                        'dificultad': m.dificultad,
+                        'clase': m.clase,
+                        'color': m.color,
+                        'autor': m.autor,
+                        'enlace_autor': m.enlace_autor,
+                        'fecha': m.fecha,
+                        'imagen': m.imagen,
+                        'descripcion': m.descripcion,
+                        'link_descarga': m.link_descarga
+                }
+                if d['imagen']:
+                        d['imagen_url'] = url_for('static', filename=f"dockerlabs/{d['imagen']}", _external=True)
+                info_maquinas.append(d)
+
+        return jsonify(info_maquinas), 200
