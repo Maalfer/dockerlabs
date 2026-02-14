@@ -397,6 +397,8 @@ def api_update_writeup_subido(writeup_id):
         alchemy_db.session.rollback()
         return jsonify({"error": f"Error al crear la petición de cambio: {str(e)}"}), 500
 
+
+
 @writeups_bp.route('/api/writeups_subidos/<int:writeup_id>', methods=['DELETE'])
 @role_required('admin', 'moderador')
 @csrf_protect

@@ -2,20 +2,13 @@ import React, { useEffect, useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import './Header.css'
 
+import { useAuth } from '../context/AuthContext'
+
 export default function Header({ openModal }) {
-  const [user, setUser] = useState({ is_authenticated: false, user: null })
+  const { user, logout } = useAuth()
   const navigate = useNavigate()
 
-  useEffect(() => {
-    fetch('/api/user/info', { credentials: 'include' })
-      .then(r => r.ok ? r.json() : Promise.resolve({ is_authenticated: false }))
-      .then(data => setUser(data || { is_authenticated: false }))
-      .catch(() => setUser({ is_authenticated: false }))
-  }, [])
-
   const isAuth = !!user.is_authenticated
-
-
 
   return (
     <header className="position-fixed fixed-top" style={{ display: 'grid', gridTemplateColumns: '1fr auto 1fr', alignItems: 'center', gap: '15px' }}>
@@ -58,7 +51,7 @@ export default function Header({ openModal }) {
               <i className="bi bi-speedometer2" /> Dashboard
             </button>
 
-            <button id="logout-button" className="btn-auth btn-logout" onClick={() => window.location.href = '/auth/logout'}>
+            <button id="logout-button" className="btn-auth btn-logout" onClick={logout}>
               <i className="bi bi-box-arrow-right" /> Cerrar sesión
             </button>
           </>

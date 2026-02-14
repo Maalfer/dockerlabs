@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import BunkerLayout, { useBunkerSession } from '../components/BunkerLayout'
+import { useAuth } from '../context/AuthContext'
 import './BunkerLoginPage.css'
 
 function BunkerLoginContent() {
@@ -9,6 +10,7 @@ function BunkerLoginContent() {
     const [loading, setLoading] = useState(false)
     const [isFocused, setIsFocused] = useState(false)
     const navigate = useNavigate()
+    const { login } = useAuth() // Use AuthContext
     const sess = useBunkerSession()
 
     useEffect(() => {
@@ -37,6 +39,7 @@ function BunkerLoginContent() {
 
             if (res.ok && data.success) {
                 sess.refresh()
+                login() // Update global auth state
                 navigate('/bunkerlabs')
             } else {
                 setError(data.error || 'Error al iniciar sesión')

@@ -2,25 +2,28 @@ import React, { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import './LoginPage.css'
 
-export default function LoginPage(){
+import { useAuth } from '../context/AuthContext'
+
+export default function LoginPage() {
   const [csrf, setCsrf] = useState('')
   const [errorMsg, setErrorMsg] = useState('')
   const [successMsg, setSuccessMsg] = useState('')
   const navigate = useNavigate()
+  const { login } = useAuth()
 
-  useEffect(()=>{
+  useEffect(() => {
     // read optional messages from query params (server sometimes redirects with ?error=...)
-    try{
+    try {
       const params = new URLSearchParams(window.location.search)
       if (params.get('error')) setErrorMsg(params.get('error'))
       if (params.get('success')) setSuccessMsg(params.get('success'))
-    }catch(e){}
+    } catch (e) { }
 
     // fetch CSRF token (sets session cookie)
     fetch('/api/csrf', { credentials: 'include' })
       .then(r => r.ok ? r.json() : null)
       .then(data => { if (data && data.csrf_token) setCsrf(data.csrf_token) })
-      .catch(()=>{})
+      .catch(() => { })
   }, [])
 
   return (
@@ -34,21 +37,22 @@ export default function LoginPage(){
         {errorMsg && <div className="alert alert-danger"><i className="fas fa-exclamation-circle"></i> {errorMsg}</div>}
         {successMsg && <div className="alert alert-success"><i className="fas fa-check-circle"></i> {successMsg}</div>}
 
-        <form method="post" className="login-form" onSubmit={async (e)=>{
-            e.preventDefault()
-            setErrorMsg('')
-            const fd = new FormData(e.currentTarget)
-            const payload = { username: fd.get('username'), password: fd.get('password') }
-            try{
-              const res = await fetch('/auth/api_login', { method: 'POST', credentials: 'include', headers: { 'Content-Type':'application/json', 'X-CSRFToken': csrf }, body: JSON.stringify(payload) })
-              const j = await res.json()
-              if (res.ok && j.success) {
-                navigate('/dashboard')
-              } else {
-                setErrorMsg(j.message || 'Error al iniciar sesión')
-              }
-            }catch(err){ setErrorMsg('Error de red') }
-          }}>
+        <form method="post" className="login-form" onSubmit={async (e) => {
+          e.preventDefault()
+          setErrorMsg('')
+          const fd = new FormData(e.currentTarget)
+          const payload = { username: fd.get('username'), password: fd.get('password') }
+          try {
+            const res = await fetch('/auth/api_login', { method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrf }, body: JSON.stringify(payload) })
+            const j = await res.json()
+            if (res.ok && j.success) {
+              login() // Update global auth state
+              navigate('/dashboard')
+            } else {
+              setErrorMsg(j.message || 'Error al iniciar sesión')
+            }
+          } catch (err) { setErrorMsg('Error de red') }
+        }}>
           <input type="hidden" name="csrf_token" value={csrf} />
 
           <div className="auth-grid">

@@ -40,6 +40,8 @@ function DockerLabsLayout({ modalState, open, close }) {
   )
 }
 
+import { AuthProvider } from './context/AuthContext'
+
 export default function App() {
   const [modalState, setModalState] = useState({ menu: false, dashboard: false, messaging: false, gestion: false })
 
@@ -47,7 +49,7 @@ export default function App() {
   const close = (key) => setModalState(s => ({ ...s, [key]: false }))
 
   return (
-    <div>
+    <AuthProvider>
       <Routes>
         {/* BunkerLabs routes (own layout, no DockerLabs header/footer) */}
         <Route path="/bunkerlabs/login" element={<BunkerLoginPage />} />
@@ -75,7 +77,7 @@ export default function App() {
           <Route path="*" element={<NotFoundPage />} />
         </Route>
       </Routes>
-    </div>
+    </AuthProvider>
   )
 }
 
