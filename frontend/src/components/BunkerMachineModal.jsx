@@ -1,5 +1,5 @@
 import React from 'react'
-import './BunkerModals.css'
+// No CSS import needed as we use global styles from BunkerLayout.css (bunkerlabs.css)
 
 function escapeHtml(str) {
     if (!str) return ''
@@ -18,40 +18,47 @@ export default function BunkerMachineModal({ machine, onClose }) {
     const badgeClass = claseMapping[machine.dificultad] || ''
 
     return (
-        <div className="bunker-overlay" onClick={onClose}>
-            <div className="bunker-modal" onClick={e => e.stopPropagation()} style={{ maxWidth: 520 }}>
+        <div className="bunker-modal-overlay" onClick={onClose}>
+            <div className="bunker-modal-popup" onClick={e => e.stopPropagation()}>
                 <button className="bunker-modal-close" onClick={onClose}>×</button>
 
-                {machine.imagen && (
-                    <img src={machine.imagen} alt={machine.nombre} className="bunker-machine-img" />
-                )}
+                <div className="bunker-modal-content">
+                    <h2 className="bunker-modal-title">{escapeHtml(machine.nombre)}</h2>
+                    <div className="bunker-modal-subtitle">
+                        DIFICULTAD: <span className={badgeClass}>{escapeHtml(machine.dificultad)}</span>
+                    </div>
 
-                <h2 style={{ textAlign: 'center' }}>{escapeHtml(machine.nombre)}</h2>
+                    <hr className="bunker-modal-separator" />
 
-                <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
-                    <span className={`bunker-badge ${badgeClass}`}>{escapeHtml(machine.dificultad)}</span>
+                    <div className="bunker-modal-body">
+                        {machine.imagen && (
+                            <img src={machine.imagen} alt={machine.nombre} className="bunker-modal-image" />
+                        )}
+
+                        <div className="bunker-modal-info">
+                            <div className="bunker-modal-row">
+                                <span className="bunker-modal-label">CREADOR</span>
+                                <span className="bunker-modal-value">
+                                    <a href={machine.enlace_autor || '#'} target="_blank" rel="noreferrer">
+                                        {escapeHtml(machine.autor)}
+                                    </a>
+                                </span>
+                            </div>
+
+                            <div className="bunker-modal-row">
+                                <span className="bunker-modal-label">FECHA DE SALIDA</span>
+                                <span className="bunker-modal-value">{escapeHtml(machine.fecha)}</span>
+                            </div>
+
+                            {/* Assuming description might be handled differently or just added here */}
+                            {machine.descripcion && (
+                                <div style={{ marginTop: '1rem', fontSize: '0.9rem', color: '#cbd5e1', lineHeight: 1.6 }}>
+                                    {escapeHtml(machine.descripcion)}
+                                </div>
+                            )}
+                        </div>
+                    </div>
                 </div>
-
-                <div className="bunker-machine-meta">
-                    <div className="bunker-machine-meta-item">
-                        <span className="label">Autor</span>
-                        <span className="value">{escapeHtml(machine.autor)}</span>
-                    </div>
-                    <div className="bunker-machine-meta-item">
-                        <span className="label">Fecha</span>
-                        <span className="value">{escapeHtml(machine.fecha)}</span>
-                    </div>
-                </div>
-
-                {machine.descripcion && (
-                    <div style={{
-                        background: 'var(--bunker-surface-soft)', borderRadius: 10,
-                        padding: '1rem', border: '1px solid var(--bunker-border-soft)', fontSize: '0.9rem',
-                        lineHeight: 1.7, color: 'var(--bunker-text-secondary)'
-                    }}>
-                        {escapeHtml(machine.descripcion)}
-                    </div>
-                )}
             </div>
         </div>
     )

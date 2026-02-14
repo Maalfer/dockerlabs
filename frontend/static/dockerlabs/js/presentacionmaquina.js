@@ -546,6 +546,9 @@ function presentacion(nombre, dificultad, color, autor_nombre, autor_enlace, fec
     const imgEl = document.createElement('img');
     imgEl.className = 'popup-machine-image';
     imgEl.src = imageUrl;
+    imgEl.onerror = function () {
+        this.src = '/static/dockerlabs/images/logos/logo.png';
+    };
 
     // Optional sparkle icon from screenshot
     const sparkle = document.createElement('i');

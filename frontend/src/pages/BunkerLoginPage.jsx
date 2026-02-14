@@ -7,6 +7,7 @@ function BunkerLoginContent() {
     const [password, setPassword] = useState('')
     const [error, setError] = useState('')
     const [loading, setLoading] = useState(false)
+    const [isFocused, setIsFocused] = useState(false)
     const navigate = useNavigate()
     const sess = useBunkerSession()
 
@@ -47,74 +48,79 @@ function BunkerLoginContent() {
         }
     }
 
-    const handleGuest = async () => {
-        setError('')
-        setLoading(true)
-        try {
-            const res = await fetch('/bunkerlabs/api/guest', {
-                method: 'POST',
-                credentials: 'include'
-            })
-            const data = await res.json()
-            if (res.ok && data.success) {
-                sess.refresh()
-                navigate('/bunkerlabs')
-            } else {
-                setError(data.error || 'Error al entrar como invitado')
-            }
-        } catch {
-            setError('Error de conexión')
-        } finally {
-            setLoading(false)
-        }
-    }
-
     return (
-        <div className="bunker-login-wrapper">
-            <div className="bunker-login-grid">
-                {/* LEFT: Login form */}
-                <div className="bunker-login-card">
-                    <div className="bunker-login-header">
-                        <h2>🔐 Acceso BunkerLabs</h2>
-                        <p>Introduce tu contraseña de acceso</p>
+        <div className="bunker-container">
+            <div className={`bunker-box ${isFocused ? 'input-focused' : ''}`}>
+                {/* Columna Izquierda: Login */}
+                <div className="login-section">
+                    <div className="bunker-header">
+                        <div className="bunker-icon">
+                            <i className="bi bi-shield-lock"></i>
+                        </div>
+                        <h2>Acceso BunkerLabs</h2>
+                        <p className="bunker-subtitle">Área restringida - Acceso autorizado</p>
                     </div>
 
-                    {error && <div className="bunker-login-alert error">{error}</div>}
+                    {error && (
+                        <div className="alert alert-danger bunker-alert">
+                            <i className="bi bi-exclamation-triangle"></i>
+                            {error}
+                        </div>
+                    )}
 
-                    <form className="bunker-login-form" onSubmit={handleLogin}>
-                        <div className="bunker-form-group">
-                            <label htmlFor="bunker-pw"><i className="bi bi-key"></i> Contraseña</label>
+                    <form onSubmit={handleLogin} className="bunker-form">
+                        <div className="form-group">
+                            <label htmlFor="password" className="bunker-label">
+                                <i className="bi bi-key"></i>
+                                Contraseña de acceso
+                            </label>
                             <input
-                                id="bunker-pw"
                                 type="password"
-                                placeholder="Tu contraseña de acceso..."
+                                id="password"
+                                name="password"
+                                className="bunker-input"
+                                required
+                                placeholder="Ingresa la contraseña de BunkerLabs"
                                 value={password}
                                 onChange={e => setPassword(e.target.value)}
-                                autoFocus
-                                autoComplete="off"
+                                onFocus={() => setIsFocused(true)}
+                                onBlur={() => setIsFocused(false)}
+                                disabled={loading}
                             />
                         </div>
-                        <button type="submit" className="bunker-btn-login" disabled={loading}>
-                            <i className="bi bi-box-arrow-in-right"></i>
-                            {loading ? 'Accediendo...' : 'Acceder'}
+
+                        <button type="submit" className="bunker-btn" disabled={loading}>
+                            <i className="bi bi-door-open"></i>
+                            {loading ? 'Accediendo...' : 'Acceder a BunkerLabs'}
                         </button>
                     </form>
 
-                    <div className="bunker-login-footer">
-                        <button onClick={handleGuest} disabled={loading}>
-                            <i className="bi bi-person"></i> Entrar como invitado
-                        </button>
+                    <div className="bunker-footer">
+                        <p className="bunker-warning" style={{ fontSize: '0.9rem', lineHeight: 1.5 }}>
+                            <i className="bi bi-info-circle"></i>
+                            {' '}Lugar donde se alojan otro tipo de laboratorios vulnerables para enseñar a los alumnos la
+                            explotación de vulnerabilidades en laboratorios hechos a medida.
+                            <br /><br />
+                            Puedes acceder en modo de prueba a BunkerLabs a través de este{' '}
+                            <a href="/bunkerlabs/guest"
+                                style={{ color: '#a78bfa', textDecoration: 'underline', fontWeight: 600 }}>
+                                enlace
+                            </a>.
+                        </p>
                     </div>
                 </div>
 
-                {/* RIGHT: Video */}
-                <div className="bunker-login-video">
-                    <iframe
-                        src="https://www.youtube.com/embed/SSPKQmep-bE?si=W0XN5dJpU2mT_vFr"
-                        title="BunkerLabs Video"
-                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                        allowFullScreen
-                    />
+                {/* Columna Derecha: Video */}
+                <div className="video-section">
+                    <div className="video-overlay"></div>
+                    <div className="video-container">
+                        <iframe
+                            src="https://www.youtube.com/embed/cJS0IewSuRU?autoplay=1&mute=1&controls=0&showinfo=0&rel=0&loop=1&playlist=cJS0IewSuRU"
+                            title="BunkerLabs Video"
+                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                            allowFullScreen
+                        ></iframe>
+                    </div>
                 </div>
             </div>
         </div>

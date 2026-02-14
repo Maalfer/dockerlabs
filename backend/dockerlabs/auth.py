@@ -378,6 +378,7 @@ def api_login():
     return jsonify({'success': True, 'redirect': url_for('dashboard')})
 
 @auth_bp.route('/logout')
+@auth_bp.route('/auth/logout')
 
 def logout():
     """

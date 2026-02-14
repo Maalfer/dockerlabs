@@ -18,6 +18,8 @@ import NotFoundPage from './pages/NotFoundPage'
 import ForbiddenPage from './pages/ForbiddenPage'
 import Footer from './components/Footer'
 import Modals from './components/Modals'
+import WriteupsPublicadosPage from './pages/WriteupsPublicadosPage'
+import WriteupsRecibidosPage from './pages/WriteupsRecibidosPage'
 
 // BunkerLabs pages (own layout)
 import BunkerLoginPage from './pages/BunkerLoginPage'
@@ -60,6 +62,8 @@ export default function App() {
           <Route path="/recover" element={<RecoverPage />} />
           <Route path="/dashboard" element={<DashboardPage />} />
           <Route path="/estadisticas" element={<EstadisticasPage />} />
+          <Route path="/writeups-publicados" element={<WriteupsPublicadosPage />} />
+          <Route path="/writeups-recibidos" element={<WriteupsRecibidosPage />} />
           <Route path="/instrucciones-uso" element={<InstruccionesUsoPage />} />
           <Route path="/enviar-maquina" element={<EnviarMaquinaPage />} />
           <Route path="/como-se-crea-una-maquina" element={<ComoSeCreaUnaMaquinaPage />} />

@@ -1,37 +1,59 @@
-import React, { useState, useRef, useEffect } from 'react'
-import { useBunkerSession } from './BunkerLayout'
-import './BunkerModals.css'
+import React, { useState } from 'react'
+import { useBunkerSession } from './BunkerLayout' // Ensure correct import path
+import './BunkerFlagModal.css'
 
-export default function BunkerFlagModal({ machineName, machineId, onClose, onSuccess }) {
-    const [flag, setFlag] = useState('')
-    const [msg, setMsg] = useState(null) // { type: 'success'|'error', text }
+export default function BunkerFlagModal({ machineName, machineId, onClose }) {
+    const [pin, setPin] = useState('')
     const [loading, setLoading] = useState(false)
-    const inputRef = useRef(null)
-    const { csrf_token } = useBunkerSession()
+    const [msg, setMsg] = useState(null) // { type: 'error'|'success', text: '' }
 
-    useEffect(() => { inputRef.current?.focus() }, [])
+    // We can try to use sess.csrf_token if available, or fetch fresh
+    const sess = useBunkerSession()
 
     const handleSubmit = async (e) => {
         e.preventDefault()
-        if (!flag.trim()) return
+        if (!pin.trim()) return
+
         setLoading(true)
         setMsg(null)
 
         try {
-            const res = await fetch('/bunkerlabs/subir-flag', {
-                method: 'POST',
-                credentials: 'include',
-                headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrf_token },
-                body: JSON.stringify({ machine_id: machineId, flag: flag.trim() })
-            })
-            const data = await res.json()
-            if (res.ok && data.success) {
-                setMsg({ type: 'success', text: data.message || '¡Flag correcta! 🎉' })
-                if (onSuccess) onSuccess()
-            } else {
-                setMsg({ type: 'error', text: data.error || data.message || 'Flag incorrecta.' })
+            // Fetch CSRF if not in session or just to be safe (or use what we have)
+            let token = sess.csrf_token
+            if (!token) {
+                const r = await fetch('/api/csrf', { credentials: 'include' })
+                if (r.ok) {
+                    const d = await r.json()
+                    token = d.csrf_token
+                }
             }
-        } catch {
+
+            const res = await fetch('/bunkerlabs/subir-flag', { // Original endpoint
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': token || ''
+                },
+                body: JSON.stringify({ maquina: machineName, pin: pin.trim() })
+            })
+
+            const data = await res.json()
+
+            if (data.error) {
+                setMsg({ type: 'error', text: data.error })
+            } else {
+                setMsg({ type: 'success', text: data.message })
+                if (data.message && data.message.includes('correcta')) {
+                    setTimeout(() => {
+                        onClose()
+                        // Optional: Refresh machines to show solved state? 
+                        // We might need a way to trigger refresh in parent.
+                        if (sess.refresh) sess.refresh()
+                        window.location.reload() // As per original JS behavior
+                    }, 1500)
+                }
+            }
+        } catch (err) {
             setMsg({ type: 'error', text: 'Error de conexión.' })
         } finally {
             setLoading(false)
@@ -39,31 +61,37 @@ export default function BunkerFlagModal({ machineName, machineId, onClose, onSuc
     }
 
     return (
-        <div className="bunker-overlay" onClick={onClose}>
-            <div className="bunker-modal" onClick={e => e.stopPropagation()} style={{ maxWidth: 450 }}>
-                <button className="bunker-modal-close" onClick={onClose}>×</button>
-                <h2>🚩 Subir Flag</h2>
-                <h3>{machineName}</h3>
+        <div className="bunker-flag-overlay" onClick={onClose}>
+            <div className="bunker-flag-popup" onClick={e => e.stopPropagation()}>
+                <button className="bunker-flag-close" onClick={onClose}>&times;</button>
 
-                <form onSubmit={handleSubmit}>
-                    <div className="bunker-flag-input-group">
-                        <input
-                            ref={inputRef}
-                            type="text"
-                            placeholder="Introduce el PIN..."
-                            value={flag}
-                            onChange={e => setFlag(e.target.value)}
-                            autoComplete="off"
-                        />
-                        <button type="submit" className="bunker-flag-btn" disabled={loading || !flag.trim()}>
-                            {loading ? '...' : 'Validar'}
-                        </button>
-                    </div>
-                </form>
+                <h2 className="bunker-flag-title">Subir Flag</h2>
+
+                <p style={{ fontSize: '0.95rem', color: '#94a3b8', marginBottom: '1.5rem', textAlign: 'center', lineHeight: 1.5 }}>
+                    Introduce el PIN obtenido en la máquina:<br />
+                    <strong style={{ color: '#e2e8f0' }}>{machineName}</strong>
+                </p>
 
                 {msg && (
-                    <div className={`bunker-alert ${msg.type}`}>{msg.text}</div>
+                    <div className={`bunker-alert ${msg.type}`}>
+                        {msg.text}
+                    </div>
                 )}
+
+                <form onSubmit={handleSubmit}>
+                    <input
+                        type="text"
+                        className="bunker-flag-input"
+                        placeholder="PIN de Acceso"
+                        value={pin}
+                        onChange={e => setPin(e.target.value)}
+                        autoFocus
+                        disabled={loading}
+                    />
+                    <button type="submit" className="bunker-flag-btn" disabled={loading}>
+                        {loading ? 'Validando...' : 'Validar Flag'}
+                    </button>
+                </form>
             </div>
         </div>
     )
