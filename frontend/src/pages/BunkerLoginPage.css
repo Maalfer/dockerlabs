@@ -1,0 +1,189 @@
+/* =========================================
+   BUNKERLABS LOGIN PAGE
+   ========================================= */
+
+.bunker-login-wrapper {
+    min-height: calc(100vh - 152px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem 1.5rem;
+}
+
+.bunker-login-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 3rem;
+    max-width: 900px;
+    width: 100%;
+    align-items: center;
+}
+
+/* Left: form */
+.bunker-login-card {
+    padding: 2.3rem 2.1rem;
+    border-radius: 18px;
+    background: var(--bunker-surface, #24283B);
+    border: 1px solid rgba(148, 163, 184, 0.35);
+    box-shadow: 0 18px 40px rgba(15, 23, 42, 0.55);
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    transition: transform 0.18s ease, box-shadow 0.25s ease;
+}
+
+.bunker-login-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 22px 55px rgba(15, 23, 42, 0.75);
+}
+
+.bunker-login-header {
+    text-align: center;
+}
+
+.bunker-login-header h2 {
+    font-family: 'Fira Code', monospace;
+    font-weight: 600;
+    font-size: 1.5rem;
+    color: #fff;
+    margin: 0 0 0.5rem;
+}
+
+.bunker-login-header p {
+    color: var(--bunker-text-secondary, #A9B1D6);
+    font-size: 0.88rem;
+    margin: 0;
+}
+
+.bunker-login-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1.2rem;
+}
+
+.bunker-form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+}
+
+.bunker-form-group label {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--bunker-text-secondary, #A9B1D6);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.bunker-form-group label i {
+    color: var(--bunker-primary-light, #9575CD);
+    font-size: 0.9rem;
+}
+
+.bunker-form-group input {
+    background: var(--bunker-surface-soft, #2A2E3F);
+    border: 1px solid var(--bunker-border-soft, #414868);
+    border-radius: 10px;
+    padding: 0.8rem 1rem;
+    color: var(--bunker-text, #C0CAF5);
+    font-size: 0.9rem;
+    font-family: 'Fira Code', monospace;
+    transition: all 0.3s ease;
+}
+
+.bunker-form-group input:focus {
+    outline: none;
+    border-color: var(--bunker-primary, #7E57C2);
+    box-shadow: 0 0 0 3px rgba(126, 87, 194, 0.2);
+}
+
+.bunker-form-group input::placeholder {
+    color: var(--bunker-text-muted, #787C99);
+}
+
+.bunker-btn-login {
+    padding: 0.85rem 1.5rem;
+    border-radius: 10px;
+    background: linear-gradient(135deg, var(--bunker-primary, #7E57C2), var(--bunker-primary-dark, #5E35B1));
+    color: #fff;
+    font-weight: 600;
+    font-size: 0.95rem;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    transition: all 0.3s ease;
+    font-family: 'Inter', sans-serif;
+}
+
+.bunker-btn-login:hover {
+    box-shadow: var(--bunker-glow-strong);
+    transform: translateY(-2px);
+}
+
+.bunker-btn-login:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.bunker-login-footer {
+    text-align: center;
+    padding-top: 0.5rem;
+}
+
+.bunker-login-footer a,
+.bunker-login-footer button {
+    color: var(--bunker-primary-light, #9575CD);
+    font-size: 0.85rem;
+    font-weight: 500;
+    text-decoration: none;
+    transition: color 0.2s;
+    background: none;
+    border: none;
+    cursor: pointer;
+}
+
+.bunker-login-footer a:hover,
+.bunker-login-footer button:hover {
+    color: #fff;
+}
+
+.bunker-login-alert {
+    padding: 0.7rem 1rem;
+    border-radius: 10px;
+    font-size: 0.88rem;
+    font-weight: 500;
+    text-align: center;
+}
+
+.bunker-login-alert.error {
+    background: rgba(247, 118, 142, 0.15);
+    border: 1px solid rgba(247, 118, 142, 0.4);
+    color: var(--bunker-danger, #F7768E);
+}
+
+/* Right: video */
+.bunker-login-video {
+    aspect-ratio: 16/9;
+    border-radius: 16px;
+    overflow: hidden;
+    border: 1px solid var(--bunker-border-soft, #414868);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+}
+
+.bunker-login-video iframe {
+    width: 100%;
+    height: 100%;
+    border: 0;
+}
+
+@media (max-width: 768px) {
+    .bunker-login-grid {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+    }
+}

@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
 import MachineModal from './MachineModal'
+import './Modals.css'
 
 export default function Modals({ state, open, close }){
   const [machineModalOpen, setMachineModalOpen] = useState(false)
@@ -14,7 +16,8 @@ export default function Modals({ state, open, close }){
     return ()=> window.removeEventListener('open-machine-modal', handler)
   }, [])
 
-  // Render overlays with the same IDs and inner structure as `templates/dockerlabs/base.html`
+  const closeAndNavigate = (key) => { close(key) }
+
   return (
     <>
       <div id="gestionWriteupsModal" className={`overlay ${state.gestion ? 'visible' : ''}`}>
@@ -22,7 +25,7 @@ export default function Modals({ state, open, close }){
           <button className="modal-close-button" type="button" onClick={()=>close('gestion')}>&times;</button>
           <div className="modal-header"><h2 className="modal-title">Gestión writeups</h2></div>
           <div className="ranking-list">
-            <a href="/writeups_publicados" className="ranking-item">
+            <a href="/writeups-publicados" className="ranking-item" onClick={()=>close('gestion')}>
               <div className="user-info"><span className="user-name">Writeups publicados</span></div>
               <i className="bi bi-chevron-right" style={{color:'#64748b'}}></i>
             </a>
@@ -40,35 +43,35 @@ export default function Modals({ state, open, close }){
               <i className="bi bi-box-arrow-up-right" style={{color:'#64748b', fontSize:'0.9rem'}}></i>
             </a>
 
-            <a href="/instrucciones-uso" target="_blank" rel="noreferrer" className="ranking-item">
+            <Link to="/instrucciones-uso" className="ranking-item" onClick={()=>closeAndNavigate('menu')}>
               <div className="user-info"><span className="user-name">Instrucciones de Uso</span></div>
               <i className="bi bi-file-earmark-pdf" style={{color:'#64748b'}}></i>
-            </a>
+            </Link>
 
-            <a href="/enviar-maquina" className="ranking-item">
+            <Link to="/enviar-maquina" className="ranking-item" onClick={()=>closeAndNavigate('menu')}>
               <div className="user-info"><span className="user-name">Enviar Máquina</span></div>
               <i className="bi bi-chevron-right" style={{color:'#64748b'}}></i>
-            </a>
+            </Link>
 
-            <a href="/como-se-crea-una-maquina" className="ranking-item">
+            <Link to="/como-se-crea-una-maquina" className="ranking-item" onClick={()=>closeAndNavigate('menu')}>
               <div className="user-info"><span className="user-name">Cómo se Crea una Máquina</span></div>
               <i className="bi bi-chevron-right" style={{color:'#64748b'}}></i>
-            </a>
+            </Link>
 
-            <a href="/estadisticas" className="ranking-item">
+            <Link to="/estadisticas" className="ranking-item" onClick={()=>closeAndNavigate('menu')}>
               <div className="user-info"><span className="user-name">Estadísticas</span></div>
               <i className="bi bi-bar-chart-line" style={{color:'#64748b'}}></i>
-            </a>
+            </Link>
 
             <a href="/docs/" target="_blank" rel="noreferrer" className="ranking-item">
               <div className="user-info"><span className="user-name">Swagger UI</span></div>
               <i className="bi bi-file-code" style={{color:'#64748b'}}></i>
             </a>
 
-            <a href="/agradecimientos" className="ranking-item">
+            <Link to="/agradecimientos" className="ranking-item" onClick={()=>closeAndNavigate('menu')}>
               <div className="user-info"><span className="user-name">Agradecimientos</span></div>
               <i className="bi bi-heart" style={{color:'#64748b'}}></i>
-            </a>
+            </Link>
           </div>
         </div>
       </div>
@@ -78,7 +81,7 @@ export default function Modals({ state, open, close }){
           <button className="modal-close-button" type="button" onClick={()=>close('dashboard')}>&times;</button>
           <div className="modal-header"><h2 className="modal-title">Dashboard</h2><div className="modal-subtitle">Opciones de usuario</div></div>
           <div className="ranking-list two-columns">
-            <a href="/dashboard" className="ranking-item"><div className="user-info"><span className="user-name">Ir al Dashboard</span></div><i className="bi bi-speedometer2"></i></a>
+            <Link to="/dashboard" className="ranking-item" onClick={()=>closeAndNavigate('dashboard')}><div className="user-info"><span className="user-name">Ir al Dashboard</span></div><i className="bi bi-speedometer2"></i></Link>
           </div>
         </div>
       </div>

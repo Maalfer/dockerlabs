@@ -810,6 +810,83 @@ def reject_claim(claim_id):
 
     return redirect(url_for('peticiones'))
 
+@maquinas_bp.route('/api/reclamar-maquina', methods=['POST'])
+@role_required('jugador', 'admin', 'moderador')
+@csrf_protect
+@limiter.limit("5 per hour")
+def api_reclamar_maquina():
+    """JSON API: Claim machine authorship (for React dashboard)."""
+    data = request.json or {}
+    maquina_nombre = (data.get('maquina_nombre') or '').strip()
+    contacto = (data.get('contacto') or '').strip()
+    prueba = (data.get('prueba') or '').strip()
+
+    if not maquina_nombre or not contacto or not prueba:
+        return jsonify({'error': 'Todos los campos son obligatorios.'}), 400
+
+    valid, _ = validators.validate_machine_name(maquina_nombre)
+    if not valid:
+        return jsonify({'error': 'Nombre de máquina no válido.'}), 400
+
+    user_id = session.get('user_id')
+    username = (session.get('username') or '').strip()
+
+    try:
+        new_claim = MachineClaim(
+            user_id=user_id,
+            username=username,
+            maquina_nombre=maquina_nombre,
+            contacto=contacto,
+            prueba=prueba,
+            estado='pendiente'
+        )
+        alchemy_db.session.add(new_claim)
+        alchemy_db.session.commit()
+        return jsonify({'message': 'Reclamación enviada correctamente.'}), 200
+    except Exception:
+        alchemy_db.session.rollback()
+        return jsonify({'error': 'Error al procesar la reclamación.'}), 500
+
+@maquinas_bp.route('/api/claims/<int:claim_id>/approve', methods=['POST'])
+@role_required('admin')
+@csrf_protect
+@limiter.limit("5 per minute", methods=["POST"])
+def api_approve_claim(claim_id):
+    """JSON API: Approve machine claim."""
+    claim = MachineClaim.query.get(claim_id)
+    if not claim:
+        return jsonify({'error': 'Reclamación no encontrada.'}), 404
+
+    try:
+        maquina = Machine.query.filter_by(nombre=claim.maquina_nombre).first()
+        if maquina:
+            maquina.autor = claim.username
+        claim.estado = 'aprobada'
+        alchemy_db.session.commit()
+        recalcular_ranking_creadores()
+        return jsonify({'message': 'Reclamación aprobada.'}), 200
+    except Exception:
+        alchemy_db.session.rollback()
+        return jsonify({'error': 'Error al aprobar la reclamación.'}), 500
+
+@maquinas_bp.route('/api/claims/<int:claim_id>/reject', methods=['POST'])
+@role_required('admin')
+@csrf_protect
+@limiter.limit("5 per minute", methods=["POST"])
+def api_reject_claim(claim_id):
+    """JSON API: Reject machine claim."""
+    claim = MachineClaim.query.get(claim_id)
+    if not claim:
+        return jsonify({'error': 'Reclamación no encontrada.'}), 404
+    try:
+        alchemy_db.session.delete(claim)
+        alchemy_db.session.commit()
+        return jsonify({'message': 'Reclamación rechazada.'}), 200
+    except Exception:
+        alchemy_db.session.rollback()
+        return jsonify({'error': 'Error al rechazar la reclamación.'}), 500
+
+
 @maquinas_bp.route('/claims/<int:claim_id>/revert', methods=['POST'])
 @role_required('admin', 'moderador')
 @csrf_protect

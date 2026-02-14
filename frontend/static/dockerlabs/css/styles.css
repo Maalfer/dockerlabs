@@ -1,4 +1,5 @@
 @import url('https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
 :root {
     --primary-blue: #3b82f6;
@@ -1782,7 +1783,6 @@ footer {
 }
 
 /* --- Minimalist Modal Styles (Shared) --- */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
 /* Override base modal styles if they conflict, or use parallel structure */
 .overlay {

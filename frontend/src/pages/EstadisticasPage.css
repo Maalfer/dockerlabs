@@ -1,0 +1,120 @@
+/* EstadisticasPage - migrado desde templates/dockerlabs/estadisticas.html */
+
+.stats-container {
+  padding: 80px 20px 40px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.stats-header {
+  text-align: center;
+  margin-bottom: 3rem;
+}
+
+.stats-header h1 {
+  font-weight: 700;
+  color: #f8fafc;
+  margin-bottom: 0.5rem;
+}
+
+.stats-header p {
+  color: #94a3b8;
+  font-size: 1.1rem;
+}
+
+.stats-loading {
+  text-align: center;
+  color: #94a3b8;
+  padding: 3rem;
+}
+
+.stats-charts-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 2rem;
+}
+
+.stats-chart-card {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s;
+}
+
+.stats-chart-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+}
+
+.stats-chart-title {
+  color: #f8fafc;
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.stats-chart-bars {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.stats-empty {
+  color: #64748b;
+  font-size: 0.9rem;
+  margin: 0;
+}
+
+.stats-bar-row {
+  display: grid;
+  grid-template-columns: 60px 1fr 50px;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.stats-bar-label {
+  font-size: 0.9rem;
+  color: #cbd5e1;
+}
+
+.stats-bar-track {
+  height: 24px;
+  background: rgba(30, 41, 59, 0.8);
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.stats-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #3b82f6, #60a5fa);
+  border-radius: 6px;
+  transition: width 0.5s ease;
+}
+
+.stats-chart-card:nth-child(2) .stats-bar-fill {
+  background: linear-gradient(90deg, #10b981, #34d399);
+}
+
+.stats-chart-card:nth-child(3) .stats-bar-fill {
+  background: linear-gradient(90deg, #f59e0b, #fbbf24);
+}
+
+.stats-bar-value {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #94a3b8;
+  text-align: right;
+}
+
+.stats-container .alert-danger {
+  background: rgba(239, 68, 68, 0.15);
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  color: #fca5a5;
+  padding: 1rem;
+  border-radius: 12px;
+}

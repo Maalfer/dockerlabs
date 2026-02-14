@@ -1,0 +1,277 @@
+/* =========================================
+   BUNKERLABS ACCESOS (ADMIN) PAGE
+   ========================================= */
+
+.bunker-accesos-container {
+    max-width: 1300px;
+    margin: 0 auto;
+    padding: 1rem 1.5rem 3rem;
+}
+
+.bunker-accesos-title {
+    font-family: 'Fira Code', monospace;
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #fff;
+    margin: 0 0 2rem;
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+}
+
+/* Glass Card */
+.bunker-glass-card {
+    background: var(--bunker-surface, #24283B);
+    border: 1px solid var(--bunker-border-soft, #414868);
+    border-radius: 16px;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+    box-shadow: var(--bunker-shadow-lg);
+}
+
+.bunker-glass-card h3 {
+    font-family: 'Fira Code', monospace;
+    font-size: 1.1rem;
+    margin: 0 0 1.2rem;
+    color: var(--bunker-secondary, #B39DDB);
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+}
+
+/* Form row */
+.bunker-form-row {
+    display: flex;
+    gap: 0.8rem;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    margin-bottom: 1rem;
+}
+
+.bunker-form-row .bunker-input {
+    flex: 1;
+    min-width: 150px;
+    background: var(--bunker-surface-soft, #2A2E3F);
+    border: 1px solid var(--bunker-border-soft, #414868);
+    border-radius: 10px;
+    padding: 0.7rem 1rem;
+    color: var(--bunker-text, #C0CAF5);
+    font-size: 0.88rem;
+    font-family: 'Inter', sans-serif;
+    transition: all 0.3s ease;
+}
+
+.bunker-form-row .bunker-input:focus {
+    outline: none;
+    border-color: var(--bunker-primary, #7E57C2);
+    box-shadow: 0 0 0 3px rgba(126, 87, 194, 0.2);
+}
+
+.bunker-form-row .bunker-input::placeholder {
+    color: var(--bunker-text-muted, #787C99);
+}
+
+.bunker-form-row select.bunker-input {
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23787C99' d='M2 4l4 4 4-4'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 0.8rem center;
+    padding-right: 2.5rem;
+}
+
+.bunker-btn-primary {
+    padding: 0.7rem 1.2rem;
+    border-radius: 10px;
+    background: linear-gradient(135deg, var(--bunker-primary), var(--bunker-primary-dark));
+    color: #fff;
+    font-weight: 600;
+    font-size: 0.85rem;
+    border: none;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    transition: all 0.3s ease;
+    white-space: nowrap;
+}
+
+.bunker-btn-primary:hover {
+    box-shadow: var(--bunker-glow-strong);
+    transform: translateY(-2px);
+}
+
+.bunker-btn-primary:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.bunker-btn-danger {
+    padding: 0.5rem 0.8rem;
+    border-radius: 8px;
+    background: rgba(247, 118, 142, 0.15);
+    border: 1px solid rgba(247, 118, 142, 0.4);
+    color: var(--bunker-danger, #F7768E);
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+}
+
+.bunker-btn-danger:hover {
+    background: rgba(247, 118, 142, 0.3);
+    transform: translateY(-1px);
+}
+
+.bunker-btn-sm {
+    padding: 0.4rem 0.7rem;
+    border-radius: 8px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    cursor: pointer;
+    border: 1px solid var(--bunker-border-soft, #414868);
+    background: var(--bunker-surface-soft, #2A2E3F);
+    color: var(--bunker-text-secondary, #A9B1D6);
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+}
+
+.bunker-btn-sm:hover {
+    border-color: var(--bunker-primary);
+    color: #fff;
+}
+
+/* Tables */
+.bunker-table-wrapper {
+    overflow-x: auto;
+    margin-top: 1rem;
+}
+
+.bunker-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    font-size: 0.85rem;
+}
+
+.bunker-table th {
+    text-align: left;
+    padding: 0.8rem 1rem;
+    background: var(--bunker-surface-soft, #2A2E3F);
+    color: var(--bunker-text-muted, #787C99);
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    border-bottom: 1px solid var(--bunker-border-soft, #414868);
+}
+
+.bunker-table td {
+    padding: 0.7rem 1rem;
+    border-bottom: 1px solid rgba(65, 72, 104, 0.3);
+    color: var(--bunker-text, #C0CAF5);
+    vertical-align: middle;
+}
+
+.bunker-table tr:hover td {
+    background: rgba(126, 87, 194, 0.05);
+}
+
+.bunker-table .status-active {
+    color: var(--bunker-success, #9ECE6A);
+    font-weight: 600;
+}
+
+.bunker-table .status-inactive {
+    color: var(--bunker-danger, #F7768E);
+    font-weight: 600;
+}
+
+/* Token code */
+.bunker-token-code {
+    font-family: 'Fira Code', monospace;
+    font-size: 0.8rem;
+    background: var(--bunker-surface-soft);
+    padding: 0.25rem 0.5rem;
+    border-radius: 6px;
+    border: 1px solid var(--bunker-border-soft);
+}
+
+/* Inline flag edit */
+.bunker-flag-inline {
+    display: flex;
+    gap: 0.4rem;
+    align-items: center;
+}
+
+.bunker-flag-inline input {
+    width: 120px;
+    background: var(--bunker-surface-soft);
+    border: 1px solid var(--bunker-border-soft);
+    border-radius: 6px;
+    padding: 0.35rem 0.6rem;
+    color: var(--bunker-text);
+    font-family: 'Fira Code', monospace;
+    font-size: 0.8rem;
+}
+
+.bunker-flag-inline input:focus {
+    outline: none;
+    border-color: var(--bunker-primary);
+}
+
+/* Toggle lock */
+.bunker-toggle-lock {
+    cursor: pointer;
+    font-size: 1rem;
+    padding: 0.3rem;
+    border: none;
+    background: none;
+    transition: transform 0.2s;
+}
+
+.bunker-toggle-lock:hover {
+    transform: scale(1.2);
+}
+
+/* Alert */
+.bunker-page-alert {
+    padding: 0.8rem 1rem;
+    border-radius: 10px;
+    margin-bottom: 1rem;
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+.bunker-page-alert.success {
+    background: rgba(158, 206, 106, 0.15);
+    border: 1px solid rgba(158, 206, 106, 0.4);
+    color: var(--bunker-success);
+}
+
+.bunker-page-alert.error {
+    background: rgba(247, 118, 142, 0.15);
+    border: 1px solid rgba(247, 118, 142, 0.4);
+    color: var(--bunker-danger);
+}
+
+/* Logs modal */
+.bunker-logs-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.bunker-logs-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 0.6rem 0.8rem;
+    border-bottom: 1px solid rgba(65, 72, 104, 0.3);
+    font-size: 0.85rem;
+    color: var(--bunker-text-secondary);
+}

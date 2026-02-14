@@ -1,33 +1,5 @@
 import React, { useEffect, useState } from 'react'
-
-function injectStyles() {
-  const styleId = 'modern-modal-styles-v2'
-  if (document.getElementById(styleId)) return
-  const style = document.createElement('style')
-  style.id = styleId
-  style.textContent = `
-/* Injected modal styles (excerpted from original presentacionmaquina.js) */
-.popup { background: #1e293b; color: #f1f5f9; border-radius: 24px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); position: fixed; top:50%; left:50%; width:900px; max-width:95vw; max-height:90vh; display:grid; grid-template-columns:1fr 1.1fr; overflow:hidden; transform:translate(-50%,-50%) scale(0.95); transition:all 0.3s cubic-bezier(0.16,1,0.3,1); font-family: 'Inter', sans-serif; }
-.popup.visible{ transform:translate(-50%,-50%) scale(1); opacity:1 }
-.overlay{ position:fixed; inset:0; background:rgba(15,23,42,0.85); backdrop-filter: blur(8px); z-index:9998; display:flex; align-items:center; justify-content:center; opacity:0; transition:opacity .3s}
-.overlay.visible{ opacity:1 }
-.popup-image-container{ background:#0f172a; display:flex; align-items:center; justify-content:center; padding:2rem }
-.popup-machine-image{ width:100%; height:auto; max-height:100%; aspect-ratio:1/1; object-fit:cover; border-radius:16px }
-.popup-content{ padding:2.5rem; display:flex; flex-direction:column; position:relative }
-.modal-close-button{ position:absolute; top:1.5rem; right:1.5rem; background:rgba(255,255,255,0.05); border:none; color:#94a3b8; width:32px; height:32px; border-radius:50%; font-size:1.25rem; cursor:pointer }
-.header-row{ display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:.5rem; padding-right:2rem }
-.machine-title{ font-size:2.5rem; font-weight:700; color:#fff; margin:0; line-height:1.1 }
-.difficulty-pill{ display:inline-block; padding:.35rem 1rem; border-radius:999px; font-size:.75rem; font-weight:700; text-transform:uppercase; margin-top:.75rem; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1) }
-.creator-card{ background:rgba(30,41,59,0.5); border:1px solid rgba(148,163,184,0.1); border-radius:12px; padding:1rem; margin-top:2rem; display:flex; align-items:center; gap:1rem }
-.creator-avatar{ width:48px; height:48px; border-radius:50%; object-fit:cover; background:#334155 }
-.creation-date{ font-size:.8rem; color:#64748b; display:flex; align-items:center; gap:.35rem; margin-left:auto }
-.action-area{ margin-top:2rem }
-.btn-mark-completed{ width:100%; background:transparent; border:1px solid #334155; color:#cbd5e1; padding:1rem; border-radius:12px; font-weight:600; cursor:pointer }
-.btn-mark-completed.completed{ background: rgba(16,185,129,0.1); border-color: rgba(16,185,129,0.4); color:#34d399 }
-.user-rating-stars{ color:#fbbf24; font-size:1.1rem; cursor:pointer }
-`;
-  document.head.appendChild(style)
-}
+import './MachineModal.css'
 
 function getCsrfToken() {
   return fetch('/api/csrf', { credentials: 'include' }).then(r => r.ok ? r.json() : {}).then(d => d.csrf_token || '')
@@ -43,7 +15,6 @@ export default function MachineModal({ open, data, onClose }){
 
   useEffect(()=>{
     if (open) {
-      injectStyles()
       setVisible(true)
     } else {
       setVisible(false)

@@ -36,6 +36,7 @@ ALLOWED_LOGO_EXTENSIONS = {'.jpg', '.jpeg', '.png', '.gif', '.webp', '.svg'}
 # Serve templates and static assets from the sibling `frontend/` folder so React assets
 # and original templates are available after the repo reorganization.
 FRONTEND_DIR = os.path.abspath(os.path.join(BASE_DIR, '..', 'frontend'))
+DIST_DIR = os.path.join(FRONTEND_DIR, 'dist')
 app = Flask(
     __name__,
     static_folder=os.path.join(FRONTEND_DIR, 'static'),
@@ -229,6 +230,39 @@ def dashboard():
         profile_image_url=profile_image_url,
         user=g.user
     )
+
+@app.route('/api/dashboard-data')
+@role_required('admin', 'moderador', 'jugador')
+def api_dashboard_data():
+    """
+    JSON API: Return dashboard data (pending claims + machines list).
+    """
+    from .models import Machine, MachineClaim
+
+    maquinas = Machine.query.filter_by(origen='docker').with_entities(
+        Machine.id, Machine.nombre, Machine.autor
+    ).order_by(Machine.nombre.asc()).all()
+
+    machines_list = [{'id': m.id, 'nombre': m.nombre, 'autor': m.autor} for m in maquinas]
+
+    role = session.get('role') or (g.user.role if hasattr(g, 'user') and g.user else None)
+    claims_list = []
+    if role in ('admin', 'moderador'):
+        claims = MachineClaim.query.filter_by(estado='pendiente').order_by(
+            MachineClaim.created_at.desc()
+        ).all()
+        claims_list = [{
+            'id': c.id,
+            'username': c.username,
+            'maquina_nombre': c.maquina_nombre,
+            'contacto': c.contacto,
+            'prueba': c.prueba,
+            'estado': c.estado,
+            'created_at': c.created_at.isoformat() if c.created_at else None
+        } for c in claims]
+
+    return jsonify({'machines': machines_list, 'claims': claims_list})
+
 
 @app.route('/peticiones')
 @role_required('admin', 'moderador')
@@ -437,17 +471,23 @@ from flask import abort
 
 @app.route('/')
 def index():
-    """Serve the React frontend `index.html` as the application root."""
-    return send_from_directory(FRONTEND_DIR, 'index.html')
+    """Serve the React frontend built `index.html` as the application root."""
+    return send_from_directory(DIST_DIR, 'index.html')
+
+
+@app.route('/assets/<path:filename>')
+def serve_assets(filename):
+    """Serve Vite-built asset bundles (JS/CSS) from dist/assets/."""
+    return send_from_directory(os.path.join(DIST_DIR, 'assets'), filename)
 
 
 # Catch-all for client-side routes: serve the React app for unknown paths
 @app.route('/<path:unknown>')
 def catch_all(unknown):
-    # Do not interfere with API or static routes
-    if unknown.startswith('api') or unknown.startswith('static') or unknown.startswith('docs') or unknown.startswith('flasgger_static'):
+    # Do not interfere with API, static, docs, or asset routes
+    if unknown.startswith(('api', 'static', 'docs', 'flasgger_static', 'assets', 'auth')):
         return abort(404)
-    return send_from_directory(FRONTEND_DIR, 'index.html')
+    return send_from_directory(DIST_DIR, 'index.html')
 
 @app.errorhandler(404)
 def page_not_found(e):

@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import './Header.css'
 
 export default function Header({ openModal }) {
   const [user, setUser] = useState({ is_authenticated: false, user: null })
@@ -13,6 +14,44 @@ export default function Header({ openModal }) {
   }, [])
 
   const isAuth = !!user.is_authenticated
+
+  useEffect(() => {
+    const el = () => document.getElementById('dockerlabs-link')
+    function mobileClick(e) {
+      e.preventDefault()
+      window.location.href = 'https://dockerlabs.es'
+    }
+
+    function updateHoverEffect() {
+      const element = el()
+      if (!element) return
+      const isMobile = window.innerWidth <= 768
+
+      if (isMobile) {
+        element.onmouseover = null
+        element.onmouseout = null
+        element.innerText = 'DockerLabs'
+        element.addEventListener('click', mobileClick)
+      } else {
+        element.removeEventListener('click', mobileClick)
+        element.onmouseover = function () { this.innerText = 'BunkerLabs' }
+        element.onmouseout = function () { this.innerText = 'DockerLabs' }
+      }
+    }
+
+    updateHoverEffect()
+    window.addEventListener('resize', updateHoverEffect)
+
+    return () => {
+      window.removeEventListener('resize', updateHoverEffect)
+      const element = el()
+      if (element) {
+        element.onmouseover = null
+        element.onmouseout = null
+        element.removeEventListener('click', mobileClick)
+      }
+    }
+  }, [])
 
   return (
     <header className="position-fixed fixed-top" style={{display:'grid',gridTemplateColumns:'1fr auto 1fr',alignItems:'center',gap:'15px'}}>
@@ -31,7 +70,7 @@ export default function Header({ openModal }) {
       </div>
 
       <h1 style={{margin:0,textAlign:'center'}}>
-        <a href="#" id="dockerlabs-link">DockerLabs</a>
+        <a href="/bunkerlabs/" id="dockerlabs-link">DockerLabs</a>
       </h1>
 
       <div className="auth-buttons" style={{justifySelf:'end',display:'flex',gap:'0.75rem',alignItems:'center'}}>

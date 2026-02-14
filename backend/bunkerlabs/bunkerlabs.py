@@ -595,3 +595,287 @@ def update_machine_flag(machine_id):
     except Exception as e:
         alchemy_db.session.rollback()
         return jsonify({'error': str(e)}), 500
+
+
+# ===================================================================
+# JSON API ENDPOINTS FOR REACT FRONTEND
+# ===================================================================
+
+@bunkerlabs_bp.route('/api/session', methods=['GET'])
+def api_session():
+    """Return current BunkerLabs session status."""
+    from dockerlabs.decorators import get_current_role
+    role = get_current_role() if session.get('user_id') else None
+    return jsonify({
+        'logged_in': bool(session.get('bunkerlabs_ok')),
+        'nombre': session.get('bunkerlabs_nombre'),
+        'is_guest': session.get('bunkerlabs_guest', False),
+        'is_anonymous': session.get('bunkerlabs_anonymous', False),
+        'is_admin': role == 'admin' if role else False,
+        'docker_logged_in': session.get('user_id') is not None,
+        'csrf_token': session.get('csrf_token', ''),
+    }), 200
+
+
+@bunkerlabs_bp.route('/api/login', methods=['POST'])
+@csrf_protect
+@extensions.limiter.limit("5 per minute", methods=["POST"])
+def api_login():
+    """JSON login for BunkerLabs."""
+    if session.get('user_id') is None:
+        return jsonify({'error': 'Debes iniciar sesión en DockerLabs primero.'}), 401
+
+    data = request.get_json() or {}
+    token_introducido = (data.get('password') or '').strip()
+
+    if not token_introducido:
+        return jsonify({'error': 'Debes introducir una contraseña de acceso.'}), 400
+
+    token_obj = BunkerAccessToken.query.filter_by(
+        token=token_introducido,
+        activo=1
+    ).first()
+
+    if token_obj is None:
+        return jsonify({'error': 'Contraseña incorrecta o inactiva.'}), 401
+
+    docker_username = session.get('username')
+    if docker_username:
+        token_obj.nombre = docker_username
+        token_obj.last_accessed = datetime.utcnow()
+        new_log = BunkerAccessLog(
+            token_id=token_obj.id,
+            user_nombre=docker_username,
+            accessed_at=datetime.utcnow()
+        )
+        alchemy_db.session.add(new_log)
+        alchemy_db.session.commit()
+        session['bunkerlabs_nombre'] = docker_username
+    else:
+        session['bunkerlabs_nombre'] = token_obj.nombre
+        token_obj.last_accessed = datetime.utcnow()
+        new_log = BunkerAccessLog(
+            token_id=token_obj.id,
+            user_nombre=token_obj.nombre,
+            accessed_at=datetime.utcnow()
+        )
+        alchemy_db.session.add(new_log)
+        alchemy_db.session.commit()
+
+    session['bunkerlabs_ok'] = True
+    session['bunkerlabs_id'] = token_obj.id
+    session.pop('bunkerlabs_guest', None)
+
+    return jsonify({'success': True, 'nombre': session['bunkerlabs_nombre']}), 200
+
+
+@bunkerlabs_bp.route('/api/guest', methods=['POST'])
+@extensions.limiter.limit("5 per minute")
+def api_guest():
+    """Enter BunkerLabs as guest via JSON."""
+    if session.get('user_id') is None:
+        return jsonify({'error': 'Debes iniciar sesión en DockerLabs primero.'}), 401
+
+    session['bunkerlabs_ok'] = True
+    session['bunkerlabs_guest'] = True
+    session['bunkerlabs_nombre'] = "Invitado"
+    session['bunkerlabs_id'] = None
+
+    return jsonify({'success': True, 'nombre': 'Invitado'}), 200
+
+
+@bunkerlabs_bp.route('/api/logout', methods=['POST'])
+def api_logout():
+    """Logout from BunkerLabs via JSON."""
+    session.pop('bunkerlabs_ok', None)
+    session.pop('bunkerlabs_guest', None)
+    session.pop('bunkerlabs_nombre', None)
+    session.pop('bunkerlabs_id', None)
+    return jsonify({'success': True}), 200
+
+
+@bunkerlabs_bp.route('/api/machines', methods=['GET'])
+def api_machines():
+    """Return all BunkerLabs machines as JSON."""
+    if not session.get('bunkerlabs_ok'):
+        return jsonify({'error': 'No autorizado'}), 401
+
+    maquinas = Machine.query.filter_by(origen='bunker').order_by(Machine.id.asc()).all()
+    is_guest = session.get('bunkerlabs_guest', False)
+
+    result = []
+    for m in maquinas:
+        result.append({
+            'id': m.id,
+            'nombre': m.nombre,
+            'tamaño': m.tamaño if hasattr(m, 'tamaño') else '',
+            'clase': m.clase,
+            'color': m.color,
+            'autor': m.autor,
+            'enlace_autor': m.enlace_autor,
+            'fecha': m.fecha,
+            'imagen': m.imagen,
+            'descripcion': m.descripcion,
+            'link_descarga': m.link_descarga,
+            'dificultad': m.dificultad,
+            'guest_access': m.guest_access if hasattr(m, 'guest_access') else True,
+        })
+
+    return jsonify({
+        'machines': result,
+        'is_guest': is_guest,
+        'is_anonymous': session.get('bunkerlabs_anonymous', False),
+    }), 200
+
+
+@bunkerlabs_bp.route('/api/accesos', methods=['GET'])
+@role_required('admin')
+def api_accesos_get():
+    """Return accesos data for admin panel."""
+    from .models import BunkerWriteup
+
+    tokens = BunkerAccessToken.query.order_by(
+        BunkerAccessToken.created_at.desc()
+    ).all()
+
+    tokens_data = []
+    for t in tokens:
+        tokens_data.append({
+            'id': t.id,
+            'nombre': t.nombre,
+            'token': t.token,
+            'activo': bool(t.activo),
+            'puntos': t.puntos,
+            'created_at': t.created_at.isoformat() if t.created_at else None,
+            'last_accessed': t.last_accessed.isoformat() if t.last_accessed else None,
+        })
+
+    real_machines = Machine.query.filter_by(origen='bunker', clase='real').order_by(Machine.nombre.asc()).all()
+    real_machines_data = [{'id': m.id, 'nombre': m.nombre} for m in real_machines]
+
+    writeups = BunkerWriteup.query.order_by(BunkerWriteup.created_at.desc()).all()
+    writeups_data = [{
+        'id': w.id,
+        'maquina': w.maquina,
+        'autor': w.autor,
+        'url': w.url,
+        'tipo': w.tipo,
+        'locked': w.locked,
+        'created_at': w.created_at.isoformat() if w.created_at else None,
+    } for w in writeups]
+
+    bunker_machines = Machine.query.filter_by(origen='bunker').order_by(Machine.nombre.asc()).all()
+    bunker_machines_data = [{
+        'id': m.id,
+        'nombre': m.nombre,
+        'dificultad': m.dificultad,
+        'color': m.color,
+        'pin': m.pin if hasattr(m, 'pin') else '',
+    } for m in bunker_machines]
+
+    return jsonify({
+        'tokens': tokens_data,
+        'real_machines': real_machines_data,
+        'writeups': writeups_data,
+        'bunker_machines': bunker_machines_data,
+    }), 200
+
+
+@bunkerlabs_bp.route('/api/accesos', methods=['POST'])
+@role_required('admin')
+@csrf_protect
+@extensions.limiter.limit("5 per minute", methods=["POST"])
+def api_accesos_create():
+    """Create a new access token via JSON."""
+    data = request.get_json() or {}
+    nombre = (data.get('nombre') or '').strip()
+    password = (data.get('password') or '').strip()
+
+    if not nombre or not password:
+        return jsonify({'error': 'El nombre y la contraseña son obligatorios.'}), 400
+
+    try:
+        new_token_obj = BunkerAccessToken(
+            nombre=nombre,
+            token=password
+        )
+        alchemy_db.session.add(new_token_obj)
+        alchemy_db.session.commit()
+        return jsonify({
+            'success': True,
+            'message': f'Acceso creado correctamente para {nombre}',
+            'token': password,
+        }), 200
+    except IntegrityError:
+        alchemy_db.session.rollback()
+        return jsonify({'error': 'Error: Esa contraseña ya existe.'}), 409
+
+
+@bunkerlabs_bp.route('/api/accesos/<int:token_id>', methods=['DELETE'])
+@role_required('admin')
+@csrf_protect
+def api_delete_token(token_id):
+    """Delete a BunkerLabs access token via JSON."""
+    token_obj = BunkerAccessToken.query.get(token_id)
+    if not token_obj:
+        return jsonify({'error': 'Token no encontrado'}), 404
+    alchemy_db.session.delete(token_obj)
+    alchemy_db.session.commit()
+    return jsonify({'success': True, 'message': 'Token eliminado'}), 200
+
+
+@bunkerlabs_bp.route('/api/writeups/add', methods=['POST'])
+@role_required('admin')
+@csrf_protect
+@extensions.limiter.limit("10 per minute", methods=["POST"])
+def api_add_writeup():
+    """Add writeup via JSON."""
+    from .models import BunkerWriteup
+
+    data = request.get_json() or {}
+    maquina = (data.get('maquina') or '').strip()
+    autor = (data.get('autor') or '').strip()
+    url = (data.get('url') or '').strip()
+    tipo = (data.get('tipo') or '').strip()
+    locked = data.get('locked', False)
+
+    if not all([maquina, autor, url, tipo]) or tipo not in ['texto', 'video']:
+        return jsonify({'error': 'Todos los campos son obligatorios y el tipo debe ser texto o video.'}), 400
+
+    try:
+        new_writeup = BunkerWriteup(
+            maquina=maquina,
+            autor=autor,
+            url=url,
+            tipo=tipo,
+            locked=locked
+        )
+        alchemy_db.session.add(new_writeup)
+        alchemy_db.session.commit()
+        return jsonify({'success': True, 'message': f'Writeup añadido correctamente para {maquina}'}), 200
+    except IntegrityError:
+        alchemy_db.session.rollback()
+        return jsonify({'error': 'Error: Este writeup ya existe.'}), 409
+    except Exception as e:
+        alchemy_db.session.rollback()
+        return jsonify({'error': f'Error al añadir writeup: {str(e)}'}), 500
+
+
+@bunkerlabs_bp.route('/api/writeups/<int:writeup_id>', methods=['DELETE'])
+@role_required('admin')
+@csrf_protect
+def api_delete_writeup(writeup_id):
+    """Delete writeup via JSON."""
+    from .models import BunkerWriteup
+
+    writeup = BunkerWriteup.query.get(writeup_id)
+    if not writeup:
+        return jsonify({'error': 'Writeup no encontrado'}), 404
+
+    try:
+        alchemy_db.session.delete(writeup)
+        alchemy_db.session.commit()
+        return jsonify({'success': True, 'message': 'Writeup eliminado correctamente.'}), 200
+    except Exception as e:
+        alchemy_db.session.rollback()
+        return jsonify({'error': f'Error al eliminar writeup: {str(e)}'}), 500

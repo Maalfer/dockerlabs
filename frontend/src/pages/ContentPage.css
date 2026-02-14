@@ -1,0 +1,68 @@
+/* Shared styles for static content pages (instrucciones, enviar, como-se-crea, agradecimientos) */
+
+.content-page {
+  padding-top: 80px;
+  padding-bottom: 3rem;
+}
+
+.content-page .title {
+  margin-bottom: 1rem;
+  color: var(--text-primary);
+}
+
+.content-page .subtitle {
+  text-align: center;
+  margin-top: 20px;
+  margin-bottom: 1rem;
+  color: var(--text-secondary);
+  font-size: 1.1rem;
+}
+
+.content-center {
+  text-align: center;
+  margin: 1rem 0;
+}
+
+.content-center img,
+.content-img {
+  display: block;
+  margin: 0.75rem auto;
+  max-width: 100%;
+}
+
+.content-img.full-width,
+.content-center .full-width {
+  width: 100%;
+  max-width: 100%;
+}
+
+.content-center code {
+  display: block;
+  margin-top: 10px;
+  color: var(--accent-cyan);
+  font-size: 0.9rem;
+}
+
+.content-page ul {
+  margin: 1rem 0;
+  padding-left: 1.5rem;
+}
+
+.content-page a {
+  color: var(--primary-blue-light);
+  text-decoration: none;
+}
+
+.content-page a:hover {
+  text-decoration: underline;
+}
+
+.content-page .ratio {
+  margin-top: 1rem;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.content-page iframe {
+  border-radius: 10px;
+}

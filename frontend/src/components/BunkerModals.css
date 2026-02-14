@@ -1,0 +1,308 @@
+/* =========================================
+   BUNKERLABS MODALS – SHARED
+   ========================================= */
+
+.bunker-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(26, 27, 38, 0.88);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2000;
+    backdrop-filter: blur(6px);
+    animation: bunkerFadeIn 0.2s ease;
+}
+
+@keyframes bunkerFadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes bunkerSlideUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px) scale(0.96);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+.bunker-modal {
+    background: var(--bunker-surface, #24283B);
+    border: 1px solid var(--bunker-border-soft, #414868);
+    border-radius: 18px;
+    padding: 2rem;
+    max-width: 600px;
+    width: 90%;
+    max-height: 85vh;
+    overflow-y: auto;
+    position: relative;
+    box-shadow: 0 25px 60px rgba(0, 0, 0, 0.6);
+    animation: bunkerSlideUp 0.3s ease;
+    color: var(--bunker-text, #C0CAF5);
+}
+
+.bunker-modal-close {
+    position: absolute;
+    top: 1rem;
+    right: 1.2rem;
+    font-size: 1.5rem;
+    color: var(--bunker-text-secondary, #A9B1D6);
+    cursor: pointer;
+    background: none;
+    border: none;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 6px;
+    transition: color 0.2s ease, transform 0.2s ease;
+}
+
+.bunker-modal-close:hover {
+    color: var(--bunker-secondary, #B39DDB);
+    background: rgba(126, 87, 194, 0.1);
+    transform: scale(1.1);
+}
+
+.bunker-modal h2 {
+    font-family: 'Fira Code', monospace;
+    font-size: 1.4rem;
+    margin: 0 0 1.5rem 0;
+    color: #fff;
+}
+
+.bunker-modal h3 {
+    font-family: 'Fira Code', monospace;
+    font-size: 1.1rem;
+    margin: 0 0 1rem 0;
+    color: var(--bunker-secondary, #B39DDB);
+}
+
+/* Machine Modal Specific */
+.bunker-machine-img {
+    width: 140px;
+    height: 140px;
+    object-fit: contain;
+    display: block;
+    margin: 0 auto 1.5rem;
+    border-radius: 12px;
+    border: 2px solid var(--bunker-border-soft, #414868);
+}
+
+.bunker-machine-meta {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.8rem;
+    margin-bottom: 1.5rem;
+}
+
+.bunker-machine-meta-item {
+    background: var(--bunker-surface-soft, #2A2E3F);
+    padding: 0.8rem;
+    border-radius: 10px;
+    border: 1px solid var(--bunker-border-soft, #414868);
+}
+
+.bunker-machine-meta-item .label {
+    display: block;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    color: var(--bunker-text-muted, #787C99);
+    letter-spacing: 0.05em;
+    margin-bottom: 0.2rem;
+}
+
+.bunker-machine-meta-item .value {
+    font-weight: 600;
+    color: var(--bunker-text, #C0CAF5);
+    font-size: 0.9rem;
+}
+
+.bunker-badge {
+    display: inline-block;
+    padding: 0.4rem 0.8rem;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+}
+
+.bunker-badge.muy-facil {
+    background: linear-gradient(135deg, #7DCFFF, #7AA2F7);
+    color: #1A1B26;
+}
+
+.bunker-badge.facil {
+    background: linear-gradient(135deg, #9ECE6A, #73DACA);
+    color: #1A1B26;
+}
+
+.bunker-badge.medio {
+    background: linear-gradient(135deg, #E0AF68, #FF9E64);
+    color: #1A1B26;
+}
+
+.bunker-badge.dificil {
+    background: linear-gradient(135deg, #F7768E, #BB9AF7);
+    color: #1A1B26;
+}
+
+/* Ranking */
+.bunker-ranking-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.bunker-ranking-item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.8rem 1rem;
+    border-radius: 10px;
+    margin-bottom: 0.5rem;
+    background: var(--bunker-surface-soft, #2A2E3F);
+    border: 1px solid var(--bunker-border-soft, #414868);
+    transition: all 0.2s ease;
+}
+
+.bunker-ranking-item:hover {
+    border-color: var(--bunker-primary, #7E57C2);
+    transform: translateX(4px);
+}
+
+.bunker-ranking-pos {
+    font-family: 'Fira Code', monospace;
+    font-weight: 700;
+    font-size: 1.1rem;
+    min-width: 2rem;
+    text-align: center;
+}
+
+.bunker-ranking-name {
+    flex: 1;
+    font-weight: 600;
+}
+
+.bunker-ranking-pts {
+    font-family: 'Fira Code', monospace;
+    color: var(--bunker-primary-light, #9575CD);
+    font-weight: 600;
+}
+
+/* Flag modal */
+.bunker-flag-input-group {
+    display: flex;
+    gap: 0.8rem;
+    margin-top: 1rem;
+}
+
+.bunker-flag-input-group input {
+    flex: 1;
+    background: var(--bunker-surface-soft, #2A2E3F);
+    border: 1px solid var(--bunker-border-soft, #414868);
+    border-radius: 10px;
+    padding: 0.8rem 1rem;
+    color: var(--bunker-text, #C0CAF5);
+    font-family: 'Fira Code', monospace;
+    font-size: 0.9rem;
+    transition: border-color 0.3s ease;
+}
+
+.bunker-flag-input-group input:focus {
+    outline: none;
+    border-color: var(--bunker-primary, #7E57C2);
+    box-shadow: 0 0 0 3px rgba(126, 87, 194, 0.2);
+}
+
+.bunker-flag-btn {
+    padding: 0.8rem 1.5rem;
+    border-radius: 10px;
+    background: linear-gradient(135deg, var(--bunker-primary, #7E57C2), var(--bunker-primary-dark, #5E35B1));
+    color: #fff;
+    font-weight: 600;
+    border: none;
+    cursor: pointer;
+    font-family: 'Inter', sans-serif;
+    transition: all 0.3s ease;
+}
+
+.bunker-flag-btn:hover {
+    box-shadow: var(--bunker-glow-strong);
+    transform: translateY(-2px);
+}
+
+.bunker-flag-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.bunker-alert {
+    padding: 0.8rem 1rem;
+    border-radius: 10px;
+    margin-top: 1rem;
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+.bunker-alert.success {
+    background: rgba(158, 206, 106, 0.15);
+    border: 1px solid rgba(158, 206, 106, 0.4);
+    color: var(--bunker-success);
+}
+
+.bunker-alert.error {
+    background: rgba(247, 118, 142, 0.15);
+    border: 1px solid rgba(247, 118, 142, 0.4);
+    color: var(--bunker-danger);
+}
+
+/* Writeup modal */
+.bunker-writeup-item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.8rem 1rem;
+    border-radius: 10px;
+    margin-bottom: 0.5rem;
+    background: var(--bunker-surface-soft, #2A2E3F);
+    border: 1px solid var(--bunker-border-soft, #414868);
+    transition: all 0.2s ease;
+}
+
+.bunker-writeup-item:hover {
+    border-color: var(--bunker-primary-light);
+}
+
+.bunker-writeup-item a {
+    color: var(--bunker-primary-light);
+    text-decoration: none;
+    font-weight: 500;
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.bunker-writeup-item a:hover {
+    color: #fff;
+}
+
+.bunker-writeup-locked {
+    color: var(--bunker-text-muted);
+    font-style: italic;
+    flex: 1;
+}

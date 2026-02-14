@@ -1,4 +1,8 @@
 import React, { useEffect, useState } from 'react'
+import RankingWriteupsModal from '../components/RankingWriteupsModal'
+import RankingAutoresModal from '../components/RankingAutoresModal'
+import AuthorProfileModal from '../components/AuthorProfileModal'
+import './HomePage.css'
 
 const ITEMS_PER_PAGE = 50
 
@@ -10,6 +14,9 @@ export default function HomePage(){
   const [filterDifficulty, setFilterDifficulty] = useState('todos')
   const [filterCategory, setFilterCategory] = useState('')
   const [filterCompleted, setFilterCompleted] = useState(null)
+  const [showRankingWriteups, setShowRankingWriteups] = useState(false)
+  const [showRankingAutores, setShowRankingAutores] = useState(false)
+  const [authorProfileName, setAuthorProfileName] = useState(null)
 
   useEffect(()=>{
     setLoading(true)
@@ -90,8 +97,8 @@ export default function HomePage(){
             </div>
 
             <button id="academia" className="btn btn-sm" onClick={()=> window.open('https://elrincondelhacker.es', '_blank')}>Academia🧠</button>
-            <button id="ranking" className="btn btn-sm" onClick={()=> window.ranking()}>Writeups👑</button>
-            <button id="autores" className="btn btn-sm" onClick={()=> window.rankingautores()}>Autores👑</button>
+            <button id="ranking" className="btn btn-sm" onClick={()=> setShowRankingWriteups(true)}>Writeups👑</button>
+            <button id="autores" className="btn btn-sm" onClick={()=> setShowRankingAutores(true)}>Autores👑</button>
             <span className="filters-divider" aria-hidden="true"></span>
 
             <div className="d-flex flex-wrap gap-2 ms-auto" id="filtro-dificultad">
@@ -132,6 +139,22 @@ export default function HomePage(){
       <div className="header-pagination-row" style={{marginTop:'2rem'}}>
         <div id="pagination-container" className="pagination-container" style={{display: filtered.length > ITEMS_PER_PAGE ? 'block' : 'none'}}></div>
       </div>
+
+      <RankingWriteupsModal
+        open={showRankingWriteups}
+        onClose={() => setShowRankingWriteups(false)}
+        onOpenAuthor={(name) => { setShowRankingWriteups(false); setAuthorProfileName(name) }}
+      />
+      <RankingAutoresModal
+        open={showRankingAutores}
+        onClose={() => setShowRankingAutores(false)}
+        onOpenAuthor={(name) => { setShowRankingAutores(false); setAuthorProfileName(name) }}
+      />
+      <AuthorProfileModal
+        open={!!authorProfileName}
+        authorName={authorProfileName}
+        onClose={() => setAuthorProfileName(null)}
+      />
     </div>
   )
 }

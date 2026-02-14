@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react'
+import './RegisterPage.css'
 
 export default function RegisterPage(){
   const [csrf, setCsrf] = useState('')
@@ -18,21 +19,6 @@ export default function RegisterPage(){
       .then(r => r.ok ? r.json() : null)
       .then(data => { if (data && data.csrf_token) setCsrf(data.csrf_token) })
       .catch(()=>{})
-  }, [])
-
-  // Load original registro.css for visual parity
-  useEffect(() => {
-    const id = 'register-page-css'
-    if (document.getElementById(id)) return
-    const link = document.createElement('link')
-    link.id = id
-    link.rel = 'stylesheet'
-    link.href = '/static/dockerlabs/css/registro.css'
-    document.head.appendChild(link)
-    return () => {
-      const el = document.getElementById(id)
-      if (el) el.remove()
-    }
   }, [])
 
   return (
@@ -87,7 +73,7 @@ export default function RegisterPage(){
                   <input type="checkbox" id="terms" name="terms" required />
                   <span>
                     Al registrarme acepto los
-                    <a href="/politicas/condiciones_uso.html" target="_blank"> Términos y Condiciones</a>
+                    <a href="/condiciones-uso" target="_blank" rel="noreferrer"> Términos y Condiciones</a>
                   </span>
                 </label>
               </div>
@@ -105,7 +91,7 @@ export default function RegisterPage(){
         <div className="auth-footer-actions">
           <span className="text-muted">¿Ya tienes cuenta?</span>
           <span className="auth-separator">/</span>
-          <a href="/auth/login" className="footer-link"><i className="fas fa-sign-in-alt"></i> Iniciar sesión</a>
+          <a href="/login" className="footer-link"><i className="bi bi-box-arrow-in-right"></i> Iniciar sesión</a>
         </div>
       </div>
     </div>

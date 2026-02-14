@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import './LoginPage.css'
 
 export default function LoginPage(){
   const [csrf, setCsrf] = useState('')
@@ -20,21 +21,6 @@ export default function LoginPage(){
       .then(r => r.ok ? r.json() : null)
       .then(data => { if (data && data.csrf_token) setCsrf(data.csrf_token) })
       .catch(()=>{})
-  }, [])
-
-  // Ensure the original login.css is loaded (templates added it via extra_head)
-  useEffect(() => {
-    const id = 'login-page-css'
-    if (document.getElementById(id)) return
-    const link = document.createElement('link')
-    link.id = id
-    link.rel = 'stylesheet'
-    link.href = '/static/dockerlabs/css/login.css'
-    document.head.appendChild(link)
-    return () => {
-      const el = document.getElementById(id)
-      if (el) el.remove()
-    }
   }, [])
 
   return (
@@ -88,9 +74,9 @@ export default function LoginPage(){
         </form>
 
         <div className="auth-footer-actions">
-          <a href="/auth/recover" className="footer-link"><i className="fas fa-key"></i> ¿Olvidaste tu contraseña?</a>
+          <a href="/recover" className="footer-link"><i className="bi bi-key"></i> ¿Olvidaste tu contraseña?</a>
           <span className="auth-separator">/</span>
-          <a href="/auth/register" className="footer-link"><i className="fas fa-user-plus"></i> Crear cuenta nueva</a>
+          <a href="/register" className="footer-link"><i className="bi bi-person-plus"></i> Crear cuenta nueva</a>
         </div>
       </div>
     </div>

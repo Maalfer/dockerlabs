@@ -273,6 +273,46 @@ def recover():
 
     return render_template('dockerlabs/recover.html', error=error)
 
+
+@auth_bp.route('/auth/api_recover', methods=['POST'])
+@csrf_protect
+@limiter.limit("5 per minute", methods=["POST"])
+def api_recover():
+    """
+    Password recovery API for React frontend. Returns JSON.
+    """
+    from .extensions import db as alchemy_db
+
+    data = request.get_json(silent=True) or {}
+    username = (data.get('username') or '').strip()
+    pin = (data.get('pin') or '').strip()
+    password = data.get('password') or ''
+    password2 = data.get('password2') or ''
+
+    if not username or not pin or not password:
+        return jsonify({'success': False, 'error': 'Todos los campos son obligatorios.'}), 400
+    if password != password2:
+        return jsonify({'success': False, 'error': 'Las contraseñas no coinciden.'}), 400
+
+    user_obj = User.query.filter_by(username=username).first()
+    if not user_obj:
+        return jsonify({'success': False, 'error': 'Usuario no encontrado.'}), 400
+    if not user_obj.recovery_pin_hash:
+        return jsonify({'success': False, 'error': 'No hay un PIN de recuperación registrado para este usuario. Regístrate nuevamente o contacta al soporte.'}), 400
+    if not check_password_hash(user_obj.recovery_pin_hash, pin):
+        return jsonify({'success': False, 'error': 'PIN incorrecto.'}), 400
+    if not user_obj.recovery_pin_created_at:
+        return jsonify({'success': False, 'error': 'Error en la fecha de emisión del PIN. Contacta al soporte.'}), 400
+
+    new_pwd_hash = generate_password_hash(password)
+    user_obj.password_hash = new_pwd_hash
+    user_obj.recovery_pin_hash = None
+    user_obj.recovery_pin_created_at = None
+    alchemy_db.session.commit()
+
+    return jsonify({'success': True, 'message': 'Contraseña actualizada correctamente.'}), 200
+
+
 @auth_bp.route('/login', methods=['GET', 'POST'])
 @csrf_protect
 @limiter.limit("5 per minute", methods=["POST"])
@@ -545,38 +585,37 @@ def update_social_links():
         
         alchemy_db.session.commit()
         return jsonify({"message": "Enlaces de redes sociales actualizados correctamente."}), 200
-
-
-    @auth_bp.route('/api/me')
-    def api_me():
-        """
-        Return current authenticated user info for SPA.
-        """
-        if 'user_id' not in session:
-            return jsonify({'authenticated': False}), 401
-
-        user = User.query.get(session['user_id'])
-        if not user:
-            return jsonify({'authenticated': False}), 404
-
-        profile_path = get_profile_image_static_path(user.username, user_id=user.id)
-        profile_image_url = url_for('static', filename=profile_path)
-
-        return jsonify({
-            'authenticated': True,
-            'id': user.id,
-            'username': user.username,
-            'email': user.email,
-            'biography': user.biography,
-            'linkedin_url': user.linkedin_url,
-            'github_url': user.github_url,
-            'youtube_url': user.youtube_url,
-            'profile_image_url': profile_image_url,
-            'role': user.role
-        })
     except Exception as e:
         alchemy_db.session.rollback()
         return jsonify({"error": f"Error al actualizar enlaces: {str(e)}"}), 500
+
+@auth_bp.route('/api/me')
+def api_me():
+    """
+    Return current authenticated user info for SPA.
+    """
+    if 'user_id' not in session:
+        return jsonify({'authenticated': False}), 401
+
+    user = User.query.get(session['user_id'])
+    if not user:
+        return jsonify({'authenticated': False}), 404
+
+    profile_path = get_profile_image_static_path(user.username, user_id=user.id)
+    profile_image_url = url_for('static', filename=profile_path)
+
+    return jsonify({
+        'authenticated': True,
+        'id': user.id,
+        'username': user.username,
+        'email': user.email,
+        'biography': user.biography,
+        'linkedin_url': user.linkedin_url,
+        'github_url': user.github_url,
+        'youtube_url': user.youtube_url,
+        'profile_image_url': profile_image_url,
+        'role': user.role
+    })
 
 @auth_bp.route('/upload-profile-photo', methods=['POST'])
 @role_required('admin', 'moderador', 'jugador')
@@ -847,6 +886,53 @@ def request_username_change():
 
     flash("Solicitud enviada. Un moderador o admin deberá aprobarla.", "success")
     return redirect(url_for('dashboard'))
+
+@auth_bp.route('/api/request_username_change', methods=['POST'])
+@csrf_protect
+@limiter.limit("5 per hour")
+def api_request_username_change():
+    """
+    JSON API: Request username change (for React dashboard).
+    """
+    if 'user_id' not in session:
+        return jsonify({'error': 'Debes iniciar sesión.'}), 401
+
+    data = request.json or {}
+    user_id = session['user_id']
+    old_username = session['username']
+    requested_username = (data.get('requested_username') or '').strip()
+    reason = (data.get('reason') or '').strip()
+    contacto_opcional = (data.get('contacto_opcional') or '').strip()
+
+    if not requested_username:
+        return jsonify({'error': 'Debes escribir un nombre nuevo.'}), 400
+
+    if len(requested_username) > 20:
+        return jsonify({'error': 'El nombre de usuario no puede exceder 20 caracteres.'}), 400
+
+    if not re.match(r'^[A-Za-z0-9_\-]{3,20}$', requested_username):
+        return jsonify({'error': 'El nombre debe tener entre 3 y 20 caracteres y solo letras, números, guion y guion bajo.'}), 400
+
+    from .extensions import db as alchemy_db
+
+    if User.query.filter_by(username=requested_username).first():
+        return jsonify({'error': 'Ese nombre ya está en uso.'}), 400
+
+    try:
+        new_req = UsernameChangeRequest(
+            user_id=user_id,
+            old_username=old_username,
+            requested_username=requested_username,
+            reason=reason,
+            contacto_opcional=contacto_opcional,
+            estado='pendiente'
+        )
+        alchemy_db.session.add(new_req)
+        alchemy_db.session.commit()
+        return jsonify({'message': 'Solicitud enviada. Un moderador o admin deberá aprobarla.'}), 200
+    except Exception:
+        alchemy_db.session.rollback()
+        return jsonify({'error': 'Error al procesar la solicitud.'}), 500
 
 @auth_bp.route('/approve_username_change/<int:request_id>', methods=['POST'])
 @role_required('admin')

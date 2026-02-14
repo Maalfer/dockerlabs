@@ -16,13 +16,9 @@ window.showEnlaces = function(nombre){
   alert('Ver writeups de: ' + nombre)
 }
 
-window.ranking = function(){
-  alert('Abrir ranking')
-}
-
-window.rankingautores = function(){
-  alert('Abrir ranking de autores')
-}
+// Ranking modals are now React components in HomePage; keep no-op for legacy script compatibility
+window.ranking = function(){ /* opened via React state in HomePage */ }
+window.rankingautores = function(){ /* opened via React state in HomePage */ }
 
 // Difficulty filter helpers (kept for compatibility if scripts call them)
 window.botonmuyfacil = function(){ document.getElementById('boton-muy-facil')?.click() }

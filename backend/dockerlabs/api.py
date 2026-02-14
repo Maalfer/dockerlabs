@@ -241,6 +241,67 @@ def api_ranking_writeups():
     return jsonify(response_list), 200
 
 
+@api_bp.route('/api/estadisticas', methods=['GET'])
+@limiter.limit("30 per minute", methods=["GET"])
+def api_estadisticas():
+    """
+    Estadísticas de la plataforma (máquinas, writeups, usuarios por año) para el frontend React.
+    ---
+    tags:
+      - API Pública
+    responses:
+      200:
+        description: machine_stats, writeup_stats, user_stats (porcentajes por año).
+    """
+    from .models import Machine, Writeup, User
+    from datetime import datetime
+    from collections import defaultdict
+
+    def get_distribution_by_year(items, date_extractor):
+        year_counts = defaultdict(int)
+        total = 0
+        for item in items:
+            try:
+                year = date_extractor(item)
+                if year:
+                    year_counts[year] += 1
+                    total += 1
+            except Exception:
+                continue
+        distribution = {}
+        if total > 0:
+            for year, count in year_counts.items():
+                distribution[year] = round((count / total) * 100, 2)
+        return dict(sorted(distribution.items()))
+
+    machines = Machine.query.all()
+    def machine_date_extractor(m):
+        if not m.fecha:
+            return None
+        try:
+            return datetime.strptime(m.fecha, "%d/%m/%Y").year
+        except (ValueError, TypeError):
+            return None
+
+    writeups = Writeup.query.all()
+    def writeup_date_extractor(w):
+        return w.created_at.year if w.created_at else None
+
+    users = User.query.all()
+    def user_date_extractor(u):
+        return u.created_at.year if u.created_at else None
+
+    machine_stats = get_distribution_by_year(machines, machine_date_extractor)
+    writeup_stats = get_distribution_by_year(writeups, writeup_date_extractor)
+    user_stats = get_distribution_by_year(users, user_date_extractor)
+
+    return jsonify({
+        "machine_stats": machine_stats,
+        "writeup_stats": writeup_stats,
+        "user_stats": user_stats
+    }), 200
+
+
 @api_bp.route('/api/maquinas', methods=['GET'])
 @limiter.limit("60 per minute", methods=["GET"])
 def api_maquinas():
