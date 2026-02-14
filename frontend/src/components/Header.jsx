@@ -1,7 +1,9 @@
 import React, { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 
 export default function Header({ openModal }) {
   const [user, setUser] = useState({ is_authenticated: false, user: null })
+  const navigate = useNavigate()
 
   useEffect(() => {
     fetch('/api/user/info', { credentials: 'include' })
@@ -57,10 +59,10 @@ export default function Header({ openModal }) {
           </>
         ) : (
           <>
-            <button id="login-button" onClick={()=> window.location.href='/auth/login'} className="btn-auth"> 
+            <button id="login-button" onClick={()=> navigate('/login')} className="btn-auth"> 
               <i className="bi bi-box-arrow-in-right"/> Iniciar sesión
             </button>
-            <button id="register-button" onClick={()=> window.location.href='/auth/register'} className="btn-auth"> 
+            <button id="register-button" onClick={()=> navigate('/register')} className="btn-auth"> 
               <i className="bi bi-person-plus"/> Registro
             </button>
           </>

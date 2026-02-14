@@ -1,6 +1,7 @@
 // Expose minimal helper functions to mimic original behavior used by templates.
 window.presentacion = function(nombre, dificultad, color, autor, enlace_autor, fecha, imagen, categoria) {
-  alert('Presentación: ' + nombre)
+  const detail = { nombre, dificultad, color, autor, enlace_autor, fecha, imagen, categoria };
+  window.dispatchEvent(new CustomEvent('open-machine-modal', { detail }));
 }
 
 window.descripcion = function(nombre, descripcion){

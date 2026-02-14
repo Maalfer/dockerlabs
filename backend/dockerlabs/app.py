@@ -142,6 +142,15 @@ app.register_blueprint(auth_bp)
 app.register_blueprint(maquinas_bp)
 app.register_blueprint(api_bp)
 
+
+@app.route('/api/csrf')
+def api_csrf():
+    """
+    Return a CSRF token and ensure session cookie is set for client-side forms.
+    """
+    token = generate_csrf_token()
+    return jsonify({'csrf_token': token})
+
 @app.context_processor
 def inject_globals():
     return {

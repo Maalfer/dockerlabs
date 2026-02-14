@@ -1,6 +1,8 @@
 /* Minimal styles for the React scaffold; project uses original CSS from /static/dockerlabs/css */
-body { font-family: 'Fira Code', monospace; background: #0b1220; color: #e6eef6; }
-.container { max-width: 1100px; margin: 0 auto; }
+.body { font-family: 'Fira Code', monospace; background: #0b1220; color: #e6eef6; }
+/* Do not override the original project's `.container` width; keep parity with
+	`/static/dockerlabs/css/styles.css` where `.container { max-width: 1400px; }` */
+.container { max-width: 1400px; margin: 0 auto; }
 .maquina-item { display:flex; justify-content:space-between; padding:0.75rem; border-bottom:1px solid rgba(255,255,255,0.04); cursor:pointer }
 .etiqueta { background: rgba(255,255,255,0.03); padding: 0.15rem 0.5rem; border-radius:6px }
 .overlay { display:none; position:fixed; inset:0; background:rgba(2,6,23,0.6); align-items:center; justify-content:center; z-index:9999 }

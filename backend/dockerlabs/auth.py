@@ -310,6 +310,33 @@ def login():
     remaining = session.pop('rate_limit_remaining', None)
     return render_template('dockerlabs/login.html', error=error, success=success)
 
+
+@auth_bp.route('/auth/api_login', methods=['POST'])
+@csrf_protect
+@limiter.limit("10 per minute", methods=["POST"])
+def api_login():
+    """
+    API login endpoint for SPA clients. Accepts JSON {username,password} and returns JSON.
+    """
+    data = request.json or {}
+    username = (data.get('username') or '').strip()
+    password = data.get('password') or ''
+
+    if not username or not password:
+        return jsonify({'success': False, 'message': 'Faltan credenciales'}), 400
+
+    user = User.query.filter_by(username=username).first()
+    if user is None or not check_password_hash(user.password_hash, password):
+        return jsonify({'success': False, 'message': 'Usuario o contraseña incorrectos'}), 401
+
+    # login the user and set session
+    session.clear()
+    login_user(user)
+    session['user_id'] = user.id
+    session['username'] = user.username
+
+    return jsonify({'success': True, 'redirect': url_for('dashboard')})
+
 @auth_bp.route('/logout')
 
 def logout():
@@ -518,6 +545,35 @@ def update_social_links():
         
         alchemy_db.session.commit()
         return jsonify({"message": "Enlaces de redes sociales actualizados correctamente."}), 200
+
+
+    @auth_bp.route('/api/me')
+    def api_me():
+        """
+        Return current authenticated user info for SPA.
+        """
+        if 'user_id' not in session:
+            return jsonify({'authenticated': False}), 401
+
+        user = User.query.get(session['user_id'])
+        if not user:
+            return jsonify({'authenticated': False}), 404
+
+        profile_path = get_profile_image_static_path(user.username, user_id=user.id)
+        profile_image_url = url_for('static', filename=profile_path)
+
+        return jsonify({
+            'authenticated': True,
+            'id': user.id,
+            'username': user.username,
+            'email': user.email,
+            'biography': user.biography,
+            'linkedin_url': user.linkedin_url,
+            'github_url': user.github_url,
+            'youtube_url': user.youtube_url,
+            'profile_image_url': profile_image_url,
+            'role': user.role
+        })
     except Exception as e:
         alchemy_db.session.rollback()
         return jsonify({"error": f"Error al actualizar enlaces: {str(e)}"}), 500
