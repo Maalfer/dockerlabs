@@ -591,31 +591,26 @@ main {
 }
 
 .bunker-scope .footer-content {
-  display: grid;
-  grid-template-columns: 1fr auto 1fr;
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+  max-width: 600px;
+  /* Slightly wider than DockerLabs to fit content */
   align-items: center;
-  gap: 1rem;
-  max-width: 1400px;
   width: 100%;
   position: relative;
   z-index: 20;
 }
 
-.bunker-scope .footer-content p:first-child {
-  justify-self: start;
-}
-
+.bunker-scope .footer-content p:first-child,
+.bunker-scope .footer-content p:last-child,
 .bunker-scope .footer-icons {
-  justify-self: center;
-}
-
-.bunker-scope .footer-content p:last-child {
-  justify-self: end;
+  justify-self: auto;
 }
 
 .bunker-scope .footer-content p {
   margin: 0;
-  font-size: 0.8rem;
+  font-size: 0.9rem;
   color: var(--bunker-text-secondary);
 }
 
@@ -629,7 +624,8 @@ main {
 
 .bunker-scope .footer-icons {
   display: flex;
-  gap: 15px;
+  gap: 1.2rem;
+  margin: 0.5rem 0;
 }
 
 /* WAVE */

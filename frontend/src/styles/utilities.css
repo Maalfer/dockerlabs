@@ -1,0 +1,134 @@
+/* --- GitHub Support Tooltip --- */
+.support-tooltip {
+    position: relative;
+}
+
+.support-tooltip::before {
+    content: attr(data-tooltip);
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    margin-bottom: 8px;
+    padding: 4px 8px;
+    background: #eab308;
+    color: #0f172a;
+    font-size: 0.75rem;
+    font-weight: 600;
+    border-radius: 4px;
+    white-space: nowrap;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.2s ease;
+    pointer-events: none;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.support-tooltip::after {
+    content: '';
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    margin-bottom: 4px;
+    border: 4px solid transparent;
+    border-top-color: #eab308;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.2s ease;
+}
+
+.support-tooltip:hover::before,
+.support-tooltip:hover::after {
+    opacity: 1;
+    visibility: visible;
+    transform: translateX(-50%) translateY(-2px);
+}
+
+@keyframes heartbeat {
+    0% {
+        transform: scale(1);
+    }
+
+    14% {
+        transform: scale(1.1);
+        text-shadow: 0 0 10px rgba(251, 191, 36, 0.6);
+    }
+
+    28% {
+        transform: scale(1);
+    }
+
+    42% {
+        transform: scale(1.1);
+        text-shadow: 0 0 10px rgba(251, 191, 36, 0.6);
+    }
+
+    70% {
+        transform: scale(1);
+    }
+}
+
+.github-pulse {
+    color: #fbbf24 !important;
+    animation: heartbeat 3s infinite;
+    display: inline-block;
+}
+
+.github-pulse:hover {
+    animation: none;
+    text-shadow: 0 0 15px rgba(251, 191, 36, 0.8);
+    transform: scale(1.1);
+    transition: all 0.3s ease;
+}
+/* ===== Alerts ===== */
+
+.alert-warning {
+    background: rgba(251, 146, 60, 0.08);
+    color: #fbbf24;
+    padding: 16px 20px;
+    border-radius: 12px;
+    border: 1px solid rgba(251, 191, 36, 0.6);
+    font-weight: 500;
+    backdrop-filter: blur(6px);
+    box-shadow:
+        0 0 6px rgba(251, 191, 36, 0.4),
+        0 0 12px rgba(251, 191, 36, 0.25);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 15px 0;
+    transition: 0.3s ease;
+}
+
+.alert-warning:hover {
+    border-color: #fbbf24;
+    box-shadow:
+        0 0 10px rgba(251, 191, 36, 0.7),
+        0 0 20px rgba(251, 191, 36, 0.5);
+}
+
+.alert-hint {
+    background: rgba(59, 130, 246, 0.08);
+    color: #60a5fa;
+    padding: 16px 20px;
+    border-radius: 12px;
+    border: 1px solid rgba(96, 165, 250, 0.6);
+    font-weight: 500;
+    backdrop-filter: blur(6px);
+    box-shadow:
+        0 0 6px rgba(96, 165, 250, 0.4),
+        0 0 12px rgba(96, 165, 250, 0.25);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 15px 0;
+    transition: 0.3s ease;
+}
+
+.alert-hint:hover {
+    border-color: #60a5fa;
+    box-shadow:
+        0 0 10px rgba(96, 165, 250, 0.7),
+        0 0 20px rgba(96, 165, 250, 0.5);
+}

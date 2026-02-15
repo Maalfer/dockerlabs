@@ -1,0 +1,419 @@
+/* Machine List & Item Styles */
+
+.lista {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+/* Center the last visible machine when there's an odd number */
+.lista .maquina-item.last-visible-odd {
+    grid-column: 1 / -1;
+    width: calc(50% - 0.5rem);
+    justify-self: center;
+}
+
+/* Centered layout for single machine */
+.lista-unica-centrada {
+    display: flex;
+    justify-content: center;
+    margin-top: 1rem;
+    padding: 0 1rem;
+}
+
+.lista-unica-centrada .maquina-item {
+    max-width: 600px;
+    width: 100%;
+}
+
+.maquina-item {
+    background: #0f172a;
+    border: 1px solid rgba(34, 211, 238, 0.85);
+    border-radius: 12px;
+    padding: 0.7rem 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    transition: all 0.25s ease;
+    cursor: pointer;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.5), 0 0 16px rgba(34, 211, 238, 0.25);
+    position: relative;
+    overflow: hidden;
+    min-height: 45px;
+    animation: fadeInUp 0.4s ease;
+    gap: 0.8rem;
+}
+
+.maquina-item:hover {
+    transform: translateY(-2px);
+    border-color: rgba(255, 255, 255, 0.25);
+    box-shadow: 0 16px 36px rgba(0, 0, 0, 0.6);
+    background: #1e293b;
+}
+
+.maquina-item span:first-child {
+    color: var(--text-primary);
+    font-size: 0.9rem;
+    font-weight: 600;
+    flex: 1;
+    transition: color 0.2s ease;
+}
+
+.maquina-item:hover span:first-child {
+    color: #ffffff;
+}
+
+.maquina-item .etiqueta {
+    font-size: 0.68rem;
+    font-weight: 700;
+    padding: 0.2rem 1rem;
+    border-radius: 5px;
+    margin-left: 0.8rem;
+    border: 1px solid transparent;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    min-width: 100px;
+    text-align: center;
+    display: inline-block;
+    white-space: nowrap;
+}
+
+.etiqueta {
+    background: rgba(255, 255, 255, 0.03);
+    padding: 0.15rem 0.5rem;
+    border-radius: 6px
+}
+
+.maquina-item .etiqueta.muy-facil {
+    background: rgba(34, 211, 238, 0.1);
+    color: var(--accent-cyan);
+    border-color: rgba(34, 211, 238, 0.2);
+}
+
+.maquina-item .etiqueta.facil {
+    background: rgba(132, 204, 22, 0.1);
+    color: #a3e635;
+    border-color: rgba(132, 204, 22, 0.2);
+}
+
+.maquina-item .etiqueta.medio {
+    background: rgba(245, 158, 11, 0.1);
+    color: var(--accent-yellow);
+    border-color: rgba(245, 158, 11, 0.2);
+}
+
+.maquina-item .etiqueta.dificil {
+    background: rgba(239, 68, 68, 0.1);
+    color: var(--accent-red);
+    border-color: rgba(239, 68, 68, 0.2);
+}
+
+.acciones {
+    display: flex;
+    gap: 0.4rem;
+    align-items: center;
+    margin-left: 0.8rem;
+}
+
+.acciones button {
+    background: rgba(15, 23, 42, 0.96);
+    border: 1px solid var(--border-strong);
+    color: var(--primary-blue-light);
+    border-radius: 10px;
+    padding: 0.18rem 0.4rem;
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.acciones button:hover {
+    transform: translateY(-1px) scale(1.04);
+    border-color: var(--primary-blue);
+    box-shadow: 0 8px 18px rgba(37, 99, 235, 0.45);
+}
+
+.acciones .subir {
+    background: rgba(16, 185, 129, 0.1);
+    border-color: rgba(16, 185, 129, 0.8);
+    color: var(--accent-green);
+}
+
+.acciones .subir:hover {
+    background: var(--accent-green);
+    color: #ffffff;
+}
+
+.acciones .descargar {
+    background: rgba(34, 211, 238, 0.1);
+    border-color: rgba(34, 211, 238, 0.8);
+    color: var(--accent-cyan);
+}
+
+.acciones .descargar:hover {
+    background: var(--accent-cyan);
+    color: #000;
+}
+
+.acciones button:last-child {
+    background: rgba(139, 92, 246, 0.1);
+    border-color: rgba(139, 92, 246, 0.8);
+    color: var(--accent-purple);
+}
+
+.acciones button:last-child:hover {
+    background: var(--accent-purple);
+    color: #ffffff;
+}
+
+.maquina-item::after {
+    content: '';
+    position: absolute;
+    bottom: -6px;
+    left: 6%;
+    width: 88%;
+    height: 10px;
+    background: rgba(15, 23, 42, 0.8);
+    border-radius: 50%;
+    filter: blur(8px);
+    transition: all 0.25s ease;
+    z-index: -1;
+}
+
+.maquina-item:hover::after {
+    bottom: -8px;
+    width: 92%;
+    background: rgba(37, 99, 235, 0.4);
+    filter: blur(10px);
+}
+
+/* Estilo especial para la máquina más reciente */
+.maquina-item.mas-reciente {
+    border-color: #ff8c00;
+    box-shadow: 0 10px 24px rgba(255, 140, 0, 0.3);
+}
+
+.maquina-item.mas-reciente:hover {
+    border-color: #ffa500;
+    box-shadow: 0 16px 36px rgba(255, 140, 0, 0.5);
+}
+
+.maquina-item.mas-reciente::after {
+    background: rgba(255, 140, 0, 0.3);
+}
+
+.maquina-item.mas-reciente:hover::after {
+    background: rgba(255, 140, 0, 0.5);
+}
+
+/* Badge ¡Nueva! para la máquina más reciente */
+.etiqueta-nueva {
+    display: inline-block;
+    background: linear-gradient(135deg, #ff8c00, #ffa500);
+    color: #000;
+    font-size: 0.65rem;
+    font-weight: 700;
+    padding: 3px 8px;
+    border-radius: 4px;
+    margin-left: 8px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    box-shadow: 0 2px 8px rgba(255, 140, 0, 0.5);
+    animation: pulse-orange 2s ease-in-out infinite;
+}
+
+@keyframes pulse-orange {
+
+    0%,
+    100% {
+        box-shadow: 0 2px 8px rgba(255, 140, 0, 0.5);
+        transform: scale(1);
+    }
+
+    50% {
+        box-shadow: 0 4px 16px rgba(255, 140, 0, 0.8);
+        transform: scale(1.05);
+    }
+}
+
+/* Estilo para la segunda máquina más reciente (PLATA) */
+.maquina-item.second-recent {
+    border-color: #C0C0C0;
+    box-shadow: 0 10px 24px rgba(192, 192, 192, 0.3);
+}
+
+.maquina-item.second-recent:hover {
+    border-color: #E8E8E8;
+    box-shadow: 0 16px 36px rgba(192, 192, 192, 0.5);
+}
+
+/* Pagination */
+.header-pagination-row {
+    width: 100%;
+    margin-top: 0.1rem;
+    padding-top: 0.1rem;
+}
+
+.pagination-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+    padding: 0;
+}
+
+.pagination-wrapper {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    padding: 0.25rem 0.5rem;
+    background: rgba(15, 23, 42, 0.4);
+    border: 1px solid rgba(51, 65, 85, 0.4);
+    border-radius: 6px;
+}
+
+.pagination-info {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    font-weight: 500;
+}
+
+.pagination-nav {
+    display: flex;
+    align-items: center;
+    gap: 0.2rem;
+}
+
+.pagination-btn {
+    min-width: 28px;
+    height: 28px;
+    padding: 0 0.45rem;
+    font-size: 0.8rem;
+    border: 1px solid transparent;
+    background: transparent;
+    color: var(--text-secondary);
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-family: inherit;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.pagination-btn:hover:not(:disabled) {
+    background: rgba(51, 65, 85, 0.5);
+    color: var(--accent-cyan);
+}
+
+.pagination-btn:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+}
+
+.pagination-btn.active {
+    background: var(--accent-cyan);
+    color: var(--background-dark);
+    font-weight: 600;
+}
+
+.pagination-pages {
+    display: flex;
+    align-items: center;
+    gap: 0.15rem;
+}
+
+.pagination-pages .pagination-btn {
+    min-width: 26px;
+    height: 26px;
+}
+
+/* Mobile Adjustments */
+@media (max-width: 480px) {
+
+    /* Fix machine item layout on mobile */
+    .maquina-item {
+        padding: 0.6rem 0.75rem !important;
+        gap: 0.5rem !important;
+    }
+
+    /* Reduce badge size */
+    .maquina-item .etiqueta {
+        padding: 0.15rem 0.5rem !important;
+        font-size: 0.6rem !important;
+        min-width: auto !important;
+        margin-left: auto !important;
+        white-space: nowrap;
+    }
+
+    /* Optimize action buttons */
+    .acciones {
+        gap: 0.3rem !important;
+        margin-left: 0.3rem !important;
+    }
+
+    .acciones button {
+        padding: 0.2rem 0.3rem !important;
+        font-size: 0.8rem !important;
+    }
+
+    /* Machine name truncation if needed */
+    .maquina-item span:first-child {
+        font-size: 0.85rem !important;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 100px;
+    }
+
+    /* New/Medal badges smaller */
+    .etiqueta-nueva,
+    .etiqueta-segunda,
+    .etiqueta-tercera {
+        font-size: 0.55rem !important;
+        padding: 2px 5px !important;
+        margin-left: 4px !important;
+    }
+}
+/* Description Button (Extra) */
+.acciones button.btn-descripcion {
+    background: rgba(148, 163, 184, 0.1) !important;
+    border-color: rgba(148, 163, 184, 0.4) !important;
+    color: var(--text-secondary) !important;
+}
+
+.acciones button.btn-descripcion:hover {
+    background: rgba(148, 163, 184, 0.2) !important;
+    color: #ffffff !important;
+    box-shadow: 0 0 15px rgba(148, 163, 184, 0.3) !important;
+    border-color: var(--text-secondary) !important;
+}
+
+.actions button.btn-descripcion {
+    background: rgba(148, 163, 184, 0.1) !important;
+    border-color: rgba(148, 163, 184, 0.4) !important;
+    color: var(--text-secondary) !important;
+    border: 1px solid var(--border-strong) !important;
+    border-radius: 10px;
+    padding: 0.18rem 0.4rem;
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.actions button.btn-descripcion:hover {
+    transform: translateY(-1px) scale(1.04);
+    background: rgba(148, 163, 184, 0.2) !important;
+    color: #ffffff !important;
+    box-shadow: 0 8px 18px rgba(148, 163, 184, 0.3) !important;
+    border-color: var(--text-secondary) !important;
+}

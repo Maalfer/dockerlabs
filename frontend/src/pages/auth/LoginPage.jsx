@@ -41,9 +41,15 @@ export default function LoginPage() {
           e.preventDefault()
           setErrorMsg('')
           const fd = new FormData(e.currentTarget)
-          const payload = { username: fd.get('username'), password: fd.get('password') }
           try {
-            const res = await fetch('/auth/api_login', { method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrf }, body: JSON.stringify(payload) })
+            const res = await fetch('/auth/api_login', {
+              method: 'POST',
+              credentials: 'include',
+              headers: {
+                'X-CSRFToken': csrf
+              },
+              body: new URLSearchParams(fd) // Sends as application/x-www-form-urlencoded
+            })
             const j = await res.json()
             if (res.ok && j.success) {
               await login() // Update global auth state and wait for it

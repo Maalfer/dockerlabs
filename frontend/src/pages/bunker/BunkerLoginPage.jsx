@@ -32,8 +32,13 @@ function BunkerLoginContent() {
             const res = await fetch('/bunkerlabs/api/login', {
                 method: 'POST',
                 credentials: 'include',
-                headers: { 'Content-Type': 'application/json', 'X-CSRFToken': token },
-                body: JSON.stringify({ password: password.trim() })
+                headers: {
+                    'X-CSRFToken': token
+                },
+                body: new URLSearchParams({
+                    password: password.trim(),
+                    csrf_token: token // Include token in body just in case
+                })
             })
             const data = await res.json()
 

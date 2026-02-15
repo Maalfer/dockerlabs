@@ -25,7 +25,11 @@ export default function BunkerLayout({ children }) {
         }
     }
 
-    useEffect(() => { fetchSession() }, [])
+    useEffect(() => {
+        fetchSession()
+        document.body.classList.add('bunker-mode')
+        return () => document.body.classList.remove('bunker-mode')
+    }, [])
 
     const ctxValue = { ...sess, refresh: fetchSession }
 

@@ -4,6 +4,7 @@ import './Header.css'
 
 import { useAuth } from '../../context/AuthContext'
 
+
 export default function Header({ openModal }) {
   const { user, logout } = useAuth()
   const navigate = useNavigate()

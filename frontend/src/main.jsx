@@ -2,8 +2,10 @@ import React from 'react'
 import { createRoot } from 'react-dom/client'
 import { BrowserRouter } from 'react-router-dom'
 import App from './App'
-import './base.css'
-import './styles.css'
+import './styles/variables.css'
+import './styles/globals.css'
+import './styles/utilities.css'
+import './components/machines/Machines.css' // Shared machine list styles
 
 class ErrorBoundary extends React.Component {
   constructor(props) { super(props); this.state = { error: null } }

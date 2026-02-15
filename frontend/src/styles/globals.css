@@ -76,3 +76,9 @@ body {
     color: #fff;
     font-size: 1.5rem
 }
+/* Override for BunkerLabs pages */
+body.bunker-mode {
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+    background: #1A1B26 !important; /* Match Bunker background */
+}
