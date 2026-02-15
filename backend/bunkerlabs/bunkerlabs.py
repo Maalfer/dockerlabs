@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, request, redirect, url_for, session, jsonify, flash
+from flask import Blueprint, request, redirect, url_for, session, jsonify, flash
 from sqlalchemy import func
 from sqlalchemy.exc import IntegrityError
 
@@ -280,7 +280,7 @@ def api_session():
     from dockerlabs.decorators import get_current_role
     role = get_current_role() if session.get('user_id') else None
     return jsonify({
-        'logged_in': bool(session.get('bunkerlabs_ok')) or (role == 'admin'),
+        'logged_in': bool(session.get('bunkerlabs_ok')),
         'nombre': session.get('bunkerlabs_nombre'),
         'is_guest': session.get('bunkerlabs_guest', False),
         'is_anonymous': session.get('bunkerlabs_anonymous', False),
@@ -372,7 +372,7 @@ def api_machines():
     """Return all BunkerLabs machines as JSON."""
     from dockerlabs.decorators import get_current_role
     role = get_current_role()
-    if not session.get('bunkerlabs_ok') and role != 'admin':
+    if not session.get('bunkerlabs_ok'):
         return jsonify({'error': 'No autorizado'}), 401
 
     maquinas = Machine.query.filter_by(origen='bunker').order_by(Machine.id.asc()).all()

@@ -1,4 +1,4 @@
-from flask import Blueprint, request, jsonify, render_template, redirect, url_for, session, flash
+from flask import Blueprint, request, jsonify, redirect, url_for, session, flash
 import re
 import urllib.parse
 import json
@@ -560,19 +560,7 @@ def api_get_reports():
 
     return jsonify(reports), 200
 
-@writeups_bp.route('/writeups-recibidos')
-@role_required('admin', 'moderador')
-def writeups_recibidos():
-    """
-    Received writeups page.
-    ---
-    tags:
-      - Admin
-    responses:
-      200:
-        description: Received writeups page.
-    """
-    return redirect('/')
+
 
 @writeups_bp.route('/api/ranking_writeups', methods=['GET'])
 @limiter.limit("60 per minute", methods=["GET"]) 

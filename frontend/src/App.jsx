@@ -1,42 +1,42 @@
 import React, { useState } from 'react'
 import { Routes, Route, Outlet } from 'react-router-dom'
-import Header from './components/Header'
-import Home from './pages/HomePage'
-import LoginPage from './pages/LoginPage'
-import RegisterPage from './pages/RegisterPage'
-import DashboardPage from './pages/DashboardPage'
-import RecoverPage from './pages/RecoverPage'
-import EstadisticasPage from './pages/EstadisticasPage'
-import InstruccionesUsoPage from './pages/InstruccionesUsoPage'
-import EnviarMaquinaPage from './pages/EnviarMaquinaPage'
-import ComoSeCreaUnaMaquinaPage from './pages/ComoSeCreaUnaMaquinaPage'
-import AgradecimientosPage from './pages/AgradecimientosPage'
-import PoliticaPrivacidadPage from './pages/PoliticaPrivacidadPage'
-import PoliticaCookiesPage from './pages/PoliticaCookiesPage'
-import CondicionesUsoPage from './pages/CondicionesUsoPage'
-import NotFoundPage from './pages/NotFoundPage'
-import ForbiddenPage from './pages/ForbiddenPage'
-import Footer from './components/Footer'
-import Modals from './components/Modals'
-import WriteupsPublicadosPage from './pages/WriteupsPublicadosPage'
-import WriteupsRecibidosPage from './pages/WriteupsRecibidosPage'
-import GestionMaquinasPage from './pages/GestionMaquinasPage';
-import MaquinasCompletadasPage from './pages/MaquinasCompletadasPage';
-import AddMachinePage from './pages/AddMachinePage';
-import GestionUsuariosPage from './pages/GestionUsuariosPage';
-import PeticionesPage from './pages/PeticionesPage';
+import Header from './components/layout/Header'
+import Home from './pages/general/HomePage'
+import LoginPage from './pages/auth/LoginPage'
+import RegisterPage from './pages/auth/RegisterPage'
+import DashboardPage from './pages/dashboard/DashboardPage'
+import RecoverPage from './pages/auth/RecoverPage'
+import EstadisticasPage from './pages/info/EstadisticasPage'
+import InstruccionesUsoPage from './pages/info/InstruccionesUsoPage'
+import EnviarMaquinaPage from './pages/admin/EnviarMaquinaPage'
+import ComoSeCreaUnaMaquinaPage from './pages/info/ComoSeCreaUnaMaquinaPage'
+import AgradecimientosPage from './pages/info/AgradecimientosPage'
+import PoliticaPrivacidadPage from './pages/legal/PoliticaPrivacidadPage'
+import PoliticaCookiesPage from './pages/legal/PoliticaCookiesPage'
+import CondicionesUsoPage from './pages/legal/CondicionesUsoPage'
+import NotFoundPage from './pages/general/NotFoundPage'
+import ForbiddenPage from './pages/auth/ForbiddenPage'
+import Footer from './components/layout/Footer'
+import Modals from './components/layout/Modals'
+import WriteupsPublicadosPage from './pages/writeups/WriteupsPublicadosPage'
+import WriteupsRecibidosPage from './pages/writeups/WriteupsRecibidosPage'
+import GestionMaquinasPage from './pages/admin/GestionMaquinasPage';
+import MaquinasCompletadasPage from './pages/machines/MaquinasCompletadasPage';
+import AddMachinePage from './pages/admin/AddMachinePage';
+import GestionUsuariosPage from './pages/admin/GestionUsuariosPage';
+import PeticionesPage from './pages/admin/PeticionesPage';
 
 // BunkerLabs pages (own layout)
-import BunkerLoginPage from './pages/BunkerLoginPage'
-import BunkerHomePage from './pages/BunkerHomePage'
-import BunkerAccesosPage from './pages/BunkerAccesosPage'
+import BunkerLoginPage from './pages/bunker/BunkerLoginPage'
+import BunkerHomePage from './pages/bunker/BunkerHomePage'
+import BunkerAccesosPage from './pages/bunker/BunkerAccesosPage'
 
 /* Layout wrapper for DockerLabs routes (Header + Footer + Modals) */
 function DockerLabsLayout({ modalState, open, close }) {
   return (
     <>
       <Header openModal={open} />
-      <main style={{ paddingTop: '48px' }}>
+      <main>
         <Outlet />
       </main>
       <Footer />
@@ -90,5 +90,3 @@ export default function App() {
     </AuthProvider>
   )
 }
-
-

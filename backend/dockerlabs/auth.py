@@ -4,7 +4,7 @@ import re
 import secrets
 import io
 from datetime import datetime, timedelta
-from flask import Blueprint, render_template, request, jsonify, redirect, url_for, session, g, flash
+from flask import Blueprint, request, jsonify, redirect, url_for, session, g, flash
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_login import login_user, logout_user, login_required, current_user
 from werkzeug.utils import secure_filename
@@ -241,47 +241,9 @@ def api_register():
             alchemy_db.session.rollback()
             return jsonify({'success': False, 'error': f"Error al crear usuario: {str(e)}"}), 500
 
-@auth_bp.route('/register', methods=['GET', 'POST'])
-@csrf_protect
-@limiter.limit("3 per minute", methods=["POST"])
-def register():
-    """
-    User registration endpoint.
-    Legacy route, kept for redirect or 404? 
-    Given React handles this, we can remove or redirect to /.
-    For now, remove content and return 404 or redirect.
-    But let's just remove it as per plan.
-    """
-    return redirect('/')
 
-@auth_bp.route('/recover', methods=['GET', 'POST'])
-@csrf_protect
-@limiter.limit("5 per minute", methods=["POST"])
-def recover():
-    """
-    Password recovery endpoint.
-    Legacy route.
-    """
-    return redirect('/')
 
-@auth_bp.route('/login', methods=['GET', 'POST'])
-@csrf_protect
-@limiter.limit("5 per minute", methods=["POST"])
-def login():
-    """
-    User login endpoint.
-    Legacy route.
-    """
-    return redirect('/')
 
-@auth_bp.route('/gestion-usuarios')
-@role_required('admin', 'moderador')
-def gestion_usuarios():
-    """
-    Admin user management page.
-    Legacy route.
-    """
-    return redirect('/')
 
 
 @auth_bp.route('/api/usuarios')

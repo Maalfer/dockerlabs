@@ -31,7 +31,7 @@ export const AuthProvider = ({ children }) => {
 
     const login = (userData) => {
         // Optimistic update or refetch
-        fetchUser();
+        return fetchUser();
     };
 
     const logout = () => {
