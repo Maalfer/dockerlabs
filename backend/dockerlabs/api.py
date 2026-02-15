@@ -120,11 +120,12 @@ def api_user_info():
         'username': user.username,
         'email': user.email,
         'role': user.role,
+        'created_at': user.created_at.isoformat() if getattr(user, 'created_at', None) else None,
         'biography': user.biography,
         'linkedin_url': user.linkedin_url,
         'github_url': user.github_url,
         'youtube_url': user.youtube_url,
-        'created_at': user.created_at
+        'profile_image': get_profile_image_static_path(user.username, user.id),
     }
 
     static_path = get_profile_image_static_path(user.username, user_id=user.id)
@@ -146,12 +147,18 @@ def api_user_info():
 
     response = {
         "is_authenticated": True,
-        "user": user_data,
-        "completed_machines": completed_machines,
-        "submitted_writeups": writeups
+        'user': user_data,
+        'completed_machines': completed_machines,
+        'submitted_writeups': writeups
     }
 
     return jsonify(response), 200
+
+@api_bp.route('/api/me', methods=['GET'])
+@limiter.limit("60 per minute", methods=["GET"])
+def api_me():
+    """Alias for /api/user/info (used by React)."""
+    return api_user_info()
 
 @api_bp.route('/api/ranking_autores', methods=['GET'])
 @limiter.limit("60 per minute", methods=["GET"])

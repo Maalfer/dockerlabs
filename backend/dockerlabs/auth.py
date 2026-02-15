@@ -22,6 +22,40 @@ ALLOWED_PROFILE_EXTENSIONS = {'.jpg', '.jpeg', '.png', '.gif', '.webp'}
 
 auth_bp = Blueprint('auth', __name__)
 
+
+@auth_bp.route('/auth/api_login', methods=['POST'])
+@csrf_protect
+@limiter.limit("10 per minute", methods=["POST"])
+def api_login():
+    """JSON login endpoint (React frontend)."""
+    data = request.get_json(silent=True) or {}
+    username_or_email = (data.get('username') or data.get('email') or '').strip()
+    password = (data.get('password') or '').strip()
+
+    if not username_or_email or not password:
+        return jsonify({'success': False, 'error': 'Usuario y contraseña son obligatorios.'}), 400
+
+    user = User.query.filter(
+        (User.username == username_or_email) | (User.email == username_or_email)
+    ).first()
+
+    if not user or not check_password_hash(user.password_hash, password):
+        return jsonify({'success': False, 'error': 'Credenciales inválidas.'}), 401
+
+    login_user(user)
+    session['user_id'] = user.id
+    session['username'] = user.username
+    session['role'] = user.role
+
+    return jsonify({
+        'success': True,
+        'user': {
+            'id': user.id,
+            'username': user.username,
+            'role': user.role,
+        }
+    }), 200
+
 def get_profile_image_static_path(username, user_id=None):
 
     default_image = "dockerlabs/images/balu.webp"

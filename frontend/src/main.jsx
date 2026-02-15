@@ -3,7 +3,6 @@ import { createRoot } from 'react-dom/client'
 import { BrowserRouter } from 'react-router-dom'
 import App from './App'
 import './styles.css'
-import './client_helpers'
 
 class ErrorBoundary extends React.Component {
   constructor(props) { super(props); this.state = { error: null } }

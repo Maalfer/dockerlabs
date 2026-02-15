@@ -5,14 +5,14 @@ import BunkerFooter from './BunkerFooter'
 import './BunkerLayout.css' // This will be scoped now
 
 const BunkerSessionCtx = createContext({
-    logged_in: false, nombre: null, is_guest: false, is_admin: false,
+    logged_in: false, nombre: null, is_guest: false, is_anonymous: false, is_admin: false,
     docker_logged_in: false, csrf_token: '', refresh: () => { }
 })
 
 export function useBunkerSession() { return useContext(BunkerSessionCtx) }
 
 export default function BunkerLayout({ children }) {
-    const [sess, setSess] = useState({ logged_in: false, nombre: null, is_guest: false, is_admin: false, docker_logged_in: false, csrf_token: '' })
+    const [sess, setSess] = useState({ logged_in: false, nombre: null, is_guest: false, is_anonymous: false, is_admin: false, docker_logged_in: false, csrf_token: '' })
     const navigate = useNavigate()
 
     const fetchSession = () => {

@@ -6,7 +6,7 @@ from datetime import datetime, timedelta
 from functools import wraps
 from urllib.parse import urlparse, urljoin
 
-from flask import Flask, render_template, request, jsonify, redirect, url_for, session, g, flash, send_from_directory
+from flask import Flask, request, jsonify, redirect, url_for, session, g, flash, send_from_directory
 from flask_httpauth import HTTPBasicAuth
 from flask_login import LoginManager, current_user
 from flask_limiter.errors import RateLimitExceeded
@@ -40,7 +40,7 @@ DIST_DIR = os.path.join(FRONTEND_DIR, 'dist')
 app = Flask(
     __name__,
     static_folder=os.path.join(FRONTEND_DIR, 'static'),
-    template_folder=os.path.join(FRONTEND_DIR, 'templates')
+    template_folder=None
 )
 auth = HTTPBasicAuth()
 
@@ -63,7 +63,8 @@ swagger_config = {
 }
 swagger = Swagger(app, config=swagger_config)
 
-app.config['SESSION_COOKIE_SECURE'] = True                                  
+# Use Secure cookies only when explicitly enabled (e.g., behind HTTPS in production).
+app.config['SESSION_COOKIE_SECURE'] = os.environ.get('SESSION_COOKIE_SECURE', '0') == '1'
 app.config['SESSION_COOKIE_HTTPONLY'] = True
 app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
 
@@ -183,7 +184,7 @@ def terminos_condiciones():
       200:
         description: Página de términos.
     """
-    return render_template('dockerlabs/terminos-condiciones.html')
+    return redirect('/')
 
 @app.route('/bug-bounty')
 def bug_bounty():
@@ -196,7 +197,7 @@ def bug_bounty():
       200:
         description: Página de Bug Bounty.
     """
-    return render_template('dockerlabs/bug_bounty.html')
+    return redirect('/')
 
 @app.route('/dashboard')
 @role_required('admin', 'moderador', 'jugador')
@@ -210,26 +211,8 @@ def dashboard():
       200:
         description: Dashboard del usuario.
     """
-    from .models import Machine
+    return redirect('/')
 
-    maquinas = Machine.query.filter_by(origen='docker').with_entities(Machine.id, Machine.nombre, Machine.autor).order_by(Machine.nombre.asc()).all()
-
-    current_username = session.get('username') or (current_user.username if current_user.is_authenticated else None)
-    current_user_id = session.get('user_id') or (current_user.id if current_user.is_authenticated else None)
-
-    static_path = get_profile_image_static_path(current_username, user_id=current_user_id)
-
-    if static_path is None:
-        static_path = 'dockerlabs/images/balu.webp'
-
-    profile_image_url = url_for('static', filename=static_path)
-
-    return render_template(
-        'dockerlabs/dashboard.html',
-        maquinas=maquinas,
-        profile_image_url=profile_image_url,
-        user=g.user
-    )
 
 @app.route('/api/dashboard-data')
 @role_required('admin', 'moderador', 'jugador')
@@ -272,6 +255,9 @@ from flask import abort
 @app.route('/')
 def index():
     """Serve the React frontend built `index.html` as the application root."""
+    index_path = os.path.join(DIST_DIR, 'index.html')
+    if not os.path.exists(index_path):
+        return jsonify({'error': 'React build not found. Run the frontend dev server or build the frontend.'}), 404
     return send_from_directory(DIST_DIR, 'index.html')
 
 
@@ -287,11 +273,19 @@ def catch_all(unknown):
     # Do not interfere with API, static, docs, or asset routes
     if unknown.startswith(('api', 'static', 'docs', 'flasgger_static', 'assets', 'auth')):
         return abort(404)
+    index_path = os.path.join(DIST_DIR, 'index.html')
+    if not os.path.exists(index_path):
+        return abort(404)
     return send_from_directory(DIST_DIR, 'index.html')
 
 @app.errorhandler(404)
 def page_not_found(e):
-    return render_template('dockerlabs/404.html'), 404
+    if request.path.startswith('/api') or request.accept_mimetypes['application/json'] >= request.accept_mimetypes['text/html']:
+        return jsonify({'error': 'Not Found'}), 404
+    index_path = os.path.join(DIST_DIR, 'index.html')
+    if not os.path.exists(index_path):
+        return jsonify({'error': 'Not Found'}), 404
+    return send_from_directory(DIST_DIR, 'index.html')
 
 from bunkerlabs import bunkerlabs_bp
 app.register_blueprint(bunkerlabs_bp, url_prefix='/bunkerlabs')

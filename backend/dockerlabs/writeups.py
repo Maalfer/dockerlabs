@@ -572,7 +572,7 @@ def writeups_recibidos():
       200:
         description: Received writeups page.
     """
-    return render_template('dockerlabs/writeups_recibidos.html')
+    return redirect('/')
 
 @writeups_bp.route('/api/ranking_writeups', methods=['GET'])
 @limiter.limit("60 per minute", methods=["GET"]) 
@@ -817,7 +817,7 @@ def writeups_publicados():
       200:
         description: Published writeups page.
     """
-    return render_template('dockerlabs/writeups_publicados.html',user=user)
+    return redirect('/')
 
 @writeups_bp.route('/api/writeups_subidos', methods=['GET'])
 @role_required('admin', 'moderador', 'jugador')
@@ -938,7 +938,7 @@ def peticiones_writeups():
                                     
     requests = WriteupEditRequest.query.order_by(WriteupEditRequest.id.desc()).all()
 
-    return render_template("peticiones.html", peticiones=requests)
+    return redirect('/')
 @writeups_bp.route('/api/writeup_edits/<int:request_id>/approve', methods=['POST'])
 @role_required('admin', 'moderador')
 @csrf_protect

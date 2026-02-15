@@ -51,6 +51,23 @@ function BunkerLoginContent() {
         }
     }
 
+    const handleGuest = async (e) => {
+        e.preventDefault()
+        setError('')
+        try {
+            const res = await fetch('/bunkerlabs/api/guest', { method: 'POST', credentials: 'include' })
+            const data = await res.json()
+            if (res.ok && data.success) {
+                sess.refresh()
+                navigate('/bunkerlabs')
+            } else {
+                setError(data.error || 'No se pudo acceder como invitado')
+            }
+        } catch {
+            setError('Error de conexión')
+        }
+    }
+
     return (
         <div className="bunker-container">
             <div className={`bunker-box ${isFocused ? 'input-focused' : ''}`}>
@@ -105,7 +122,7 @@ function BunkerLoginContent() {
                             explotación de vulnerabilidades en laboratorios hechos a medida.
                             <br /><br />
                             Puedes acceder en modo de prueba a BunkerLabs a través de este{' '}
-                            <a href="/bunkerlabs/guest"
+                            <a href="#" onClick={handleGuest}
                                 style={{ color: '#a78bfa', textDecoration: 'underline', fontWeight: 600 }}>
                                 enlace
                             </a>.

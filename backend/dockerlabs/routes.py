@@ -1,4 +1,5 @@
-from flask import Blueprint, render_template, request, session, redirect
+import os
+from flask import Blueprint, request, session, redirect, jsonify, send_from_directory
 from flask_limiter.errors import RateLimitExceeded
 from dockerlabs.models import User, Machine, Writeup
 from datetime import datetime
@@ -7,13 +8,27 @@ from collections import defaultdict
 
 main_bp = Blueprint('main', __name__)
 
+# Keep consistent with app.py
+FRONTEND_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', 'frontend'))
+DIST_DIR = os.path.join(FRONTEND_DIR, 'dist')
+
 @main_bp.app_errorhandler(403)
 def forbidden_error(error):
-    return render_template('dockerlabs/403.html'), 403
+    if request.path.startswith('/api') or request.accept_mimetypes['application/json'] >= request.accept_mimetypes['text/html']:
+        return jsonify({'error': 'Forbidden'}), 403
+    index_path = os.path.join(DIST_DIR, 'index.html')
+    if not os.path.exists(index_path):
+        return jsonify({'error': 'Forbidden'}), 403
+    return send_from_directory(DIST_DIR, 'index.html'), 403
 
 @main_bp.app_errorhandler(404)
 def not_found_error(error):
-    return render_template('dockerlabs/404.html'), 404
+    if request.path.startswith('/api') or request.accept_mimetypes['application/json'] >= request.accept_mimetypes['text/html']:
+        return jsonify({'error': 'Not Found'}), 404
+    index_path = os.path.join(DIST_DIR, 'index.html')
+    if not os.path.exists(index_path):
+        return jsonify({'error': 'Not Found'}), 404
+    return send_from_directory(DIST_DIR, 'index.html'), 404
 
 @main_bp.app_errorhandler(RateLimitExceeded)
 def handle_rate_limit(e):
@@ -32,6 +47,7 @@ def handle_rate_limit(e):
     session['rate_limit_remaining'] = retry_after
 
     return redirect(request.path)
+
 
 @main_bp.route('/api/estadisticas')
 def api_estadisticas():

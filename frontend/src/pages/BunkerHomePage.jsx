@@ -33,10 +33,10 @@ function BunkerHomeContent() {
     const navigate = useNavigate()
 
     useEffect(() => {
-        // If not logged in at all (neither specific nor docker), redirect to login
-        if (!sess.logged_in && !sess.docker_logged_in && !sess.is_guest) {
-            // Let the backend session check handle redirection if needed, 
-            // but here we just check if we have data.
+        // If the user is logged into DockerLabs but not into BunkerLabs, force PIN login.
+        if (sess.docker_logged_in && !sess.logged_in && !sess.is_guest && !sess.is_anonymous) {
+            navigate('/bunkerlabs/login')
+            return
         }
 
         // Fetch machines
@@ -49,7 +49,7 @@ function BunkerHomeContent() {
             })
             .catch(() => setMachines([]))
             .finally(() => setLoading(false))
-    }, [sess.logged_in])
+    }, [sess.docker_logged_in, sess.logged_in, sess.is_guest, sess.is_anonymous, navigate])
 
     // Filtering Logic
     const filtered = useMemo(() => {

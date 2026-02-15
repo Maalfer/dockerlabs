@@ -1,5 +1,5 @@
 from functools import wraps
-from flask import session, request, jsonify, render_template, redirect, url_for, g
+from flask import session, request, jsonify, redirect, url_for, g
 import secrets
 from datetime import datetime
 
@@ -36,11 +36,11 @@ def csrf_protect(view_func):
             if not session_token or not token:
                 if request.accept_mimetypes['application/json'] >= request.accept_mimetypes['text/html']:
                     return jsonify({'error': 'CSRF token missing'}), 400
-                return render_template('dockerlabs/403.html'), 403
+                return redirect('/'), 403
             if not secrets.compare_digest(str(session_token), str(token)):
                 if request.accept_mimetypes['application/json'] >= request.accept_mimetypes['text/html']:
                     return jsonify({'error': 'CSRF token invalid'}), 400
-                return render_template('dockerlabs/403.html'), 403
+                return redirect('/'), 403
         return view_func(*args, **kwargs)
     return wrapped_view
 
@@ -49,12 +49,15 @@ def role_required(*roles_permitidos):
         @wraps(view_func)
         def wrapped_view(*args, **kwargs):
             if session.get('user_id') is None:
-                                                                        
-                return render_template('dockerlabs/403.html'), 403
+                if request.path.startswith('/api') or request.accept_mimetypes['application/json'] >= request.accept_mimetypes['text/html']:
+                    return jsonify({'error': 'Unauthorized'}), 401
+                return redirect('/'), 403
             
             role = get_current_role()
             if role not in roles_permitidos:
-                return render_template('dockerlabs/403.html'), 403
+                if request.path.startswith('/api') or request.accept_mimetypes['application/json'] >= request.accept_mimetypes['text/html']:
+                    return jsonify({'error': 'Forbidden'}), 403
+                return redirect('/'), 403
             return view_func(*args, **kwargs)
         return wrapped_view
     return decorator

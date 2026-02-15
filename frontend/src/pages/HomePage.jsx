@@ -130,7 +130,16 @@ export default function HomePage() {
 
         {pageItems.map((m, idx) => (
           <div key={m.id || idx}
-            onClick={() => window.presentacion && window.presentacion(m.nombre, m.dificultad, m.color, m.autor, m.enlace_autor, m.fecha, m.imagen, m.categoria)}
+            onClick={() => window.dispatchEvent(new CustomEvent('open-machine-modal', { detail: {
+              nombre: m.nombre,
+              dificultad: m.dificultad,
+              color: m.color,
+              autor: m.autor,
+              enlace_autor: m.enlace_autor,
+              fecha: m.fecha,
+              imagen: m.imagen,
+              categoria: m.categoria,
+            }}))}
             className={`maquina-item ${m.clase || ''}`} data-category={m.categoria || ''}>
             <span><strong>{m.nombre}</strong></span>
             <span className={`etiqueta ${m.clase || ''}`}>{m.dificultad}</span>
@@ -139,16 +148,11 @@ export default function HomePage() {
             </div>
             <div className="acciones">
               <button className="subir" style={{ fontSize: '1.2em' }} onClick={(e) => { e.stopPropagation(); window.open(m.link_descarga, '_blank') }} title="Descargar máquina"><i className="bi bi-cloud-arrow-down-fill"></i></button>
-              <button className="subir" style={{ fontSize: '1.2em' }} onClick={(e) => { e.stopPropagation(); window.subirwriteup && window.subirwriteup(m.nombre) }} title="Subir writeup"><i className="bi bi-cloud-arrow-up-fill"></i></button>
+              <button className="subir" style={{ fontSize: '1.2em' }} onClick={(e) => { e.stopPropagation(); alert('Subir writeup para: ' + m.nombre) }} title="Subir writeup"><i className="bi bi-cloud-arrow-up-fill"></i></button>
               <button style={{ fontSize: '1.2em' }} onClick={(e) => { e.stopPropagation(); setWriteupModalMachine(m.nombre) }} title="Ver writeups"><i className="bi bi-book"></i></button>
             </div>
           </div>
         ))}
-      </div>
-
-      {/* Pagination container (scripts expect #pagination-container) */}
-      <div className="header-pagination-row" style={{ marginTop: '2rem' }}>
-        <div id="pagination-container" className="pagination-container" style={{ display: filtered.length > ITEMS_PER_PAGE ? 'block' : 'none' }}></div>
       </div>
 
       <RankingWriteupsModal

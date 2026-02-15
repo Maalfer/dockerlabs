@@ -35,6 +35,18 @@ export default function Header({ openModal }) {
     }, 120)
   }
 
+  const handleBunkerClick = async (e) => {
+    e.preventDefault()
+    try {
+      const r = await fetch('/bunkerlabs/api/session', { credentials: 'include' })
+      const d = r.ok ? await r.json() : {}
+      if (d && d.logged_in) navigate('/bunkerlabs')
+      else navigate('/bunkerlabs/login')
+    } catch {
+      navigate('/bunkerlabs/login')
+    }
+  }
+
   return (
     <header className="position-fixed fixed-top" style={{ display: 'grid', gridTemplateColumns: '1fr auto 1fr', alignItems: 'center', gap: '15px' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
@@ -53,10 +65,11 @@ export default function Header({ openModal }) {
 
       <h1 style={{ margin: 0, textAlign: 'center' }}>
         <Link
-          to="/bunkerlabs"
+          to="/bunkerlabs/login"
           id="dockerlabs-link"
           onMouseEnter={() => animateSwap(altName)}
           onMouseLeave={() => animateSwap(baseName)}
+          onClick={handleBunkerClick}
         >
           {displayName}
         </Link>
