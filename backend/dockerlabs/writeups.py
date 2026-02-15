@@ -637,7 +637,7 @@ def api_author_profile():
                 static_path = f'dockerlabs/images/{img}'
             else:
                 static_path = f'dockerlabs/images/logos/{img}'
-            imagen_url = url_for('static', filename=static_path)
+            imagen_url = f"/assets/{static_path}"
         
         maquinas.append({
             "nombre": m.nombre,
@@ -666,7 +666,7 @@ def api_author_profile():
     if profile_static_path is None:
         profile_static_path = 'dockerlabs/images/balu.webp'
     
-    profile_image_url = url_for('static', filename=profile_static_path)
+    profile_image_url = f"/assets/{profile_static_path}"
     
     return jsonify({
         "nombre": nombre,
@@ -901,7 +901,7 @@ def api_list_maquinas_writeups_subidos():
                 static_path = f'dockerlabs/images/{imagen_rel}'
             else:
                 static_path = f'dockerlabs/images/logos/{imagen_rel}'
-            imagen_url = url_for('static', filename=static_path)
+            imagen_url = f"/assets/{static_path}"
         
         maquinas.append({
             "maquina": maquina_nombre,

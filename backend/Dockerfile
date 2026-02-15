@@ -22,9 +22,9 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Create necessary directories for static files
-RUN mkdir -p /app/static/images/perfiles \
-    /app/static/images/logos \
-    /app/static/images/logos-bunkerlabs
+RUN mkdir -p /app/frontend/public/assets/dockerlabs/images/perfiles \
+    /app/frontend/public/assets/dockerlabs/images/logos \
+    /app/frontend/public/assets/bunkerlabs/images/logos-bunkerlabs
 
 # Copy application code
 COPY . .

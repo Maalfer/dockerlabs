@@ -194,9 +194,9 @@ def api_ranking_autores():
         static_path = get_profile_image_static_path(r['autor'], user_id=user_id)
         
         if static_path:
-             r['imagen'] = url_for('static', filename=static_path, _external=True)
+             r['imagen'] = f"/assets/{static_path}"
         else:
-             r['imagen'] = url_for('static', filename='dockerlabs/images/balu.webp', _external=True)
+             r['imagen'] = "/assets/dockerlabs/images/balu.webp"
 
         response_list.append(r)
 
@@ -237,11 +237,11 @@ def api_ranking_writeups():
         if author_name:
             static_path = get_profile_image_static_path(author_name, user_id=user_id)
             if static_path:
-                r['imagen_url'] = url_for('static', filename=static_path, _external=True)
+                r['imagen_url'] = f"/assets/{static_path}"
             else:
-                r['imagen_url'] = url_for('static', filename='dockerlabs/images/balu.webp', _external=True)
+                r['imagen_url'] = "/assets/dockerlabs/images/balu.webp"
         else:
-             r['imagen_url'] = url_for('static', filename='dockerlabs/images/balu.webp', _external=True)
+             r['imagen_url'] = "/assets/dockerlabs/images/balu.webp"
 
         response_list.append(r)
 

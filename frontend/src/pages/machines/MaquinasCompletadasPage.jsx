@@ -83,7 +83,7 @@ const MaquinasCompletadasPage = () => {
                                 <div className="machine-card-content">
                                     <div className="machine-image-container">
                                         <img
-                                            src={machine.imagen ? `/assets/${machine.imagen}` : "/assets/dockerlabs/images/logos/logo.png"}
+                                            src={machine.imagen ? `/assets/dockerlabs/images/${machine.imagen}` : "/assets/dockerlabs/images/logos/logo.png"}
                                             alt={machine.machine_name}
                                             className="machine-image"
                                             onError={(e) => { e.target.src = "/assets/dockerlabs/images/logos/logo.png"; }}

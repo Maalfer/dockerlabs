@@ -60,7 +60,7 @@ const MachineRow = ({ machine, type, onUpdate, onDelete, onUploadLogo, onToggleG
                 <td>
                     <div className="logo-upload-wrapper">
                         {machine.imagen ? (
-                            <img src={`/assets/${machine.imagen}`} className="logo-preview" onError={(e) => e.target.style.display = 'none'} />
+                            <img src={`/assets/dockerlabs/images/${machine.imagen}`} className="logo-preview" onError={(e) => e.target.style.display = 'none'} />
                         ) : (
                             <div className="logo-preview" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#ccc' }}>?</div>
                         )}
@@ -121,7 +121,7 @@ const MachineRow = ({ machine, type, onUpdate, onDelete, onUploadLogo, onToggleG
                 {/* Image upload separate from edit state, always available */}
                 <div className="logo-upload-wrapper">
                     {machine.imagen ? (
-                        <img src={`/assets/${machine.imagen}`} className="logo-preview" onError={(e) => e.target.style.display = 'none'} />
+                        <img src={`/assets/dockerlabs/images/${machine.imagen}`} className="logo-preview" onError={(e) => e.target.style.display = 'none'} />
                     ) : (
                         <div className="logo-preview" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#ccc' }}>?</div>
                     )}

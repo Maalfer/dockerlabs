@@ -17,7 +17,9 @@ from bunkerlabs.extensions import limiter
 from .models import User, NameClaim, UsernameChangeRequest, Writeup, CreatorRanking, PendingWriteup, WriteupRanking
 
 BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
-PROFILE_UPLOAD_FOLDER = os.path.join(BASE_DIR, 'static', 'dockerlabs',  'images', 'perfiles')
+FRONTEND_DIR = os.path.join(BASE_DIR, '..', 'frontend')
+PUBLIC_ASSETS_DIR = os.path.join(FRONTEND_DIR, 'public', 'assets')
+PROFILE_UPLOAD_FOLDER = os.path.join(PUBLIC_ASSETS_DIR, 'dockerlabs',  'images', 'perfiles')
 ALLOWED_PROFILE_EXTENSIONS = {'.jpg', '.jpeg', '.png', '.gif', '.webp'}
 
 auth_bp = Blueprint('auth', __name__)

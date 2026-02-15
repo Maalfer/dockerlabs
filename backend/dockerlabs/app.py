@@ -27,9 +27,11 @@ from .maquinas import maquinas_bp, recalcular_ranking_creadores
 from .api import api_bp
 
 BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
-PROFILE_UPLOAD_FOLDER = os.path.join(BASE_DIR, 'static', 'images', 'perfiles')
-MACHINE_LOGOS_FOLDER = os.path.join(BASE_DIR, 'static', 'images', 'logos')
-LOGO_UPLOAD_FOLDER = os.path.join(BASE_DIR, 'static', 'images', 'logos')
+FRONTEND_DIR = os.path.join(BASE_DIR, 'frontend')
+PUBLIC_ASSETS_DIR = os.path.join(FRONTEND_DIR, 'public', 'assets')
+PROFILE_UPLOAD_FOLDER = os.path.join(PUBLIC_ASSETS_DIR, 'dockerlabs', 'images', 'perfiles')
+MACHINE_LOGOS_FOLDER = os.path.join(PUBLIC_ASSETS_DIR, 'dockerlabs', 'images', 'logos')
+LOGO_UPLOAD_FOLDER = os.path.join(PUBLIC_ASSETS_DIR, 'dockerlabs', 'images', 'logos')
 ALLOWED_PROFILE_EXTENSIONS = {'.jpg', '.jpeg', '.png', '.gif', '.webp'}
 ALLOWED_LOGO_EXTENSIONS = {'.jpg', '.jpeg', '.png', '.gif', '.webp', '.svg'}
 

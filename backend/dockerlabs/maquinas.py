@@ -15,8 +15,10 @@ from .extensions import db as alchemy_db
 maquinas_bp = Blueprint('maquinas', __name__)
 
 BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
-MACHINE_LOGOS_FOLDER = os.path.join(BASE_DIR, 'static', 'dockerlabs', 'images', 'logos')
-LOGO_UPLOAD_FOLDER = os.path.join(BASE_DIR, 'static', 'dockerlabs', 'images', 'logos')
+FRONTEND_DIR = os.path.join(BASE_DIR, '..', 'frontend')
+PUBLIC_ASSETS_DIR = os.path.join(FRONTEND_DIR, 'public', 'assets')
+MACHINE_LOGOS_FOLDER = os.path.join(PUBLIC_ASSETS_DIR, 'dockerlabs', 'images', 'logos')
+LOGO_UPLOAD_FOLDER = os.path.join(PUBLIC_ASSETS_DIR, 'dockerlabs', 'images', 'logos')
 ALLOWED_LOGO_EXTENSIONS = {'.jpg', '.jpeg', '.png', '.gif', '.webp', '.svg'}
 ALLOWED_PROFILE_EXTENSIONS = {'.jpg', '.jpeg', '.png', '.gif', '.webp'}
 
@@ -94,7 +96,7 @@ def api_add_maquina():
                     final_filename = f"{nombre_seguro}{ext}"
                     
                     if destino == 'bunker':
-                        upload_folder = os.path.join(BASE_DIR, 'static', 'bunkerlabs', 'images', 'logos-bunkerlabs')
+                        upload_folder = os.path.join(PUBLIC_ASSETS_DIR, 'bunkerlabs', 'images', 'logos-bunkerlabs')
                         db_path_prefix = "bunkerlabs/images/logos-bunkerlabs"
                     else:
                         upload_folder = LOGO_UPLOAD_FOLDER
