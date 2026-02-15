@@ -100,6 +100,7 @@ img {
 
 .bunker-scope .bunker-main-padding {
   padding-top: 80px;
+  padding-bottom: 80px;
   flex: 1;
 }
 
@@ -581,25 +582,54 @@ main {
 /* FOOTER */
 .bunker-scope .bunker-footer {
   margin-top: auto;
-  padding: 3rem 1.5rem;
-  background: linear-gradient(145deg, rgba(59, 7, 34, 0.92), rgba(15, 23, 42, 0.92));
+  padding: 1.05rem 1rem;
+  background: linear-gradient(145deg, rgba(59, 7, 34, 0.9), rgba(15, 23, 42, 0.95));
   text-align: center;
   display: flex;
   justify-content: center;
-  position: relative;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  z-index: 1000;
+  border-top: 1px solid rgba(51, 65, 85, 0.4);
+  box-shadow: 0 -12px 30px rgba(15, 23, 42, 0.65);
   overflow: hidden;
 }
 
 .bunker-scope .footer-content {
-  display: flex;
-  flex-direction: column;
-  gap: 0.8rem;
-  max-width: 600px;
-  /* Slightly wider than DockerLabs to fit content */
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
   align-items: center;
+  gap: 0.9rem;
+  max-width: 1400px;
   width: 100%;
   position: relative;
   z-index: 20;
+}
+
+.bunker-scope .footer-left {
+  flex: 1;
+  min-width: 280px;
+  text-align: left;
+  min-width: 0;
+}
+
+.bunker-scope .footer-left .copyright {
+  white-space: nowrap;
+  line-height: 1.1;
+  overflow: visible;
+  text-overflow: unset;
+}
+
+.bunker-scope .footer-center {
+  justify-self: center;
+}
+
+.bunker-scope .footer-right {
+  text-align: right;
+  justify-self: end;
+  min-width: 0;
 }
 
 .bunker-scope .footer-content p:first-child,
@@ -610,7 +640,7 @@ main {
 
 .bunker-scope .footer-content p {
   margin: 0;
-  font-size: 0.9rem;
+  font-size: 0.78rem;
   color: var(--bunker-text-secondary);
 }
 
@@ -624,8 +654,25 @@ main {
 
 .bunker-scope .footer-icons {
   display: flex;
-  gap: 1.2rem;
-  margin: 0.5rem 0;
+  justify-content: center;
+  gap: 0.8rem;
+  margin: 0;
+}
+
+.bunker-scope .footer-icon i {
+  font-size: 1.1rem;
+}
+
+@media (max-width: 1100px) {
+  .bunker-scope .footer-left .copyright {
+    white-space: normal;
+    overflow: visible;
+    text-overflow: unset;
+  }
+
+  .bunker-scope .footer-icons {
+    gap: 0.9rem;
+  }
 }
 
 /* WAVE */
@@ -671,18 +718,22 @@ main {
 @media (max-width: 768px) {
   .bunker-scope .footer-content {
     grid-template-columns: 1fr;
+    justify-items: center;
     gap: 0.6rem;
     text-align: center;
   }
 
-  .bunker-scope .footer-content p:first-child,
-  .bunker-scope .footer-content p:last-child,
-  .bunker-scope .footer-icons {
-    justify-self: center;
+  .bunker-scope .footer-center {
+    order: -1;
   }
 
-  .bunker-scope .footer-icons {
-    order: -1;
+  .bunker-scope .footer-left,
+  .bunker-scope .footer-right {
+    text-align: center;
+  }
+
+  .bunker-scope .footer-left .copyright {
+    white-space: normal;
   }
 }
 

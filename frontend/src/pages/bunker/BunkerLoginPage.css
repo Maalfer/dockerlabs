@@ -1,15 +1,23 @@
 /* Import BunkerLabs variables and base styles if not already globally available */
 /* We assume bunkerlabs.css is loaded via BunkerLayout, but we enforce specific login styles here */
 
+.bunker-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 2rem 1rem;
+    min-height: calc(100vh - 160px);
+}
+
 .bunker-box {
-    max-width: 900px !important;
+    width: 100%;
+    max-width: 980px !important;
     display: flex !important;
     flex-direction: row;
     gap: 0;
     align-items: stretch;
     padding: 0 !important;
-    margin: 4rem auto 2rem;
-    /* Adjusted top margin */
+    margin: 0 auto;
     overflow: hidden;
     border-radius: 16px;
     /* Rounded corners */
@@ -26,7 +34,7 @@
     justify-content: center;
     /* Center content vertically */
     gap: 1.5rem;
-    padding: 3rem;
+    padding: 2.5rem;
     background: #1e293b;
     z-index: 2;
 }
@@ -40,8 +48,7 @@
     align-items: center;
     justify-content: center;
     overflow: hidden;
-    min-height: 500px;
-    /* Taller */
+    min-height: 420px;
 }
 
 .video-overlay {
@@ -209,7 +216,6 @@
     .bunker-box {
         flex-direction: column;
         max-width: 480px !important;
-        margin-top: 2rem;
     }
 
     .video-section {

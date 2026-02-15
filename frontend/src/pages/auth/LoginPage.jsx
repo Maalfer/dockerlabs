@@ -46,16 +46,22 @@ export default function LoginPage() {
               method: 'POST',
               credentials: 'include',
               headers: {
-                'X-CSRFToken': csrf
+                'X-CSRFToken': csrf,
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
               },
-              body: new URLSearchParams(fd) // Sends as application/x-www-form-urlencoded
+              body: JSON.stringify({
+                username: String(fd.get('username') || '').trim(),
+                password: String(fd.get('password') || '').trim(),
+                csrf_token: csrf
+              })
             })
             const j = await res.json()
             if (res.ok && j.success) {
               await login() // Update global auth state and wait for it
               navigate('/dashboard')
             } else {
-              setErrorMsg(j.message || 'Error al iniciar sesión')
+              setErrorMsg(j.error || j.message || 'Error al iniciar sesión')
             }
           } catch (err) { setErrorMsg('Error de red') }
         }}>
