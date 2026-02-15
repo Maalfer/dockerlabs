@@ -126,17 +126,17 @@ export default function Modals({ state, open, close }) {
               </>
             )}
 
-            <a href="/maquinas/gestion" className="ranking-item">
+            <Link to="/gestion-maquinas" className="ranking-item" onClick={() => closeAndNavigate('dashboard')}>
               <div className="user-info"><span className="user-name">Gestión Máquinas</span></div>
               <i className="bi bi-gear" style={{ color: '#64748b' }}></i>
-            </a>
+            </Link>
 
             {user.role === 'admin' && (
               <>
-                <a href="/admin/add-machine" className="ranking-item">
+                <Link to="/gestion-maquinas" className="ranking-item" onClick={() => closeAndNavigate('dashboard')}>
                   <div className="user-info"><span className="user-name">Añadir Máquina</span></div>
                   <i className="bi bi-plus-lg" style={{ color: '#64748b' }}></i>
-                </a>
+                </Link>
                 <Link to="/bunkerlabs/accesos" className="ranking-item" onClick={() => closeAndNavigate('dashboard')}>
                   <div className="user-info"><span className="user-name">Accesos Bunkerlabs</span></div>
                   <i className="bi bi-key" style={{ color: '#64748b' }}></i>

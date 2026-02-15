@@ -24,10 +24,17 @@ export default function HomePage() {
 
   useEffect(() => {
     setLoading(true)
-    fetch('/api/maquinas')
-      .then(r => r.ok ? r.json() : [])
-      .then(data => setMaquinas(data || []))
-      .catch(() => setMaquinas([]))
+    fetch('/api/public/maquinas', { credentials: 'include' })
+      .then(r => r.ok ? r.json() : { docker: [], bunker: [] })
+      .then(data => {
+        const docker = data.docker || [];
+        const bunker = data.bunker || [];
+        setMaquinas([...docker, ...bunker]);
+      })
+      .catch((err) => {
+        console.error(err);
+        setMaquinas([]);
+      })
       .finally(() => setLoading(false))
   }, [])
 

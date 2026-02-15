@@ -688,6 +688,199 @@ def add_maquina_page():
 
     return render_template('dockerlabs/add-maquina.html', error=error)
 
+@maquinas_bp.route('/api/add-maquina', methods=['POST'])
+@role_required('admin')
+@csrf_protect
+@limiter.limit("5 per minute", methods=["POST"])
+def api_add_maquina():
+    """
+    API to add a new machine.
+    """
+    error = None
+    try:
+        nombre = (request.form.get('nombre') or '').strip()
+        dificultad_form = (request.form.get('dificultad') or '').strip()
+        autor = (request.form.get('autor') or '').strip()
+        fecha_raw = (request.form.get('fecha') or '').strip()
+        descripcion = (request.form.get('descripcion') or '').strip()
+        link_descarga = (request.form.get('link_descarga') or '').strip()
+        imagen = (request.form.get('imagen') or '').strip()
+        destino = (request.form.get('destino') or 'docker').strip().lower()
+
+        # Validar que el autor sea un usuario registrado
+        from .models import User
+        if autor:
+            user_exists = User.query.filter_by(username=autor).first()
+            if not user_exists:
+                return jsonify({'error': "El autor seleccionado no es un usuario registrado válido."}), 400
+
+        file = request.files.get('imagen')
+        if file and file.filename:
+            file.seek(0, os.SEEK_END)
+            size = file.tell()
+            file.seek(0)
+            MAX_IMAGE_SIZE = 2 * 1024 * 1024
+            if size > MAX_IMAGE_SIZE:
+                return jsonify({'error': "La imagen excede el tamaño máximo permitido de 2MB."}), 400
+            elif not file.mimetype.startswith('image/'):
+                return jsonify({'error': "El archivo subido no es una imagen válida."}), 400
+            else:
+                valid, err_msg = validators.validate_image_content(file.stream)
+                if not valid:
+                    return jsonify({'error': f"Contenido de imagen inválido: {err_msg}"}), 400
+                else:
+                    original = secure_filename(file.filename)
+                
+                _, ext = os.path.splitext(original)
+                ext = ext.lower()
+                if ext in ALLOWED_PROFILE_EXTENSIONS:
+                    nombre_seguro = secure_filename(nombre) if nombre else secure_filename(original)
+                    final_filename = f"{nombre_seguro}{ext}"
+                    
+                    if destino == 'bunker':
+                        upload_folder = os.path.join(BASE_DIR, 'static', 'bunkerlabs', 'images', 'logos-bunkerlabs')
+                        db_path_prefix = "bunkerlabs/images/logos-bunkerlabs"
+                    else:
+                        upload_folder = LOGO_UPLOAD_FOLDER
+                        db_path_prefix = "dockerlabs/images/logos"
+
+                    os.makedirs(upload_folder, exist_ok=True)
+                    save_path = os.path.join(upload_folder, final_filename)
+                    file.save(save_path)
+                    imagen = f"{db_path_prefix}/{final_filename}"
+                else:
+                    return jsonify({'error': "Extensión de imagen no permitida."}), 400
+        else:
+            if not imagen:
+                if destino == 'bunker':
+                     imagen = "dockerlabs/images/logos/logo.png"
+                else:
+                     imagen = "dockerlabs/images/logos/logo.png"
+
+        # Obtener enlace_autor desde el perfil del usuario
+        # NOTE: logic here might need to fetch the AUTHOR'S profile, not the current user's profile if admin is adding for someone else?
+        # The original code used session.get('user_id'), which is the ADMIN's id. 
+        # But 'autor' field is the username of the creator.
+        # If the admin is adding a machine FOR someone else, we should probably get THAT user's links.
+        # However, to stay consistent with original logic (which uses session user), we will keep it.
+        # Wait, the original code validates 'autor' exists, but sets 'enlace_autor' based on 'user_id' (the logged in admin).
+        # This seems like a bug in the original code or intended behavior where admin takes credit/provides links?
+        # Let's stick to original behavior for now or improve it?
+        # Original: user_id = session.get('user_id'); user_obj = User.query.get(user_id)
+        # Let's keep it 1:1 for now to avoid side effects.
+        
+        user_id = session.get('user_id')
+        user_obj = User.query.get(user_id)
+        enlace_autor = ''
+        if user_obj:
+            if user_obj.youtube_url:
+                enlace_autor = user_obj.youtube_url
+            elif user_obj.github_url:
+                enlace_autor = user_obj.github_url
+            elif user_obj.linkedin_url:
+                enlace_autor = user_obj.linkedin_url
+        
+        entorno_real = request.form.get('entorno_real')
+        is_entorno_real = destino == 'bunker' and entorno_real
+        
+        if is_entorno_real:
+            mandatory_fields = ['nombre', 'autor', 'fecha', 'descripcion', 'link_descarga']
+        else:
+            mandatory_fields = ['nombre', 'dificultad', 'autor', 'fecha', 'descripcion', 'link_descarga']
+
+        missing = [f for f in mandatory_fields if not request.form.get(f)]
+        if missing:
+             return jsonify({'error': f'Faltan campos obligatorios: {", ".join(missing)}'}), 400
+
+        try:
+            fecha = datetime.strptime(fecha_raw, "%Y-%m-%d").strftime("%d/%m/%Y")
+        except ValueError:
+            return jsonify({'error': "Formato de fecha inválido."}), 400
+
+        color_dificultad = {
+            "muy facil": "#43959b",
+            "muy fácil": "#43959b",
+            "facil": "#8bc34a",
+            "fácil": "#8bc34a",
+            "medio": "#e0a553",
+            "dificil": "#d83c31",
+            "difícil": "#d83c31"
+        }
+
+        dificultad_lower = dificultad_form.strip().lower()
+
+        if "muy" in dificultad_lower:
+            clase = "muy-facil"
+            dificultad_texto = "Muy Fácil"
+        elif "facil" in dificultad_lower or "fácil" in dificultad_lower:
+            clase = "facil"
+            dificultad_texto = "Fácil"
+        elif "medio" in dificultad_lower:
+            clase = "medio"
+            dificultad_texto = "Medio"
+        else:
+            clase = "dificil"
+            dificultad_texto = "Difícil"
+
+        color = color_dificultad.get(dificultad_lower, "#43959b")
+
+        if destino == 'bunker':
+            pin = (request.form.get('pin') or '').strip()
+            entorno_real = request.form.get('entorno_real')
+            
+            if entorno_real:
+                clase = "real"
+                dificultad_texto = "Real"
+                color = "#ffffff"
+            
+            try:
+                new_bunker_machine = Machine(
+                    nombre=nombre,
+                    dificultad=dificultad_texto,
+                    clase=clase,
+                    color=color,
+                    autor=autor,
+                    enlace_autor=enlace_autor,
+                    fecha=fecha,
+                    imagen=imagen,
+                    descripcion=descripcion,
+                    link_descarga=link_descarga,
+                    pin=pin,
+                    origen='bunker'
+                )
+                alchemy_db.session.add(new_bunker_machine)
+                alchemy_db.session.commit()
+            except IntegrityError:
+                alchemy_db.session.rollback()
+                return jsonify({'error': "Ya existe una máquina con ese nombre."}), 400
+
+        else:
+            try:
+                new_machine = Machine(
+                    nombre=nombre,
+                    dificultad=dificultad_texto,
+                    clase=clase,
+                    color=color,
+                    autor=autor,
+                    enlace_autor=enlace_autor,
+                    fecha=fecha,
+                    imagen=imagen,
+                    descripcion=descripcion,
+                    link_descarga=link_descarga,
+                    origen='docker'
+                )
+                alchemy_db.session.add(new_machine)
+                alchemy_db.session.commit()
+                recalcular_ranking_creadores()
+            except Exception:
+                alchemy_db.session.rollback()
+                return jsonify({'error': "Ya existe una máquina con ese nombre."}), 400
+
+        return jsonify({'message': "Máquina añadida correctamente", 'success': True}), 200
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
 @maquinas_bp.route('/api/get_users', methods=['GET'])
 @role_required('admin')
 def get_users():
@@ -706,6 +899,97 @@ def get_users():
     users_list = [{'id': u.id, 'username': u.username} for u in users]
     
     return jsonify({'users': users_list}), 200
+
+@maquinas_bp.route('/api/maquinas', methods=['GET'])
+@role_required('admin', 'moderador', 'jugador')
+def api_get_maquinas():
+    """
+    Get list of machines for management (React).
+    """
+    current_username = (session.get('username') or '').strip()
+    role = get_current_role()
+
+    if role in ('admin', 'moderador'):
+        maquinas_docker = Machine.query.filter_by(origen='docker').order_by(Machine.id.asc()).all()
+        maquinas_bunker = Machine.query.filter_by(origen='bunker').order_by(Machine.id.asc()).all()
+    else:
+        if not current_username:
+            maquinas_docker = []
+            maquinas_bunker = []
+        else:
+            maquinas_docker = Machine.query.filter_by(origen='docker', autor=current_username).order_by(Machine.id.asc()).all()
+            maquinas_bunker = Machine.query.filter_by(origen='bunker', autor=current_username).order_by(Machine.id.asc()).all()
+            
+    # Helper to serialize machine
+    def serialize(m):
+        return {
+            'id': m.id,
+            'nombre': m.nombre,
+            'dificultad': m.dificultad,
+            'autor': m.autor,
+            'enlace_autor': m.enlace_autor,
+            'fecha': m.fecha,
+            'imagen': m.imagen,
+            'descripcion': m.descripcion,
+            'link_descarga': m.link_descarga,
+            'guest_access': m.guest_access if hasattr(m, 'guest_access') else False,
+            'origen': m.origen
+        }
+
+    return jsonify({
+        'docker': [serialize(m) for m in maquinas_docker],
+        'bunker': [serialize(m) for m in maquinas_bunker]
+    }), 200
+
+
+@maquinas_bp.route('/api/public/maquinas', methods=['GET'])
+def api_get_public_maquinas():
+    """
+    Get public list of machines for Home Page (React).
+    Includes 'completada' status for logged-in users.
+    """
+    current_username = (session.get('username') or '').strip()
+    
+    # 1. Fetch Machines
+    maquinas_docker = Machine.query.filter_by(origen='docker').order_by(Machine.id.asc()).all()
+    maquinas_bunker = Machine.query.filter_by(origen='bunker').order_by(Machine.id.asc()).all()
+    
+    # 2. Fetch Completed IDs if user is logged in
+    completed_ids = set()
+    if current_username:
+        try:
+            completes = CompletedMachine.query.filter_by(username=current_username).all()
+            completed_ids = {c.machine_id for c in completes}
+        except Exception:
+            pass 
+            
+    # 3. Fetch Categories
+    cats = Category.query.all()
+    cat_map = {(c.origen, c.machine_id): c.categoria for c in cats}
+    
+    def serialize_public(m):
+        return {
+            'id': m.id,
+            'nombre': m.nombre,
+            'dificultad': m.dificultad,
+            'clase': m.clase,
+            'color': m.color,
+            'autor': m.autor,
+            'enlace_autor': m.enlace_autor,
+            'fecha': m.fecha,
+            'imagen': m.imagen,
+            'descripcion': m.descripcion,
+            'link_descarga': m.link_descarga,
+            'guest_access': m.guest_access if hasattr(m, 'guest_access') else False,
+            'origen': m.origen,
+            'categoria': cat_map.get((m.origen, m.id), ''),
+            'completada': m.id in completed_ids if current_username else False
+        }
+
+    return jsonify({
+        'docker': [serialize_public(m) for m in maquinas_docker],
+        'bunker': [serialize_public(m) for m in maquinas_bunker]
+    }), 200
 
 
 @maquinas_bp.route('/reclamar-maquina', methods=['POST'])
