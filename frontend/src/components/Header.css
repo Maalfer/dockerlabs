@@ -1,1 +1,17 @@
 /* Header component - layout and auth buttons use global styles from styles.css / base.css */
+/* Animated site name */
+#dockerlabs-link {
+	display: inline-block;
+	transition: transform 160ms ease, opacity 160ms ease;
+	will-change: transform, opacity;
+}
+
+#dockerlabs-link.fade-out {
+	transform: translateY(-6px) scale(0.98);
+	opacity: 0;
+}
+
+#dockerlabs-link.fade-in {
+	transform: translateY(0) scale(1);
+	opacity: 1;
+}

@@ -33,120 +33,10 @@ def handle_rate_limit(e):
 
     return redirect(request.path)
 
-@main_bp.route('/403.html')
-def error_403_page():
+@main_bp.route('/api/estadisticas')
+def api_estadisticas():
     """
-    Página de error 403 (Prohibido).
-    ---
-    tags:
-      - Páginas
-    responses:
-      200:
-        description: Página de error 403.
-    """
-    return render_template('dockerlabs/403.html')
-
-@main_bp.route('/instrucciones-uso')
-def instrucciones_uso():
-    """
-    Página de instrucciones.
-    ---
-    tags:
-      - Páginas
-    responses:
-      200:
-        description: Instrucciones.
-    """
-    return render_template('dockerlabs/instrucciones_uso.html')
-
-@main_bp.route('/enviar-maquina')
-def enviar_maquina():
-    """
-    Página enviar máquina.
-    ---
-    tags:
-      - Páginas
-    responses:
-      200:
-        description: Página para enviar máquina.
-    """
-    return render_template('dockerlabs/enviar_maquina.html')
-
-@main_bp.route('/como-se-crea-una-maquina')
-def como_se_crea():
-    """
-    Página de cómo crear una máquina.
-    ---
-    tags:
-      - Páginas
-    responses:
-      200:
-        description: Página de tutorial.
-    """
-    return render_template('dockerlabs/como_se_crea_una_maquina.html')
-
-@main_bp.route('/agradecimientos')
-def agradecimientos():
-    """
-    Página de agradecimientos.
-    ---
-    tags:
-      - Páginas
-    responses:
-      200:
-        description: Agradecimientos.
-    """
-    return render_template('dockerlabs/agradecimientos.html')
-
-@main_bp.route('/politica-privacidad')
-def politica_privacidad():
-    """
-    Política de privacidad.
-    ---
-    tags:
-      - Legal
-    responses:
-      200:
-        description: Política de privacidad.
-    """
-    return render_template('politicas/politica_privacidad.html')
-
-@main_bp.route('/politica-cookies')
-def politica_cookies():
-    """
-    Política de cookies.
-    ---
-    tags:
-      - Legal
-    responses:
-      200:
-        description: Política de cookies.
-    """
-    return render_template('politicas/politica_cookies.html')
-
-@main_bp.route('/condiciones-uso')
-def condiciones_uso():
-    """
-    Condiciones de uso.
-    ---
-    tags:
-      - Legal
-    responses:
-      200:
-        description: Condiciones de uso.
-    """
-    return render_template('politicas/condiciones_uso.html')
-
-@main_bp.route('/estadisticas')
-def estadisticas():
-    """
-    Página de estadísticas.
-    ---
-    tags:
-      - Páginas
-    responses:
-      200:
-        description: Estadísticas de la plataforma.
+    API de estadísticas (JSON).
     """
     # Helper to calculate percentages per year
     def get_distribution_by_year(items, date_extractor):
@@ -168,6 +58,8 @@ def estadisticas():
         
         # Return sorted by year
         return dict(sorted(distribution.items()))
+
+    from flask import jsonify
 
     # --- Machines ---
     machines = Machine.query.all()
@@ -191,7 +83,8 @@ def estadisticas():
 
     user_stats = get_distribution_by_year(users, user_date_extractor)
 
-    return render_template('dockerlabs/estadisticas.html', 
-                         machine_stats=machine_stats,
-                         writeup_stats=writeup_stats,
-                         user_stats=user_stats)
+    return jsonify({
+        'machine_stats': machine_stats,
+        'writeup_stats': writeup_stats,
+        'user_stats': user_stats
+    })

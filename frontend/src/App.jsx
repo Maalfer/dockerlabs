@@ -20,7 +20,11 @@ import Footer from './components/Footer'
 import Modals from './components/Modals'
 import WriteupsPublicadosPage from './pages/WriteupsPublicadosPage'
 import WriteupsRecibidosPage from './pages/WriteupsRecibidosPage'
-import GestionMaquinasPage from './pages/GestionMaquinasPage'
+import GestionMaquinasPage from './pages/GestionMaquinasPage';
+import MaquinasCompletadasPage from './pages/MaquinasCompletadasPage';
+import AddMachinePage from './pages/AddMachinePage';
+import GestionUsuariosPage from './pages/GestionUsuariosPage';
+import PeticionesPage from './pages/PeticionesPage';
 
 // BunkerLabs pages (own layout)
 import BunkerLoginPage from './pages/BunkerLoginPage'
@@ -68,6 +72,10 @@ export default function App() {
           <Route path="/writeups-publicados" element={<WriteupsPublicadosPage />} />
           <Route path="/writeups-recibidos" element={<WriteupsRecibidosPage />} />
           <Route path="/gestion-maquinas" element={<GestionMaquinasPage />} />
+          <Route path="/add-maquina" element={<AddMachinePage />} />
+          <Route path="/gestion-usuarios" element={<GestionUsuariosPage />} />
+          <Route path="/peticiones" element={<PeticionesPage />} />
+          <Route path="/maquinas-hechas" element={<MaquinasCompletadasPage />} />
           <Route path="/instrucciones-uso" element={<InstruccionesUsoPage />} />
           <Route path="/enviar-maquina" element={<EnviarMaquinaPage />} />
           <Route path="/como-se-crea-una-maquina" element={<ComoSeCreaUnaMaquinaPage />} />

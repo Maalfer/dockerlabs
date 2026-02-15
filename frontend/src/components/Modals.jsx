@@ -133,7 +133,7 @@ export default function Modals({ state, open, close }) {
 
             {user.role === 'admin' && (
               <>
-                <Link to="/gestion-maquinas" className="ranking-item" onClick={() => closeAndNavigate('dashboard')}>
+                <Link to="/add-maquina" className="ranking-item" onClick={() => closeAndNavigate('dashboard')}>
                   <div className="user-info"><span className="user-name">Añadir Máquina</span></div>
                   <i className="bi bi-plus-lg" style={{ color: '#64748b' }}></i>
                 </Link>

@@ -939,3 +939,57 @@ def peticiones_writeups():
     requests = WriteupEditRequest.query.order_by(WriteupEditRequest.id.desc()).all()
 
     return render_template("peticiones.html", peticiones=requests)
+@writeups_bp.route('/api/writeup_edits/<int:request_id>/approve', methods=['POST'])
+@role_required('admin', 'moderador')
+@csrf_protect
+def api_approve_writeup_edit(request_id):
+    from .models import WriteupEditRequest, Writeup
+    req = WriteupEditRequest.query.get(request_id)
+    if not req:
+        return jsonify({'error': 'Request not found'}), 404
+
+    if req.estado != 'pendiente':
+        return jsonify({'error': 'Request already processed'}), 400
+
+    writeup = Writeup.query.get(req.writeup_id)
+    if not writeup:
+        return jsonify({'error': 'Writeup not found'}), 404
+
+    try:
+        writeup.maquina = req.maquina_nueva
+        writeup.autor = req.autor_nuevo
+        writeup.url = req.url_nueva
+        writeup.tipo = req.tipo_nuevo
+        
+        req.estado = 'aprobada'
+        alchemy_db.session.commit()
+        return jsonify({'message': 'Edit approved'}), 200
+    except Exception as e:
+        alchemy_db.session.rollback()
+        return jsonify({'error': str(e)}), 500
+
+@writeups_bp.route('/api/writeup_edits/<int:request_id>/reject', methods=['POST'])
+@role_required('admin', 'moderador')
+@csrf_protect
+def api_reject_writeup_edit(request_id):
+    from .models import WriteupEditRequest
+    req = WriteupEditRequest.query.get(request_id)
+    if not req:
+        return jsonify({'error': 'Request not found'}), 404
+
+    req.estado = 'rechazada'
+    alchemy_db.session.commit()
+    return jsonify({'message': 'Edit rejected'}), 200
+
+@writeups_bp.route('/api/writeup_edits/<int:request_id>/revert', methods=['POST'])
+@role_required('admin', 'moderador')
+@csrf_protect
+def api_revert_writeup_edit(request_id):
+    from .models import WriteupEditRequest
+    req = WriteupEditRequest.query.get(request_id)
+    if not req:
+        return jsonify({'error': 'Request not found'}), 404
+
+    req.estado = 'pendiente'
+    alchemy_db.session.commit()
+    return jsonify({'message': 'Edit reverted'}), 200

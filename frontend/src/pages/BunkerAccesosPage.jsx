@@ -10,6 +10,7 @@ function BunkerAccesosContent() {
     const [data, setData] = useState({ tokens: [], real_machines: [], writeups: [], bunker_machines: [] })
     const [loading, setLoading] = useState(true)
     const [alert, setAlert] = useState(null)
+    const [createdToken, setCreatedToken] = useState(null)
 
     // Form states
     const [newName, setNewName] = useState('')
@@ -67,6 +68,8 @@ function BunkerAccesosContent() {
         if (res.ok && d.success) {
             showAlert('success', d.message)
             setNewName(''); setNewPass('')
+            // show created token so admin can copy it
+            if (d.token) setCreatedToken(d.token)
             fetchData()
         } else {
             showAlert('error', d.error || 'Error')
@@ -89,6 +92,49 @@ function BunkerAccesosContent() {
         const res = await fetch(`/bunkerlabs/api/logs/${tokenId}`, { credentials: 'include' })
         const d = await res.json()
         setLogsModal({ tokenId, tokenName, logs: d.logs || d || [] })
+    }
+
+    const handleClearLogs = async (tokenId) => {
+        if (!confirm('¿Eliminar TODO el historial de accesos para este usuario?')) return
+        const csrf = await getCsrf()
+        const res = await fetch(`/bunkerlabs/api/logs/${tokenId}/delete`, {
+            method: 'POST', credentials: 'include', headers: { 'X-CSRFToken': csrf }
+        })
+        const d = await res.json()
+        if (res.ok) {
+            showAlert('success', d.message || 'Historial eliminado')
+            setLogsModal(prev => prev ? { ...prev, logs: [] } : prev)
+        } else {
+            showAlert('error', d.error || 'Error al eliminar historial')
+        }
+    }
+
+    // copy utilities
+    const copyToClipboard = async (text) => {
+        try {
+            if (navigator.clipboard && window.isSecureContext) {
+                await navigator.clipboard.writeText(text)
+            } else {
+                const textArea = document.createElement('textarea')
+                textArea.value = text
+                textArea.style.position = 'fixed'
+                textArea.style.left = '-9999px'
+                document.body.appendChild(textArea)
+                textArea.focus()
+                textArea.select()
+                document.execCommand('copy')
+                document.body.removeChild(textArea)
+            }
+            showAlert('success', 'Copiado al portapapeles')
+        } catch (err) {
+            console.error('Copy failed', err)
+            showAlert('error', 'No se pudo copiar')
+        }
+    }
+
+    const copyDirectLink = (token) => {
+        const url = window.location.origin + '/bunkerlabs/?token=' + token
+        copyToClipboard(url)
     }
 
     // ─── Writeup CRUD ───
@@ -201,6 +247,9 @@ function BunkerAccesosContent() {
                                         <div style={{ display: 'flex', gap: '0.4rem' }}>
                                             <button className="bunker-btn-sm" onClick={() => handleViewLogs(t.id, t.nombre)} title="Ver historial">
                                                 <i className="bi bi-clock-history"></i>
+                                            </button>
+                                            <button className="bunker-btn" onClick={() => copyDirectLink(t.token)} title="Copiar enlace">
+                                                <i className="bi bi-link-45deg"></i>
                                             </button>
                                             <button className="bunker-btn-danger" onClick={() => handleDeleteToken(t.id)} title="Eliminar">
                                                 <i className="bi bi-trash"></i>
@@ -344,6 +393,22 @@ function BunkerAccesosContent() {
                         ) : (
                             <p style={{ color: 'var(--bunker-text-muted)', textAlign: 'center' }}>No hay registros de acceso.</p>
                         )}
+                        <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end', marginTop: 12 }}>
+                            <button className="bunker-btn-danger" onClick={() => handleClearLogs(logsModal.tokenId)}>Limpiar historial</button>
+                            <button className="bunker-btn" onClick={() => setLogsModal(null)}>Cerrar</button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Show created token box so admin can copy it easily */}
+            {createdToken && (
+                <div style={{ marginTop: 12 }}>
+                    <div className="bunker-created-token">
+                        <strong>Contraseña generada:</strong>
+                        <code style={{ marginLeft: 8 }}>{createdToken}</code>
+                        <button className="bunker-btn" style={{ marginLeft: 8 }} onClick={() => copyToClipboard(createdToken)}>Copiar</button>
+                        <small style={{ display: 'block', color: 'var(--bunker-text-muted)', marginTop: 6 }}>Entrega esta contraseña al usuario (debe estar registrado en DockerLabs).</small>
                     </div>
                 </div>
             )}

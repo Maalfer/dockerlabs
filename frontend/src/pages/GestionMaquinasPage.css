@@ -1,223 +1,357 @@
+:root {
+    --primary-color: #3b82f6;
+    --accent-bunker: #6f42c1;
+    --bg-dark: #0f172a;
+    --bg-card: rgba(30, 41, 59, 0.7);
+    --glass-bg: rgba(30, 41, 59, 0.7);
+    --glass-border: 1px solid rgba(255, 255, 255, 0.1);
+    --text-main: #f1f5f9;
+    --text-muted: #94a3b8;
+    --border-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Page Container */
 .gestion-maquinas-container {
-    padding: 2rem;
-    max-width: 1400px;
+    padding: 120px 20px 40px;
+    max-width: 95%;
     margin: 0 auto;
 }
 
+/* Header Section */
 .page-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
     margin-bottom: 2rem;
-    flex-wrap: wrap;
-    gap: 1rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--border-color);
+    position: relative;
+    z-index: 10;
 }
 
 .page-title {
     font-size: 2rem;
     font-weight: 700;
-    color: var(--text-primary);
+    color: #ffffff;
+    text-shadow: 0 0 10px rgba(255, 255, 255, 0.1);
     margin: 0;
 }
 
 .header-actions {
     display: flex;
+    align-items: center;
     gap: 1rem;
 }
 
+/* Platform Switcher (Tabs) */
 .platform-switcher {
-    display: flex;
-    background-color: var(--bg-card);
-    border-radius: 8px;
+    display: inline-flex;
+    background: rgba(30, 41, 59, 0.7);
     padding: 4px;
-    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 .platform-btn {
-    padding: 8px 16px;
+    padding: 10px 20px;
     border: none;
-    background: transparent;
-    color: var(--text-secondary);
-    border-radius: 6px;
+    background: rgba(255, 255, 255, 0.05);
+    color: #cbd5e1;
+    font-weight: 600;
+    border-radius: 8px;
     cursor: pointer;
-    font-weight: 500;
-    transition: all 0.2s;
+    transition: all 0.3s ease;
     display: flex;
     align-items: center;
     gap: 8px;
+}
+
+.platform-btn:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
 }
 
 .platform-btn.active {
-    background-color: var(--primary-color);
+    background: #3b82f6;
     color: white;
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
 }
 
-.platform-btn:hover:not(.active) {
-    background-color: var(--bg-hover);
-    color: var(--text-primary);
+.platform-btn.active:nth-child(2) {
+    /* Bunker button */
+    background: #6f42c1;
+    box-shadow: 0 4px 12px rgba(111, 66, 193, 0.4);
 }
 
+/* Add Machine Button */
 .btn-add-machine {
-    background-color: var(--success-color, #10b981);
-    color: white;
+    padding: 10px 20px;
     border: none;
-    padding: 8px 16px;
-    border-radius: 8px;
+    background: #10b981;
+    color: white;
     font-weight: 600;
+    border-radius: 8px;
     cursor: pointer;
+    transition: all 0.3s ease;
     display: flex;
     align-items: center;
     gap: 8px;
-    transition: background-color 0.2s;
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2);
 }
 
 .btn-add-machine:hover {
-    background-color: var(--success-hover, #059669);
+    background: #059669;
+    transform: translateY(-1px);
+    box-shadow: 0 6px 16px rgba(16, 185, 129, 0.3);
+}
+
+/* Glassmorphism Table Card */
+.table-card {
+    background: var(--glass-bg);
+    backdrop-filter: blur(12px);
+    border-radius: 16px;
+    border: var(--glass-border);
+    padding: 1.5rem;
+    overflow: hidden;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
 }
 
 /* Table Styles */
-.table-card {
-    background-color: var(--bg-card);
-    border-radius: 12px;
-    border: 1px solid var(--border-color);
-    overflow: hidden;
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-}
-
-.table-responsive {
-    overflow-x: auto;
-}
-
 .custom-table {
     width: 100%;
-    border-collapse: collapse;
-    white-space: nowrap;
+    border-collapse: separate;
+    border-spacing: 0;
 }
 
 .custom-table th {
-    background-color: var(--bg-secondary);
-    color: var(--text-secondary);
-    font-weight: 600;
-    text-align: left;
-    padding: 12px 16px;
-    border-bottom: 1px solid var(--border-color);
-    font-size: 0.875rem;
+    background: rgba(30, 41, 59, 0.8);
+    color: #94a3b8;
+    font-weight: 700;
     text-transform: uppercase;
-    letter-spacing: 0.05em;
+    font-size: 0.85rem;
+    padding: 1.2rem 1rem;
+    text-align: left;
+    border-bottom: 2px solid var(--border-color);
+    white-space: nowrap;
+    letter-spacing: 0.5px;
 }
 
 .custom-table td {
-    padding: 12px 16px;
-    border-bottom: 1px solid var(--border-color);
-    color: var(--text-primary);
+    padding: 1rem;
     vertical-align: middle;
-}
-
-.custom-table tr:last-child td {
-    border-bottom: none;
+    border-bottom: 1px solid rgba(51, 65, 85, 0.5);
+    color: var(--text-main);
+    font-size: 0.95rem;
 }
 
 .custom-table tr:hover td {
-    background-color: var(--bg-hover);
+    background: rgba(59, 130, 246, 0.05);
 }
 
-/* Machine Info Cells */
-.logo-preview {
-    width: 40px;
-    height: 40px;
-    object-fit: contain;
-    border-radius: 4px;
-    background-color: #fff;
-    padding: 2px;
+/* Form Inputs within Table */
+.input-minimal {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid transparent;
+    border-radius: 6px;
+    color: var(--text-main);
+    padding: 8px 10px;
+    width: 100%;
+    transition: all 0.2s ease;
 }
 
+.input-minimal:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    background: rgba(255, 255, 255, 0.08);
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+}
+
+.select-minimal {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid transparent;
+    border-radius: 6px;
+    color: var(--text-main);
+    cursor: pointer;
+    padding: 8px 10px;
+    transition: all 0.2s;
+}
+
+.select-minimal:focus {
+    border-color: var(--primary-color);
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.select-minimal option {
+    background: var(--bg-card);
+    color: var(--text-main);
+}
+
+/* Difficulty Colors */
 .badge {
     padding: 4px 8px;
     border-radius: 4px;
-    font-size: 0.75rem;
     font-weight: 600;
-    color: white;
+    font-size: 0.85em;
 }
 
 .badge.muy-facil {
-    background-color: #43959b;
+    color: #4ade80;
+    background: rgba(74, 222, 128, 0.1);
+    border: 1px solid rgba(74, 222, 128, 0.2);
 }
 
 .badge.facil {
-    background-color: #8bc34a;
+    color: #60a5fa;
+    background: rgba(96, 165, 250, 0.1);
+    border: 1px solid rgba(96, 165, 250, 0.2);
 }
 
 .badge.medio {
-    background-color: #e0a553;
+    color: #facc15;
+    background: rgba(250, 204, 21, 0.1);
+    border: 1px solid rgba(250, 204, 21, 0.2);
 }
 
 .badge.dificil {
-    background-color: #d83c31;
+    color: #f87171;
+    background: rgba(248, 113, 113, 0.1);
+    border: 1px solid rgba(248, 113, 113, 0.2);
 }
 
-.action-btn {
-    padding: 6px;
-    border-radius: 4px;
-    border: none;
+/* Image Upload & Preview */
+.logo-upload-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.logo-preview {
+    width: 42px;
+    height: 42px;
+    border-radius: 8px;
+    object-fit: contain;
+    border: 1px solid var(--border-color);
+    background: rgba(0, 0, 0, 0.2);
+    padding: 2px;
+}
+
+.btn-upload-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--border-color);
+    color: var(--text-muted);
     cursor: pointer;
-    transition: background-color 0.2s;
-    background: transparent;
-    color: var(--text-secondary);
+    transition: all 0.2s;
 }
 
-.action-btn:hover {
-    background-color: var(--bg-hover);
-    color: var(--text-primary);
+.btn-upload-icon:hover {
+    background: var(--primary-color);
+    color: white;
+    border-color: var(--primary-color);
+    transform: translateY(-1px);
 }
 
-.action-btn.edit:hover {
-    color: var(--primary-color);
+/* Action Buttons */
+.btn-action {
+    width: 36px;
+    height: 36px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    border: 1px solid transparent;
+    cursor: pointer;
+    transition: all 0.2s;
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--text-muted);
 }
 
-.action-btn.delete:hover {
+.btn-action.save {
+    color: #10b981;
+    background: rgba(16, 185, 129, 0.1);
+}
+
+.btn-action.save:hover {
+    background: #10b981;
+    color: white;
+    box-shadow: 0 0 10px rgba(16, 185, 129, 0.3);
+}
+
+.btn-action.delete {
     color: #ef4444;
+    background: rgba(239, 68, 68, 0.1);
 }
 
-/* Modal Overlay for Add Machine */
+.btn-action.delete:hover {
+    background: #ef4444;
+    color: white;
+    box-shadow: 0 0 10px rgba(239, 68, 68, 0.3);
+}
+
+/* Loading Spinner */
+.loading-spinner {
+    border: 4px solid rgba(255, 255, 255, 0.1);
+    border-left-color: var(--primary-color);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+/* Modal Overlay */
 .modal-overlay {
     position: fixed;
     top: 0;
     left: 0;
     right: 0;
     bottom: 0;
-    background-color: rgba(0, 0, 0, 0.5);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 1000;
-    padding: 1rem;
+    background: rgba(0, 0, 0, 0.7);
     backdrop-filter: blur(4px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
 }
 
 .modal-content {
-    background-color: var(--bg-card);
-    border-radius: 12px;
-    width: 100%;
-    max-width: 650px;
+    background: #1e293b;
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
+    padding: 20px;
+    /* Reduced padding used by AddMachine, wrapper handles outline */
+    position: relative;
+    max-width: 900px;
+    width: 90%;
     max-height: 90vh;
     overflow-y: auto;
-    position: relative;
-    border: 1px solid var(--border-color);
-    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
 }
 
 .modal-close {
     position: absolute;
-    top: 1rem;
-    right: 1rem;
+    top: 15px;
+    right: 15px;
     background: transparent;
     border: none;
+    color: var(--text-muted);
     font-size: 1.5rem;
     cursor: pointer;
-    color: var(--text-secondary);
     z-index: 10;
 }
 
 .modal-close:hover {
-    color: var(--text-primary);
+    color: white;
 }

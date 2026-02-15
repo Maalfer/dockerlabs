@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { useNavigate, Link } from 'react-router-dom'
+import { useNavigate, Link, useLocation } from 'react-router-dom'
 import './Header.css'
 
 import { useAuth } from '../context/AuthContext'
@@ -9,6 +9,31 @@ export default function Header({ openModal }) {
   const navigate = useNavigate()
 
   const isAuth = !!user.is_authenticated
+  const location = useLocation()
+
+  // Determine base and alternate names depending on current route
+  const baseName = location.pathname.startsWith('/bunkerlabs') ? 'BunkerLabs' : 'DockerLabs'
+  const altName = baseName === 'DockerLabs' ? 'BunkerLabs' : 'DockerLabs'
+  const [displayName, setDisplayName] = useState(baseName)
+
+  useEffect(() => {
+    setDisplayName(baseName)
+  }, [baseName])
+  // small animation: toggle classes to fade out/in when swapping name
+  const animateSwap = (newName) => {
+    const el = document.getElementById('dockerlabs-link')
+    if (!el) {
+      setDisplayName(newName)
+      return
+    }
+    el.classList.add('fade-out')
+    setTimeout(() => {
+      setDisplayName(newName)
+      el.classList.remove('fade-out')
+      el.classList.add('fade-in')
+      setTimeout(() => el.classList.remove('fade-in'), 180)
+    }, 120)
+  }
 
   return (
     <header className="position-fixed fixed-top" style={{ display: 'grid', gridTemplateColumns: '1fr auto 1fr', alignItems: 'center', gap: '15px' }}>
@@ -27,7 +52,14 @@ export default function Header({ openModal }) {
       </div>
 
       <h1 style={{ margin: 0, textAlign: 'center' }}>
-        <Link to="/bunkerlabs/login" id="dockerlabs-link">DockerLabs</Link>
+        <Link
+          to="/bunkerlabs"
+          id="dockerlabs-link"
+          onMouseEnter={() => animateSwap(altName)}
+          onMouseLeave={() => animateSwap(baseName)}
+        >
+          {displayName}
+        </Link>
       </h1>
 
       <div className="auth-buttons" style={{ justifySelf: 'end', display: 'flex', gap: '0.75rem', alignItems: 'center' }}>

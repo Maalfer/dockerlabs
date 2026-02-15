@@ -171,8 +171,9 @@ const AddMachine = ({ onMachineAdded }) => {
                 </div>
             )}
 
-            <form onSubmit={handleSubmit}>
-                <div className="form-group">
+            <div className="add-machine-grid">
+                <form onSubmit={handleSubmit} className="add-machine-main">
+                    <div className="form-group">
                     <label className="form-label">Enviar a</label>
                     <select
                         name="destino"
@@ -344,6 +345,31 @@ const AddMachine = ({ onMachineAdded }) => {
                     {loading ? ' Guardando...' : ' Guardar máquina'}
                 </button>
             </form>
+
+                <aside className="add-machine-side">
+                    <div className="preview-box">
+                        {previewUrl ? (
+                            <img src={previewUrl} alt="Preview" />
+                        ) : (
+                            <div style={{textAlign: 'center', color: 'var(--text-muted)'}}>Vista previa de la imagen</div>
+                        )}
+                        <div style={{width: '100%'}}>
+                            <small className="form-text">La imagen se subirá junto con la máquina y se mostrará en la ficha.</small>
+                        </div>
+                    </div>
+
+                    <div style={{height: '12px'}} />
+
+                    <div className="meta-list">
+                        <div className="meta-item"><span>Destino</span><strong>{formData.destino}</strong></div>
+                        <div className="meta-item"><span>Autor</span><strong>{formData.autor || '-'}</strong></div>
+                        <div className="meta-item"><span>Fecha</span><strong>{formData.fecha || '-'}</strong></div>
+                        {!isEntornoReal && <div className="meta-item"><span>Dificultad</span><strong>{formData.dificultad || '-'}</strong></div>}
+                        {isBunker && !isEntornoReal && <div className="meta-item"><span>PIN</span><strong>{formData.pin || '-'}</strong></div>}
+                        <div className="meta-item"><span>Link</span><a style={{color: 'var(--primary-color)'}} href={formData.link_descarga || '#'} target="_blank" rel="noreferrer">{formData.link_descarga ? 'Abrir' : '-'}</a></div>
+                    </div>
+                </aside>
+            </div>
         </div>
     );
 };
