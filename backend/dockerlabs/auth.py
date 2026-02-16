@@ -4,7 +4,7 @@ import re
 import secrets
 import io
 from datetime import datetime, timedelta
-from flask import Blueprint, request, jsonify, redirect, url_for, session, g, flash
+from flask import Blueprint, render_template, request, jsonify, redirect, url_for, session, g, flash
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_login import login_user, logout_user, login_required, current_user
 from werkzeug.utils import secure_filename
@@ -17,46 +17,10 @@ from bunkerlabs.extensions import limiter
 from .models import User, NameClaim, UsernameChangeRequest, Writeup, CreatorRanking, PendingWriteup, WriteupRanking
 
 BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
-FRONTEND_DIR = os.path.join(BASE_DIR, '..', 'frontend')
-PUBLIC_ASSETS_DIR = os.path.join(FRONTEND_DIR, 'public', 'assets')
-PROFILE_UPLOAD_FOLDER = os.path.join(PUBLIC_ASSETS_DIR, 'dockerlabs',  'images', 'perfiles')
+PROFILE_UPLOAD_FOLDER = os.path.join(BASE_DIR, 'static', 'dockerlabs',  'images', 'perfiles')
 ALLOWED_PROFILE_EXTENSIONS = {'.jpg', '.jpeg', '.png', '.gif', '.webp'}
 
 auth_bp = Blueprint('auth', __name__)
-
-
-@auth_bp.route('/auth/api_login', methods=['POST'])
-@csrf_protect
-@limiter.limit("10 per minute", methods=["POST"])
-def api_login():
-    """JSON login endpoint (React frontend)."""
-    data = request.get_json(silent=True) or {}
-    username_or_email = (data.get('username') or data.get('email') or '').strip()
-    password = (data.get('password') or '').strip()
-
-    if not username_or_email or not password:
-        return jsonify({'success': False, 'error': 'Usuario y contraseña son obligatorios.'}), 400
-
-    user = User.query.filter(
-        (User.username == username_or_email) | (User.email == username_or_email)
-    ).first()
-
-    if not user or not check_password_hash(user.password_hash, password):
-        return jsonify({'success': False, 'error': 'Credenciales inválidas.'}), 401
-
-    login_user(user)
-    session['user_id'] = user.id
-    session['username'] = user.username
-    session['role'] = user.role
-
-    return jsonify({
-        'success': True,
-        'user': {
-            'id': user.id,
-            'username': user.username,
-            'role': user.role,
-        }
-    }), 200
 
 def get_profile_image_static_path(username, user_id=None):
 
@@ -244,8 +208,72 @@ def api_register():
             return jsonify({'success': False, 'error': f"Error al crear usuario: {str(e)}"}), 500
 
 
+@auth_bp.route('/auth/api_login', methods=['POST'])
+@csrf_protect
+@limiter.limit("5 per minute", methods=["POST"])
+def api_login():
+    data = request.get_json() or {}
+    username = (data.get('username') or '').strip()
+    password = data.get('password') or ''
 
+    if not username or not password:
+        return jsonify({'success': False, 'error': 'Usuario y contraseña son obligatorios.'}), 400
 
+    user = User.query.filter_by(username=username).first()
+    if user is None:
+        user = User.query.filter_by(email=username).first()
+
+    if user is None or not check_password_hash(user.password_hash, password):
+        return jsonify({'success': False, 'error': 'Credenciales inválidas.'}), 401
+
+    login_user(user)
+    session['user_id'] = user.id
+    session['username'] = user.username
+    session['role'] = user.role
+
+    return jsonify({'success': True, 'username': user.username, 'role': user.role}), 200
+
+@auth_bp.route('/register', methods=['GET', 'POST'])
+@csrf_protect
+@limiter.limit("3 per minute", methods=["POST"])
+def register():
+    """
+    User registration endpoint.
+    Legacy route, kept for redirect or 404? 
+    Given React handles this, we can remove or redirect to /.
+    For now, remove content and return 404 or redirect.
+    But let's just remove it as per plan.
+    """
+    return redirect('/')
+
+@auth_bp.route('/recover', methods=['GET', 'POST'])
+@csrf_protect
+@limiter.limit("5 per minute", methods=["POST"])
+def recover():
+    """
+    Password recovery endpoint.
+    Legacy route.
+    """
+    return redirect('/')
+
+@auth_bp.route('/login', methods=['GET', 'POST'])
+@csrf_protect
+@limiter.limit("5 per minute", methods=["POST"])
+def login():
+    """
+    User login endpoint.
+    Legacy route.
+    """
+    return redirect('/')
+
+@auth_bp.route('/gestion-usuarios')
+@role_required('admin', 'moderador')
+def gestion_usuarios():
+    """
+    Admin user management page.
+    Legacy route.
+    """
+    return redirect('/')
 
 
 @auth_bp.route('/api/usuarios')

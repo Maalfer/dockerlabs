@@ -25,7 +25,7 @@ const AddMachinePage = () => {
             <div className="add-machine-wrapper">
                 <div className="add-machine-intro">
                     <strong>Consejos rápidos</strong>
-                    <ul style={{marginTop: '0.5rem', paddingLeft: '1rem'}}>
+                    <ul>
                         <li>Mantén un nombre descriptivo y único.</li>
                         <li>Incluye un enlace de descarga válido (HTTPS preferible).</li>
                         <li>Sube una imagen clara para la vista previa.</li>

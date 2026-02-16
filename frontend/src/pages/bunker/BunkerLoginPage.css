@@ -1,229 +1,353 @@
-/* Import BunkerLabs variables and base styles if not already globally available */
-/* We assume bunkerlabs.css is loaded via BunkerLayout, but we enforce specific login styles here */
+/* BunkerLabs Login Page - Minimalist Premium Redesign */
 
-.bunker-container {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    padding: 2rem 1rem;
+.bunker-login-container {
+    /* Fix scroll: align to available space */
+    height: auto;
     min-height: calc(100vh - 160px);
-}
-
-.bunker-box {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+    position: relative;
+    overflow: visible;
     width: 100%;
-    max-width: 980px !important;
-    display: flex !important;
-    flex-direction: row;
-    gap: 0;
-    align-items: stretch;
-    padding: 0 !important;
-    margin: 0 auto;
-    overflow: hidden;
-    border-radius: 16px;
-    /* Rounded corners */
-    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
-    /* Strong shadow */
-    background: #1e293b;
-    border: 1px solid rgba(148, 163, 184, 0.1);
 }
 
-.login-section {
+/* Background elements for depth */
+.bunker-login-container::before {
+    content: '';
+    position: absolute;
+    top: -10%;
+    right: -5%;
+    width: 600px;
+    height: 600px;
+    background: radial-gradient(circle, rgba(124, 58, 237, 0.15) 0%, transparent 70%);
+    filter: blur(80px);
+    z-index: 0;
+}
+
+.bunker-login-container::after {
+    content: '';
+    position: absolute;
+    bottom: -10%;
+    left: -10%;
+    width: 500px;
+    height: 500px;
+    background: radial-gradient(circle, rgba(59, 130, 246, 0.1) 0%, transparent 70%);
+    filter: blur(60px);
+    z-index: 0;
+}
+
+.bunker-login-card {
+    display: flex;
+    width: 100%;
+    max-width: 900px;
+    /* Slightly wider */
+    height: auto;
+    min-height: 500px;
+    max-height: calc(100vh - 220px);
+    background: rgba(15, 23, 42, 0.6);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 20px;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+    overflow: visible;
+    position: relative;
+    z-index: 10;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.bunker-login-card:hover {
+    box-shadow: 0 30px 60px -12px rgba(0, 0, 0, 0.6);
+    border-color: rgba(255, 255, 255, 0.12);
+}
+
+/* Left Section: Form */
+.bunker-login-form-section {
     flex: 1;
+    padding: 2.5rem;
+    /* Reduced padding */
     display: flex;
     flex-direction: column;
     justify-content: center;
-    /* Center content vertically */
-    gap: 1.5rem;
-    padding: 2.5rem;
-    background: #1e293b;
-    z-index: 2;
+    position: relative;
+    background: linear-gradient(180deg, rgba(15, 23, 42, 0.4) 0%, rgba(15, 23, 42, 0.8) 100%);
+    overflow-y: auto;
 }
 
-.video-section {
-    flex: 1.2;
-    /* Give video slightly more space */
-    background: #0f172a;
-    position: relative;
+.bunker-brand {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 2rem;
+}
+
+.brand-icon {
+    width: 40px;
+    height: 40px;
+    background: linear-gradient(135deg, #7c3aed, #4f46e5);
+    border-radius: 10px;
     display: flex;
     align-items: center;
     justify-content: center;
-    overflow: hidden;
-    min-height: 420px;
+    color: white;
+    font-size: 1.25rem;
+    box-shadow: 0 4px 12px rgba(124, 58, 237, 0.3);
 }
 
-.video-overlay {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(to right, #1e293b 0%, transparent 40%);
-    /* Smoother gradient */
-    pointer-events: none;
-    z-index: 10;
-}
-
-.video-container {
-    width: 100%;
-    height: 100%;
-    position: relative;
-}
-
-.video-container iframe {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    width: 150%;
-    height: 150%;
-    transform: translate(-50%, -50%);
-    /* Center and zoom to cover */
-    border: 0;
-    opacity: 0.6;
-    /* Subtler video */
-    pointer-events: none;
-    /* No interaction with video */
-    filter: grayscale(40%) contrast(1.1);
-    /* Cinematic look */
-}
-
-/* Header Styles */
-.bunker-header {
-    text-align: left;
-    /* Align left for modern look */
-    margin-bottom: 1rem;
-}
-
-.bunker-icon {
-    width: 48px;
-    height: 48px;
-    background: rgba(124, 58, 237, 0.1);
-    /* Purple tint */
-    color: #a78bfa;
-    border-radius: 12px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.5rem;
-    margin-bottom: 1rem;
-}
-
-.bunker-header h2 {
-    color: #f8fafc;
-    font-size: 1.8rem;
+.brand-text h1 {
+    font-size: 1.35rem;
     font-weight: 700;
-    margin: 0 0 0.5rem 0;
+    margin: 0;
+    background: linear-gradient(to right, #fff, #cbd5e1);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
     letter-spacing: -0.02em;
 }
 
-.bunker-subtitle {
+.brand-badge {
+    font-size: 0.6rem;
+    background: rgba(124, 58, 237, 0.15);
+    color: #a78bfa;
+    padding: 0.15rem 0.4rem;
+    border-radius: 4px;
+    border: 1px solid rgba(124, 58, 237, 0.3);
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    margin-top: 0.25rem;
+    display: inline-block;
+}
+
+.login-header {
+    margin-bottom: 1.5rem;
+}
+
+.login-header h2 {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: white;
+    margin: 0 0 0.5rem 0;
+}
+
+.login-header p {
     color: #94a3b8;
     font-size: 0.95rem;
     margin: 0;
 }
 
-/* Form Styles */
-.bunker-form {
+/* Alert Styling */
+.bunker-error-alert {
+    background: rgba(220, 38, 38, 0.1);
+    border-left: 4px solid #dc2626;
+    color: #fca5a5;
+    padding: 0.75rem;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 1.5rem;
+    font-size: 0.9rem;
+    animation: shake 0.4s cubic-bezier(.36, .07, .19, .97) both;
+}
+
+@keyframes shake {
+
+    10%,
+    90% {
+        transform: translate3d(-1px, 0, 0);
+    }
+
+    20%,
+    80% {
+        transform: translate3d(2px, 0, 0);
+    }
+
+    30%,
+    50%,
+    70% {
+        transform: translate3d(-4px, 0, 0);
+    }
+
+    40%,
+    60% {
+        transform: translate3d(4px, 0, 0);
+    }
+}
+
+/* ... previous styles ... */
+
+/* Form Styling */
+.login-form {
     display: flex;
     flex-direction: column;
     gap: 1.5rem;
+    width: 100%;
+    /* Ensure form takes full width */
 }
 
-.form-group {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-}
+/* ... label ... */
 
-.bunker-label {
-    color: #cbd5e1;
-    font-size: 0.9rem;
-    font-weight: 500;
+.input-wrapper {
+    position: relative;
     display: flex;
     align-items: center;
-    gap: 0.5rem;
+    width: 100%;
+    /* Ensure wrapper takes full width */
 }
+
+/* ... icon ... */
 
 .bunker-input {
-    background: #0f172a;
-    border: 1px solid #334155;
-    color: #fff;
-    padding: 0.75rem 1rem;
-    border-radius: 8px;
-    font-size: 1rem;
-    transition: all 0.2s;
     width: 100%;
-}
-
-.bunker-input:focus {
+    box-sizing: border-box;
+    /* Explicitly set box-sizing */
+    background: rgba(30, 41, 59, 0.5);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    padding: 1rem 1rem 1rem 3rem;
+    color: white;
+    font-size: 1rem;
     outline: none;
-    border-color: #a78bfa;
-    box-shadow: 0 0 0 3px rgba(167, 139, 250, 0.2);
+    transition: all 0.2s;
 }
 
-.bunker-btn {
-    background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);
+/* ... focus ... */
+
+.bunker-access-btn {
+    width: 100%;
+    /* Match input width */
+    background: #6366f1;
+    /* Solid primary color for better visibility */
     color: white;
     border: none;
-    padding: 0.85rem;
-    border-radius: 8px;
-    font-weight: 600;
+    padding: 1rem;
+    border-radius: 12px;
+    font-weight: 700;
+    /* Bolder text */
     font-size: 1rem;
     cursor: pointer;
+    transition: all 0.2s;
     display: flex;
     align-items: center;
     justify-content: center;
     gap: 0.5rem;
-    transition: transform 0.2s, box-shadow 0.2s;
     margin-top: 0.5rem;
+    box-shadow: 0 4px 6px -1px rgba(99, 102, 241, 0.4);
+    /* Matching shadow */
 }
 
-.bunker-btn:hover:not(:disabled) {
+.bunker-access-btn:hover:not(:disabled) {
+    background: #4f46e5;
     transform: translateY(-2px);
-    box-shadow: 0 10px 20px -5px rgba(124, 58, 237, 0.5);
+    box-shadow: 0 10px 15px -3px rgba(99, 102, 241, 0.5);
 }
 
-.bunker-btn:disabled {
-    opacity: 0.7;
-    cursor: not-allowed;
-}
+/* ... disabled ... */
 
-/* Footer & Alert */
-.bunker-footer {
-    margin-top: auto;
-    padding-top: 1rem;
-    border-top: 1px solid #334155;
-}
+/* ... footer ... */
 
-.bunker-warning {
-    color: #64748b;
-    font-size: 0.85rem;
-    margin: 0;
-}
-
-.bunker-alert {
-    background: rgba(239, 68, 68, 0.1);
-    border: 1px solid rgba(239, 68, 68, 0.2);
-    color: #f87171;
-    padding: 0.75rem;
-    border-radius: 8px;
-    font-size: 0.9rem;
+/* Right Section: Visual/Video */
+.bunker-visual-section {
+    flex: 1;
+    background: #000;
+    position: relative;
+    overflow: hidden;
     display: flex;
-    align-items: center;
-    gap: 0.5rem;
+    align-items: flex-end;
+    padding: 2.5rem;
+    border-left: 1px solid rgba(255, 255, 255, 0.1);
+    /* Separator line instead of blend */
 }
 
+/* REMOVED .bunker-visual-section::before (the blending gradient) */
+
+.video-background {
+    /* ... keep existing ... */
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1;
+}
+
+.video-background iframe {
+    /* ... keep existing ... */
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    pointer-events: none;
+    opacity: 0.6;
+    /* Slightly increased opacity */
+    filter: grayscale(80%) contrast(1.1);
+    /* Reduced grayscale slightly */
+    transform: scale(1.5);
+}
+
+.visual-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(to top, rgba(0, 0, 0, 0.8) 0%, transparent 60%);
+    /* Darker bottom overlay for text readability */
+    z-index: 2;
+}
+
+.visual-content {
+    position: relative;
+    z-index: 10;
+    color: white;
+}
+
+.visual-content h3 {
+    font-size: 2rem;
+    font-weight: 800;
+    margin-bottom: 0.75rem;
+    line-height: 1.1;
+    background: linear-gradient(to right, #fff, #94a3b8);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+}
+
+.visual-content p {
+    font-size: 0.95rem;
+    color: #cbd5e1;
+    max-width: 90%;
+}
+
+
+/* Responsive Design */
 @media (max-width: 900px) {
-    .bunker-box {
+    .bunker-login-card {
         flex-direction: column;
-        max-width: 480px !important;
+        max-width: 450px;
+        min-height: auto;
     }
 
-    .video-section {
+    .bunker-visual-section {
         display: none;
-        /* Hide video on mobile for cleaner look */
+        /* Hide visual on tablet/mobile for minimalism */
     }
 
-    .video-overlay {
-        background: linear-gradient(to bottom, #1e293b 0%, transparent 20%);
+    .bunker-login-form-section {
+        padding: 2.5rem 2rem;
+    }
+}
+
+@media (max-width: 640px) {
+    .bunker-login-container {
+        padding: 1rem;
+    }
+
+    .bunker-login-form-section {
+        padding: 2rem 1.5rem;
+    }
+
+    .login-header h2 {
+        font-size: 1.5rem;
     }
 }

@@ -9,6 +9,7 @@ export default defineConfig({
       '/api': 'http://127.0.0.1:5000',
       '/auth': 'http://127.0.0.1:5000',
       '/bunkerlabs/api': 'http://127.0.0.1:5000',
+      '/subirwriteups': 'http://127.0.0.1:5000',
       '/static': 'http://127.0.0.1:5000',
       '/upload-profile-photo': 'http://127.0.0.1:5000',
       '/reclamar-maquina': 'http://127.0.0.1:5000',

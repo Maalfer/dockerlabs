@@ -174,191 +174,189 @@ const AddMachine = ({ onMachineAdded }) => {
             <div className="add-machine-grid">
                 <form onSubmit={handleSubmit} className="add-machine-main">
                     <div className="form-group">
-                    <label className="form-label">Enviar a</label>
-                    <select
-                        name="destino"
-                        className="form-select"
-                        value={formData.destino}
-                        onChange={handleChange}
-                    >
-                        <option value="docker">DockerLabs (página principal)</option>
-                        <option value="bunker">BunkerLabs (zona protegida)</option>
-                    </select>
-                </div>
-
-                {isBunker && (
-                    <div className="form-group">
-                        <div className="form-check">
-                            <input
-                                type="checkbox"
-                                name="entorno_real"
-                                id="entorno_real"
-                                className="form-check-input"
-                                checked={formData.entorno_real}
-                                onChange={handleChange}
-                            />
-                            <label className="form-check-label" htmlFor="entorno_real">
-                                <strong>Marcar como Entorno Real</strong>
-                                <div className="form-text" style={{ marginTop: 0 }}>Esta máquina simula un entorno de producción real</div>
-                            </label>
-                        </div>
-                    </div>
-                )}
-
-                {isBunker && !isEntornoReal && (
-                    <div className="form-group">
-                        <label className="form-label">PIN de la máquina (Flag)</label>
-                        <input
-                            type="text"
-                            name="pin"
-                            className="form-control"
-                            placeholder="Introduce el PIN/Flag para esta máquina"
-                            value={formData.pin}
-                            onChange={handleChange}
-                            required
-                        />
-                    </div>
-                )}
-
-                <div className="form-group">
-                    <label className="form-label">Nombre de la máquina</label>
-                    <input
-                        type="text"
-                        name="nombre"
-                        className="form-control"
-                        value={formData.nombre}
-                        onChange={handleChange}
-                        required
-                    />
-                </div>
-
-                {!isEntornoReal && (
-                    <div className="form-group">
-                        <label className="form-label">Dificultad</label>
+                        <label className="form-label">Enviar a</label>
                         <select
-                            name="dificultad"
+                            name="destino"
                             className="form-select"
-                            value={formData.dificultad}
+                            value={formData.destino}
                             onChange={handleChange}
-                            required
                         >
-                            <option value="">Selecciona una dificultad</option>
-                            <option value="Muy Fácil">Muy fácil</option>
-                            <option value="Fácil">Fácil</option>
-                            <option value="Medio">Medio</option>
-                            <option value="Difícil">Difícil</option>
+                            <option value="docker">DockerLabs (página principal)</option>
+                            <option value="bunker">BunkerLabs (zona protegida)</option>
                         </select>
                     </div>
-                )}
 
-                <div className="form-group">
-                    <label className="form-label">Autor</label>
-                    <div className="custom-select-wrapper">
+                    {isBunker && (
+                        <div className="form-group">
+                            <div className="form-check">
+                                <input
+                                    type="checkbox"
+                                    name="entorno_real"
+                                    id="entorno_real"
+                                    className="form-check-input"
+                                    checked={formData.entorno_real}
+                                    onChange={handleChange}
+                                />
+                                <label className="form-check-label" htmlFor="entorno_real">
+                                    <strong>Marcar como Entorno Real</strong>
+                                    <div className="form-text" style={{ marginTop: 0 }}>Esta máquina simula un entorno de producción real</div>
+                                </label>
+                            </div>
+                        </div>
+                    )}
+
+                    {isBunker && !isEntornoReal && (
+                        <div className="form-group">
+                            <label className="form-label">PIN de la máquina (Flag)</label>
+                            <input
+                                type="text"
+                                name="pin"
+                                className="form-control"
+                                placeholder="Introduce el PIN/Flag para esta máquina"
+                                value={formData.pin}
+                                onChange={handleChange}
+                                required
+                            />
+                        </div>
+                    )}
+
+                    <div className="form-group">
+                        <label className="form-label">Nombre de la máquina</label>
                         <input
                             type="text"
-                            ref={searchInputRef}
+                            name="nombre"
                             className="form-control"
-                            placeholder="Buscar usuario..."
-                            value={authorSearch}
-                            onChange={handleAuthorSearchChange}
-                            onFocus={() => setShowDropdown(true)}
+                            value={formData.nombre}
+                            onChange={handleChange}
                             required
                         />
-                        {showDropdown && (
-                            <div className="custom-select-dropdown" ref={dropdownRef}>
-                                {loadingUsers ? (
-                                    <div className="p-3 text-muted text-center">Cargando...</div>
-                                ) : filteredUsers.length > 0 ? (
-                                    filteredUsers.map(user => (
-                                        <div
-                                            key={user.id}
-                                            className={`custom-select-option ${user.username === formData.autor ? 'selected' : ''}`}
-                                            onClick={() => selectAuthor(user.username)}
-                                        >
-                                            <i className="bi bi-person-circle"></i> {user.username}
-                                        </div>
-                                    ))
-                                ) : (
-                                    <div className="p-3 text-muted text-center">No se encontraron usuarios</div>
-                                )}
+                    </div>
+
+                    {!isEntornoReal && (
+                        <div className="form-group">
+                            <label className="form-label">Dificultad</label>
+                            <select
+                                name="dificultad"
+                                className="form-select"
+                                value={formData.dificultad}
+                                onChange={handleChange}
+                                required
+                            >
+                                <option value="">Selecciona una dificultad</option>
+                                <option value="Muy Fácil">Muy fácil</option>
+                                <option value="Fácil">Fácil</option>
+                                <option value="Medio">Medio</option>
+                                <option value="Difícil">Difícil</option>
+                            </select>
+                        </div>
+                    )}
+
+                    <div className="form-group">
+                        <label className="form-label">Autor</label>
+                        <div className="custom-select-wrapper">
+                            <input
+                                type="text"
+                                ref={searchInputRef}
+                                className="form-control"
+                                placeholder="Buscar usuario..."
+                                value={authorSearch}
+                                onChange={handleAuthorSearchChange}
+                                onFocus={() => setShowDropdown(true)}
+                                required
+                            />
+                            {showDropdown && (
+                                <div className="custom-select-dropdown" ref={dropdownRef}>
+                                    {loadingUsers ? (
+                                        <div className="p-3 text-muted text-center">Cargando...</div>
+                                    ) : filteredUsers.length > 0 ? (
+                                        filteredUsers.map(user => (
+                                            <div
+                                                key={user.id}
+                                                className={`custom-select-option ${user.username === formData.autor ? 'selected' : ''}`}
+                                                onClick={() => selectAuthor(user.username)}
+                                            >
+                                                <i className="bi bi-person-circle"></i> {user.username}
+                                            </div>
+                                        ))
+                                    ) : (
+                                        <div className="p-3 text-muted text-center">No se encontraron usuarios</div>
+                                    )}
+                                </div>
+                            )}
+                        </div>
+                    </div>
+
+                    <div className="form-group">
+                        <label className="form-label">Fecha</label>
+                        <input
+                            type="date"
+                            name="fecha"
+                            className="form-control"
+                            value={formData.fecha}
+                            onChange={handleChange}
+                            required
+                        />
+                    </div>
+
+                    <div className="form-group">
+                        <label className="form-label">Imagen de la máquina</label>
+                        <input
+                            type="file"
+                            name="imagen"
+                            className="form-control"
+                            accept="image/*"
+                            onChange={handleImageChange}
+                        />
+                        {previewUrl && (
+                            <div className="mt-2 text-center">
+                                <img src={previewUrl} alt="Preview" style={{ maxHeight: '100px', borderRadius: '4px' }} />
                             </div>
                         )}
                     </div>
-                </div>
 
-                <div className="form-group">
-                    <label className="form-label">Fecha</label>
-                    <input
-                        type="date"
-                        name="fecha"
-                        className="form-control"
-                        value={formData.fecha}
-                        onChange={handleChange}
-                        required
-                    />
-                </div>
+                    <div className="form-group">
+                        <label className="form-label">Descripción</label>
+                        <textarea
+                            name="descripcion"
+                            className="form-control"
+                            rows="4"
+                            value={formData.descripcion}
+                            onChange={handleChange}
+                            placeholder="Descripción de lo que se aprende en esta máquina"
+                            required
+                        ></textarea>
+                    </div>
 
-                <div className="form-group">
-                    <label className="form-label">Imagen de la máquina</label>
-                    <input
-                        type="file"
-                        name="imagen"
-                        className="form-control"
-                        accept="image/*"
-                        onChange={handleImageChange}
-                    />
-                    {previewUrl && (
-                        <div className="mt-2 text-center">
-                            <img src={previewUrl} alt="Preview" style={{ maxHeight: '100px', borderRadius: '4px' }} />
-                        </div>
-                    )}
-                </div>
+                    <div className="form-group">
+                        <label className="form-label">Link de descarga</label>
+                        <input
+                            type="url"
+                            name="link_descarga"
+                            className="form-control"
+                            placeholder="https://..."
+                            value={formData.link_descarga}
+                            onChange={handleChange}
+                            required
+                        />
+                    </div>
 
-                <div className="form-group">
-                    <label className="form-label">Descripción</label>
-                    <textarea
-                        name="descripcion"
-                        className="form-control"
-                        rows="4"
-                        value={formData.descripcion}
-                        onChange={handleChange}
-                        placeholder="Descripción de lo que se aprende en esta máquina"
-                        required
-                    ></textarea>
-                </div>
-
-                <div className="form-group">
-                    <label className="form-label">Link de descarga</label>
-                    <input
-                        type="url"
-                        name="link_descarga"
-                        className="form-control"
-                        placeholder="https://..."
-                        value={formData.link_descarga}
-                        onChange={handleChange}
-                        required
-                    />
-                </div>
-
-                <button type="submit" className="btn-submit" disabled={loading}>
-                    {loading ? <div className="loading-spinner"></div> : <i className="bi bi-save"></i>}
-                    {loading ? ' Guardando...' : ' Guardar máquina'}
-                </button>
-            </form>
+                    <button type="submit" className="btn-submit" disabled={loading}>
+                        {loading ? <div className="loading-spinner"></div> : <i className="bi bi-save"></i>}
+                        {loading ? ' Guardando...' : ' Guardar máquina'}
+                    </button>
+                </form>
 
                 <aside className="add-machine-side">
                     <div className="preview-box">
                         {previewUrl ? (
                             <img src={previewUrl} alt="Preview" />
                         ) : (
-                            <div style={{textAlign: 'center', color: 'var(--text-muted)'}}>Vista previa de la imagen</div>
+                            <div className="preview-placeholder">Vista previa de la imagen</div>
                         )}
-                        <div style={{width: '100%'}}>
+                        <div className="preview-help">
                             <small className="form-text">La imagen se subirá junto con la máquina y se mostrará en la ficha.</small>
                         </div>
                     </div>
-
-                    <div style={{height: '12px'}} />
 
                     <div className="meta-list">
                         <div className="meta-item"><span>Destino</span><strong>{formData.destino}</strong></div>
@@ -366,7 +364,7 @@ const AddMachine = ({ onMachineAdded }) => {
                         <div className="meta-item"><span>Fecha</span><strong>{formData.fecha || '-'}</strong></div>
                         {!isEntornoReal && <div className="meta-item"><span>Dificultad</span><strong>{formData.dificultad || '-'}</strong></div>}
                         {isBunker && !isEntornoReal && <div className="meta-item"><span>PIN</span><strong>{formData.pin || '-'}</strong></div>}
-                        <div className="meta-item"><span>Link</span><a style={{color: 'var(--primary-color)'}} href={formData.link_descarga || '#'} target="_blank" rel="noreferrer">{formData.link_descarga ? 'Abrir' : '-'}</a></div>
+                        <div className="meta-item"><span>Link</span><a className="meta-link" href={formData.link_descarga || '#'} target="_blank" rel="noreferrer">{formData.link_descarga ? 'Abrir' : '-'}</a></div>
                     </div>
                 </aside>
             </div>

@@ -3,6 +3,7 @@ import RankingWriteupsModal from '../../components/ranking/RankingWriteupsModal'
 import RankingAutoresModal from '../../components/ranking/RankingAutoresModal'
 import AuthorProfileModal from '../../components/ranking/AuthorProfileModal'
 import WriteupModal from '../../components/common/WriteupModal'
+import SubmitWriteupModal from '../../components/common/SubmitWriteupModal'
 import MachineDescriptionModal from '../../components/machines/MachineDescriptionModal'
 
 
@@ -20,6 +21,7 @@ export default function HomePage() {
   const [showRankingAutores, setShowRankingAutores] = useState(false)
   const [authorProfileName, setAuthorProfileName] = useState(null)
   const [writeupModalMachine, setWriteupModalMachine] = useState(null)
+  const [submitWriteupModalMachine, setSubmitWriteupModalMachine] = useState(null)
   const [descriptionModal, setDescriptionModal] = useState(null)
 
   useEffect(() => {
@@ -165,7 +167,7 @@ export default function HomePage() {
             </div>
             <div className="acciones">
               <button className="subir" style={{ fontSize: '1.2em' }} onClick={(e) => { e.stopPropagation(); window.open(m.link_descarga, '_blank') }} title="Descargar máquina"><i className="bi bi-cloud-arrow-down-fill"></i></button>
-              <button className="subir" style={{ fontSize: '1.2em' }} onClick={(e) => { e.stopPropagation(); alert('Subir writeup para: ' + m.nombre) }} title="Subir writeup"><i className="bi bi-cloud-arrow-up-fill"></i></button>
+              <button className="subir" style={{ fontSize: '1.2em' }} onClick={(e) => { e.stopPropagation(); setSubmitWriteupModalMachine(m) }} title="Subir writeup"><i className="bi bi-cloud-arrow-up-fill"></i></button>
               <button style={{ fontSize: '1.2em' }} onClick={(e) => { e.stopPropagation(); setWriteupModalMachine(m.nombre) }} title="Ver writeups"><i className="bi bi-book"></i></button>
             </div>
           </div>
@@ -223,6 +225,11 @@ export default function HomePage() {
       <WriteupModal
         machineName={writeupModalMachine}
         onClose={() => setWriteupModalMachine(null)}
+      />
+
+      <SubmitWriteupModal
+        machine={submitWriteupModalMachine}
+        onClose={() => setSubmitWriteupModalMachine(null)}
       />
 
       <MachineDescriptionModal

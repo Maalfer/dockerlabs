@@ -1,55 +1,124 @@
+/* AddMachinePage.css - Premium Redesign */
+
 .add-machine-page-container {
-    max-width: 1200px;
+    max-width: 1400px;
     margin: 0 auto;
-    padding: 100px 20px 48px;
+    padding: 120px 20px 60px;
     min-height: 100vh;
+    animation: fadeIn 0.5s ease-out;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 .add-machine-page-header {
     text-align: center;
-    margin-bottom: 40px;
+    margin-bottom: 3rem;
+    position: relative;
 }
 
 .add-machine-page-header h1 {
-    font-size: 2.2rem;
-    font-weight: 700;
-    color: var(--text-primary);
-    margin-bottom: 10px;
-}
-
-.add-machine-page-header p {
-    color: var(--text-muted);
-    font-size: 1.1rem;
-}
-
-
-.add-machine-wrapper {
-    background: transparent;
-    display: flex;
-    justify-content: center;
+    font-size: 2.5rem;
+    font-weight: 800;
+    margin-bottom: 1rem;
+    background: linear-gradient(135deg, #fff 0%, #a78bfa 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    letter-spacing: -0.02em;
+    display: inline-flex;
+    align-items: center;
     gap: 1rem;
 }
 
-/* Override or adjust AddMachine component styles if needed */
-.add-machine-wrapper .add-machine-container {
-    width: 100%;
-    max-width: 820px;
-    background: var(--bg-card);
-    backdrop-filter: blur(8px);
-    border: 1px solid var(--border-color);
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.18);
+.add-machine-page-header h1 i {
+    color: #a78bfa;
+    -webkit-text-fill-color: initial;
+    filter: drop-shadow(0 0 10px rgba(167, 139, 250, 0.4));
+}
+
+.add-machine-page-header p {
+    color: var(--text-secondary);
+    font-size: 1.15rem;
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+.add-machine-wrapper {
+    display: flex;
+    justify-content: center;
+    gap: 2rem;
+    align-items: flex-start;
 }
 
 .add-machine-intro {
-    max-width: 300px;
-    padding: 1rem;
-    border-radius: 8px;
-    background: linear-gradient(180deg, rgba(255,255,255,0.02), transparent);
-    border: 1px solid var(--border-color);
+    flex: 0 0 300px;
+    background: rgba(30, 41, 59, 0.4);
+    backdrop-filter: blur(12px);
+    padding: 1.5rem;
+    border-radius: 16px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
     color: var(--text-secondary);
     font-size: 0.95rem;
+    position: sticky;
+    top: 100px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
 }
 
-@media (max-width: 900px) {
-    .add-machine-intro { display: none; }
+.add-machine-intro strong {
+    display: block;
+    color: #fff;
+    font-size: 1.1rem;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.add-machine-intro strong::before {
+    content: '\F644';
+    /* lightbulb icon */
+    font-family: 'bootstrap-icons';
+    color: #fbbf24;
+}
+
+.add-machine-intro ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.8rem;
+}
+
+.add-machine-intro li {
+    position: relative;
+    padding-left: 1.5rem;
+    line-height: 1.5;
+}
+
+.add-machine-intro li::before {
+    content: '\F26E';
+    /* check-circle-fill */
+    font-family: 'bootstrap-icons';
+    position: absolute;
+    left: 0;
+    top: 2px;
+    color: #10b981;
+    font-size: 0.9rem;
+}
+
+@media (max-width: 1024px) {
+    .add-machine-intro {
+        display: none;
+    }
 }

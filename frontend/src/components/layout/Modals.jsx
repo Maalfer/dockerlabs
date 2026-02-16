@@ -40,12 +40,12 @@ export default function Modals({ state, open, close }) {
           <div className="ranking-list">
             <Link to="/writeups-publicados" className="ranking-item" onClick={() => closeAndNavigate('gestion')}>
               <div className="user-info"><span className="user-name">Writeups publicados</span></div>
-              <i className="bi bi-chevron-right" style={{ color: '#64748b' }}></i>
+              <i className="bi bi-chevron-right"></i>
             </Link>
             {['admin', 'moderador'].includes(user.role) && (
               <Link to="/writeups-recibidos" className="ranking-item" onClick={() => closeAndNavigate('gestion')}>
                 <div className="user-info"><span className="user-name">Writeups recibidos</span></div>
-                <i className="bi bi-chevron-right" style={{ color: '#64748b' }}></i>
+                <i className="bi bi-chevron-right"></i>
               </Link>
             )}
           </div>
@@ -59,37 +59,37 @@ export default function Modals({ state, open, close }) {
           <div className="ranking-list two-columns">
             <a href="https://app.secur0.com/vulnerability-disclosure/Dockerlabs" target="_blank" rel="noreferrer" className="ranking-item">
               <div className="user-info"><span className="user-name">Programa VDP</span></div>
-              <i className="bi bi-box-arrow-up-right" style={{ color: '#64748b', fontSize: '0.9rem' }}></i>
+              <i className="bi bi-box-arrow-up-right" style={{ fontSize: '0.9rem' }}></i>
             </a>
 
             <Link to="/instrucciones-uso" className="ranking-item" onClick={() => closeAndNavigate('menu')}>
               <div className="user-info"><span className="user-name">Instrucciones de Uso</span></div>
-              <i className="bi bi-file-earmark-pdf" style={{ color: '#64748b' }}></i>
+              <i className="bi bi-file-earmark-pdf"></i>
             </Link>
 
             <Link to="/enviar-maquina" className="ranking-item" onClick={() => closeAndNavigate('menu')}>
               <div className="user-info"><span className="user-name">Enviar Máquina</span></div>
-              <i className="bi bi-chevron-right" style={{ color: '#64748b' }}></i>
+              <i className="bi bi-chevron-right"></i>
             </Link>
 
             <Link to="/como-se-crea-una-maquina" className="ranking-item" onClick={() => closeAndNavigate('menu')}>
               <div className="user-info"><span className="user-name">Cómo se Crea una Máquina</span></div>
-              <i className="bi bi-chevron-right" style={{ color: '#64748b' }}></i>
+              <i className="bi bi-chevron-right"></i>
             </Link>
 
             <Link to="/estadisticas" className="ranking-item" onClick={() => closeAndNavigate('menu')}>
               <div className="user-info"><span className="user-name">Estadísticas</span></div>
-              <i className="bi bi-bar-chart-line" style={{ color: '#64748b' }}></i>
+              <i className="bi bi-bar-chart-line"></i>
             </Link>
 
             <a href="/docs/" target="_blank" rel="noreferrer" className="ranking-item">
               <div className="user-info"><span className="user-name">Swagger UI</span></div>
-              <i className="bi bi-file-code" style={{ color: '#64748b' }}></i>
+              <i className="bi bi-file-code"></i>
             </a>
 
             <Link to="/agradecimientos" className="ranking-item" onClick={() => closeAndNavigate('menu')}>
               <div className="user-info"><span className="user-name">Agradecimientos</span></div>
-              <i className="bi bi-heart" style={{ color: '#64748b' }}></i>
+              <i className="bi bi-heart"></i>
             </Link>
           </div>
         </div>
@@ -105,41 +105,41 @@ export default function Modals({ state, open, close }) {
           <div className="ranking-list two-columns">
             <Link to="/dashboard" className="ranking-item" onClick={() => closeAndNavigate('dashboard')}>
               <div className="user-info"><span className="user-name">Ir al Dashboard</span></div>
-              <i className="bi bi-speedometer2" style={{ color: '#64748b' }}></i>
+              <i className="bi bi-speedometer2"></i>
             </Link>
 
             <a href="/maquinas-hechas" className="ranking-item">
               <div className="user-info"><span className="user-name">Máquinas Completadas</span></div>
-              <i className="bi bi-check-circle" style={{ color: '#64748b' }}></i>
+              <i className="bi bi-check-circle"></i>
             </a>
 
             {['admin', 'moderador'].includes(user.role) && (
               <>
                 <a href="/peticiones" className="ranking-item">
                   <div className="user-info"><span className="user-name">Peticiones</span></div>
-                  <i className="bi bi-inbox" style={{ color: '#64748b' }}></i>
+                  <i className="bi bi-inbox"></i>
                 </a>
                 <a href="/gestion-usuarios" className="ranking-item">
                   <div className="user-info"><span className="user-name">Gestión Usuarios</span></div>
-                  <i className="bi bi-people" style={{ color: '#64748b' }}></i>
+                  <i className="bi bi-people"></i>
                 </a>
               </>
             )}
 
             <Link to="/gestion-maquinas" className="ranking-item" onClick={() => closeAndNavigate('dashboard')}>
               <div className="user-info"><span className="user-name">Gestión Máquinas</span></div>
-              <i className="bi bi-gear" style={{ color: '#64748b' }}></i>
+              <i className="bi bi-gear"></i>
             </Link>
 
             {user.role === 'admin' && (
               <>
                 <Link to="/add-maquina" className="ranking-item" onClick={() => closeAndNavigate('dashboard')}>
                   <div className="user-info"><span className="user-name">Añadir Máquina</span></div>
-                  <i className="bi bi-plus-lg" style={{ color: '#64748b' }}></i>
+                  <i className="bi bi-plus-lg"></i>
                 </Link>
                 <Link to="/bunkerlabs/accesos" className="ranking-item" onClick={() => closeAndNavigate('dashboard')}>
                   <div className="user-info"><span className="user-name">Accesos Bunkerlabs</span></div>
-                  <i className="bi bi-key" style={{ color: '#64748b' }}></i>
+                  <i className="bi bi-key"></i>
                 </Link>
               </>
             )}

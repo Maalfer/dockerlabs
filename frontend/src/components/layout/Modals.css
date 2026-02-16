@@ -1,4 +1,201 @@
-/* Modals component - overlay, popup, ranking-list use global styles from styles.css / base.css */
+/* Modals component - Updated for Premium UI */
+
+/* Global Overlay & Popup Enhancements */
+.overlay {
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(8px);
+    transition: all 0.3s ease;
+}
+
+.popup {
+    background: rgba(15, 23, 42, 0.95);
+    /* Dark blue-slate */
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 8px 10px -6px rgba(0, 0, 0, 0.5);
+    border-radius: 16px;
+    padding: 2rem;
+    color: #f1f5f9;
+    animation: modalPop 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes modalPop {
+    0% {
+        transform: scale(0.95);
+        opacity: 0;
+    }
+
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+.modal-header {
+    margin-bottom: 1.5rem;
+    text-align: center;
+    position: relative;
+}
+
+.modal-title {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: #fff;
+    margin: 0;
+    background: linear-gradient(to right, #60a5fa, #a855f7);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    display: inline-block;
+}
+
+.modal-subtitle {
+    font-size: 0.9rem;
+    color: #94a3b8;
+    margin-top: 0.25rem;
+}
+
+.modal-close-button {
+    top: 1rem;
+    right: 1rem;
+    background: rgba(255, 255, 255, 0.05);
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+    cursor: pointer;
+}
+
+.modal-close-button:hover {
+    background: rgba(255, 255, 255, 0.15);
+    transform: rotate(90deg);
+}
+
+/* Ranking/Menu List Items */
+.ranking-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.ranking-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem 1.25rem;
+    background: rgba(30, 41, 59, 0.5);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 12px;
+    text-decoration: none;
+    color: #e2e8f0;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+}
+
+.ranking-item:hover {
+    background: rgba(59, 130, 246, 0.1);
+    border-color: rgba(59, 130, 246, 0.3);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.ranking-item::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 4px;
+    height: 100%;
+    background: linear-gradient(to bottom, #3b82f6, #8b5cf6);
+    opacity: 0;
+    transition: opacity 0.2s;
+}
+
+.ranking-item:hover::before {
+    opacity: 1;
+}
+
+.ranking-item .user-info {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.ranking-item .user-name {
+    font-weight: 500;
+    font-size: 1.05rem;
+    letter-spacing: 0.025em;
+}
+
+.ranking-item i {
+    font-size: 1.2rem;
+    transition: transform 0.2s;
+    color: #94a3b8;
+    /* Slate-400 */
+}
+
+.ranking-item:hover i {
+    transform: translateX(3px) scale(1.1);
+    color: #60a5fa !important;
+}
+
+/* Grid Layout for Dashboard/Menu */
+.ranking-list.two-columns {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 1rem;
+}
+
+/* Specific Adjustments */
+#gestionWriteupsModal .popup {
+    border-top: 4px solid #f59e0b;
+    /* Amber */
+}
+
+#menuModal .popup {
+    border-top: 4px solid #8b5cf6;
+    /* Violet */
+}
+
+#dashboardModal .popup {
+    border-top: 4px solid #3b82f6;
+    /* Blue */
+}
+
+
+/* --- Messaging Modal (Preserved & Enhanced) --- */
+#messagingModal .modal-body {
+    padding: 0;
+    display: flex;
+    height: 600px;
+    /* Taller */
+    overflow: hidden;
+    background: #0f172a;
+    border-radius: 0 0 16px 16px;
+    /* Match popup radius */
+    margin: -1rem -2rem -2rem -2rem;
+    /* Negate padding */
+    width: calc(100% + 4rem);
+}
+
+.msg-sidebar {
+    width: 300px;
+    border-right: 1px solid rgba(255, 255, 255, 0.05);
+    display: flex;
+    flex-direction: column;
+    background: rgba(15, 23, 42, 0.5);
+}
+
+.msg-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    background: rgba(30, 41, 59, 0.3);
+}
 
 .msg-badge {
     position: absolute;
@@ -16,30 +213,6 @@
     position: relative;
 }
 
-/* --- Messaging Modal --- */
-#messagingModal .modal-body {
-    padding: 0;
-    display: flex;
-    height: 500px;
-    overflow: hidden;
-    background: #1e293b;
-}
-
-.msg-sidebar {
-    width: 35%;
-    border-right: 1px solid #334155;
-    display: flex;
-    flex-direction: column;
-    background: #0f172a;
-}
-
-.msg-content {
-    width: 65%;
-    display: flex;
-    flex-direction: column;
-    background: #1e293b;
-}
-
 .msg-list {
     overflow-y: auto;
     flex: 1;
@@ -47,20 +220,22 @@
 
 .msg-contact {
     padding: 1rem;
-    border-bottom: 1px solid #334155;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
     cursor: pointer;
     transition: background 0.2s;
 }
 
 .msg-contact:hover,
 .msg-contact.active {
-    background: #334155;
+    background: rgba(255, 255, 255, 0.05);
+    border-left: 3px solid #3b82f6;
 }
 
 .msg-contact .name {
-    font-weight: bold;
+    font-weight: 600;
     color: #f8fafc;
     display: block;
+    margin-bottom: 0.25rem;
 }
 
 .msg-contact .last-msg {
@@ -72,36 +247,39 @@
 }
 
 .msg-chat-header {
-    padding: 1rem;
-    border-bottom: 1px solid #334155;
-    background: #0f172a;
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    background: rgba(15, 23, 42, 0.8);
     color: #f8fafc;
-    font-weight: bold;
+    font-weight: 600;
     display: flex;
     justify-content: space-between;
     align-items: center;
+    font-size: 1.1rem;
 }
 
 .msg-chat-messages {
     flex: 1;
-    padding: 1rem;
+    padding: 1.5rem;
     overflow-y: auto;
     display: flex;
     flex-direction: column;
-    gap: 0.5rem;
+    gap: 0.75rem;
 }
 
 .msg-message {
-    max-width: 80%;
-    padding: 0.5rem 1rem;
-    border-radius: 12px;
+    max-width: 75%;
+    padding: 0.75rem 1rem;
+    border-radius: 16px;
     font-size: 0.95rem;
     word-wrap: break-word;
+    line-height: 1.5;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
 }
 
 .msg-message.sent {
     align-self: flex-end;
-    background: #3b82f6;
+    background: linear-gradient(135deg, #3b82f6, #2563eb);
     color: white;
     border-bottom-right-radius: 2px;
 }
@@ -114,45 +292,89 @@
 }
 
 .msg-input-area {
-    padding: 1rem;
-    border-top: 1px solid #334155;
-    background: #0f172a;
+    padding: 1rem 1.5rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+    background: rgba(15, 23, 42, 0.8);
     display: flex;
-    gap: 0.5rem;
+    gap: 0.75rem;
 }
 
 .msg-input {
     flex: 1;
-    background: #1e293b;
-    border: 1px solid #334155;
+    background: rgba(30, 41, 59, 0.5);
+    border: 1px solid rgba(255, 255, 255, 0.1);
     color: white;
-    padding: 0.5rem;
-    border-radius: 6px;
+    padding: 0.75rem 1rem;
+    border-radius: 99px;
+    /* Rounded pill */
+    outline: none;
+    transition: border-color 0.2s;
+}
+
+.msg-input:focus {
+    border-color: #3b82f6;
 }
 
 .msg-send-btn {
     background: #3b82f6;
     color: white;
     border: none;
-    padding: 0.5rem 1rem;
-    border-radius: 6px;
+    width: 42px;
+    height: 42px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
     cursor: pointer;
+    transition: transform 0.2s, background 0.2s;
+}
+
+.msg-send-btn:hover {
+    background: #2563eb;
+    transform: scale(1.05);
 }
 
 .msg-new-btn {
     margin: 1rem;
     width: calc(100% - 2rem);
-    background: #3b82f6;
-    border: none;
+    background: rgba(59, 130, 246, 0.1);
+    border: 1px solid rgba(59, 130, 246, 0.2);
+    color: #60a5fa;
+    padding: 0.75rem;
+    border-radius: 8px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.msg-new-btn:hover {
+    background: rgba(59, 130, 246, 0.2);
     color: white;
-    padding: 0.5rem;
-    border-radius: 6px;
 }
 
 /* Mobile handling */
 @media (max-width: 768px) {
     #messagingModal .modal-body {
         flex-direction: column;
+        height: 100%;
+        margin: 0;
+        width: 100%;
+        border-radius: 0;
+    }
+
+    #messagingModal .popup {
+        width: 100% !important;
+        height: 100% !important;
+        max-height: 100vh !important;
+        border-radius: 0;
+        padding: 0;
+        display: flex;
+        flex-direction: column;
+    }
+
+    #messagingModal .modal-header {
+        margin: 0;
+        padding: 1rem;
     }
 
     .msg-sidebar {
@@ -165,6 +387,10 @@
         width: 100%;
         height: 100%;
         display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        z-index: 20;
     }
 
     .msg-content.active {
@@ -177,37 +403,65 @@
 
     .msg-back-btn {
         display: inline-block !important;
-        margin-right: 10px;
+        margin-right: 15px;
         cursor: pointer;
+        font-size: 1.2rem;
     }
 }
 
-.msg-back-btn {
-    display: none;
+
+/* Modal Inputs & Buttons */
+.modal-input {
+    width: 100%;
+    background: rgba(30, 41, 59, 0.5);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: white;
+    padding: 0.75rem 1rem;
+    border-radius: 8px;
+    outline: none;
+    transition: all 0.2s;
+    font-size: 0.95rem;
 }
 
-/* --- Modal Grid Layout --- */
-.ranking-list.two-columns {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 1rem;
-    padding: 1rem;
+.modal-input:focus {
+    border-color: #3b82f6;
+    background: rgba(30, 41, 59, 0.8);
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
 }
 
-/* Center last item if odd */
-.ranking-list.two-columns> :last-child:nth-child(odd) {
-    grid-column: span 2;
-    width: calc(50% - 0.5rem);
-    margin: 0 auto;
+.modal-btn {
+    padding: 0.75rem 1.5rem;
+    border-radius: 8px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    border: none;
+    font-size: 0.95rem;
 }
 
-@media (max-width: 600px) {
-    .ranking-list.two-columns {
-        grid-template-columns: 1fr;
-    }
+.modal-btn-primary {
+    background: linear-gradient(135deg, #3b82f6, #2563eb);
+    color: white;
+    box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.3);
+}
 
-    .ranking-list.two-columns> :last-child:nth-child(odd) {
-        grid-column: span 1;
-        width: 100%;
-    }
+.modal-btn-primary:hover:not(:disabled) {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 8px -1px rgba(59, 130, 246, 0.4);
+}
+
+.modal-btn-primary:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+}
+
+.modal-btn-secondary {
+    background: rgba(255, 255, 255, 0.05);
+    color: #cbd5e1;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.modal-btn-secondary:hover:not(:disabled) {
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
 }
