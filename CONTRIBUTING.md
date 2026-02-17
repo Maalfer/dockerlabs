@@ -15,6 +15,23 @@
 # Desplegar DockerLabs en local
 
 ## Dependencias
+Para desplegar DockerLabs requeriremos de las siguientes dependencias: `memcached,flask,flask_httpauth,flask-limiter,flask-sqlalchemy,flask-login,pymemcache,pillow,python-dotenv,uvicorn,asgiref,flasgger,gunicorn`
+
+Para instalar `memcached` podremos hacerlo mediante `apt`:
+```bash
+sudo apt install memcached
+```
+
+Para instalar las dependencias en Python, el repositorio de DockerLabs deja un [requeriments.txt](/requirements.txt) donde están indicadas todas las dependencias que hacen funcionar la plataforma. Para instalarlas:
+> [!WARNING]
+> Se recomienda hacerlo en un entorno virtual de Python. Para desplegar uno:
+> ```bash
+>python3 -m venv venv
+>```
+```bash
+pip3 install -r requeriments.txt
+```
+
 ## Configurar y desplegar DockerLabs
 
 # ¿Qué ocurre después de abrir una Pull Request?
