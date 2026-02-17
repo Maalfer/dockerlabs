@@ -1,5 +1,5 @@
 # 👷Como contribuir en DockerLabs
-*~Desde el equipo de desarrollo de DockerLabs agradecemos tus ganas de colaborar🐋🩵~*
+*Desde el equipo de desarrollo de DockerLabs agradecemos tus ganas de colaborar🐋🩵*
 # Índice
 - [Antes de empezar](#antes-de-empezar)
 - [Mejores prácticas y recomendaciones](#mejores-prácticas-y-recomendaciones)
@@ -9,7 +9,7 @@
 - [Reportar vulnerabilidades (VDP)](#reportar-vulnerabilidades-vdp)
 # Antes de empezar
 > [!IMPORTANT]
-> DockerLabs está migrando a React. Cualquier cambio indicado para la versión actual se trasladará al nuevo DockerLabs.
+> DockerLabs está migrando a React. Cualquier cambio indicado para la versión actual se trasladará al nuevo DockerLabs. Si quiere visualizar el proyecto en React puede ir a [DockerLabs React](https://github.com/Maalfer/dockerlabs/tree/migrar-react)
 # Mejores prácticas y recomendaciones
 
 # Desplegar DockerLabs en local
