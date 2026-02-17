@@ -6,6 +6,10 @@
 - [Desplegar DockerLabs en local](#desplegar-dockerlabs-en-local)
     - [Dependencias](#dependencias)
     - [Configurar y desplegar DockerLabs](#configurar-y-desplegar-dockerlabs)
+        - [Activar servicio de memcached](#activar-servicio-de-memcached)
+        - [.env](#env)
+        - [Desplegar DockerLabs](#desplegar-dockerlabs)
+- [¿Qué ocurre después de abrir una Pull Request?](#qué-ocurre-después-de-abrir-una-pull-request)
 - [Reportar vulnerabilidades (VDP)](#reportar-vulnerabilidades-vdp)
 # Antes de empezar
 > [!IMPORTANT]
@@ -33,11 +37,38 @@ pip3 install -r requeriments.txt
 ```
 
 ## Configurar y desplegar DockerLabs
+Ya tengamos las dependencias instaladas vamos a configurar correctamente la aplicación para poder desplegarla.
+### Activar servicio de memcached
+DockerLabs emplea `memcached` para el sistema de caché. Así que requiere estar en marcha. Podemos emplear `service` o `systemctl`:
+
+```bash
+service start memcached
+```
+
+### .env
+En el repositorio verás que ofrecemos un `.env.example`, donde contiene la `SECRET_KEY`. Podremos usar la que se da de ejemplo o crear una clave a nuestro gusto. El archivo debe llamarse `.env`.
+
+### Desplegar DockerLabs
+Una vez todo preparado podemos lanzar DockerLabs, para ello ejecutaremos el script [run.py](/run.py):
+
+```bash
+(venv) root@b3e19df7fedc:~/dockerlabs# python3 run.py 
+INFO:     Will watch for changes in these directories: ['/root/dockerlabs']
+INFO:     Uvicorn running on http://0.0.0.0:5000 (Press CTRL+C to quit)
+INFO:     Started reloader process [29] using StatReload
+WARNING: SECRET_KEY not set. Using a temporary generated key.
+INFO:     Started server process [31]
+INFO:     Waiting for application startup.
+INFO:     ASGI 'lifespan' protocol appears unsupported.
+INFO:     Application startup complete.
+```
+
+Si quiere relleno en la plataforma *(máquinas,usuarios,writeups...)* puede emplear el script [populate_datos.py](/populate_datos.py).
 
 # ¿Qué ocurre después de abrir una Pull Request?
-El equipo de Desarrollo de DockerLabs revisará detalladamente todos los cambios sugeridos y seguirá la siguiente metodología:
-1. ¿Es necesario en la plataforma?
+El equipo de Desarrollo de DockerLabs revisará detalladamente todos los cambios sugeridos. Todo cambio innecesario será rechazado.
 
+Aceptamos y agradecemos cambios. Pero hazlo con cabeza, evita dejar fallos de seguridad abiertos o conflictos en el código.
 # Reportar vulnerabilidades (VDP)
 Si encuentra una falla de seguridad en nuestra plataforma, puede reportarla en nuestro programa VDP en la plataforma [Secur0](https://secur0.com/):
 https://app.secur0.com/vulnerability-disclosure/Dockerlabs
