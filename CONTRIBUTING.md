@@ -17,6 +17,10 @@
 ## Dependencias
 ## Configurar y desplegar DockerLabs
 
+# ¿Qué ocurre después de abrir una Pull Request?
+El equipo de Desarrollo de DockerLabs revisará detalladamente todos los cambios sugeridos y seguirá la siguiente metodología:
+1. ¿Es necesario en la plataforma?
+
 # Reportar vulnerabilidades (VDP)
 Si encuentra una falla de seguridad en nuestra plataforma, puede reportarla en nuestro programa VDP en la plataforma [Secur0](https://secur0.com/):
 https://app.secur0.com/vulnerability-disclosure/Dockerlabs
