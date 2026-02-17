@@ -11,10 +11,16 @@
         - [Desplegar DockerLabs](#desplegar-dockerlabs)
 - [¿Qué ocurre después de abrir una Pull Request?](#qué-ocurre-después-de-abrir-una-pull-request)
 - [Reportar vulnerabilidades (VDP)](#reportar-vulnerabilidades-vdp)
+
 # Antes de empezar
 > [!IMPORTANT]
 > DockerLabs está migrando a React. Cualquier cambio indicado para la versión actual se trasladará al nuevo DockerLabs. Si quiere visualizar el proyecto en React puede ir a [DockerLabs React](https://github.com/Maalfer/dockerlabs/tree/migrar-react)
+
 # Mejores prácticas y recomendaciones
+Para realizar cambios seguros y que no ocasionen problemas con la plataforma, recomendamos:
+
+- Probar las nuevas integraciones a la plataforma -> Comprueba que funciona debidamente y que no ocasiona ningún problema con otras funciones de la plataforma. *(Si tienes dudas puede realizar la Pull Request y el equipo de desarrollo debaterá sobre los cambios.)*
+
 
 # Desplegar DockerLabs en local
 
@@ -39,7 +45,7 @@ pip3 install -r requeriments.txt
 ## Configurar y desplegar DockerLabs
 Ya tengamos las dependencias instaladas vamos a configurar correctamente la aplicación para poder desplegarla.
 ### Activar servicio de memcached
-DockerLabs emplea `memcached` para el sistema de caché. Así que requiere estar en marcha. Podemos emplear `service` o `systemctl`:
+DockerLabs emplea `memcached` para el sistema de caché y rate limit. Así que requiere estar en marcha. Podemos emplear `service` o `systemctl`:
 
 ```bash
 service start memcached
@@ -69,6 +75,8 @@ Si quiere relleno en la plataforma *(máquinas,usuarios,writeups...)* puede empl
 El equipo de Desarrollo de DockerLabs revisará detalladamente todos los cambios sugeridos. Todo cambio innecesario será rechazado.
 
 Aceptamos y agradecemos cambios. Pero hazlo con cabeza, evita dejar fallos de seguridad abiertos o conflictos en el código.
+
 # Reportar vulnerabilidades (VDP)
 Si encuentra una falla de seguridad en nuestra plataforma, puede reportarla en nuestro programa VDP en la plataforma [Secur0](https://secur0.com/):
-https://app.secur0.com/vulnerability-disclosure/Dockerlabs
+
+- https://app.secur0.com/vulnerability-disclosure/Dockerlabs
