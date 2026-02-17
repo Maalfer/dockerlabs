@@ -19,7 +19,13 @@
 # Mejores prácticas y recomendaciones
 Para realizar cambios seguros y que no ocasionen problemas con la plataforma, recomendamos:
 
-- Probar las nuevas integraciones a la plataforma -> Comprueba que funciona debidamente y que no ocasiona ningún problema con otras funciones de la plataforma. *(Si tienes dudas puede realizar la Pull Request y el equipo de desarrollo debaterá sobre los cambios.)*
+- **Probar nuevas integraciones en la plataforma**  
+  Verifica que la funcionalidad opere correctamente y que no genere conflictos con otras partes del sistema.  
+  *(Si tienes dudas, puedes realizar la Pull Request igualmente y el equipo de desarrollo debatirá los cambios.)*
+
+- **Documentar detalladamente los cambios en las Pull Request**  
+  Explicar claramente las modificaciones realizadas nos ayudará a comprender mejor la funcionalidad propuesta.  
+  Una buena documentación también puede agilizar la revisión, evitando la necesidad de analizar el código en profundidad.
 
 
 # Desplegar DockerLabs en local
@@ -72,11 +78,13 @@ INFO:     Application startup complete.
 Si quiere relleno en la plataforma *(máquinas,usuarios,writeups...)* puede emplear el script [populate_datos.py](/populate_datos.py).
 
 # ¿Qué ocurre después de abrir una Pull Request?
-El equipo de Desarrollo de DockerLabs revisará detalladamente todos los cambios sugeridos. Todo cambio innecesario será rechazado.
 
-Aceptamos y agradecemos cambios. Pero hazlo con cabeza, evita dejar fallos de seguridad abiertos o conflictos en el código.
+El equipo de desarrollo de DockerLabs revisará detalladamente todos los cambios propuestos. Aquellos cambios que se consideren innecesarios o que puedan generar problemas serán rechazados.
+
+Valoramos y agradecemos todas las contribuciones. Sin embargo, te pedimos que revises cuidadosamente tus cambios para evitar introducir vulnerabilidades de seguridad o conflictos en el código.
 
 # Reportar vulnerabilidades (VDP)
-Si encuentra una falla de seguridad en nuestra plataforma, puede reportarla en nuestro programa VDP en la plataforma [Secur0](https://secur0.com/):
+
+Si encuentras una vulnerabilidad de seguridad en nuestra plataforma, puedes reportarla a través de nuestro programa VDP en Secur0:
 
 - https://app.secur0.com/vulnerability-disclosure/Dockerlabs
