@@ -9,13 +9,38 @@ api_bp = Blueprint('api', __name__)
 @limiter.limit("60 per minute", methods=["GET"])
 def api_summary():
     """
-    Obtener resumen de máquinas, creadores y writeups.
+    Obtener resumen global de la plataforma (máquinas, creadores y writeups).
     ---
     tags:
       - API Pública
     responses:
       200:
-        description: Diccionario con datos del resumen.
+        description: Objeto JSON con toda la información pública resumida de Dockerlabs.
+        schema:
+          type: object
+          properties:
+            info_maquinas:
+              type: array
+              description: Lista detallada de todas las máquinas.
+              items:
+                type: object
+            maquinas:
+              type: array
+              description: Lista de nombres de las máquinas disponibles.
+              items:
+                type: string
+            metadata:
+              type: object
+              description: Totales y estadísticas del sitio.
+            ranking_creadores:
+              type: array
+              description: Ranking de creadores de máquinas.
+            ranking_writeups:
+              type: array
+              description: Ranking de autores de writeups.
+            writeups:
+              type: object
+              description: Writeups separados por texto y video.
     """
     from .models import Machine, CreatorRanking, WriteupRanking, Writeup
     from sqlalchemy import func
@@ -93,17 +118,32 @@ def api_summary():
 @limiter.limit("60 per minute", methods=["GET"])
 def api_user_info():
     """
-    Get current user information.
+    Obtener información del perfil del usuario autenticado.
     ---
     tags:
-      - User
+      - Usuario API
     responses:
       200:
-        description: User profile and stats.
+        description: Perfil de usuario, máquinas completadas y writeups subidos.
+        schema:
+          type: object
+          properties:
+            is_authenticated:
+              type: boolean
+              example: true
+            user:
+              type: object
+              description: Datos básicos del perfil del usuario.
+            completed_machines:
+              type: array
+              description: Lista de máquinas que ha completado.
+            submitted_writeups:
+              type: array
+              description: Lista de writeups que ha enviado.
       401:
-        description: User not authenticated.
+        description: El usuario no ha iniciado sesión.
       404:
-        description: User not found.
+        description: El usuario logueado no existe en el sistema.
     """
     user_id = session.get('user_id')
     if not user_id:
@@ -163,7 +203,24 @@ def api_ranking_autores():
       - API Pública
     responses:
       200:
-        description: Lista de creadores ordenados por cantidad de máquinas.
+        description: Lista de creadores ordenados por cantidad de máquinas subidas.
+        schema:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: integer
+              nombre:
+                type: string
+              maquinas:
+                type: integer
+                description: Número de máquinas creadas.
+              autor:
+                type: string
+              imagen:
+                type: string
+                description: URL estática de la imagen de perfil.
     """
 
     from .models import CreatorRanking, User
@@ -205,7 +262,23 @@ def api_ranking_writeups():
       - API Pública
     responses:
       200:
-        description: Lista de usuarios ordenados por puntos de writeup.
+        description: Lista de usuarios ordenados por puntos de writeup creados.
+        schema:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: integer
+              nombre:
+                type: string
+                description: username del autor.
+              puntos:
+                type: integer
+                description: Puntos acumulados por los writeups.
+              imagen_url:
+                type: string
+                description: URL estática de la imagen de perfil.
     """
 
     from .models import WriteupRanking, User

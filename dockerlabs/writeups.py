@@ -233,13 +233,17 @@ def revert_writeup_edit(request_id):
 @limiter.limit("20 per minute", methods=["POST"])
 def api_aprobar_writeup_recibido(writeup_id):
     """
-    Approve received writeup.
+    Aprobar y mover un writeup desde la cola de pendientes a publicados.
     ---
     tags:
-      - Admin
+      - API Administrador Writeups
     responses:
       200:
-        description: Writeup approved.
+        description: Writeup aprobado correctamente.
+      404:
+        description: El writeup pendiente no fue encontrado.
+      500:
+        description: Error al aprobar el writeup en base de datos.
     """
     try:
         pending = PendingWriteup.query.get(writeup_id)
@@ -319,13 +323,19 @@ def rechazar_cambio_writeup(req_id):
 @limiter.limit("20 per minute", methods=["PUT"]) 
 def api_update_writeup_subido(writeup_id):
     """
-    Update submitted writeup.
+    Actualizar datos de un writeup subido (URL o tipo).
     ---
     tags:
-      - Writeups
+      - API Writeups
     responses:
       200:
-        description: Writeup updated.
+        description: Writeup actualizado o petición de edición enviada a revisión.
+      400:
+        description: Faltan datos obligatorios o los datos son inválidos.
+      403:
+        description: No tiene permisos (usuario incorrecto).
+      404:
+        description: El writeup no existe.
     """
     data = request.json or {}
     if not all(k in data for k in ("url", "tipo")):
@@ -403,13 +413,15 @@ def api_update_writeup_subido(writeup_id):
 @limiter.limit("20 per minute", methods=["DELETE"]) 
 def api_delete_writeup_subido(writeup_id):
     """
-    Delete submitted writeup.
+    Eliminar un writeup publicado.
     ---
     tags:
-      - Admin
+      - API Administrador Writeups
     responses:
       200:
-        description: Writeup deleted.
+        description: Writeup eliminado de manera exitosa.
+      404:
+        description: El writeup no existe.
     """
     try:
         writeup = Writeup.query.get(writeup_id)
@@ -430,18 +442,36 @@ def api_delete_writeup_subido(writeup_id):
 @limiter.limit("60 per minute", methods=["GET"]) 
 def api_writeups_maquina(maquina_nombre):
     """
-    Get writeups for a machine.
+    Obtener writeups asociados a una máquina determinada.
     ---
     tags:
-      - Writeups
+      - API Writeups Pública
     parameters:
       - name: maquina_nombre
         in: path
         type: string
         required: true
+        description: Nombre de la máquina para filtrar.
     responses:
       200:
-        description: List of writeups.
+        description: Arreglo de writeups públicos de esa máquina.
+        schema:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: integer
+              name:
+                type: string
+                description: Nombre del autor.
+              url:
+                type: string
+              type:
+                type: string
+                description: Emoji asociado a texto o video.
+              es_usuario_registrado:
+                type: boolean
     """
     writeups_query = alchemy_db.session.query(
             Writeup.id, Writeup.autor, Writeup.url, Writeup.tipo, User.id
@@ -465,13 +495,17 @@ def api_writeups_maquina(maquina_nombre):
 @limiter.limit("10 per minute", methods=["POST"])
 def api_report_writeup(writeup_id):
     """
-    Report a writeup.
+    Reportar un writeup problemático o inválido.
     ---
     tags:
-      - Writeups
+      - API Writeups
     responses:
       200:
-        description: Report submitted.
+        description: Reporte enviado correctamente a moderación.
+      401:
+        description: Debe iniciar sesión para poder reportar.
+      404:
+        description: El writeup reportado no se ha encontrado.
     """
     if 'user_id' not in session:
         return jsonify({"error": "Debes iniciar sesión para reportar"}), 401

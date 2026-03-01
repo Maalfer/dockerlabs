@@ -89,7 +89,17 @@
     </div>
     {% endif %}
 
-    {% if is_guest %}
+    {% if is_unauthenticated_guest %}
+    <div class="alert text-center"
+        style="border-left: 4px solid #f59e0b; background: rgba(245,158,11,0.1); color: #fcd34d;">
+        <i class="bi bi-exclamation-triangle-fill me-2" style="color: #f59e0b;"></i>
+        <strong>Estás accediendo como invitado sin cuenta.</strong>
+        Para guardar tu progreso y desbloquear todas las máquinas,
+        <a href="{{ url_for('auth.login') }}" class="fw-bold" style="color: #f59e0b;">inicia sesión</a> o
+        <a href="{{ url_for('auth.register') }}" class="fw-bold" style="color: #f59e0b;">regístrate gratis</a> en
+        DockerLabs.
+    </div>
+    {% elif is_guest %}
     <div class="alert alert-warning text-center">
         Estas máquinas son de acceso exclusivo para los miembros del <a href="https://skool.com/bunkerpinguino"
             target="_blank" class="fw-bold">bunker</a>
@@ -160,7 +170,6 @@
 <script nonce="{{ csp_nonce }}" src="{{ url_for('static', filename='bunkerlabs/js/script_bunkerlabs.js') }}"></script>
 <script nonce="{{ csp_nonce }}"
     src="{{ url_for('static', filename='bunkerlabs/js/presentacionmaquina_bunkerlabs.js') }}"></script>
-<!-- description script removed -->
 <script nonce="{{ csp_nonce }}" src="{{ url_for('static', filename='bunkerlabs/js/ranking_bunkerlabs.js') }}"></script>
 <script nonce="{{ csp_nonce }}" src="{{ url_for('static', filename='bunkerlabs/js/flag_bunkerlabs.js') }}"></script>
 {% endblock %}

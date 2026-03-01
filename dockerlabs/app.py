@@ -53,6 +53,15 @@ swagger_config = {
     "swagger_ui": True,
     "specs_route": "/docs/"
 }
+
+app.config['SWAGGER'] = {
+    'title': 'API DockerLabs',
+    'uiversion': 3,
+    'ui_params': {
+        'queryConfigEnabled': False
+    }
+}
+
 swagger = Swagger(app, config=swagger_config)
 
 app.config['SESSION_COOKIE_SECURE'] = True                                  
@@ -125,6 +134,9 @@ def load_logged_in_user():
 @app.before_request
 def restrict_swagger_access():
     if request.path.startswith('/docs') or request.path.startswith('/apispec.json') or request.path.startswith('/flasgger_static'):
+        if request.args.get('configUrl'):
+            return "Configuration by URL is disabled.", 403
+        
         if not current_user.is_authenticated:
             return redirect(url_for('auth.login', next=request.url))
 

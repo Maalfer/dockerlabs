@@ -119,13 +119,12 @@
 .auth-column-right {
     display: flex;
     flex-direction: column;
-    justify-content: center;
+    justify-content: flex-start;
+    align-items: center;
     gap: 1.5rem;
     padding-left: 1rem;
     position: sticky;
     top: 2rem;
-    height: 100%;
-    /* Ensure it takes height for vertical centering if needed */
 }
 
 /* Register Form Elements */
@@ -636,6 +635,6 @@
 }
 
 .text-muted {
-    color: var(--text-muted);
+    color: #cbd5e1 !important;
     font-size: 0.9rem;
 }

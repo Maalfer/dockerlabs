@@ -1,0 +1,213 @@
+/* Base layout */
+.bunker-box {
+    max-width: 480px !important;
+    padding: 0 !important;
+    margin: 2rem auto;
+    overflow: hidden;
+}
+
+/* Wide two-column variant */
+.bunker-box-wide {
+    max-width: 900px !important;
+    display: flex !important;
+    flex-direction: row;
+    align-items: stretch;
+    margin: 2rem auto;
+    overflow: hidden;
+}
+
+/* Login form column */
+.login-section {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    padding: 3rem;
+    background: #1e293b;
+    flex: 1;
+    min-width: 300px;
+}
+
+/* ── Info Panel ── */
+.bunker-info-panel {
+    flex: 1.1;
+    background: linear-gradient(145deg, #0f172a 0%, #0d1f35 60%, #0a1628 100%);
+    padding: 3rem 2.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.75rem;
+    position: relative;
+    overflow: hidden;
+    border-right: 1px solid rgba(139, 92, 246, 0.15);
+}
+
+.bunker-info-panel::before {
+    content: '';
+    position: absolute;
+    top: -80px;
+    right: -80px;
+    width: 260px;
+    height: 260px;
+    background: radial-gradient(circle, rgba(139, 92, 246, 0.12) 0%, transparent 70%);
+    border-radius: 50%;
+    pointer-events: none;
+}
+
+.bunker-info-panel::after {
+    content: '';
+    position: absolute;
+    bottom: -60px;
+    left: -60px;
+    width: 200px;
+    height: 200px;
+    background: radial-gradient(circle, rgba(34, 211, 238, 0.07) 0%, transparent 70%);
+    border-radius: 50%;
+    pointer-events: none;
+}
+
+.bunker-info-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.35rem 0.85rem;
+    background: rgba(139, 92, 246, 0.12);
+    border: 1px solid rgba(139, 92, 246, 0.3);
+    border-radius: 999px;
+    color: #a78bfa;
+    font-size: 0.78rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    width: fit-content;
+    position: relative;
+    z-index: 1;
+}
+
+.bunker-info-title {
+    font-size: 2rem;
+    font-weight: 800;
+    line-height: 1.15;
+    color: #f1f5f9;
+    margin: 0;
+    letter-spacing: -0.02em;
+    position: relative;
+    z-index: 1;
+}
+
+.bunker-info-title span {
+    background: linear-gradient(135deg, #a78bfa 0%, #22d3ee 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.bunker-info-desc {
+    font-size: 0.9rem;
+    color: #94a3b8;
+    line-height: 1.65;
+    margin: 0;
+    position: relative;
+    z-index: 1;
+}
+
+.bunker-info-desc strong {
+    color: #e2e8f0;
+}
+
+/* Access links */
+.bunker-info-links {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    position: relative;
+    z-index: 1;
+}
+
+.bunker-info-link {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+    padding: 0.85rem 1rem;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.07);
+    border-radius: 12px;
+    text-decoration: none;
+    color: #e2e8f0;
+    transition: all 0.25s ease;
+}
+
+a.bunker-info-link:hover {
+    background: rgba(139, 92, 246, 0.1);
+    border-color: rgba(139, 92, 246, 0.35);
+    transform: translateX(4px);
+    color: #f8fafc;
+}
+
+.bunker-info-link--plain {
+    cursor: default;
+    opacity: 0.75;
+}
+
+.bunker-link-icon {
+    width: 38px;
+    height: 38px;
+    background: rgba(139, 92, 246, 0.12);
+    border: 1px solid rgba(139, 92, 246, 0.2);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+    color: #a78bfa;
+    flex-shrink: 0;
+}
+
+.bunker-link-text {
+    display: flex;
+    flex-direction: column;
+    gap: 0.1rem;
+    flex: 1;
+}
+
+.bunker-link-text strong {
+    font-size: 0.88rem;
+    font-weight: 600;
+    color: #f1f5f9;
+}
+
+.bunker-link-text small {
+    font-size: 0.75rem;
+    color: #64748b;
+}
+
+.bunker-info-footer {
+    margin-top: auto;
+    padding: 0.85rem 1rem;
+    background: rgba(34, 211, 238, 0.05);
+    border: 1px solid rgba(34, 211, 238, 0.12);
+    border-radius: 10px;
+    font-size: 0.8rem;
+    color: #67e8f9;
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    position: relative;
+    z-index: 1;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .bunker-box-wide {
+        flex-direction: column;
+        max-width: 500px !important;
+    }
+
+    .bunker-info-panel {
+        border-right: none;
+        border-bottom: 1px solid rgba(139, 92, 246, 0.15);
+        padding: 2rem 1.75rem;
+    }
+
+    .bunker-info-title {
+        font-size: 1.6rem;
+    }
+}

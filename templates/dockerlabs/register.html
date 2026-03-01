@@ -99,15 +99,6 @@
                             required autocomplete="new-password">
                     </div>
 
-                    <div class="password-requirements">
-                        <h6><i class="fas fa-info-circle"></i> Requisitos de la contraseña:</h6>
-                        <ul>
-                            <li><i class="fas fa-check-circle"></i> Mínimo 8 caracteres</li>
-                            <li><i class="fas fa-check-circle"></i> Al menos una mayúscula</li>
-                            <li><i class="fas fa-check-circle"></i> Al menos un número</li>
-                            <li><i class="fas fa-check-circle"></i> Al menos un carácter especial</li>
-                        </ul>
-                    </div>
 
                     <div class="terms-checkbox">
                         <label>
@@ -121,16 +112,15 @@
                     </div>
                 </div>
 
-                <!-- Right Column: Actions -->
                 <div class="auth-column-right">
-                    <button type="submit" class="btn-register">
-                        <i class="fas fa-user-plus"></i> Crear cuenta
-                    </button>
-
                     <div class="logo-display">
                         <img src="{{ url_for('static', filename='dockerlabs/images/logos/logo.png') }}"
                             alt="DockerLabs Logo" class="auth-logo">
                     </div>
+
+                    <button type="submit" class="btn-register">
+                        <i class="fas fa-user-plus"></i> Crear cuenta
+                    </button>
                 </div>
             </div>
         </form>

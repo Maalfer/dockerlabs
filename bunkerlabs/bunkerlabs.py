@@ -34,8 +34,9 @@ def bunkerlabs_login():
       200:
         description: Login page or redirect.
     """
-    if session.get('user_id') is None:
-        return redirect(url_for('auth.login'))
+   
+    if session.get('bunkerlabs_ok'):
+        return redirect(url_for('bunkerlabs.bunkerlabs_home'))
 
     error = None
 
@@ -87,7 +88,7 @@ def bunkerlabs_login():
             else:
                 error = "Contraseña incorrecta o inactiva."
 
-    return render_template('bunkerlabs/login.html', error=error)
+    return render_template('bunkerlabs/login-bunkerlabs.html', error=error)
 
 
 @bunkerlabs_bp.route('/guest')
@@ -102,13 +103,13 @@ def bunkerlabs_guest():
       302:
         description: Redirect to BunkerLabs home.
     """
-    if session.get('user_id') is None:
-        return redirect(url_for('auth.login'))
-    
+    is_unauthenticated = session.get('user_id') is None
+
     session['bunkerlabs_ok'] = True
     session['bunkerlabs_guest'] = True
     session['bunkerlabs_nombre'] = "Invitado"
     session['bunkerlabs_id'] = None
+    session['bunkerlabs_unauthenticated'] = is_unauthenticated
     
     return redirect(url_for('bunkerlabs.bunkerlabs_home'))
 
@@ -198,11 +199,13 @@ def bunkerlabs_home():
     maquinas = Machine.query.filter_by(origen='bunker').order_by(Machine.id.asc()).all()
     
     is_anonymous = session.get('bunkerlabs_anonymous', False)
+    is_unauthenticated_guest = session.get('bunkerlabs_unauthenticated', False)
 
     return render_template('bunkerlabs/home.html', 
                            maquinas=maquinas, 
                            is_guest=session.get('bunkerlabs_guest', False),
-                           is_anonymous=is_anonymous)
+                           is_anonymous=is_anonymous,
+                           is_unauthenticated_guest=is_unauthenticated_guest)
 
 
 @bunkerlabs_bp.route('/accesos', methods=['GET', 'POST'])

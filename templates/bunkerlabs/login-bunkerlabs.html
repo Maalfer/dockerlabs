@@ -1,0 +1,125 @@
+{% extends "bunkerlabs/base.html" %}
+
+{% block title %}BunkerLabs - Acceso{% endblock %}
+
+{% block content %}
+<link rel="stylesheet" href="{{ url_for('static', filename='bunkerlabs/css/bunkerlabs-login.css') }}">
+
+<div class="bunker-container">
+    <div class="bunker-box bunker-box-wide">
+
+        <div class="bunker-info-panel">
+            <div class="bunker-info-badge">
+                <i class="bi bi-shield-fill-check"></i>
+                Acceso restringido
+            </div>
+
+            <h2 class="bunker-info-title">
+                Laboratorios<br><span>a medida</span>
+            </h2>
+
+            <p class="bunker-info-desc">
+                BunkerLabs alberga entornos creados a medida, inspirados en
+                vulnerabilidades de entornos reales. Son de acceso
+                <strong>exclusivo</strong> para alumnos de:
+            </p>
+
+            <div class="bunker-info-links">
+                <a href="https://elrincondelhacker.es/academia" target="_blank" class="bunker-info-link">
+                    <span class="bunker-link-icon"><i class="bi bi-mortarboard-fill"></i></span>
+                    <span class="bunker-link-text">
+                        <strong>La Academia</strong>
+                        <small>elrincondelhacker.es/formaciones</small>
+                    </span>
+                    <i class="bi bi-arrow-right ms-auto"></i>
+                </a>
+
+                <a href="https://skool.com/bunkerpinguino" target="_blank" class="bunker-info-link">
+                    <span class="bunker-link-icon"><i class="bi bi-people-fill"></i></span>
+                    <span class="bunker-link-text">
+                        <strong>El Bunker</strong>
+                        <small>skool.com/bunkerpinguino</small>
+                    </span>
+                    <i class="bi bi-arrow-right ms-auto"></i>
+                </a>
+
+                <div class="bunker-info-link bunker-info-link--plain">
+                    <span class="bunker-link-icon"><i class="bi bi-building-fill"></i></span>
+                    <span class="bunker-link-text">
+                        <strong>Otras instituciones</strong>
+                        <small>Con acceso concedido por el equipo</small>
+                    </span>
+                </div>
+            </div>
+
+            <div class="bunker-info-footer">
+                <i class="bi bi-lock-fill"></i>
+                Necesitas una contraseña de acceso facilitada por tu instructor.
+            </div>
+        </div>
+
+        <!-- Columna Derecha: Formulario -->
+        <div class="login-section">
+            <div class="bunker-header">
+                <div class="bunker-icon">
+                    <i class="bi bi-shield-lock"></i>
+                </div>
+                <h2>Acceso BunkerLabs</h2>
+                <p class="bunker-subtitle">Área restringida - Acceso autorizado</p>
+            </div>
+
+            {% if error %}
+            <div class="alert alert-danger bunker-alert">
+                <i class="bi bi-exclamation-triangle"></i>
+                {{ error }}
+            </div>
+            {% endif %}
+
+            <form method="post" class="bunker-form">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <div class="form-group">
+                    <label for="password" class="bunker-label">
+                        <i class="bi bi-key"></i>
+                        Contraseña de acceso
+                    </label>
+                    <input type="password" id="password" name="password" class="bunker-input" required
+                        placeholder="Ingresa la contraseña de BunkerLabs">
+                </div>
+
+                <button type="submit" class="bunker-btn">
+                    <i class="bi bi-door-open"></i>
+                    Acceder a BunkerLabs
+                </button>
+            </form>
+
+            <div class="bunker-footer">
+                <p class="bunker-warning" style="font-size: 0.9rem; line-height: 1.5;">
+                    <i class="bi bi-info-circle"></i>
+                    Puedes acceder en modo de prueba a BunkerLabs a través de este
+                    <a href="{{ url_for('bunkerlabs.bunkerlabs_guest') }}"
+                        style="color: #a78bfa; text-decoration: underline; font-weight: 600;">enlace</a>.
+                </p>
+            </div>
+        </div>
+
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const passwordInput = document.getElementById('password');
+        const bunkerBox = document.querySelector('.bunker-box');
+
+        passwordInput.addEventListener('focus', function () {
+            bunkerBox.classList.add('input-focused');
+        });
+
+        passwordInput.addEventListener('blur', function () {
+            bunkerBox.classList.remove('input-focused');
+        });
+    });
+</script>
+{% endblock %}

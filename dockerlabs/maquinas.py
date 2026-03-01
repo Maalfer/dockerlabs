@@ -692,13 +692,30 @@ def add_maquina_page():
 @role_required('admin')
 def get_users():
     """
-    Get list of registered users.
+    Obtener lista de usuarios registrados.
     ---
     tags:
-      - API
+      - API Administrador
     responses:
       200:
-        description: List of users.
+        description: Lista de usuarios (solo accesible para administradores).
+        schema:
+          type: object
+          properties:
+            users:
+              type: array
+              description: Arreglo de usuarios registrados en la plataforma.
+              items:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                    description: ID único del usuario.
+                  username:
+                    type: string
+                    description: Nombre de usuario.
+      403:
+        description: No tiene permisos de administrador.
     """
     from .models import User
     
