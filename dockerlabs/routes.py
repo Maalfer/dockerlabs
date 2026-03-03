@@ -59,6 +59,10 @@ def instrucciones_uso():
     """
     return render_template('dockerlabs/instrucciones_uso.html')
 
+@main_bp.route('/soporte')
+def soporte():
+  return render_template('dockerlabs/soporte.html')
+
 @main_bp.route('/enviar-maquina')
 def enviar_maquina():
     """
