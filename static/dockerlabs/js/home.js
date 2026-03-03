@@ -15,6 +15,14 @@ function updateGridLayout() {
     }
 }
 
+function setFiltroLabel(texto, color) {
+    const label = document.getElementById('filtro-label');
+    const btn = document.getElementById('filtro-dificultad-btn');
+    label.textContent = texto;
+    btn.style.color = color;
+    btn.style.borderColor = color;
+}
+
 function getFilteredItems() {
     const searchInput = document.getElementById('buscador');
     const searchTerm = (searchInput?.value || '').toLowerCase();
