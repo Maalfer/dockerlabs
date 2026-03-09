@@ -1,0 +1,99 @@
+{% extends "dockerlabs/base.html" %}
+
+{% block content %}
+
+<style>
+    .link-dark {
+        color: #0d6efd !important;
+        text-decoration: none;
+        font-weight: 500;
+    }
+
+    .link-dark:hover {
+        text-decoration: underline;
+    }
+</style>
+
+<div class="container mt-5 equipo-page">
+    <h1 class="title" style="text-align: center; font-weight: bold;">Equipo de DockerLabs</h1>
+
+    <!-- ADMINISTRADORES -->
+    <div class="section-label">
+        <span><i class="bi bi-shield-fill-check"></i> Administradores</span>
+    </div>
+    <div class="card p-4 mt-2 mb-5 colaboradores-card">
+        <div class="colaboradores-grid admins-grid">
+
+        <a href="https://github.com/Maalfer/" target="_blank" class="colaborador">
+            <img src="/static/dockerlabs/images/agradecimientos/mario.png" alt="Maalfer">
+            <span class="colaborador-name">El Pingüino de Mario</span>
+            <div class="role-badge role-owner">
+                👑 Owner
+            </div>
+            <div class="role-badge role-admin">
+                <i class="bi bi-shield-fill-check"></i> Administrador
+            </div>
+        </a>
+
+            <a href="https://github.com/0xR00" target="_blank" class="colaborador">
+                <img src="/static/dockerlabs/images/agradecimientos/pylon.jpg" alt="0xR0_">
+                <span class="colaborador-name">0xR0_</span>
+                <div class="role-badge role-dev">
+                    <i class="bi bi-code-slash"></i> Desarrollador
+                </div>
+                <div class="role-badge role-admin">
+                    <i class="bi bi-shield-fill-check"></i> Administrador
+                </div>
+            </a>
+
+            <a href="https://github.com/Maciferna" target="_blank" class="colaborador">
+                <img src="/static/dockerlabs/images/agradecimientos/maci.png" alt="Maciferma">
+                <span class="colaborador-name">Maciiii___</span>
+                <div class="role-badge role-admin">
+                    <i class="bi bi-shield-fill-check"></i> Administrador
+                </div>
+            </a>
+
+        </div>
+    </div>
+
+    <!-- MODERADORES -->
+    <div class="section-label">
+        <span><i class="bi bi-shield-fill"></i> Moderadores</span>
+    </div>
+    <div class="card p-4 mt-2 mb-5 colaboradores-card">
+        <div class="colaboradores-grid">
+
+            <a href="https://github.com/Santitub" target="_blank" class="colaborador">
+                <img src="/static/dockerlabs/images/agradecimientos/santitub.png" alt="Santitub">
+                <span class="colaborador-name">Santitub</span>
+                <div class="role-badge role-mod">
+                    <i class="bi bi-shield-fill"></i> Moderador
+                </div>
+            </a>
+
+            <a href="https://github.com/fenixiado/" target="_blank" class="colaborador">
+                <img src="/static/dockerlabs/images/agradecimientos/sebastian.png" alt="Sebastian">
+                <span class="colaborador-name">Sebastian Viña</span>
+                <div class="role-badge role-mod">
+                    <i class="bi bi-shield-fill"></i> Moderador
+                </div>
+            </a>
+        </div>
+    </div>
+    
+    <!-- COLABORADORES -->
+    <div class="section-label">
+        <span><i class="bi bi-people-fill"></i> Colaboradores</span>
+    </div>
+    <p class="colaboradores-desc" style="text-align: center;">¿Quieres aparecer aquí? Para colaborar en DockerLabs puede consultar <a href="https://github.com/0xR00/dockerlabs/blob/new/contributing-repo/CONTRIBUTING.md">AQUÍ</a></p>
+    </div>
+    <div class="card p-4 mt-2 mb-5 colaboradores-card">
+        <div class="colaboradores-mosaic">
+            <a href="https://dockerlabs.es" target="_blank" class="colaborador-mini" title="Test">
+                <img src="/static/dockerlabs/images/agradecimientos/test.png" alt="Test">
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -100,12 +100,59 @@
                 <button id="ranking" class="btn btn-sm" onclick="ranking()">Writeups👑</button>
                 <button id="autores" class="btn btn-sm" onclick="rankingautores()">Autores👑</button>
                 <span class="filters-divider" aria-hidden="true"></span>
-                <div class="d-flex flex-wrap gap-2 ms-auto" id="filtro-dificultad">
-                    <button id="boton-muy-facil" class="btn btn-sm" onclick="botonmuyfacil()">Muy Fácil</button>
-                    <button id="boton-facil" class="btn btn-sm" onclick="botonfacil()">Fácil</button>
-                    <button id="boton-medio" class="btn btn-sm" onclick="botonmedio()">Medio</button>
-                    <button id="boton-dificil" class="btn btn-sm" onclick="botondificil()">Difícil</button>
-                    <button id="boton-todos" class="btn btn-sm selected" onclick="botontodos()">Todos</button>
+                <span class="filters-divider" aria-hidden="true"></span>
+                <div class="d-flex flex-wrap gap-2 ms-auto">
+                    <div class="dropdown">
+                        <button class="btn btn-sm dropdown-toggle" id="filtro-dificultad-btn" type="button" 
+                                data-bs-toggle="dropdown" aria-expanded="false"
+                                style="background: rgba(15,23,42,0.96); border: 1px solid var(--border-strong); 
+                                       color: var(--text-secondary); padding: 0.5rem 1rem; border-radius: 6px;
+                                       font-family: 'Fira Code', monospace; font-weight: 600; font-size: 0.75rem;
+                                       text-transform: uppercase; letter-spacing: 0.05em;">
+                            <i class="bi bi-funnel-fill" style="margin-right: 0.3rem;"></i>
+                            <span id="filtro-label">Dificultad</span>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end" 
+                            style="background: rgba(15,23,42,0.98); border: 1px solid var(--border-strong); 
+                                   border-radius: 8px; padding: 0.4rem; min-width: 160px;">
+                            <li>
+                                <a class="dropdown-item dificultad-item" href="#" onclick="botontodos(); setFiltroLabel('Dificultad', 'var(--text-secondary)'); return false;"
+                                   style="border-radius: 6px; font-family: 'Fira Code', monospace; font-size: 0.75rem; 
+                                          font-weight: 600; text-transform: uppercase; color: #9ca3af; padding: 0.5rem 0.75rem;">
+                                    Todos
+                                </a>
+                            </li>
+                            <li><hr class="dropdown-divider" style="border-color: var(--border-strong); margin: 0.3rem 0;"></li>
+                            <li>
+                                <a class="dropdown-item dificultad-item" href="#" onclick="botonmuyfacil(); setFiltroLabel('Muy Fácil', 'var(--accent-cyan)'); return false;"
+                                   style="border-radius: 6px; font-family: 'Fira Code', monospace; font-size: 0.75rem; 
+                                          font-weight: 600; text-transform: uppercase; color: var(--accent-cyan); padding: 0.5rem 0.75rem;">
+                                    <i class="bi bi-circle-fill" style="font-size: 0.5rem; margin-right: 0.4rem;"></i>Muy Fácil
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item dificultad-item" href="#" onclick="botonfacil(); setFiltroLabel('Fácil', '#a3e635'); return false;"
+                                   style="border-radius: 6px; font-family: 'Fira Code', monospace; font-size: 0.75rem; 
+                                          font-weight: 600; text-transform: uppercase; color: #a3e635; padding: 0.5rem 0.75rem;">
+                                    <i class="bi bi-circle-fill" style="font-size: 0.5rem; margin-right: 0.4rem;"></i>Fácil
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item dificultad-item" href="#" onclick="botonmedio(); setFiltroLabel('Medio', 'var(--accent-yellow)'); return false;"
+                                   style="border-radius: 6px; font-family: 'Fira Code', monospace; font-size: 0.75rem; 
+                                          font-weight: 600; text-transform: uppercase; color: var(--accent-yellow); padding: 0.5rem 0.75rem;">
+                                    <i class="bi bi-circle-fill" style="font-size: 0.5rem; margin-right: 0.4rem;"></i>Medio
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item dificultad-item" href="#" onclick="botondificil(); setFiltroLabel('Difícil', 'var(--accent-red)'); return false;"
+                                   style="border-radius: 6px; font-family: 'Fira Code', monospace; font-size: 0.75rem; 
+                                          font-weight: 600; text-transform: uppercase; color: var(--accent-red); padding: 0.5rem 0.75rem;">
+                                    <i class="bi bi-circle-fill" style="font-size: 0.5rem; margin-right: 0.4rem;"></i>Difícil
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
                 </div>
             </div>
         </div>
@@ -210,6 +257,5 @@
 <script src="{{ url_for('static', filename='dockerlabs/js/writeups.js') }}"></script>
 <script src="{{ url_for('static', filename='dockerlabs/js/ranking.js') }}"></script>
 <script src="{{ url_for('static', filename='dockerlabs/js/subirwriteup.js') }}"></script>
-
 
 {% endblock %}
