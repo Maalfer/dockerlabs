@@ -123,17 +123,16 @@ function applyPagination() {
 }
 
 function updateButtonCount(buttonId, filterClass) {
-    document.querySelectorAll('#filtro-dificultad > button').forEach((e) => e.classList.remove('selected'));
-    const btn = document.querySelector('#filtro-dificultad > button#' + buttonId);
-    if (btn) btn.classList.add('selected');
+    document.querySelectorAll('.dificultad-item').forEach(e => e.classList.remove('active'));
+    const btn = document.getElementById(buttonId);
+    if (btn) btn.classList.add('active');
+    
     currentFilter.difficulty = filterClass;
     currentFilter.completed = null;
     currentPage = 1;
     applyPagination();
 
-    const filtered = getFilteredItems();
-    const button = document.getElementById(buttonId);
-    if (button) button.textContent = `${button.textContent.split(' (')[0]} (${filtered.length})`;
+    updateAllButtonCounts();
 }
 
 function botonmuyfacil() {
@@ -160,7 +159,7 @@ function filterByCompleted() {
     currentFilter.completed = true;
     currentFilter.difficulty = 'todos';
     currentPage = 1;
-    document.querySelectorAll('#filtro-dificultad > button').forEach((e) => e.classList.remove('selected'));
+    document.querySelectorAll('.dificultad-item').forEach(e => e.classList.remove('active'));
     applyPagination();
 }
 
@@ -168,7 +167,7 @@ function filterByUncompleted() {
     currentFilter.completed = false;
     currentFilter.difficulty = 'todos';
     currentPage = 1;
-    document.querySelectorAll('#filtro-dificultad > button').forEach((e) => e.classList.remove('selected'));
+    document.querySelectorAll('.dificultad-item').forEach(e => e.classList.remove('active'));
     applyPagination();
 }
 
@@ -197,7 +196,12 @@ function updateAllButtonCounts() {
             }
         });
 
-        button.textContent = `${button.textContent.split(' (')[0]} (${itemCount})`;
+        if (button) {
+            const countSpan = button.querySelector('.count');
+            if (countSpan) {
+                countSpan.textContent = ` (${itemCount})`;
+            }
+        }
     });
 
     // Call updateGridLayout only once after all counts are updated
@@ -276,8 +280,8 @@ function filterByCategory(category) {
     currentFilter.difficulty = 'todos';
     currentFilter.completed = null;
     currentPage = 1;
-    document.querySelectorAll('#filtro-dificultad button').forEach(btn => btn.classList.remove('selected'));
+    document.querySelectorAll('.dificultad-item').forEach(btn => btn.classList.remove('active'));
     const todosBtn = document.getElementById('boton-todos');
-    if (todosBtn) todosBtn.classList.add('selected');
+    if (todosBtn) todosBtn.classList.add('active');
     applyPagination();
 }

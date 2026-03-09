@@ -35,6 +35,64 @@
         font-size: 0.875rem;
         z-index: 9999 !important;
     }
+
+    .btn-academia {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        padding: 0.5rem 1rem;
+        font-family: 'Fira Code', monospace;
+        font-weight: 600;
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        border: 1px solid rgba(139, 92, 246, 0.6);
+        border-radius: 6px;
+        cursor: pointer;
+        background: rgba(15, 23, 42, 0.96);
+        color: #c4b5fd;
+        box-shadow: 0 0 10px rgba(139, 92, 246, 0.15);
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .btn-academia::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(135deg, rgba(139, 92, 246, 0.25) 0%, transparent 60%);
+        pointer-events: none;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+
+    .btn-academia:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 15px rgba(139, 92, 246, 0.4), 0 0 20px rgba(139, 92, 246, 0.2);
+        border-color: rgba(139, 92, 246, 1);
+        color: #fff;
+    }
+
+    .btn-academia:hover::before {
+        opacity: 1;
+    }
+
+    .btn-academia:active {
+        transform: translateY(0);
+        box-shadow: 0 2px 8px rgba(139, 92, 246, 0.3);
+    }
+
+    .btn-academia i {
+        font-size: 0.85rem;
+        color: #a78bfa;
+        transition: color 0.3s ease;
+    }
+
+    .btn-academia:hover i {
+        color: #ddd6fe;
+        filter: drop-shadow(0 0 5px rgba(139, 92, 246, 0.8));
+    }
 </style>
 
 <div class="container">
@@ -95,13 +153,12 @@
                     </ul>
                 </div>
 
-                <button id="academia" class="btn btn-sm"
-                    onclick="window.open('https://elrincondelhacker.es', '_blank')">Academia🧠</button>
+
                 <button id="ranking" class="btn btn-sm" onclick="ranking()">Writeups👑</button>
                 <button id="autores" class="btn btn-sm" onclick="rankingautores()">Autores👑</button>
                 <span class="filters-divider" aria-hidden="true"></span>
                 <span class="filters-divider" aria-hidden="true"></span>
-                <div class="d-flex flex-wrap gap-2 ms-auto">
+                <div class="d-flex flex-wrap gap-2 ms-auto align-items-center">
                     <div class="dropdown">
                         <button class="btn btn-sm dropdown-toggle" id="filtro-dificultad-btn" type="button" 
                                 data-bs-toggle="dropdown" aria-expanded="false"
@@ -116,43 +173,50 @@
                             style="background: rgba(15,23,42,0.98); border: 1px solid var(--border-strong); 
                                    border-radius: 8px; padding: 0.4rem; min-width: 160px;">
                             <li>
-                                <a class="dropdown-item dificultad-item" href="#" onclick="botontodos(); setFiltroLabel('Dificultad', 'var(--text-secondary)'); return false;"
+                                <a id="boton-todos" class="dropdown-item dificultad-item" href="#" onclick="botontodos(); setFiltroLabel('Dificultad', 'var(--text-secondary)'); return false;"
                                    style="border-radius: 6px; font-family: 'Fira Code', monospace; font-size: 0.75rem; 
                                           font-weight: 600; text-transform: uppercase; color: #9ca3af; padding: 0.5rem 0.75rem;">
-                                    Todos
+                                    Todos<span class="count"></span>
                                 </a>
                             </li>
                             <li><hr class="dropdown-divider" style="border-color: var(--border-strong); margin: 0.3rem 0;"></li>
                             <li>
-                                <a class="dropdown-item dificultad-item" href="#" onclick="botonmuyfacil(); setFiltroLabel('Muy Fácil', 'var(--accent-cyan)'); return false;"
+                                <a id="boton-muy-facil" class="dropdown-item dificultad-item" href="#" onclick="botonmuyfacil(); setFiltroLabel('Muy Fácil', 'var(--accent-cyan)'); return false;"
                                    style="border-radius: 6px; font-family: 'Fira Code', monospace; font-size: 0.75rem; 
                                           font-weight: 600; text-transform: uppercase; color: var(--accent-cyan); padding: 0.5rem 0.75rem;">
-                                    <i class="bi bi-circle-fill" style="font-size: 0.5rem; margin-right: 0.4rem;"></i>Muy Fácil
+                                    <i class="bi bi-circle-fill" style="font-size: 0.5rem; margin-right: 0.4rem;"></i>Muy Fácil<span class="count"></span>
                                 </a>
                             </li>
                             <li>
-                                <a class="dropdown-item dificultad-item" href="#" onclick="botonfacil(); setFiltroLabel('Fácil', '#a3e635'); return false;"
+                                <a id="boton-facil" class="dropdown-item dificultad-item" href="#" onclick="botonfacil(); setFiltroLabel('Fácil', '#a3e635'); return false;"
                                    style="border-radius: 6px; font-family: 'Fira Code', monospace; font-size: 0.75rem; 
                                           font-weight: 600; text-transform: uppercase; color: #a3e635; padding: 0.5rem 0.75rem;">
-                                    <i class="bi bi-circle-fill" style="font-size: 0.5rem; margin-right: 0.4rem;"></i>Fácil
+                                    <i class="bi bi-circle-fill" style="font-size: 0.5rem; margin-right: 0.4rem;"></i>Fácil<span class="count"></span>
                                 </a>
                             </li>
                             <li>
-                                <a class="dropdown-item dificultad-item" href="#" onclick="botonmedio(); setFiltroLabel('Medio', 'var(--accent-yellow)'); return false;"
+                                <a id="boton-medio" class="dropdown-item dificultad-item" href="#" onclick="botonmedio(); setFiltroLabel('Medio', 'var(--accent-yellow)'); return false;"
                                    style="border-radius: 6px; font-family: 'Fira Code', monospace; font-size: 0.75rem; 
                                           font-weight: 600; text-transform: uppercase; color: var(--accent-yellow); padding: 0.5rem 0.75rem;">
-                                    <i class="bi bi-circle-fill" style="font-size: 0.5rem; margin-right: 0.4rem;"></i>Medio
+                                    <i class="bi bi-circle-fill" style="font-size: 0.5rem; margin-right: 0.4rem;"></i>Medio<span class="count"></span>
                                 </a>
                             </li>
                             <li>
-                                <a class="dropdown-item dificultad-item" href="#" onclick="botondificil(); setFiltroLabel('Difícil', 'var(--accent-red)'); return false;"
+                                <a id="boton-dificil" class="dropdown-item dificultad-item" href="#" onclick="botondificil(); setFiltroLabel('Difícil', 'var(--accent-red)'); return false;"
                                    style="border-radius: 6px; font-family: 'Fira Code', monospace; font-size: 0.75rem; 
                                           font-weight: 600; text-transform: uppercase; color: var(--accent-red); padding: 0.5rem 0.75rem;">
-                                    <i class="bi bi-circle-fill" style="font-size: 0.5rem; margin-right: 0.4rem;"></i>Difícil
+                                    <i class="bi bi-circle-fill" style="font-size: 0.5rem; margin-right: 0.4rem;"></i>Difícil<span class="count"></span>
                                 </a>
                             </li>
                         </ul>
                     </div>
+
+                    <!-- Academia Button -->
+                    <button id="academia" class="btn-academia"
+                        onclick="window.open('https://elrincondelhacker.es', '_blank')">
+                        <i class="bi bi-mortarboard-fill"></i>
+                        <span>Academia</span>
+                    </button>
                 </div>
             </div>
         </div>
@@ -235,7 +299,7 @@
     <!-- Pagination moved to bottom -->
     {% if not single_machine %}
     <div class="header-pagination-row" style="margin-top: 2rem;">
-        <div id="pagination-container" class="pagination-container" style="display: none;"></div>
+        <div id="pagination-container" class="pagination-container"></div>
     </div>
     {% endif %}
 </div>
