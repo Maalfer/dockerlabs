@@ -63,6 +63,19 @@ def instrucciones_uso():
 def soporte():
   return render_template('dockerlabs/soporte.html')
 
+@main_bp.route('/equipo')
+def equipo():
+    """
+    Página del equipo.
+    ---
+    tags:
+      - Páginas
+    responses:
+      200:
+        description: Página del equipo.
+    """
+    return render_template('dockerlabs/equipo.html')
+
 
 @main_bp.route('/enviar-maquina')
 def enviar_maquina():
