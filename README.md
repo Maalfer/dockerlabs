@@ -395,6 +395,9 @@ docker build -t dockerlabs .
 docker run -d -p 5000:5000 --name dockerlabs dockerlabs
 ```
 
+## 👷Como contribuir en DockerLabs
+En [CONTRIBUTING.md](/CONTRIBUTING.md) indicamos todos los detalles para poder contribuir en [DockerLabs](https://dockerlabs.es).
+
 ---
 
 <div align="center">
