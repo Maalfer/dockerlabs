@@ -1,0 +1,190 @@
+{% extends 'dockerlabs/base.html' %}
+
+{% block title %}Soporte - DockerLabs{% endblock %}
+
+{% block extra_head %}
+<style>
+
+.soporte-container {
+    padding: 110px 20px 60px;
+    max-width: 900px;
+    margin: 0 auto;
+}
+
+.soporte-header {
+    text-align: center;
+    margin-bottom: 3rem;
+}
+
+.soporte-header h1 {
+    font-size: 2.6rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    color: var(--text-primary);
+    margin-bottom: 0.6rem;
+}
+
+.soporte-header p {
+    color: var(--text-muted);
+    font-size: 1rem;
+}
+
+.emoji {
+    display: inline-block;
+    animation: subirBajar 2.5s ease-in-out infinite;
+}
+
+@keyframes subirBajar {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-8px); }
+}
+
+.soporte-card {
+    background: var(--surface-dark);
+    border: 1px solid var(--border-strong);
+    border-radius: 18px;
+    padding: 2.5rem;
+    backdrop-filter: blur(18px);
+    box-shadow: 0 20px 40px rgba(0,0,0,0.6);
+    transition: all 0.3s ease;
+}
+
+.soporte-card:hover {
+    border-color: var(--accent-cyan);
+    box-shadow: 0 0 25px rgba(34, 211, 238, 0.15);
+}
+
+.contact-box {
+    background: rgba(15, 23, 42, 0.6);
+    border: 1px solid var(--border-subtle);
+    padding: 1.8rem;
+    border-radius: 14px;
+    text-align: center;
+    margin-top: 1.8rem;
+    transition: all 0.3s ease;
+}
+
+.contact-box:hover {
+    border-color: hsl(205, 97%, 58%);
+    box-shadow: 0 0 15px hsl(205, 75%, 52%);
+}
+
+.section-title {
+    font-size: 1.45rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.7rem;
+    margin-bottom: 1rem;
+}
+
+.section-title i {
+    font-size: 1.6rem;
+}
+
+.email-link {
+    color: var(--accent-cyan);
+    font-weight: 600;
+    font-size: 1.05rem;
+    text-decoration: none;
+}
+
+.email-link:hover {
+    color: hsl(205, 65%, 51%);
+}
+
+.discord-channel {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #5865F2;
+    margin-top: 0.5rem;
+}
+
+.discord-btn {
+    background: #5865F2;
+    color: white;
+    padding: 0.8rem 1.6rem;
+    border-radius: 12px;
+    display: inline-block;
+    text-decoration: none;
+    font-weight: 600;
+    margin-top: 1.2rem;
+    transition: all 0.3s ease;
+}
+
+.discord-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(88, 101, 242, 0.4);
+}
+
+.soporte-info {
+    color: var(--text-secondary);
+    font-size: 0.95rem;
+    line-height: 1.6;
+    text-align: center;
+    margin-top: 2rem;
+}
+
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="soporte-container">
+
+    <div class="soporte-header">
+        <h1>Soporte <span class="emoji">🛠️</span></h1>
+        <p>¿Tienes algún problema en la plataforma?</p>
+    </div>
+
+    <div class="soporte-card">
+
+        <div class="contact-box">
+
+            <div class="section-title">
+                📩 Soporte por Email
+            </div>
+
+            <a href="mailto:soportedockerlabs@gmail.com" class="email-link">
+                soportedockerlabs@gmail.com
+            </a>
+
+        </div>
+
+        <div class="contact-box">
+
+            <div class="section-title">
+                <i class="bi bi-discord"></i>
+                Soporte en Discord
+            </div>
+
+            <p style="color: var(--text-secondary); margin-bottom: 0.8rem;">
+                Únete al servidor de <strong>DockerLabs</strong> y crea un ticket en:
+            </p>
+
+            <div class="discord-channel">
+                <i class="bi bi-ticket-detailed"></i>
+                #ticket-support
+            </div>
+
+            <br>
+
+            <a href="https://discord.gg/dD3yVejBUR" target="_blank" class="discord-btn">
+                <i class="bi bi-box-arrow-up-right"></i> Unirme a Discord
+            </a>
+
+        </div>
+
+        <p class="soporte-info">
+            Intentamos responder en menos de 24 horas.<br>
+            Incluye capturas o detalles técnicos si el problema es relacionado con laboratorios.
+        </p>
+
+    </div>
+
+</div>
+{% endblock %}
