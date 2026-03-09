@@ -72,6 +72,71 @@
 
     let allMachines = [];
 
+    function closeMachineModal() {
+        const modal = document.getElementById("machine-modal");
+        modal.style.display = "none";
+        document.body.style.overflow = "";
+    }
+
+    function deleteWriteup(writeupId, btn) {
+        if (!confirm('¿Seguro que quieres eliminar este writeup?')) return;
+    
+        fetch(`/api/writeups_subidos/${writeupId}`, {
+            method: 'DELETE',
+            headers: { 'X-CSRFToken': csrfToken }
+        })
+        .then(response => response.json().then(data => ({ ok: response.ok, data })))
+        .then(result => {
+            if (!result.ok) {
+                showAlert(result.data.error || 'Error al eliminar el writeup', 'danger');
+                return;
+            }
+            const card = btn.closest('.writeup-detail-card');
+            if (card) card.remove();
+        
+            const container = document.getElementById("modal-writeups-container");
+            if (container && container.querySelectorAll('.writeup-detail-card').length === 0) {
+                container.innerHTML = '<div class="empty-state">No hay writeups para esta máquina</div>';
+            }
+        
+            showAlert('Writeup eliminado correctamente', 'success');
+        })
+        .catch(err => {
+            console.error(err);
+            showAlert('Error al eliminar el writeup', 'danger');
+        });
+    }
+
+    function renderWriteupCard(writeup) {
+        const card = document.createElement("div");
+        card.className = "writeup-detail-card";
+
+        const isAdminOrMod = {{ 'true' if user.role in ['admin', 'moderador'] else 'false' }};
+
+        card.innerHTML = `
+            <div class="writeup-detail-header">
+                <div class="writeup-detail-icon">📝</div>
+                <div class="writeup-detail-info">
+                    <span class="writeup-detail-author">
+                        <i class="bi bi-person-fill"></i> ${escapeHtml(writeup.autor || 'Anónimo')}
+                    </span>
+                </div>
+            </div>
+            <div class="writeup-detail-footer">
+                <a href="${escapeHtml(writeup.url)}" target="_blank" rel="noopener noreferrer"
+                   class="btn-action btn-save">
+                    <i class="bi bi-box-arrow-up-right"></i> Ver Writeup
+                </a>
+                ${isAdminOrMod ? `
+                <button class="btn-action btn-delete" onclick="deleteWriteup(${writeup.id}, this)">
+                    <i class="bi bi-trash3-fill"></i> Eliminar
+                </button>` : ''}
+            </div>
+        `;
+
+        return card;
+    }    
+    
     function renderMachineCard(machine) {
         const card = document.createElement("div");
         card.className = "machine-card";
@@ -201,8 +266,6 @@
                 container.innerHTML = '<div class="error-message">Error al cargar writeups</div>';
             });
     }
-
-    // ... (closeMachineModal, renderWriteupCard, etc. remain unchanged)
 
     document.addEventListener("DOMContentLoaded", () => {
         const searchInput = document.getElementById("search-input");
