@@ -1,0 +1,38 @@
+{% extends 'dockerlabs/base.html' %}
+
+{% block content %}
+<div class="container" style="margin-top: 110px; max-width: 900px;">
+    <h2 style="margin-bottom: 0.25rem;">Backups</h2>
+    <p style="color: #94a3b8; margin-bottom: 1.25rem;">Descarga o restaura una copia de seguridad de la base de datos.</p>
+
+    <div style="display: grid; grid-template-columns: 1fr; gap: 1rem;">
+        <div style="background: rgba(15, 23, 42, 0.6); border: 1px solid #334155; border-radius: 12px; padding: 1rem;">
+            <h3 style="margin: 0 0 0.75rem 0; font-size: 1.1rem;">Descargar backup</h3>
+            <form method="POST" action="{{ url_for('main.download_backup') }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button type="submit" class="btn-auth" style="background: #22c55e; color: #052e16; font-weight: 700;">
+                    <i class="bi bi-download"></i>
+                    Descargar .zip
+                </button>
+            </form>
+        </div>
+
+        <div style="background: rgba(15, 23, 42, 0.6); border: 1px solid #334155; border-radius: 12px; padding: 1rem;">
+            <h3 style="margin: 0 0 0.75rem 0; font-size: 1.1rem;">Restaurar backup</h3>
+            <form method="POST" action="{{ url_for('main.restore_backup') }}" enctype="multipart/form-data">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <div style="display:flex; flex-direction: column; gap: 0.75rem;">
+                    <input type="file" name="backup_zip" accept=".zip" required style="color:#cbd5e1;" />
+                    <button type="submit" class="btn-auth" style="background: #ef4444; color: #ffffff; font-weight: 700;">
+                        <i class="bi bi-arrow-counterclockwise"></i>
+                        Restaurar
+                    </button>
+                </div>
+            </form>
+            <p style="margin-top: 0.75rem; color: #eab308; font-size: 0.9rem;">
+                Esta operación reemplaza la base de datos actual.
+            </p>
+        </div>
+    </div>
+</div>
+{% endblock %}
