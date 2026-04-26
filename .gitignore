@@ -20,6 +20,8 @@ database/*.db
 database/*.sqlite3
 database/*.db-shm
 database/*.db-wal
+database/*.db.lock
+database/*.lock
 
 # IDE
 .vscode/

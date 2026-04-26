@@ -2324,3 +2324,233 @@ def api_list_maquinas_writeups_subidos(
             })
 
     return {"maquinas": maquinas}
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# SERVING DE IMÁGENES - Migrado desde auth.py y maquinas.py
+# ═══════════════════════════════════════════════════════════════════════════════
+
+@api_router.get("/img/perfil/{user_id}")
+def serve_profile_image(user_id: int):
+    """
+    Sirve la imagen de perfil desde BD con fallback a disco.
+    Equivalente a: /img/perfil/<int:user_id> en auth.py
+    """
+    from dockerlabs.app import app as flask_app
+    from dockerlabs.models import User
+    import os
+    import io
+
+    BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+    PROFILE_UPLOAD_FOLDER = os.path.join(BASE_DIR, 'static', 'dockerlabs', 'images', 'perfiles')
+    ALLOWED_PROFILE_EXTENSIONS = {'.jpg', '.jpeg', '.png', '.gif', '.webp'}
+    default_image = "dockerlabs/images/balu.webp"
+
+    def get_profile_image_static_path(username, uid=None):
+        if uid:
+            for ext in ALLOWED_PROFILE_EXTENSIONS:
+                candidate = os.path.join(PROFILE_UPLOAD_FOLDER, f"{uid}{ext}")
+                if os.path.exists(candidate):
+                    return f"dockerlabs/images/perfiles/{uid}{ext}"
+        if not username:
+            return default_image
+        if '/' in username or '\\' in username or '..' in username:
+            return default_image
+        from werkzeug.utils import secure_filename
+        candidates_names = [username, username.lower(), secure_filename(username), secure_filename(username).lower()]
+        candidates_names = list(dict.fromkeys(candidates_names))
+        for name in candidates_names:
+            for ext in ALLOWED_PROFILE_EXTENSIONS:
+                candidate = os.path.join(PROFILE_UPLOAD_FOLDER, f"{name}{ext}")
+                if os.path.exists(candidate):
+                    return f"dockerlabs/images/perfiles/{name}{ext}"
+        return default_image
+
+    with flask_app.app_context():
+        user = User.query.get(user_id)
+
+        # Intentar desde BD
+        if user and user.profile_image_data:
+            mime = user.profile_image_mime or 'image/jpeg'
+            return StreamingResponse(
+                io.BytesIO(user.profile_image_data),
+                media_type=mime
+            )
+
+        # Fallback a disco
+        disk_path = get_profile_image_static_path(user.username if user else None, uid=user_id)
+        if disk_path and disk_path != default_image:
+            full_path = os.path.join(BASE_DIR, 'static', disk_path)
+            if os.path.exists(full_path):
+                from fastapi.responses import FileResponse
+                return FileResponse(full_path)
+
+    # Default fallback
+    default_path = os.path.join(BASE_DIR, 'static', default_image)
+    if os.path.exists(default_path):
+        from fastapi.responses import FileResponse
+        return FileResponse(default_path)
+    raise HTTPException(status_code=404, detail="Imagen no encontrada")
+
+
+@api_router.get("/img/maquina/{machine_id}")
+def serve_machine_logo(machine_id: int):
+    """
+    Sirve el logo de la máquina desde BD con fallback a fichero estático.
+    Equivalente a: /img/maquina/<int:machine_id> en maquinas.py
+    """
+    from dockerlabs.app import app as flask_app
+    from dockerlabs.models import Machine
+    import os
+    import io
+
+    BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+
+    with flask_app.app_context():
+        machine = Machine.query.get(machine_id)
+
+        # Desde BD
+        if machine and machine.logo_data:
+            mime = machine.logo_mime or 'image/jpeg'
+            return StreamingResponse(
+                io.BytesIO(machine.logo_data),
+                media_type=mime
+            )
+
+        # Fallback a fichero estático
+        if machine and machine.imagen:
+            full_path = os.path.join(BASE_DIR, 'static', machine.imagen)
+            if os.path.exists(full_path):
+                from fastapi.responses import FileResponse
+                return FileResponse(full_path)
+
+    # Default logo
+    default_logo = os.path.join(BASE_DIR, 'static', 'dockerlabs', 'images', 'logos', 'logo.png')
+    if os.path.exists(default_logo):
+        from fastapi.responses import FileResponse
+        return FileResponse(default_logo)
+    raise HTTPException(status_code=404, detail="Logo no encontrado")
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# BUNKERLABS API - Endpoints JSON migrados desde bunkerlabs.py
+# ═══════════════════════════════════════════════════════════════════════════════
+
+class FlagValidationRequest(BaseModel):
+    maquina_nombre: str
+    pin: str
+
+class FlagValidationResponse(BaseModel):
+    message: str
+    puntos: Optional[int] = None
+
+class RankingEntry(BaseModel):
+    id: int
+    nombre: str
+    puntos: int
+
+class RankingResponse(BaseModel):
+    ranking: List[RankingEntry]
+
+
+@api_router.post("/bunker/validate-flag", response_model=FlagValidationResponse)
+def api_validate_flag(
+    data: FlagValidationRequest,
+    flask_session: dict = Depends(get_flask_session)
+):
+    """
+    Validar flag de máquina BunkerLabs.
+    Equivalente a: POST /api/validate_flag en bunkerlabs.py
+    Rate limit: 30 por minuto.
+    """
+    user_id = flask_session.get('user_id')
+    username = (flask_session.get('username') or '').strip()
+
+    if not user_id and not flask_session.get('bunkerlabs_guest'):
+        raise HTTPException(status_code=401, detail="Sesión no válida")
+
+    from dockerlabs.app import app as flask_app
+    from dockerlabs.models import Machine, CompletedMachine, User
+    from dockerlabs.extensions import db as alchemy_db
+    from sqlalchemy import func
+    from sqlalchemy.exc import IntegrityError
+
+    PUNTOS_MAP = {"Muy Fácil": 10, "Fácil": 20, "Medio": 30, "Difícil": 40}
+
+    with flask_app.app_context():
+        maquina = Machine.query.filter_by(
+            nombre=data.maquina_nombre.strip(),
+            origen='bunker'
+        ).first()
+
+        if not maquina:
+            raise HTTPException(status_code=404, detail="Máquina no encontrada")
+
+        # Verificar acceso de invitado
+        if flask_session.get('bunkerlabs_guest'):
+            if not maquina.guest_access:
+                raise HTTPException(status_code=403, detail="Los invitados no pueden subir flags")
+            if maquina.pin == data.pin.strip():
+                return {"message": "¡Flag correcta! (Modo invitado: no se guarda el progreso)"}
+            raise HTTPException(status_code=401, detail="Flag incorrecta")
+
+        # Usuario autenticado
+        if maquina.pin != data.pin.strip():
+            raise HTTPException(status_code=401, detail="Flag incorrecta")
+
+        # Verificar si ya completó esta máquina
+        ya_completada = CompletedMachine.query.filter_by(
+            user_id=user_id,
+            machine_name=maquina.nombre
+        ).first()
+
+        if ya_completada:
+            return {"message": "Flag correcta, pero ya habías completado esta máquina"}
+
+        puntos = PUNTOS_MAP.get(maquina.dificultad, 0)
+
+        try:
+            # Marcar como completada en DockerLabs
+            completed = CompletedMachine(
+                user_id=user_id,
+                machine_name=maquina.nombre,
+                completed_at=datetime.utcnow()
+            )
+            alchemy_db.session.add(completed)
+
+            # Actualizar puntos del usuario
+            user = User.query.get(user_id)
+            if user:
+                user.puntos = (user.puntos or 0) + puntos
+
+            alchemy_db.session.commit()
+            return {"message": f"¡Flag correcta! Has ganado {puntos} puntos", "puntos": puntos}
+
+        except Exception:
+            alchemy_db.session.rollback()
+            raise HTTPException(status_code=500, detail="Error al procesar la flag")
+
+
+@api_router.get("/bunker/ranking", response_model=RankingResponse)
+def api_bunker_ranking():
+    """
+    Obtener ranking de jugadores BunkerLabs.
+    Equivalente a: GET /api/ranking en bunkerlabs.py
+    Rate limit: 60 por minuto.
+    """
+    from dockerlabs.app import app as flask_app
+    from dockerlabs.models import User
+
+    with flask_app.app_context():
+        # Solo usuarios con puntos > 0, ordenados por puntos descendente
+        users = User.query.filter(User.puntos > 0).order_by(User.puntos.desc()).all()
+
+        ranking = []
+        for idx, user in enumerate(users, start=1):
+            ranking.append({
+                "id": idx,
+                "nombre": user.username or "Unknown",
+                "puntos": user.puntos or 0
+            })
+
+    return {"ranking": ranking}
