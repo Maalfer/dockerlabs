@@ -4,14 +4,13 @@ import re
 import secrets
 import io
 from datetime import datetime, timedelta
-from flask import Blueprint, render_template, request, jsonify, redirect, url_for, session, g, flash
+from flask import Blueprint, render_template, request, jsonify, redirect, url_for, session, g, flash, send_file
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_login import login_user, logout_user, login_required, current_user
 from werkzeug.utils import secure_filename
 from urllib.parse import urlparse, urljoin
 
 from .decorators import role_required, csrf_protect, get_current_role
-from . import validators
 from . import validators
 from bunkerlabs.extensions import limiter
 from .models import User, NameClaim, UsernameChangeRequest, Writeup, CreatorRanking, PendingWriteup, WriteupRanking
@@ -58,6 +57,52 @@ def get_profile_image_static_path(username, user_id=None):
                 return f"dockerlabs/images/perfiles/{name}{ext}"
 
     return default_image
+
+
+def get_profile_image_url(username=None, user_id=None):
+    """Devuelve la URL del endpoint /img/perfil/<id> para el usuario."""
+    if user_id:
+        return url_for('auth.serve_profile_image', user_id=user_id)
+    if username:
+        from .models import User as _User
+        user = _User.query.filter_by(username=username).first()
+        if user:
+            return url_for('auth.serve_profile_image', user_id=user.id)
+    return url_for('static', filename='dockerlabs/images/balu.webp')
+
+
+@auth_bp.route('/img/perfil/<int:user_id>')
+def serve_profile_image(user_id):
+    """
+    Sirve la imagen de perfil desde la BD (fallback a disco).
+    ---
+    tags:
+      - User
+    parameters:
+      - name: user_id
+        in: path
+        type: integer
+        required: true
+    responses:
+      200:
+        description: Imagen de perfil.
+    """
+    from .models import User as _User
+    user = _User.query.get(user_id)
+    if user and user.profile_image_data:
+        mime = user.profile_image_mime or 'image/jpeg'
+        return send_file(io.BytesIO(user.profile_image_data), mimetype=mime)
+    # Fallback a disco
+    disk_path = get_profile_image_static_path(
+        user.username if user else None,
+        user_id=user_id
+    )
+    if disk_path and disk_path != 'dockerlabs/images/balu.webp':
+        full_path = os.path.join(BASE_DIR, 'static', disk_path)
+        if os.path.exists(full_path):
+            return send_file(full_path)
+    return redirect(url_for('static', filename='dockerlabs/images/balu.webp'))
+
 
 def load_username_change_requests():
 
@@ -118,9 +163,13 @@ def register():
         email = request.form.get('email', '').strip()
         password = request.form.get('password', '')
         password2 = request.form.get('password2', '')
+        terms_value = (request.form.get('terms') or '').strip().lower()
+        terms_accepted = terms_value in ('on', 'true', '1', 'yes')
 
         if not username or not email or not password:
             error = "Todos los campos son obligatorios."
+        elif not terms_accepted:
+            error = "Debes aceptar los Términos y Condiciones para registrarte."
         elif len(username) > 20:
             error = "El nombre de usuario no puede exceder 20 caracteres."
         elif len(email) > 35:
@@ -217,7 +266,7 @@ def register():
                         error = f"Error al crear usuario: {str(e)}"
 
     remaining = session.pop('rate_limit_remaining', None)
-    return render_template('dockerlabs/register.html', error=error, pending_message=pending_message, recovery_pin=recovery_pin)
+    return render_template('dockerlabs/auth/register.html', error=error, pending_message=pending_message, recovery_pin=recovery_pin)
 
 @auth_bp.route('/recover', methods=['GET', 'POST'])
 @csrf_protect
@@ -271,7 +320,7 @@ def recover():
                     else:
                          error = "Error en la fecha de emisión del PIN. Contacta al soporte."
 
-    return render_template('dockerlabs/recover.html', error=error)
+    return render_template('dockerlabs/auth/recover.html', error=error)
 
 @auth_bp.route('/login', methods=['GET', 'POST'])
 @csrf_protect
@@ -308,7 +357,7 @@ def login():
             return redirect(url_for('dashboard'))
 
     remaining = session.pop('rate_limit_remaining', None)
-    return render_template('dockerlabs/login.html', error=error, success=success)
+    return render_template('dockerlabs/auth/login.html', error=error, success=success)
 
 @auth_bp.route('/logout')
 
@@ -593,42 +642,29 @@ def upload_profile_photo():
     if not user_id:
         return jsonify({'error': 'No se ha podido determinar el ID de usuario'}), 400
 
-    os.makedirs(PROFILE_UPLOAD_FOLDER, exist_ok=True)
+    ext_to_mime = {
+        '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg',
+        '.png': 'image/png', '.gif': 'image/gif', '.webp': 'image/webp'
+    }
+    mime_type = ext_to_mime.get(ext, 'image/jpeg')
 
-    final_filename = f"{user_id}{ext}"
-    save_path = os.path.join(PROFILE_UPLOAD_FOLDER, final_filename)
+    from .extensions import db as alchemy_db
+    user_obj = User.query.get(user_id)
+    if not user_obj:
+        return jsonify({'error': 'No se ha podido determinar el usuario'}), 400
 
     try:
-        fd, tmp_path = tempfile.mkstemp(dir=PROFILE_UPLOAD_FOLDER, prefix=".profile_upload.tmp.", suffix=ext)
-        os.close(fd)
-                                 
-        with open(tmp_path, 'wb') as fh:
-                                                                      
-            if 'file_bytes' in locals() and file_bytes:
-                fh.write(file_bytes)
-            else:
-                file.stream.seek(0)
-                shutil.copyfileobj(file.stream, fh)
-
-        try:
-            os.chmod(tmp_path, 0o644)
-        except Exception:
-            pass
-
-        os.replace(tmp_path, save_path)
-
+        image_data = file_bytes if file_bytes else file.stream.read()
+        user_obj.profile_image_data = image_data
+        user_obj.profile_image_mime = mime_type
+        alchemy_db.session.commit()
     except Exception as exc:
-        logging.exception("Error al guardar la foto de perfil")
-                                                    
-        try:
-            if os.path.exists(tmp_path):
-                os.remove(tmp_path)
-        except Exception:
-            pass
+        logging.exception("Error al guardar la foto de perfil en la base de datos")
+        alchemy_db.session.rollback()
         return jsonify({'error': 'Error al guardar la imagen en el servidor'}), 500
 
     ts = int(time.time())
-    image_url = url_for('static', filename=f'dockerlabs/images/perfiles/{final_filename}') + f"?t={ts}"
+    image_url = url_for('auth.serve_profile_image', user_id=user_id) + f"?t={ts}"
 
     return jsonify({
         'message': 'Foto de perfil actualizada correctamente.',
@@ -650,7 +686,7 @@ def gestion_usuarios():
     """
     usuarios = User.query.order_by(User.id.asc()).all()
 
-    return render_template('dockerlabs/gestion_usuarios.html', usuarios=usuarios)
+    return render_template('dockerlabs/admin/gestion_usuarios.html', usuarios=usuarios)
 
 @auth_bp.route('/update_user_role/<int:user_id>', methods=['POST'])
 @role_required('admin')

@@ -1,0 +1,95 @@
+{% extends "dockerlabs/base.html" %}
+
+{% block title %}Máquinas Completadas - DockerLabs{% endblock %}
+
+{% block content %}
+
+<link rel="stylesheet" href="{{ url_for('static', filename='dockerlabs/css/user/maquinas_hechas.css') }}">
+
+<div class="completed-machines-container">
+    <div class="completed-header">
+        <h1><i class="bi bi-check-circle-fill"></i> Máquinas Completadas</h1>
+        <p>Tu progreso en DockerLabs</p>
+    </div>
+
+    <!-- Progress Bar Section -->
+    <div class="progress-section">
+        <div class="progress-label">
+            <span>Progreso Total</span>
+            <span class="progress-percentage">{{ completion_percentage }}%</span>
+        </div>
+        <div class="progress-bar-container">
+            <div class="progress-bar-fill" style="width: {{ completion_percentage }}%;"></div>
+        </div>
+        <div class="progress-text">
+            {{ completed_count }} de {{ total_machines }} máquinas completadas
+        </div>
+    </div>
+
+    {% if completed_machines %}
+    <div class="completed-stats">
+        <div class="stat-card">
+            <div class="stat-number">{{ completed_machines|length }}</div>
+            <div class="stat-label">Máquinas Completadas</div>
+        </div>
+    </div>
+
+    <div class="machines-grid">
+        {% for machine in completed_machines %}
+        <div class="machine-card" onclick="window.location.href='{{ url_for('index') }}'">
+            <div class="machine-card-content">
+                <div class="machine-image-container">
+                    {% if machine.machine_logo_url %}
+                    <img src="{{ machine.machine_logo_url }}" alt="{{ machine.machine_name }}"
+                        class="machine-image">
+                    {% else %}
+                    <img src="{{ url_for('static', filename='dockerlabs/images/logos/logo.png') }}"
+                        alt="{{ machine.machine_name }}" class="machine-image">
+                    {% endif %}
+                    <div class="machine-image-overlay"></div>
+                </div>
+
+                <div class="machine-card-body">
+                    <div class="machine-name">{{ machine.machine_name }}</div>
+
+                    <div class="machine-info">
+                        {% if machine.dificultad %}
+                        <span class="difficulty-badge {{ machine.clase }}"
+                            style="background: {{ machine.color }}; color: #000;">
+                            {{ machine.dificultad }}
+                        </span>
+                        {% endif %}
+                    </div>
+
+                    {% if machine.autor %}
+                    <div class="author-info">
+                        <i class="bi bi-person-fill"></i>{{ machine.autor }}
+                    </div>
+                    {% endif %}
+
+                    <div class="completed-date">
+                        <i class="bi bi-check-circle-fill"></i>
+                        {% if '.' in machine.completed_at %}
+                        Completada el {{ machine.completed_at.split('.')[0] }}
+                        {% else %}
+                        Completada el {{ machine.completed_at }}
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <i class="bi bi-inbox"></i>
+        <h2>No has completado ninguna máquina todavía</h2>
+        <p>Explora el catálogo de máquinas y marca las que completes</p>
+        <a href="{{ url_for('index') }}" class="btn-primary">
+            <i class="bi bi-grid-3x3-gap-fill"></i> Ver Máquinas
+        </a>
+    </div>
+    {% endif %}
+</div>
+
+{% endblock %}

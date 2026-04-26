@@ -1,6 +1,7 @@
 from .extensions import db
 from datetime import datetime
 from flask_login import UserMixin
+from sqlalchemy.orm import deferred
 
 class User(db.Model, UserMixin):
     __tablename__ = 'users'
@@ -19,6 +20,10 @@ class User(db.Model, UserMixin):
     linkedin_url = db.Column(db.String(255))
     github_url = db.Column(db.String(255))
     youtube_url = db.Column(db.String(255))
+
+    # Imagen de perfil almacenada en BD
+    profile_image_data = deferred(db.Column(db.LargeBinary, nullable=True))
+    profile_image_mime = deferred(db.Column(db.String(50), nullable=True))
 
     __repr__ = lambda self: f'<User {self.username}>'
 
@@ -40,6 +45,10 @@ class Machine(db.Model):
     pin = db.Column(db.String, nullable=True)
     guest_access = db.Column(db.Boolean, default=False)
     origen = db.Column(db.String, nullable=False, default='docker')
+
+    # Logo almacenado en BD
+    logo_data = deferred(db.Column(db.LargeBinary, nullable=True))
+    logo_mime = deferred(db.Column(db.String(50), nullable=True))
 
     __table_args__ = (
         db.Index('idx_maquinas_autor', 'autor'),
@@ -221,6 +230,33 @@ class CompletedMachine(db.Model):
     )
                            
     user = db.relationship('User', backref=db.backref('completed_machines_rel', cascade='all, delete-orphan'))
+
+class PendingMachineSubmission(db.Model):
+    __tablename__ = 'pending_machine_submissions'
+
+    id = db.Column(db.Integer, primary_key=True)
+    nombre = db.Column(db.String, nullable=False)
+    link_maquina = db.Column(db.String, nullable=False)
+    dificultad = db.Column(db.String, nullable=False)
+    categoria = db.Column(db.String)
+    tags = db.Column(db.String)
+    descripcion = db.Column(db.Text)
+    notas = db.Column(db.Text)
+    writeup_url = db.Column(db.String)
+    discord_user = db.Column(db.String, nullable=False)
+    autor_solicitante = db.Column(db.String)
+    estado = db.Column(
+        db.String,
+        default="pendiente"
+    )
+
+    submitted_at = db.Column(
+        db.DateTime,
+        default=datetime.utcnow
+    )
+
+    reviewed_by = db.Column(db.Integer)
+    reviewed_at = db.Column(db.DateTime)
 
 
 class Mensajeria(db.Model):

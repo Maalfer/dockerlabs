@@ -10,5 +10,6 @@ uvicorn
 asgiref
 flasgger
 gunicorn
+fastapi
 
 # Hay que tener memcached instalado en el vps

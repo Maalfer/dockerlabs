@@ -3,7 +3,7 @@ import re
 import urllib.parse
 import json
 from datetime import datetime
-from .auth import get_profile_image_static_path
+from .auth import get_profile_image_static_path, get_profile_image_url
 from .decorators import role_required, csrf_protect, get_current_role
 from bunkerlabs.extensions import limiter
 from . import validators
@@ -604,7 +604,7 @@ def writeups_recibidos():
       200:
         description: Received writeups page.
     """
-    return render_template('dockerlabs/writeups_recibidos.html')
+    return render_template('dockerlabs/user/writeups_recibidos.html')
 
 @writeups_bp.route('/api/ranking_writeups', methods=['GET'])
 @limiter.limit("60 per minute", methods=["GET"]) 
@@ -672,21 +672,10 @@ def api_author_profile():
 
     maquinas = []
     for m in maquinas_orm:
-        imagen_url = None
-        if m.imagen:
-            img = (m.imagen or "").strip()
-            if img.startswith('dockerlabs/') or img.startswith('bunkerlabs/'):
-                static_path = img
-            elif '/' in img:
-                static_path = f'dockerlabs/images/{img}'
-            else:
-                static_path = f'dockerlabs/images/logos/{img}'
-            imagen_url = url_for('static', filename=static_path)
-        
         maquinas.append({
             "nombre": m.nombre,
             "dificultad": m.dificultad,
-            "imagen_url": imagen_url
+            "imagen_url": url_for('maquinas.serve_machine_logo', machine_id=m.id)
         })
 
     writeups_orm = Writeup.query.filter_by(autor=nombre).order_by(Writeup.created_at.desc()).all()
@@ -706,11 +695,7 @@ def api_author_profile():
     github_url = user.github_url if user else None
     youtube_url = user.youtube_url if user else None
 
-    profile_static_path = get_profile_image_static_path(nombre, user_id=user_id)
-    if profile_static_path is None:
-        profile_static_path = 'dockerlabs/images/balu.webp'
-    
-    profile_image_url = url_for('static', filename=profile_static_path)
+    profile_image_url = get_profile_image_url(username=nombre, user_id=user_id)
     
     return jsonify({
         "nombre": nombre,
@@ -737,10 +722,11 @@ def api_list_writeups_recibidos():
         description: List of received writeups.
     """
 
-    results = alchemy_db.session.query(PendingWriteup, Machine.imagen).outerjoin(Machine, PendingWriteup.maquina == Machine.nombre)        .order_by(PendingWriteup.created_at.desc(), PendingWriteup.id.desc()).all()
+    results = alchemy_db.session.query(PendingWriteup, Machine.id, Machine.imagen).outerjoin(Machine, PendingWriteup.maquina == Machine.nombre)        .order_by(PendingWriteup.created_at.desc(), PendingWriteup.id.desc()).all()
         
     writeups = []
-    for pw, imagen in results:
+    for pw, machine_id, imagen in results:
+        imagen_url = url_for('maquinas.serve_machine_logo', machine_id=machine_id) if machine_id else None
         writeups.append({
             "id": pw.id,
             "maquina": pw.maquina,
@@ -748,7 +734,7 @@ def api_list_writeups_recibidos():
             "url": pw.url,
             "tipo": pw.tipo,
             "created_at": pw.created_at,
-            "imagen": imagen
+            "imagen": imagen_url
         })
     return jsonify(writeups), 200
 
@@ -849,7 +835,7 @@ def writeups_publicados():
       200:
         description: Published writeups page.
     """
-    return render_template('dockerlabs/writeups_publicados.html',user=user)
+    return render_template('dockerlabs/user/writeups_publicados.html',user=user)
 
 @writeups_bp.route('/api/writeups_subidos', methods=['GET'])
 @role_required('admin', 'moderador', 'jugador')
@@ -970,4 +956,4 @@ def peticiones_writeups():
                                     
     requests = WriteupEditRequest.query.order_by(WriteupEditRequest.id.desc()).all()
 
-    return render_template("peticiones.html", peticiones=requests)
+    return render_template("dockerlabs/admin/peticiones.html", peticiones=requests)

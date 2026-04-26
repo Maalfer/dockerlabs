@@ -1,0 +1,89 @@
+/* Estilos para página principal de DockerLabs */
+.search-with-filter {
+    position: relative;
+    display: inline-block;
+}
+
+.busqueda-con-filtro .form-control {
+    padding-right: 75px;
+}
+
+.search-with-filter .btn {
+    position: absolute;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    border: none;
+    background: transparent;
+    color: #6c757d;
+    z-index: 10;
+    padding: 0 10px;
+}
+
+.search-with-filter .btn:hover {
+    background: transparent;
+    color: #495057;
+}
+
+.search-with-filter .dropdown-menu {
+    font-size: 0.875rem;
+    z-index: 9999 !important;
+}
+
+.btn-academia {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.5rem 1rem;
+    font-family: 'Fira Code', monospace;
+    font-weight: 600;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    border: 1px solid rgba(139, 92, 246, 0.6);
+    border-radius: 6px;
+    cursor: pointer;
+    background: rgba(15, 23, 42, 0.96);
+    color: #c4b5fd;
+    box-shadow: 0 0 10px rgba(139, 92, 246, 0.15);
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.btn-academia::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, rgba(139, 92, 246, 0.25) 0%, transparent 60%);
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.btn-academia:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(139, 92, 246, 0.4), 0 0 20px rgba(139, 92, 246, 0.2);
+    border-color: rgba(139, 92, 246, 1);
+    color: #fff;
+}
+
+.btn-academia:hover::before {
+    opacity: 1;
+}
+
+.btn-academia:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 8px rgba(139, 92, 246, 0.3);
+}
+
+.btn-academia i {
+    font-size: 0.85rem;
+    color: #a78bfa;
+    transition: color 0.3s ease;
+}
+
+.btn-academia:hover i {
+    color: #ddd6fe;
+    filter: drop-shadow(0 0 5px rgba(139, 92, 246, 0.8));
+}

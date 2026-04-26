@@ -22,7 +22,7 @@ from .database import init_db
 from . import validators
 from .models import User
 from .decorators import get_current_role, generate_csrf_token, csrf_protect, role_required, generate_token, verify_token
-from .auth import auth_bp, get_profile_image_static_path, load_username_change_requests
+from .auth import auth_bp, get_profile_image_static_path, get_profile_image_url, load_username_change_requests
 from .maquinas import maquinas_bp, recalcular_ranking_creadores
 from .api import api_bp
 
@@ -71,7 +71,6 @@ app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY')
 
 if not app.config['SECRET_KEY']:
-    # Generar una clave segura aleatoria si no está configurada (útil para desarrollo/scripts)
     app.config['SECRET_KEY'] = secrets.token_hex(32)
     print("WARNING: SECRET_KEY not set. Using a temporary generated key.")                                                  
 
@@ -93,7 +92,7 @@ def apply_security_headers(response):
         response.headers['Content-Security-Policy-Report-Only'] = (
             f"default-src 'self'; "
             f"style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://fonts.googleapis.com; "
-            f"script-src 'self' 'nonce-{nonce}' https://cdn.jsdelivr.net https://www.googletagmanager.com; "
+            f"script-src 'self' 'nonce-{nonce}' 'unsafe-hashes' https://cdn.jsdelivr.net https://www.googletagmanager.com; "
             f"img-src 'self' data: https:; "
             f"font-src 'self' https://fonts.gstatic.com https://cdn.jsdelivr.net; "
             f"connect-src 'self'; "
@@ -108,6 +107,32 @@ def apply_security_headers(response):
     response.headers['X-Content-Type-Options'] = 'nosniff'
     response.headers['X-Frame-Options'] = 'DENY'
     response.headers['Referrer-Policy'] = 'strict-origin-when-cross-origin'
+
+    # Permissions-Policy: desactiva características del navegador no utilizadas
+    response.headers['Permissions-Policy'] = (
+        'accelerometer=(), '
+        'autoplay=(), '
+        'camera=(), '
+        'display-capture=(), '
+        'encrypted-media=(), '
+        'fullscreen=(), '
+        'gamepad=(), '
+        'geolocation=(), '
+        'gyroscope=(), '
+        'hid=(), '
+        'idle-detection=(), '
+        'magnetometer=(), '
+        'microphone=(), '
+        'midi=(), '
+        'payment=(), '
+        'picture-in-picture=(), '
+        'publickey-credentials-get=(), '
+        'screen-wake-lock=(), '
+        'serial=(), '
+        'storage-access=(), '
+        'usb=(), '
+        'xr-spatial-tracking=()'
+    )
 
     return response
 
@@ -140,6 +165,10 @@ def restrict_swagger_access():
         if not current_user.is_authenticated:
             return redirect(url_for('auth.login', next=request.url))
 
+        role = get_current_role()
+        if role not in ('admin', 'moderador'):
+            return render_template('dockerlabs/errors/403.html'), 403
+
 
 decorators.get_current_role = get_current_role
 
@@ -151,8 +180,9 @@ app.register_blueprint(api_bp)
 def inject_globals():
     return {
         'current_user_role': get_current_role(),
-        'csrf_token': generate_csrf_token,                                             
-        'csp_nonce': g.get('csp_nonce', '')
+        'csrf_token': generate_csrf_token,
+        'csp_nonce': g.get('csp_nonce', ''),
+        'get_profile_image_url': get_profile_image_url
     }
 
 def obtener_dificultades():
@@ -178,7 +208,7 @@ def terminos_condiciones():
       200:
         description: Página de términos.
     """
-    return render_template('dockerlabs/terminos-condiciones.html')
+    return render_template('dockerlabs/info/terminos-condiciones.html')
 
 @app.route('/bug-bounty')
 def bug_bounty():
@@ -212,15 +242,10 @@ def dashboard():
     current_username = session.get('username') or (current_user.username if current_user.is_authenticated else None)
     current_user_id = session.get('user_id') or (current_user.id if current_user.is_authenticated else None)
 
-    static_path = get_profile_image_static_path(current_username, user_id=current_user_id)
-
-    if static_path is None:
-        static_path = 'dockerlabs/images/balu.webp'
-
-    profile_image_url = url_for('static', filename=static_path)
+    profile_image_url = get_profile_image_url(username=current_username, user_id=current_user_id)
 
     return render_template(
-        'dockerlabs/dashboard.html',
+        'dockerlabs/admin/dashboard.html',
         maquinas=maquinas,
         profile_image_url=profile_image_url,
         user=g.user
@@ -462,6 +487,7 @@ def index():
             'enlace_autor': m.enlace_autor,
             'fecha': m.fecha,
             'imagen': m.imagen,
+            'imagen_url': url_for('maquinas.serve_machine_logo', machine_id=m.id),
             'descripcion': m.descripcion,
             'link_descarga': m.link_descarga,
             'posicion': m.posicion,
@@ -509,7 +535,7 @@ def index():
 
 @app.errorhandler(404)
 def page_not_found(e):
-    return render_template('dockerlabs/404.html'), 404
+    return render_template('dockerlabs/errors/404.html'), 404
 
 from bunkerlabs import bunkerlabs_bp
 app.register_blueprint(bunkerlabs_bp, url_prefix='/bunkerlabs')

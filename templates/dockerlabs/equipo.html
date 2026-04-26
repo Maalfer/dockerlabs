@@ -1,21 +1,13 @@
 {% extends "dockerlabs/base.html" %}
 
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='dockerlabs/css/equipo.css') }}">
+{% endblock %}
+
 {% block content %}
 
-<style>
-    .link-dark {
-        color: #0d6efd !important;
-        text-decoration: none;
-        font-weight: 500;
-    }
-
-    .link-dark:hover {
-        text-decoration: underline;
-    }
-</style>
-
 <div class="container mt-5 equipo-page">
-    <h1 class="title" style="text-align: center; font-weight: bold;">Equipo de DockerLabs</h1>
+    <h1 class="title">Equipo de DockerLabs</h1>
 
     <!-- ADMINISTRADORES -->
     <div class="section-label">
@@ -29,6 +21,9 @@
             <span class="colaborador-name">El Pingüino de Mario</span>
             <div class="role-badge role-owner">
                 👑 Owner
+            </div>
+            <div class="role-badge role-dev">
+                <i class="bi bi-code-slash"></i> Desarrollador
             </div>
             <div class="role-badge role-admin">
                 <i class="bi bi-shield-fill-check"></i> Administrador
@@ -49,6 +44,14 @@
             <a href="https://github.com/Maciferna" target="_blank" class="colaborador">
                 <img src="/static/dockerlabs/images/agradecimientos/maci.png" alt="Maciferma">
                 <span class="colaborador-name">Maciiii___</span>
+                <div class="role-badge role-admin">
+                    <i class="bi bi-shield-fill-check"></i> Administrador
+                </div>
+            </a>
+
+            <a href="https://github.com/D1se0" target="_blank" class="colaborador">
+                <img src="{{ get_profile_image_url(username='d1se0') }}" alt="d1se0">
+                <span class="colaborador-name">d1se0</span>
                 <div class="role-badge role-admin">
                     <i class="bi bi-shield-fill-check"></i> Administrador
                 </div>
@@ -87,12 +90,12 @@
         <span><i class="bi bi-people-fill"></i> Colaboradores</span>
     </div>
     <p class="colaboradores-desc" style="text-align: center;">¿Quieres aparecer aquí? Para colaborar en DockerLabs puede consultar <a href="https://github.com/0xR00/dockerlabs/blob/new/contributing-repo/CONTRIBUTING.md">AQUÍ</a></p>
-    </div>
     <div class="card p-4 mt-2 mb-5 colaboradores-card">
         <div class="colaboradores-mosaic">
             <a href="https://dockerlabs.es" target="_blank" class="colaborador-mini" title="Diseo">
                 <img src="/static/dockerlabs/images/agradecimientos/diseo.png" alt="Diseo">
             </a>
+            <!-- Los colaboradores se agregarán aquí -->
         </div>
     </div>
 </div>

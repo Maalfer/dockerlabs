@@ -528,14 +528,20 @@ function presentacion(nombre, dificultad, color, autor_nombre, autor_enlace, fec
     }
 
     // Image Cleanup
-    function sanitizeImagePath(path) {
-        if (!path) return 'dockerlabs/images/logos/logo.png';
-        path = path.replace(/\.\./g, '');
-        path = path.replace(/^\/+/, '');
-        path = path.replace(/[^a-zA-Z0-9\-_./]/g, '');
-        return path;
+    let imageUrl = "";
+    if (!escImagen) {
+        imageUrl = "/static/dockerlabs/images/logos/logo.png";
+    } else if (escImagen.includes('/img/')) {
+        imageUrl = escImagen;
+    } else {
+        function sanitizeImagePath(path) {
+            path = path.replace(/\.\./g, '');
+            path = path.replace(/^\/+/, '');
+            path = path.replace(/[^a-zA-Z0-9\-_./]/g, '');
+            return path;
+        }
+        imageUrl = "/static/" + sanitizeImagePath(escImagen);
     }
-    const imageUrl = "/static/" + sanitizeImagePath(escImagen);
 
     // --- DOM Structure ---
 

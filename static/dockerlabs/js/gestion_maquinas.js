@@ -57,7 +57,7 @@ function uploadMachineLogo(machineId, origen) {
                 }
 
                 // Update preview
-                previewEl.src = `/static/dockerlabs/images/${data.image_path}`;
+                previewEl.src = data.image_url || `/static/dockerlabs/images/${data.image_path}`;
                 previewEl.style.display = 'block';
                 const placeholder = document.getElementById(`placeholder-${origen}-${machineId}`);
                 if (placeholder) placeholder.style.display = 'none';

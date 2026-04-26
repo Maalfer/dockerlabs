@@ -16,6 +16,8 @@
     {% endif %}
     <link rel="stylesheet" href="{{ url_for('static', filename='dockerlabs/css/base.css') }}">
 
+    {% block extra_css %}{% endblock %}
+
     <link rel="icon" href="{{ url_for('static', filename='dockerlabs/images/logos/logo.png') }}" type="image/png">
 
     <script nonce="{{ csp_nonce }}">
@@ -137,7 +139,7 @@
                 <h2 class="modal-title">Menú</h2>
             </div>
             <div class="ranking-list two-columns">
-                <a href="https://app.secur0.com/vulnerability-disclosure/Dockerlabs" target="_blank"
+                <a href="https://app.secur0.com/programs/vdp/Dockerlabs" target="_blank"
                     class="ranking-item">
                     <div class="user-info"><span class="user-name">Programa VDP</span></div>
                     <i class="bi bi-box-arrow-up-right" style="color: #64748b; font-size: 0.9rem;"></i>
@@ -166,6 +168,10 @@
                     <div class="user-info"><span class="user-name">Agradecimientos</span></div>
                     <i class="bi bi-heart" style="color: #64748b;"></i>
                 </a>
+                <a href="{{ url_for('main.soporte') }}" target="_blank" class="ranking-item">
+                    <div class="user-info"><span class="user-name">Soporte</span></div>
+                    <i class="bi bi-tools" style="color: #64748b;"></i>
+                </a>
             </div>
         </div>
     </div>
@@ -186,6 +192,15 @@
                     <div class="user-info"><span class="user-name">Máquinas Completadas</span></div>
                     <i class="bi bi-check-circle" style="color: #64748b;"></i>
                 </a>
+		<a href="{{ url_for('main.user_pending_machines') }}" class="ranking-item">
+    			<div class="user-info">
+        			<span class="user-name">
+            				Mis máquinas enviadas
+        			</span>
+    			</div>
+    		    <i class="bi bi-hdd-stack" style="color:#64748b;"></i>
+		</a>
+
                 {% if current_user_role in ['admin', 'moderador'] %}
                 <a href="{{ url_for('peticiones') }}" class="ranking-item">
                     <div class="user-info"><span class="user-name">Peticiones</span></div>
@@ -195,6 +210,16 @@
                     <div class="user-info"><span class="user-name">Gestión Usuarios</span></div>
                     <i class="bi bi-people" style="color: #64748b;"></i>
                 </a>
+                <a href="{{ url_for('main.pending_machines') }}" class="ranking-item">
+   			 <div class="user-info">
+        			<span class="user-name">
+            				Aprobar Máquinas
+        			</span>
+    			</div>
+
+    		   <i class="bi bi-hdd-stack" style="color:#64748b;"></i>
+		</a>
+
                 {% endif %}
                 <a href="{{ url_for('maquinas.gestion_maquinas') }}" class="ranking-item">
                     <div class="user-info"><span class="user-name">Gestión Máquinas</span></div>
@@ -204,6 +229,10 @@
                 <a href="{{ url_for('maquinas.add_maquina_page') }}" class="ranking-item">
                     <div class="user-info"><span class="user-name">Añadir Máquina</span></div>
                     <i class="bi bi-plus-lg" style="color: #64748b;"></i>
+                </a>
+                <a href="{{ url_for('main.backups_page') }}" class="ranking-item">
+                    <div class="user-info"><span class="user-name">Backups</span></div>
+                    <i class="bi bi-database-down" style="color: #64748b;"></i>
                 </a>
                 <a href="{{ url_for('bunkerlabs.accesos_bunkerlabs') }}" class="ranking-item">
                     <div class="user-info"><span class="user-name">Accesos Bunkerlabs</span></div>

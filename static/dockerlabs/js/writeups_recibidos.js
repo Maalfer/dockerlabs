@@ -47,7 +47,7 @@ function renderRow(writeup) {
     const tipo = escapeHtml(writeup.tipo || "");
     const created_at = formatDate(writeup.created_at);
 
-    const imagen = writeup.imagen ? `/static/dockerlabs/images/${writeup.imagen}` : '/static/dockerlabs/images/logos/logo.png';
+    const imagen = writeup.imagen ? writeup.imagen : '/static/dockerlabs/images/logos/logo.png';
 
     const tr = document.createElement("tr");
     tr.dataset.id = writeup.id;

@@ -1,7 +1,11 @@
 import os
 from flask import Blueprint, jsonify, url_for, session, request
-from .auth import get_profile_image_static_path
+from .auth import get_profile_image_static_path, get_profile_image_url
 from bunkerlabs.extensions import limiter
+from .models import PendingMachineSubmission
+from .decorators import role_required, csrf_protect, get_current_role
+from flask_login import login_required
+from .extensions import db as alchemy_db
 
 api_bp = Blueprint('api', __name__)
 
@@ -170,8 +174,7 @@ def api_user_info():
     static_path = get_profile_image_static_path(user.username, user_id=user.id)
     if static_path is None:
         static_path = 'dockerlabs/images/balu.webp'
-    
-    user_data['profile_image_url'] = url_for('static', filename=static_path, _external=True)
+    user_data['profile_image_url'] = get_profile_image_url(username=user.username, user_id=user.id)
 
     completed_objs = CompletedMachine.query.filter_by(user_id=user_id).order_by(CompletedMachine.completed_at.desc()).all()
     completed_machines = [{'machine_name': c.machine_name, 'completed_at': c.completed_at} for c in completed_objs]
@@ -241,12 +244,7 @@ def api_ranking_autores():
         }
 
         user_id = user.id if user else None
-        static_path = get_profile_image_static_path(r['autor'], user_id=user_id)
-        
-        if static_path:
-             r['imagen'] = url_for('static', filename=static_path, _external=True)
-        else:
-             r['imagen'] = url_for('static', filename='dockerlabs/images/balu.webp', _external=True)
+        r['imagen'] = get_profile_image_url(username=r['autor'], user_id=user_id)
 
         response_list.append(r)
 
@@ -299,16 +297,86 @@ def api_ranking_writeups():
         
         author_name = rank.nombre
         user_id = user.id if user else None
-        
-        if author_name:
-            static_path = get_profile_image_static_path(author_name, user_id=user_id)
-            if static_path:
-                r['imagen_url'] = url_for('static', filename=static_path, _external=True)
-            else:
-                r['imagen_url'] = url_for('static', filename='dockerlabs/images/balu.webp', _external=True)
-        else:
-             r['imagen_url'] = url_for('static', filename='dockerlabs/images/balu.webp', _external=True)
+        r['imagen_url'] = get_profile_image_url(username=author_name, user_id=user_id)
 
         response_list.append(r)
 
     return jsonify(response_list), 200
+
+# @api_bp.route('/api/submit-machine', methods=['POST'])
+# @csrf_protect
+# @limiter.limit("5 per hour")
+# def submit_machine():
+# 
+#     data = request.get_json(silent=True) or {}
+# 
+#    required_fields = ["nombre", "link_maquina", "dificultad", "discord_user"]
+# 
+#     for f in required_fields:
+#         if f not in data or not data[f]:
+#             return jsonify({"error": f"Falta {f}"}), 400
+# 
+#     sub = PendingMachineSubmission(
+#         nombre=data["nombre"],
+#         link_maquina=data["link_maquina"],
+#         dificultad=data["dificultad"],
+#         categoria=data.get("categoria"),
+#         tags=data.get("tags"),
+#         descripcion=data.get("descripcion"),
+#         notas=data.get("notas"),
+#         writeup_url=data.get("writeup_url"),
+#         discord_user=data["discord_user"],
+#         autor_solicitante=session.get("username")
+#     )
+# 
+#     from .extensions import db as alchemy_db
+# 
+#     alchemy_db.session.add(sub)
+#     alchemy_db.session.commit()
+# 
+#     return jsonify({"success": True}), 200
+
+
+@api_bp.route('/api/submit-machine', methods=['POST'])
+@login_required
+@csrf_protect
+@limiter.limit("5 per hour")
+def submit_machine():
+
+    data = request.get_json(silent=True) or {}
+
+    required_fields = [
+        "nombre",
+        "link_maquina",
+        "dificultad",
+        "discord_user"
+    ]
+
+    for f in required_fields:
+        if not data.get(f):
+            return jsonify({"error": f"Falta {f}"}), 400
+
+
+    username = session.get("username")  # <- automático
+
+    sub = PendingMachineSubmission(
+        nombre=data["nombre"],
+        link_maquina=data["link_maquina"],
+        dificultad=data["dificultad"],
+        categoria=data.get("categoria"),
+        tags=data.get("tags"),
+        descripcion=data.get("descripcion"),
+        notas=data.get("notas"),
+        writeup_url=data.get("writeup_url"),
+        discord_user=data["discord_user"],
+        autor_solicitante=username,
+        estado="pendiente"
+    )
+
+    alchemy_db.session.add(sub)
+    alchemy_db.session.commit()
+
+    return jsonify({
+        "success": True,
+        "message": "Máquina enviada y pendiente de revisión"
+    }), 200

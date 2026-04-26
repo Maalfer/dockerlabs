@@ -13,9 +13,9 @@ def csrf_protect(view_func):
             form_token = request.form.get('csrf_token') if request.form else None
             token = header_token or form_token
             if not session_token or not token:
-                return render_template('403.html'), 403
+                return render_template('dockerlabs/errors/403.html'), 403
             if not secrets.compare_digest(str(session_token), str(token)):
-                return render_template('403.html'), 403
+                return render_template('dockerlabs/errors/403.html'), 403
         return view_func(*args, **kwargs)
     return wrapped_view
 
@@ -28,7 +28,7 @@ def role_required(*roles_permitidos):
 
             role = get_current_role()
             if role not in roles_permitidos:
-                return render_template('403.html'), 403
+                return render_template('dockerlabs/errors/403.html'), 403
 
             return view_func(*args, **kwargs)
         return wrapped_view
