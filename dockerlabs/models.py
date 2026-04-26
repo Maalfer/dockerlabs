@@ -21,7 +21,9 @@ class User(db.Model):
     github_url = db.Column(db.String(255))
     youtube_url = db.Column(db.String(255))
 
-    # Imagen de perfil almacenada en BD
+    # Imagen de perfil almacenada en archivo (nuevo sistema)
+    profile_image_path = db.Column(db.String(255), nullable=True)
+    # Mantener compatibilidad con datos antiguos en BD
     profile_image_data = deferred(db.Column(db.LargeBinary, nullable=True))
     profile_image_mime = deferred(db.Column(db.String(50), nullable=True))
 
@@ -51,7 +53,9 @@ class Machine(db.Model):
     guest_access = db.Column(db.Boolean, default=False)
     origen = db.Column(db.String, nullable=False, default='docker')
 
-    # Logo almacenado en BD
+    # Logo almacenado en archivo (nuevo sistema)
+    logo_path = db.Column(db.String(255), nullable=True)
+    # Mantener compatibilidad con datos antiguos en BD
     logo_data = deferred(db.Column(db.LargeBinary, nullable=True))
     logo_mime = deferred(db.Column(db.String(50), nullable=True))
 

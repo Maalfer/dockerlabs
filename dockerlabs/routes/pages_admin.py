@@ -289,16 +289,29 @@ def register_pages_admin_routes(
                     p = db_paths[k]
                     if os.path.exists(p) and os.path.isfile(p):
                         extras.append(p)
+                
+                # Incluir carpeta de almacenamiento de imágenes
+                almacenamiento_dir = os.path.join(os.path.dirname(db_paths["db"]), "almacenamiento")
+                
                 zip_bytes = io.BytesIO()
                 with zipfile.ZipFile(zip_bytes, "w", compression=zipfile.ZIP_DEFLATED) as zf:
                     zf.write(snapshot_db_path, arcname=os.path.basename(snapshot_db_path))
                     for p in extras:
                         zf.write(p, arcname=os.path.basename(p))
+                    
+                    # Agregar carpeta almacenamiento si existe
+                    if os.path.exists(almacenamiento_dir) and os.path.isdir(almacenamiento_dir):
+                        for root, dirs, files in os.walk(almacenamiento_dir):
+                            for file in files:
+                                file_path = os.path.join(root, file)
+                                arcname = os.path.join("almacenamiento", os.path.relpath(file_path, almacenamiento_dir))
+                                zf.write(file_path, arcname=arcname)
+                
                 zip_bytes.seek(0)
                 return StreamingResponse(
                     zip_bytes,
                     media_type="application/zip",
-                    headers={"Content-Disposition": 'attachment; filename="dockerlabs_sqlite_backup.zip"'},
+                    headers={"Content-Disposition": 'attachment; filename="dockerlabs_backup.zip"'},
                 )
         finally:
             try:
@@ -395,6 +408,16 @@ def register_pages_admin_routes(
                 if candidate_journal:
                     shutil.copyfile(candidate_journal, db_paths["journal"] + ".tmp")
                     os.replace(db_paths["journal"] + ".tmp", db_paths["journal"])
+
+                # Restaurar carpeta almacenamiento si existe en el backup
+                almacenamiento_extract_dir = os.path.join(extract_dir, "almacenamiento")
+                if os.path.exists(almacenamiento_extract_dir) and os.path.isdir(almacenamiento_extract_dir):
+                    almacenamiento_target_dir = os.path.join(db_dir, "almacenamiento")
+                    # Eliminar carpeta almacenamiento existente si existe
+                    if os.path.exists(almacenamiento_target_dir):
+                        shutil.rmtree(almacenamiento_target_dir, ignore_errors=True)
+                    # Copiar carpeta almacenamiento desde el backup
+                    shutil.copytree(almacenamiento_extract_dir, almacenamiento_target_dir)
 
             flask_session["_flashes"] = [("success", "Backup restaurado correctamente.")]
             cookie = set_flask_session_cookie(flask_session)

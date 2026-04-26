@@ -23,6 +23,9 @@ database/*.db-wal
 database/*.db.lock
 database/*.lock
 
+# Image storage
+database/almacenamiento/
+
 # IDE
 .vscode/
 .idea/

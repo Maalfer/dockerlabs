@@ -18,7 +18,7 @@ except Exception:
 class BackupsAdminTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        from dockerlabs.app import app
+        from asgi import fastapi_app as app
 
         cls.app = app
         cls.app.config["TESTING"] = True
@@ -103,6 +103,8 @@ class BackupsAdminTests(unittest.TestCase):
         zf = zipfile.ZipFile(io.BytesIO(resp.data), "r")
         names = zf.namelist()
         self.assertTrue(any(n.lower().endswith(".db") for n in names))
+        # Verificar que el backup incluya la carpeta almacenamiento
+        self.assertTrue(any("almacenamiento" in n for n in names))
 
     def test_restore_roundtrip(self):
         self._login_as(self.admin_id, self.admin_username)

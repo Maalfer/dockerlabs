@@ -846,16 +846,29 @@ async def api_upload_profile_photo(
     if not user_obj:
         return JSONResponse(status_code=400, content={"error": "No se ha podido determinar el usuario"})
 
+    # Guardar imagen en disco en database/almacenamiento/perfiles
+    BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+    almacenamiento_dir = os.path.join(BASE_DIR, 'database', 'almacenamiento', 'perfiles')
+    os.makedirs(almacenamiento_dir, exist_ok=True)
+    
+    ts = int(time.time())
+    filename = f"user_{user_id}_{ts}{ext}"
+    file_path = os.path.join(almacenamiento_dir, filename)
+    
     try:
-        user_obj.profile_image_data = file_bytes
+        with open(file_path, 'wb') as f:
+            f.write(file_bytes)
+        
+        # Guardar ruta en BD y limpiar datos binarios antiguos
+        user_obj.profile_image_path = f"database/almacenamiento/perfiles/{filename}"
+        user_obj.profile_image_data = None
         user_obj.profile_image_mime = mime_type
         alchemy_db.session.commit()
     except Exception as exc:
-        logging.exception("Error al guardar la foto de perfil en la base de datos")
+        logging.exception("Error al guardar la foto de perfil en disco")
         alchemy_db.session.rollback()
         return JSONResponse(status_code=500, content={"error": "Error al guardar la imagen en el servidor"})
 
-    ts = int(time.time())
     image_url = f"/img/perfil/{user_id}?t={ts}"
 
     return {
@@ -1158,19 +1171,28 @@ async def api_upload_machine_logo(
     if not maq:
         return JSONResponse(status_code=404, content={"error": "Máquina no encontrada"})
 
+    # Guardar imagen en disco en database/almacenamiento/logos
+    BASE_DIR = _os.path.abspath(_os.path.join(_os.path.dirname(__file__), '..'))
+    almacenamiento_dir = _os.path.join(BASE_DIR, 'database', 'almacenamiento', 'logos')
+    _os.makedirs(almacenamiento_dir, exist_ok=True)
+    
     if origen == 'bunker':
         nombre_seguro = secure_filename(maq.nombre)
-        final_filename = f"{nombre_seguro}{ext}"
-        db_path_prefix = "bunkerlabs/images/logos-bunkerlabs"
+        final_filename = f"bunker_{nombre_seguro}{ext}"
     else:
         ts = int(_time.time())
         final_filename = f"docker_{machine_id}_{ts}{ext}"
-        db_path_prefix = "dockerlabs/images/logos"
+    
+    file_path = _os.path.join(almacenamiento_dir, final_filename)
 
     try:
-        maq.logo_data = file_bytes
+        with open(file_path, 'wb') as f:
+            f.write(file_bytes)
+        
+        # Guardar ruta en BD y limpiar datos binarios antiguos
+        maq.logo_path = f"database/almacenamiento/logos/{final_filename}"
+        maq.logo_data = None
         maq.logo_mime = logo_mime
-        maq.imagen = f"{db_path_prefix}/{final_filename}"
         alchemy_db.session.commit()
     except Exception as e:
         alchemy_db.session.rollback()
@@ -1178,7 +1200,6 @@ async def api_upload_machine_logo(
 
     return {
         "message": "Logo subido correctamente",
-        "image_path": maq.imagen,
         "filename": final_filename,
         "image_url": f"/img/maquina/{machine_id}"
     }
