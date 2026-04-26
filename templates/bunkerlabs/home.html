@@ -114,7 +114,7 @@
             data-nombre="{{ maquina.nombre }}" data-tamanio="{{ maquina.tamaño }}" data-clase="{{ maquina.clase }}"
             data-color="{{ maquina.color }}" data-autor="{{ maquina.autor }}"
             data-enlace-autor="{{ maquina.enlace_autor }}" data-fecha="{{ maquina.fecha }}"
-            data-imagen="{{ maquina.imagen }}" data-descripcion="{{ maquina.descripcion }}" {% if is_locked_for_guest
+            data-imagen="{{ url_for('maquinas.serve_machine_logo', machine_id=maquina.id) }}" data-descripcion="{{ maquina.descripcion }}" {% if is_locked_for_guest
             %}onclick="window.open('https://skool.com/bunkerpinguino', '_blank')" style="cursor: pointer;" {% endif %}>
 
             {% if is_locked_for_guest %}

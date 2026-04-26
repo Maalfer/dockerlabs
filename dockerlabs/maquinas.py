@@ -1,9 +1,10 @@
 import os
+import io
 import json
 from datetime import datetime
 from urllib.parse import urlparse, urljoin
 from sqlalchemy.exc import IntegrityError
-from flask import Blueprint, render_template, request, jsonify, redirect, url_for, session, flash, current_app
+from flask import Blueprint, render_template, request, jsonify, redirect, url_for, session, flash, current_app, send_file
 from werkzeug.utils import secure_filename
 from .decorators import role_required, csrf_protect, get_current_role
 from bunkerlabs.extensions import limiter
@@ -444,42 +445,66 @@ def upload_machine_logo():
         final_filename = f"{origen}_{machine_id}_{timestamp}{ext}"
     
     if origen == 'bunker':
-        upload_folder = os.path.join(BASE_DIR, 'static', 'bunkerlabs', 'images', 'logos-bunkerlabs')
         db_path_prefix = "bunkerlabs/images/logos-bunkerlabs"
     else:
-        upload_folder = LOGO_UPLOAD_FOLDER
         db_path_prefix = "dockerlabs/images/logos"
 
-    os.makedirs(upload_folder, exist_ok=True)
-    
-    save_path = os.path.join(upload_folder, final_filename)
+    file.stream.seek(0)
+    logo_bytes = file.stream.read()
 
+    # Guardar también en BD
+    ext_to_mime = {
+        '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg',
+        '.png': 'image/png', '.gif': 'image/gif',
+        '.webp': 'image/webp', '.svg': 'image/svg+xml'
+    }
+    _, fext = os.path.splitext(final_filename)
+    logo_mime = ext_to_mime.get(fext.lower(), 'image/jpeg')
     try:
-        fd, tmp_path = tempfile.mkstemp(dir=upload_folder, prefix=f".{origen}_{machine_id}.tmp.")
-        os.close(fd)
-        
-        with open(tmp_path, 'wb') as fh:
-            file.stream.seek(0)
-            fh.write(file.stream.read())
-        
-        os.chmod(tmp_path, 0o644)
-        os.replace(tmp_path, save_path)
-        
-    except Exception as e:
-        try:
-            if os.path.exists(tmp_path):
-                os.remove(tmp_path)
-        except:
-            pass
-        return jsonify({'error': f'Error al guardar la imagen: {str(e)}'}), 500
+        maq = Machine.query.get(int(machine_id))
+        if maq:
+            maq.logo_data = logo_bytes
+            maq.logo_mime = logo_mime
+            maq.imagen = f"{db_path_prefix}/{final_filename}"
+            alchemy_db.session.commit()
+    except Exception:
+        alchemy_db.session.rollback()
 
     relative_path = f"{db_path_prefix}/{final_filename}"
-    
     return jsonify({
         'message': 'Logo subido correctamente',
         'image_path': relative_path,
-        'filename': final_filename
+        'filename': final_filename,
+        'image_url': url_for('maquinas.serve_machine_logo', machine_id=int(machine_id))
     }), 200
+
+
+@maquinas_bp.route('/img/maquina/<int:machine_id>')
+def serve_machine_logo(machine_id):
+    """
+    Sirve el logo de la máquina desde BD con fallback a fichero estático.
+    ---
+    tags:
+      - Machines
+    parameters:
+      - name: machine_id
+        in: path
+        type: integer
+        required: true
+    responses:
+      200:
+        description: Logo de la máquina.
+    """
+    machine = Machine.query.get(machine_id)
+    if machine and machine.logo_data:
+        mime = machine.logo_mime or 'image/jpeg'
+        return send_file(io.BytesIO(machine.logo_data), mimetype=mime)
+    # Fallback a fichero estático
+    if machine and machine.imagen:
+        full_path = os.path.join(BASE_DIR, 'static', machine.imagen)
+        if os.path.exists(full_path):
+            return send_file(full_path)
+    return redirect(url_for('static', filename='dockerlabs/images/logos/logo.png'))
 
 @maquinas_bp.route('/add-maquina', methods=['GET', 'POST'])
 @role_required('admin')
@@ -549,6 +574,13 @@ def add_maquina_page():
 
                     os.makedirs(upload_folder, exist_ok=True)
                     save_path = os.path.join(upload_folder, final_filename)
+                    file.seek(0)
+                    _pending_logo_bytes = file.read()
+                    _pending_logo_mime = {
+                        '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg',
+                        '.png': 'image/png', '.gif': 'image/gif', '.webp': 'image/webp'
+                    }.get(ext, 'image/jpeg')
+                    file.seek(0)
                     file.save(save_path)
                     imagen = f"{db_path_prefix}/{final_filename}"
                 else:
@@ -654,6 +686,14 @@ def add_maquina_page():
                     )
                     alchemy_db.session.add(new_bunker_machine)
                     alchemy_db.session.commit()
+                    # Guardar logo en BD si se subió imagen
+                    if '_pending_logo_bytes' in dir() or '_pending_logo_bytes' in locals():
+                        try:
+                            new_bunker_machine.logo_data = _pending_logo_bytes
+                            new_bunker_machine.logo_mime = _pending_logo_mime
+                            alchemy_db.session.commit()
+                        except Exception:
+                            alchemy_db.session.rollback()
                 except IntegrityError:
                     alchemy_db.session.rollback()
                     error = "Ya existe una máquina con ese nombre."
@@ -671,12 +711,20 @@ def add_maquina_page():
                         imagen=imagen,
                         descripcion=descripcion,
                         link_descarga=link_descarga,
-                        origen='docker'  # Explicitly set, though it's default
+                        origen='docker'
                     )
                     alchemy_db.session.add(new_machine)
                     alchemy_db.session.commit()
+                    # Guardar logo en BD si se subió imagen
+                    if '_pending_logo_bytes' in dir() or '_pending_logo_bytes' in locals():
+                        try:
+                            new_machine.logo_data = _pending_logo_bytes
+                            new_machine.logo_mime = _pending_logo_mime
+                            alchemy_db.session.commit()
+                        except Exception:
+                            alchemy_db.session.rollback()
                     recalcular_ranking_creadores()
-                except Exception:                            
+                except Exception:
                     alchemy_db.session.rollback()
                     error = "Ya existe una máquina con ese nombre."
 
@@ -1144,6 +1192,7 @@ def maquinas_hechas():
     results = alchemy_db.session.query(
         CompletedMachine.machine_name,
         CompletedMachine.completed_at,
+        Machine.id,
         Machine.dificultad,
         Machine.color,
         Machine.imagen,
@@ -1155,10 +1204,15 @@ def maquinas_hechas():
     for row in results:
 
         completed_at_str = row.completed_at.isoformat() if row.completed_at else None
-        
+        machine_logo_url = (
+            url_for('maquinas.serve_machine_logo', machine_id=row.id)
+            if row.id else url_for('static', filename='dockerlabs/images/logos/logo.png')
+        )
         completed_machines.append({
             "machine_name": row.machine_name,
             "completed_at": completed_at_str,
+            "machine_id": row.id,
+            "machine_logo_url": machine_logo_url,
             "dificultad": row.dificultad,
             "color": row.color,
             "imagen": row.imagen,

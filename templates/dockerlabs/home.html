@@ -101,56 +101,56 @@
             <div class="header-filters-row">
                 <div class="busqueda-con-filtro" style="max-width: 250px;">
                     <input type="text" id="buscador" class="form-control form-control-sm" placeholder="Busca algo.">
-                    <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false"
-                        title="Ordenar por fecha">
-                        <i class="bi bi-funnel"></i>
-                    </button>
-                    <ul class="dropdown-menu dropdown-menu-end">
-                        <li><a class="dropdown-item" href="#" onclick="sortByDate('recent'); return false;">Fecha
-                                Reciente</a></li>
-                        <li><a class="dropdown-item" href="#" onclick="sortByDate('oldest'); return false;">Fecha
-                                Antiguos</a></li>
-                        <li><a class="dropdown-item" href="#" onclick="filterByCompleted(); return false;">Máquinas
-                                Resueltas</a></li>
-                        <li><a class="dropdown-item" href="#" onclick="filterByUncompleted(); return false;">Máquinas
-                                Sin Resolver</a></li>
-                        <li>
-                            <hr class="dropdown-divider">
-                        </li>
-                        <li><a class="dropdown-item" href="#" onclick="sortByDate('reset'); return false;">Sin
-                                ordenar</a>
-                        </li>
-                    </ul>
+                    <div class="search-buttons-group">
+                        <button class="btn btn-category dropdown-toggle" type="button" data-bs-toggle="dropdown"
+                            aria-expanded="false" title="Filtrar por categoría">
+                            <i class="bi bi-tags"></i>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li><a class="dropdown-item" href="#" onclick="filterByCategory(''); return false;">Todas las
+                                    categorías</a></li>
+                            <li>
+                                <hr class="dropdown-divider">
+                            </li>
+                            <li><a class="dropdown-item" href="#"
+                                    onclick="filterByCategory('Hacking Web'); return false;">Hacking
+                                    Web</a></li>
+                            <li><a class="dropdown-item" href="#"
+                                    onclick="filterByCategory('Bug Bounty'); return false;">Bug
+                                    Bounty</a></li>
+                            <li><a class="dropdown-item" href="#"
+                                    onclick="filterByCategory('Hacking CMS'); return false;">Hacking
+                                    CMS</a></li>
+                            <li><a class="dropdown-item" href="#"
+                                    onclick="filterByCategory('Hacking Infraestructura'); return false;">Hacking
+                                    Infraestructura</a>
+                            </li>
+                            <li><a class="dropdown-item" href="#"
+                                    onclick="filterByCategory('Pivoting'); return false;">Pivoting</a>
+                            </li>
+                        </ul>
 
-                    <!-- Category Button Moved Inside Search -->
-                    <button class="btn btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown"
-                        aria-expanded="false" title="Filtrar por categoría"
-                        style="border: none; transition: all 0.3s ease; right: 35px;">
-                        <i class="bi bi-tags"></i>
-                    </button>
-                    <ul class="dropdown-menu dropdown-menu-end">
-                        <li><a class="dropdown-item" href="#" onclick="filterByCategory(''); return false;">Todas las
-                                categorías</a></li>
-                        <li>
-                            <hr class="dropdown-divider">
-                        </li>
-                        <li><a class="dropdown-item" href="#"
-                                onclick="filterByCategory('Hacking Web'); return false;">Hacking
-                                Web</a></li>
-                        <li><a class="dropdown-item" href="#"
-                                onclick="filterByCategory('Bug Bounty'); return false;">Bug
-                                Bounty</a></li>
-                        <li><a class="dropdown-item" href="#"
-                                onclick="filterByCategory('Hacking CMS'); return false;">Hacking
-                                CMS</a></li>
-                        <li><a class="dropdown-item" href="#"
-                                onclick="filterByCategory('Hacking Infraestructura'); return false;">Hacking
-                                Infraestructura</a>
-                        </li>
-                        <li><a class="dropdown-item" href="#"
-                                onclick="filterByCategory('Pivoting'); return false;">Pivoting</a>
-                        </li>
-                    </ul>
+                        <button class="btn btn-filter dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false"
+                            title="Ordenar por fecha">
+                            <i class="bi bi-funnel"></i>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li><a class="dropdown-item" href="#" onclick="sortByDate('recent'); return false;">Fecha
+                                    Reciente</a></li>
+                            <li><a class="dropdown-item" href="#" onclick="sortByDate('oldest'); return false;">Fecha
+                                    Antiguos</a></li>
+                            <li><a class="dropdown-item" href="#" onclick="filterByCompleted(); return false;">Máquinas
+                                    Resueltas</a></li>
+                            <li><a class="dropdown-item" href="#" onclick="filterByUncompleted(); return false;">Máquinas
+                                    Sin Resolver</a></li>
+                            <li>
+                                <hr class="dropdown-divider">
+                            </li>
+                            <li><a class="dropdown-item" href="#" onclick="sortByDate('reset'); return false;">Sin
+                                    ordenar</a>
+                            </li>
+                        </ul>
+                    </div>
                 </div>
 
 
@@ -225,7 +225,7 @@
     {% if single_machine %}
     <div class="lista-unica-centrada">
         {% for maquina in maquinas %}
-        <div onclick="presentacion({{ maquina.nombre | tojson | forceescape }}, {{ maquina.dificultad | tojson | forceescape }}, {{ maquina.color | tojson | forceescape }}, {{ maquina.autor | tojson | forceescape }}, {{ maquina.enlace_autor | tojson | forceescape }}, {{ maquina.fecha | tojson | forceescape }}, {{ maquina.imagen | tojson | forceescape }}, {{ categorias_map.get(maquina.id, '') | tojson | forceescape }})"
+        <div onclick="presentacion({{ maquina.nombre | tojson | forceescape }}, {{ maquina.dificultad | tojson | forceescape }}, {{ maquina.color | tojson | forceescape }}, {{ maquina.autor | tojson | forceescape }}, {{ maquina.enlace_autor | tojson | forceescape }}, {{ maquina.fecha | tojson | forceescape }}, {{ maquina.imagen_url | tojson | forceescape }}, {{ categorias_map.get(maquina.id, '') | tojson | forceescape }})"
             class="item {{ maquina.clase }} {% if machine_ranks.get(maquina.id) == 1 %}most-recent{% elif machine_ranks.get(maquina.id) == 2 %}second-recent{% endif %} {% if maquina.nombre.strip() in completed_machines %}completed{% endif %}"
             data-category="{{ categorias_map.get(maquina.id, '') }}">
             <span><strong>{{ maquina.nombre }}</strong>
@@ -260,7 +260,7 @@
     <div class="lista">
 
         {% for maquina in maquinas %}
-        <div onclick="presentacion({{ maquina.nombre | tojson | forceescape }}, {{ maquina.dificultad | tojson | forceescape }}, {{ maquina.color | tojson | forceescape }}, {{ maquina.autor | tojson | forceescape }}, {{ maquina.enlace_autor | tojson | forceescape }}, {{ maquina.fecha | tojson | forceescape }}, {{ maquina.imagen | tojson | forceescape }}, {{ categorias_map.get(maquina.id, '') | tojson | forceescape }})"
+        <div onclick="presentacion({{ maquina.nombre | tojson | forceescape }}, {{ maquina.dificultad | tojson | forceescape }}, {{ maquina.color | tojson | forceescape }}, {{ maquina.autor | tojson | forceescape }}, {{ maquina.enlace_autor | tojson | forceescape }}, {{ maquina.fecha | tojson | forceescape }}, {{ maquina.imagen_url | tojson | forceescape }}, {{ categorias_map.get(maquina.id, '') | tojson | forceescape }})"
             class="maquina-item {{ maquina.clase }} {% if machine_ranks.get(maquina.id) == 1 %}mas-reciente{% elif machine_ranks.get(maquina.id) == 2 %}second-recent{% endif %} {% if maquina.nombre.strip() in completed_machines %}completada{% endif %}"
             data-category="{{ categorias_map.get(maquina.id, '') }}">
             <span><strong>{{ maquina.nombre }}</strong>

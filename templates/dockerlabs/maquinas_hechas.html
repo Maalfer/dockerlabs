@@ -432,8 +432,8 @@
         <div class="machine-card" onclick="window.location.href='{{ url_for('index') }}'">
             <div class="machine-card-content">
                 <div class="machine-image-container">
-                    {% if machine.imagen %}
-                    <img src="{{ url_for('static', filename=machine.imagen) }}" alt="{{ machine.machine_name }}"
+                    {% if machine.machine_logo_url %}
+                    <img src="{{ machine.machine_logo_url }}" alt="{{ machine.machine_name }}"
                         class="machine-image">
                     {% else %}
                     <img src="{{ url_for('static', filename='dockerlabs/images/logos/logo.png') }}"

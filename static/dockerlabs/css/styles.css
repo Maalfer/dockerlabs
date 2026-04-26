@@ -291,6 +291,12 @@ header h1 a:hover {
     gap: 0.5rem;
 }
 
+@media (max-width: 768px) {
+    .header-filters-row {
+        gap: 0.4rem;
+    }
+}
+
 .filters-divider {
     width: 1px;
     height: 24px;
@@ -334,10 +340,61 @@ header h1 a:hover {
 }
 
 .busqueda-con-filtro .form-control {
-    padding-right: 75px;
+    padding-right: 70px;
 }
 
-.busqueda-con-filtro .btn {
+/* Button group for filter and category icons inside search */
+.search-buttons-group {
+    position: absolute;
+    right: 6px;
+    top: 50%;
+    transform: translateY(-50%);
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center;
+    gap: 8px;
+    background: rgba(15, 23, 42, 0.8);
+    border-radius: 20px;
+    padding: 3px 8px;
+    border: 1px solid rgba(51, 65, 85, 0.4);
+    z-index: 20;
+}
+
+.search-buttons-group .btn {
+    position: static !important;
+    padding: 5px 10px !important;
+    font-size: 0.9rem !important;
+    color: #6c757d;
+    background: transparent;
+    border: none !important;
+    border-radius: 12px !important;
+    transition: all 0.2s ease;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: auto !important;
+    min-width: 28px;
+    height: 28px;
+}
+
+.search-buttons-group .btn:hover {
+    color: var(--accent-cyan);
+    background: rgba(34, 211, 238, 0.1);
+}
+
+.search-buttons-group .btn i {
+    font-size: 0.9rem;
+}
+
+.search-buttons-group .btn-category {
+    order: 1;
+}
+
+.search-buttons-group .btn-filter {
+    order: 2;
+}
+
+.busqueda-con-filtro > .btn {
     position: absolute;
     right: 0;
     top: 0;
@@ -352,7 +409,7 @@ header h1 a:hover {
     justify-content: center;
 }
 
-.busqueda-con-filtro .btn:hover {
+.busqueda-con-filtro > .btn:hover {
     background: transparent;
     color: var(--accent-yellow);
 }
@@ -1144,10 +1201,22 @@ footer {
     }
 
     footer {
-        position: static;
-        /* Scroll with page */
+        position: relative;
         width: 100%;
-        padding-bottom: 1rem;
+        padding: 1rem 0;
+        background: rgba(2, 6, 23, 0.95);
+        border-top: 1px solid rgba(51, 65, 85, 0.5);
+        margin-top: 2rem;
+        z-index: 10;
+        min-height: 80px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+    }
+
+    /* Hide wave animation in mobile */
+    footer .wave-container {
+        display: none;
     }
 
     .header-title {
@@ -1173,17 +1242,17 @@ footer {
     }
 
     .container {
-        padding: 1rem;
-        padding-top: 2.5rem;
+        padding: 0.75rem;
+        padding-top: 0.5rem;
     }
 
     .header {
         flex-direction: column;
         align-items: stretch;
-        gap: 0.9rem;
-        padding: 1rem;
-        margin-top: 3.5rem;
-        margin-bottom: 1.25rem;
+        gap: 0.5rem;
+        padding: 0.75rem;
+        margin-top: 0.75rem;
+        margin-bottom: 0.5rem;
     }
 
     .header .col-md-6:first-child,
@@ -1205,6 +1274,31 @@ footer {
         padding: 5px 0;
         width: 100%;
         gap: 0.3rem;
+    }
+
+    /* Responsive for difficulty dropdown and academia button */
+    .header-filters-row .d-flex.flex-wrap.gap-2.ms-auto {
+        margin-left: 0 !important;
+        width: 100%;
+        justify-content: center;
+        flex-wrap: wrap;
+        gap: 0.4rem;
+    }
+
+    .header-filters-row .dropdown {
+        flex: 0 0 auto;
+    }
+
+    .btn-academia {
+        padding: 0.45rem 0.8rem;
+        font-size: 0.7rem;
+        flex: 0 0 auto;
+    }
+
+    #filtro-dificultad-btn {
+        padding: 0.45rem 0.8rem;
+        font-size: 0.7rem;
+        white-space: nowrap;
     }
 
     .lista {
@@ -1280,10 +1374,49 @@ footer {
     }
 
     .footer-content {
-        width: 90%;
+        width: 100%;
         flex-direction: column;
         gap: 0.5rem;
         text-align: center;
+        position: relative;
+        z-index: 11;
+        padding: 0.5rem 1rem;
+    }
+
+    .footer-content p.copyright {
+        display: block;
+        font-size: 0.75rem;
+        margin-bottom: 0.5rem;
+        color: var(--text-muted);
+        line-height: 1.4;
+    }
+
+    /* Ensure footer icons are visible and prominent on mobile */
+    .footer-icons {
+        display: flex !important;
+        justify-content: center;
+        gap: 1.5rem;
+        margin-top: 0.5rem;
+        padding: 0.5rem 0;
+        position: relative;
+        z-index: 12;
+    }
+
+    .footer-icon {
+        padding: 0.5rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .footer-icon i {
+        font-size: 1.6rem;
+        color: #e5e7eb;
+    }
+
+    .footer-icon:active i {
+        color: var(--primary-blue-light);
+        transform: scale(0.95);
     }
 }
 
@@ -1406,22 +1539,65 @@ footer {
         font-size: 0.6rem;
     }
 
+    /* Extra small screens: difficulty and academia buttons */
+    .header-filters-row .d-flex.flex-wrap.gap-2.ms-auto {
+        gap: 0.3rem;
+    }
+
+    .btn-academia {
+        padding: 0.35rem 0.6rem;
+        font-size: 0.65rem;
+    }
+
+    .btn-academia i {
+        font-size: 0.75rem;
+    }
+
+    #filtro-dificultad-btn {
+        padding: 0.35rem 0.6rem;
+        font-size: 0.65rem;
+    }
+
+    #filtro-dificultad-btn i {
+        font-size: 0.75rem;
+        margin-right: 0.2rem;
+    }
+
     .gestion-writeups-popup {
         padding: 18px 20px;
         width: 95%;
         margin: 1rem;
     }
 
-    .footer-content {
-        width: 95%;
+    footer {
+        padding: 0.75rem 0;
+        min-height: 70px;
     }
 
-    .footer-content p {
-        font-size: 0.75rem;
+    .footer-content {
+        width: 100%;
+        padding: 0.5rem;
+    }
+
+    .footer-content p.copyright {
+        font-size: 0.7rem;
+        margin-bottom: 0.4rem;
+    }
+
+    /* Mobile footer icons - extra small screens */
+    .footer-icons {
+        display: flex !important;
+        gap: 1.2rem;
+        margin-top: 0.4rem;
+        padding: 0.3rem 0;
+    }
+
+    .footer-icon {
+        padding: 0.4rem;
     }
 
     .footer-icon i {
-        font-size: 1.3rem;
+        font-size: 1.5rem;
     }
 }
 
@@ -1639,8 +1815,10 @@ footer {
     .container .header {
         flex-direction: column !important;
         align-items: stretch !important;
-        gap: 1rem !important;
-        padding: 1rem 0.5rem !important;
+        gap: 0.5rem !important;
+        padding: 0.5rem !important;
+        margin-top: 0.5rem !important;
+        margin-bottom: 0.5rem !important;
     }
 
     .container .header .col-md-6 {
@@ -1659,6 +1837,25 @@ footer {
     #buscador {
         width: 100% !important;
         font-size: 0.9rem !important;
+        padding-right: 65px !important;
+    }
+
+    /* Mobile: search buttons group more compact */
+    .search-buttons-group {
+        right: 4px;
+        padding: 2px 6px;
+        gap: 6px;
+    }
+
+    .search-buttons-group .btn {
+        padding: 4px 8px !important;
+        font-size: 0.85rem !important;
+        min-width: 26px;
+        height: 26px;
+    }
+
+    .search-buttons-group .btn i {
+        font-size: 0.85rem;
     }
 
     /* Category filter button */
@@ -1720,7 +1917,24 @@ footer {
 
     #buscador {
         font-size: 0.85rem !important;
-        padding: 0.45rem 0.7rem !important;
+        padding: 0.45rem 55px 0.45rem 0.7rem !important;
+    }
+
+    .search-buttons-group {
+        right: 3px;
+        padding: 2px 5px;
+        gap: 4px;
+        background: rgba(15, 23, 42, 0.9);
+    }
+
+    .search-buttons-group .btn {
+        padding: 3px 6px !important;
+        min-width: 24px;
+        height: 24px;
+    }
+
+    .search-buttons-group .btn i {
+        font-size: 0.8rem;
     }
 
     #filtro-dificultad button {

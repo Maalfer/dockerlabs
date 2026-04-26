@@ -114,7 +114,7 @@
                                     class="imagen-field-{{ m.id }}">
                                 <div class="logo-upload-wrapper">
                                     {% if m.imagen %}
-                                    <img src="{{ url_for('static', filename=m.imagen) }}" id="preview-docker-{{ m.id }}"
+                                    <img src="{{ url_for('maquinas.serve_machine_logo', machine_id=m.id) }}" id="preview-docker-{{ m.id }}"
                                         class="logo-preview">
                                     {% else %}
                                     <img src="" id="preview-docker-{{ m.id }}" class="logo-preview"
@@ -273,7 +273,7 @@
                                     class="imagen-field-{{ m.id }}">
                                 <div class="logo-upload-wrapper">
                                     {% if m.imagen %}
-                                    <img src="{{ url_for('static', filename=m.imagen) }}" id="preview-bunker-{{ m.id }}"
+                                    <img src="{{ url_for('maquinas.serve_machine_logo', machine_id=m.id) }}" id="preview-bunker-{{ m.id }}"
                                         class="logo-preview">
                                     {% else %}
                                     <img src="" id="preview-bunker-{{ m.id }}" class="logo-preview"

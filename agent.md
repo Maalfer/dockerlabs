@@ -1,0 +1,3 @@
+# Dockerlabs - Agent Rules & Architecture Decisions
+
+- **Almacenamiento de Imágenes Multimedia:** La web guarda las imágenes de perfil de los usuarios, los logotipos de las máquinas y demás recursos multimedia (información que se puede ir modificando con el tiempo) directamente dentro de la base de datos (SQLite) utilizando almacenamiento binario (BLOB). Sabemos que esto no es una buena práctica habitual en la industria, pero se ha decidido implementar de esta manera por pura comodidad. Además, gracias a la sencillez y ligereza del sitio, la web puede seguir funcionando a su máxima velocidad incluso con esta implementación.

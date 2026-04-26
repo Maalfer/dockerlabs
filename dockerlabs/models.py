@@ -20,6 +20,10 @@ class User(db.Model, UserMixin):
     github_url = db.Column(db.String(255))
     youtube_url = db.Column(db.String(255))
 
+    # Imagen de perfil almacenada en BD
+    profile_image_data = db.Column(db.LargeBinary, nullable=True)
+    profile_image_mime = db.Column(db.String(50), nullable=True)
+
     __repr__ = lambda self: f'<User {self.username}>'
 
 class Machine(db.Model):
@@ -40,6 +44,10 @@ class Machine(db.Model):
     pin = db.Column(db.String, nullable=True)
     guest_access = db.Column(db.Boolean, default=False)
     origen = db.Column(db.String, nullable=False, default='docker')
+
+    # Logo almacenado en BD
+    logo_data = db.Column(db.LargeBinary, nullable=True)
+    logo_mime = db.Column(db.String(50), nullable=True)
 
     __table_args__ = (
         db.Index('idx_maquinas_autor', 'autor'),
