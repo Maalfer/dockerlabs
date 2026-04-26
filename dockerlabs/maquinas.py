@@ -43,63 +43,6 @@ def recalcular_ranking_creadores():
     except Exception as e:
         alchemy_db.session.rollback()
 
-@maquinas_bp.route('/gestion-maquinas')
-@role_required('admin', 'moderador', 'jugador')
-def gestion_maquinas():
-    """
-    Machine management dashboard.
-    ---
-    tags:
-      - Machines
-    responses:
-      200:
-        description: List of machines.
-    """
-    current_username = (session.get('username') or '').strip()
-    role = get_current_role()
-
-    if role in ('admin', 'moderador'):
-        maquinas_docker = Machine.query.filter_by(origen='docker').order_by(Machine.id.asc()).all()
-        maquinas_bunker = Machine.query.filter_by(origen='bunker').order_by(Machine.id.asc()).all()
-    else:
-        if not current_username:
-            maquinas_docker = []
-            maquinas_bunker = []
-        else:
-            maquinas_docker = Machine.query.filter_by(origen='docker', autor=current_username).order_by(Machine.id.asc()).all()
-            maquinas_bunker = Machine.query.filter_by(origen='bunker', autor=current_username).order_by(Machine.id.asc()).all()
-
-    categorias_map = {}
-    if maquinas_docker:
-                                              
-        docker_cats = Category.query.filter_by(origen='docker').all()
-        docker_cats_lookup = {c.machine_id: c.categoria for c in docker_cats}
-        
-        for m in maquinas_docker:
-            categorias_map[('docker', m.id)] = docker_cats_lookup.get(m.id, '')
-    
-    if maquinas_bunker:
-                                                                                             
-        bunker_ids = [m.id for m in maquinas_bunker]                                   
-        if bunker_ids:
-            bunker_cats = Category.query.filter(
-                Category.origen == 'bunker',
-                Category.machine_id.in_(bunker_ids)
-            ).all()
-            
-            bunker_cats_lookup = {c.machine_id: c.categoria for c in bunker_cats}
-            
-            for m in maquinas_bunker:
-                categorias_map[('bunker', m.id)] = bunker_cats_lookup.get(m.id, '')
-
-    return render_template(
-        'dockerlabs/admin/gestion_maquinas.html',
-        maquinas_docker=maquinas_docker,
-        maquinas_bunker=maquinas_bunker,
-        current_username=current_username,
-        categorias_map=categorias_map
-    )
-
 @maquinas_bp.route('/gestion-maquinas/actualizar', methods=['POST'])
 @role_required('admin', 'moderador', 'jugador')
 @csrf_protect
@@ -118,12 +61,12 @@ def actualizar_maquina():
     maquina_id = request.form.get('id')
 
     if not maquina_id or origen not in ('docker', 'bunker'):
-        return redirect(url_for('maquinas.gestion_maquinas'))
+        return redirect('/gestion-maquinas')
 
     try:
         maquina_id = int(maquina_id)
     except ValueError:
-        return redirect(url_for('maquinas.gestion_maquinas'))
+        return redirect('/gestion-maquinas')
 
     nombre = (request.form.get('nombre') or '').strip()
     dificultad = (request.form.get('dificultad') or '').strip()
@@ -153,7 +96,7 @@ def actualizar_maquina():
         maquina = Machine.query.get(maquina_id)
 
     if maquina is None:
-        return redirect(url_for('maquinas.gestion_maquinas'))
+        return redirect('/gestion-maquinas')
 
     role = get_current_role()
     username = (session.get('username') or '').strip()
@@ -190,7 +133,7 @@ def actualizar_maquina():
                                                                                           
                 pass
 
-            return redirect(url_for('maquinas.gestion_maquinas'))
+            return redirect('/gestion-maquinas')
 
         return render_template('dockerlabs/errors/403.html'), 403
 
@@ -257,7 +200,7 @@ def actualizar_maquina():
         alchemy_db.session.rollback()
         pass
 
-    return redirect(url_for('maquinas.gestion_maquinas'))
+    return redirect('/gestion-maquinas')
 
 @maquinas_bp.route('/gestion-maquinas/eliminar', methods=['POST'])
 @role_required('admin', 'moderador', 'jugador')
@@ -277,12 +220,12 @@ def eliminar_maquina():
     maquina_id = request.form.get('id')
 
     if not maquina_id or origen not in ('docker', 'bunker'):
-        return redirect(url_for('maquinas.gestion_maquinas'))
+        return redirect('/gestion-maquinas')
 
     try:
         maquina_id = int(maquina_id)
     except ValueError:
-        return redirect(url_for('maquinas.gestion_maquinas'))
+        return redirect('/gestion-maquinas')
 
     if origen == 'docker':
         maquina = Machine.query.get(maquina_id)
@@ -292,7 +235,7 @@ def eliminar_maquina():
         maquina = Machine.query.get(maquina_id)
 
     if maquina is None:
-        return redirect(url_for('maquinas.gestion_maquinas'))
+        return redirect('/gestion-maquinas')
 
     role = get_current_role()
     maquina_autor = maquina.autor
@@ -337,36 +280,9 @@ def eliminar_maquina():
         alchemy_db.session.rollback()
         pass
 
-    return redirect(url_for('maquinas.gestion_maquinas'))
+    return redirect('/gestion-maquinas')
 
 
-
-@maquinas_bp.route('/img/maquina/<int:machine_id>')
-def serve_machine_logo(machine_id):
-    """
-    Sirve el logo de la máquina desde BD con fallback a fichero estático.
-    ---
-    tags:
-      - Machines
-    parameters:
-      - name: machine_id
-        in: path
-        type: integer
-        required: true
-    responses:
-      200:
-        description: Logo de la máquina.
-    """
-    machine = Machine.query.get(machine_id)
-    if machine and machine.logo_data:
-        mime = machine.logo_mime or 'image/jpeg'
-        return send_file(io.BytesIO(machine.logo_data), mimetype=mime)
-    # Fallback a fichero estático
-    if machine and machine.imagen:
-        full_path = os.path.join(BASE_DIR, 'static', machine.imagen)
-        if os.path.exists(full_path):
-            return send_file(full_path)
-    return redirect(url_for('static', filename='dockerlabs/images/logos/logo.png'))
 
 @maquinas_bp.route('/add-maquina', methods=['GET', 'POST'])
 @role_required('admin')
@@ -592,9 +508,9 @@ def add_maquina_page():
 
         if error is None:
             if destino == 'bunker':
-                return redirect(url_for('bunkerlabs.bunkerlabs_home'))
+                return redirect('/bunkerlabs')
             else:
-                return redirect(url_for('index'))
+                return redirect('/')
 
     return render_template('dockerlabs/info/add-maquina.html', error=error)
 
@@ -618,12 +534,12 @@ def reclamar_maquina():
     prueba = (request.form.get('prueba') or '').strip()
     
     if not maquina_nombre or not contacto or not prueba:
-        return redirect(url_for('dashboard'))
+        return redirect('/dashboard')
 
     valid, _ = validators.validate_machine_name(maquina_nombre)
     if not valid:
                                                                                        
-        return redirect(url_for('dashboard'))
+        return redirect('/dashboard')
     
     user_id = session.get('user_id')
     username = (session.get('username') or '').strip()
@@ -642,7 +558,7 @@ def reclamar_maquina():
     except Exception:
         alchemy_db.session.rollback()
         
-    return redirect(url_for('dashboard'))
+    return redirect('/dashboard')
 
 @maquinas_bp.route('/claims/<int:claim_id>/approve', methods=['POST'])
 @role_required('admin')
@@ -660,7 +576,7 @@ def approve_claim(claim_id):
     """
     claim = MachineClaim.query.get(claim_id)
     if not claim:
-        return redirect(url_for('peticiones'))
+        return redirect('/peticiones-writeups')
 
     try:
         maquina = Machine.query.filter_by(nombre=claim.maquina_nombre).first()
@@ -675,7 +591,7 @@ def approve_claim(claim_id):
     except Exception:
         alchemy_db.session.rollback()
 
-    return redirect(url_for('dashboard'))
+    return redirect('/dashboard')
 
 @maquinas_bp.route('/claims/<int:claim_id>/reject', methods=['POST'])
 @role_required('admin')
@@ -699,7 +615,7 @@ def reject_claim(claim_id):
         except:
             alchemy_db.session.rollback()
 
-    return redirect(url_for('peticiones'))
+    return redirect('/peticiones-writeups')
 
 @maquinas_bp.route('/claims/<int:claim_id>/revert', methods=['POST'])
 @role_required('admin', 'moderador')
@@ -718,7 +634,7 @@ def revert_claim(claim_id):
     if claim:
         claim.estado = 'pendiente'
         alchemy_db.session.commit()
-    return redirect(url_for('peticiones'))
+    return redirect('/peticiones-writeups')
 
 @maquinas_bp.route('/machine-edit-requests/<int:request_id>/approve', methods=['POST'])
 @role_required('admin', 'moderador')
@@ -737,7 +653,7 @@ def approve_machine_edit(request_id):
     req = MachineEditRequest.query.get(request_id)
 
     if not req:
-        return redirect(url_for('peticiones'))
+        return redirect('/peticiones-writeups')
 
     try:
         nuevos = json.loads(req.nuevos_datos)
@@ -785,7 +701,7 @@ def approve_machine_edit(request_id):
     req.estado = 'aprobada'
     alchemy_db.session.commit()
 
-    return redirect(url_for('peticiones'))
+    return redirect('/peticiones-writeups')
 
 @maquinas_bp.route('/machine-edit-requests/<int:request_id>/reject', methods=['POST'])
 @role_required('admin', 'moderador')
@@ -805,7 +721,7 @@ def reject_machine_edit(request_id):
     if req:
         req.estado = 'rechazada'
         alchemy_db.session.commit()
-    return redirect(url_for('peticiones'))
+    return redirect('/peticiones-writeups')
 
 @maquinas_bp.route('/machine-edit-requests/<int:request_id>/revert', methods=['POST'])
 @role_required('admin', 'moderador')
@@ -824,7 +740,7 @@ def revert_machine_edit(request_id):
     if req:
         req.estado = 'pendiente'
         alchemy_db.session.commit()
-    return redirect(url_for('peticiones'))
+    return redirect('/peticiones-writeups')
 
 
 @maquinas_bp.route('/maquinas-hechas')
@@ -833,7 +749,7 @@ def maquinas_hechas():
                                         
     user_id = session.get('user_id')
     if not user_id:
-        return redirect(url_for('auth.login'))
+        return redirect('/login')
 
     results = alchemy_db.session.query(
         CompletedMachine.machine_name,
@@ -851,7 +767,7 @@ def maquinas_hechas():
 
         completed_at_str = row.completed_at.isoformat() if row.completed_at else None
         machine_logo_url = (
-            url_for('maquinas.serve_machine_logo', machine_id=row.id)
+            f'/api/img/maquina/{row.id}'
             if row.id else url_for('static', filename='dockerlabs/images/logos/logo.png')
         )
         completed_machines.append({

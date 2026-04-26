@@ -78,7 +78,7 @@
                             <td>
                                 <form method="post" action="{{ url_for('maquinas.actualizar_maquina') }}"
                                     class="d-contents">
-                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token_value }}">
                                     <input type="hidden" name="origen" value="docker">
                                     <input type="hidden" name="id" value="{{ m.id }}">
 
@@ -165,7 +165,7 @@
                                     <form method="post" action="{{ url_for('maquinas.eliminar_maquina') }}"
                                         onsubmit="return confirm('¿Seguro que quieres eliminar esta máquina?');"
                                         class="d-contents">
-                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token_value }}">
                                         <input type="hidden" name="origen" value="docker">
                                         <input type="hidden" name="id" value="{{ m.id }}">
                                         <button type="submit" class="btn-action delete" title="Eliminar máquina">
@@ -237,7 +237,7 @@
                             <td>
                                 <form method="post" action="{{ url_for('maquinas.actualizar_maquina') }}"
                                     class="d-contents">
-                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token_value }}">
                                     <input type="hidden" name="origen" value="bunker">
                                     <input type="hidden" name="id" value="{{ m.id }}">
 
@@ -320,7 +320,7 @@
                                     <form method="post" action="{{ url_for('maquinas.eliminar_maquina') }}"
                                         onsubmit="return confirm('¿Seguro que quieres eliminar esta máquina?');"
                                         class="d-contents">
-                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token_value }}">
                                         <input type="hidden" name="origen" value="bunker">
                                         <input type="hidden" name="id" value="{{ m.id }}">
                                         <button type="submit" class="btn-action delete" title="Eliminar máquina">

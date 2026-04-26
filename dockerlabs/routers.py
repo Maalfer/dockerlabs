@@ -1,11 +1,58 @@
 from fastapi import APIRouter, Request, Depends, HTTPException
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, StreamingResponse, FileResponse, HTMLResponse, RedirectResponse
+from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel
 from typing import List, Optional
 from sqlalchemy import func
 from datetime import datetime
 import secrets
 import re
+import os
+
+# Importaciones Flask (necesarias durante la migración)
+from dockerlabs.app import app as flask_app
+from dockerlabs.models import User, Machine, Writeup, PendingMachineSubmission, Category, CreatorRanking, WriteupRanking, PendingWriteup, NameClaim, UsernameChangeRequest, PendingWriteup, WriteupEditRequest, CompletedMachine, Rating
+from dockerlabs.extensions import db as alchemy_db
+from werkzeug.security import check_password_hash, generate_password_hash
+from flask.sessions import SecureCookieSessionInterface
+
+# Configurar Jinja2 templates
+BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+templates = Jinja2Templates(directory=os.path.join(BASE_DIR, 'templates'))
+
+# Función url_for personalizada para compatibilidad con Flask
+def url_for(endpoint, **kwargs):
+    """Función url_for compatible con Flask para FastAPI"""
+    if endpoint == 'static':
+        filename = kwargs.get('filename', '')
+        return f"/static/{filename}"
+    
+    # Mapeo de rutas de Flask a FastAPI
+    flask_to_fastapi = {
+        'auth.login': '/login',
+        'auth.register': '/register',
+        'auth.recover': '/recover',
+        'bunkerlabs.bunkerlabs_login': '/bunkerlabs/login',
+        'main.home': '/',
+        'main.dashboard': '/dashboard',
+        'main.instrucciones_uso': '/instrucciones-uso',
+        'main.soporte': '/soporte',
+        'main.equipo': '/equipo',
+        'main.enviar_maquina': '/enviar-maquina',
+        'main.como_se_crea': '/como-se-crea-una-maquina',
+        'main.agradecimientos': '/agradecimientos',
+        'main.terminos_condiciones': '/terminos-condiciones',
+        'main.politica_privacidad': '/politica-privacidad',
+        'main.politica_cookies': '/politica-cookies',
+        'main.condiciones_uso': '/condiciones-uso',
+    }
+    
+    # Si está en el mapeo, usar la ruta de FastAPI
+    if endpoint in flask_to_fastapi:
+        return flask_to_fastapi[endpoint]
+    
+    # Para otros endpoints, devolver el nombre del endpoint
+    return f"/{endpoint}"
 
 # --- Modelos Pydantic ---
 
@@ -112,17 +159,25 @@ class SubmitMachineResponse(BaseModel):
 
 api_router = APIRouter(prefix="/api", tags=["API Pública"])
 
-def get_flask_session(request: Request):
-    """Extrae y decodifica la cookie de sesión de Flask para autenticación cruzada."""
+# Router separado para páginas HTML (sin prefijo /api)
+pages_router = APIRouter(tags=["Páginas HTML"])
+
+def get_flask_session(request: Request) -> dict:
+    """Extraer sesión Flask desde cookies para compatibilidad."""
     cookie = request.cookies.get("session")
     if not cookie:
         return {}
-    from dockerlabs.app import app as flask_app
-    from flask.sessions import SecureCookieSessionInterface
+    
+    # Crear un Request-like object para SecureCookieSessionInterface
+    class MinimalRequest:
+        def __init__(self, cookies):
+            self.cookies = cookies
+    
     session_interface = SecureCookieSessionInterface()
     serializer = session_interface.get_signing_serializer(flask_app)
     try:
-        return serializer.loads(cookie)
+        data = serializer.loads(cookie)
+        return data if isinstance(data, dict) else {}
     except:
         return {}
 
@@ -147,9 +202,6 @@ def get_fastapi_profile_image_url(username: Optional[str] = None, user_id: Optio
 
 @api_router.get("", response_model=ApiSummaryResponse)
 def api_summary():
-    from dockerlabs.app import app as flask_app
-    from dockerlabs.models import Machine, CreatorRanking, WriteupRanking, Writeup
-    from dockerlabs.extensions import db as alchemy_db
     
     with flask_app.app_context():
         maquinas_objs = Machine.query.filter_by(origen='docker').order_by(Machine.id.asc()).all()
@@ -222,23 +274,8 @@ def api_summary():
 
         return response
 
-def get_fastapi_profile_image_url(username: Optional[str] = None, user_id: Optional[int] = None) -> str:
-    """Helper to bypass Flask's url_for dependency in FastAPI."""
-    if user_id:
-        return f"/img/perfil/{user_id}"
-    if username:
-        from dockerlabs.models import User as _User
-        user = _User.query.filter_by(username=username).first()
-        if user:
-            return f"/img/perfil/{user.id}"
-    return "/static/dockerlabs/images/balu.webp"
-
 @api_router.get("/ranking_autores", response_model=List[AutorRankingResponse])
 def api_ranking_autores():
-    # Retrasar importaciones de Flask para evitar problemas circulares al arrancar
-    from dockerlabs.app import app as flask_app
-    from dockerlabs.models import CreatorRanking, User
-    from dockerlabs.extensions import db as alchemy_db
     
     with flask_app.app_context():
         results = alchemy_db.session.query(
@@ -263,9 +300,6 @@ def api_ranking_autores():
 
 @api_router.get("/ranking_writeups", response_model=List[WriteupRankingResponse])
 def api_ranking_writeups():
-    from dockerlabs.app import app as flask_app
-    from dockerlabs.models import WriteupRanking, User
-    from dockerlabs.extensions import db as alchemy_db
     
     with flask_app.app_context():
         results = alchemy_db.session.query(
@@ -294,8 +328,6 @@ def api_user_info(flask_session: dict = Depends(get_flask_session)):
     if not user_id:
         return JSONResponse(status_code=401, content={"error": "No has iniciado sesión", "is_authenticated": False})
 
-    from dockerlabs.app import app as flask_app
-    from dockerlabs.models import User, CompletedMachine, Writeup
     
     with flask_app.app_context():
         user = User.query.get(user_id)
@@ -328,6 +360,19 @@ def api_user_info(flask_session: dict = Depends(get_flask_session)):
             'created_at': w.created_at
         } for w in writeups_objs]
 
+        try:
+            # Simular request sin cookies
+            req = Request({
+                'type': 'http', 
+                'url': 'http://test.com/login',
+                'method': 'GET',
+                'headers': {}, 
+                'cookies': {},
+                'query_string': ''
+            })
+        except Exception as e:
+            print(f"Error: {str(e)}")
+
         response = {
             "is_authenticated": True,
             "user": user_data,
@@ -349,9 +394,7 @@ def submit_machine(
 
     username = flask_session.get("username")
 
-    from dockerlabs.app import app as flask_app
     from dockerlabs.models import PendingMachineSubmission
-    from dockerlabs.extensions import db as alchemy_db
 
     with flask_app.app_context():
         sub = PendingMachineSubmission(
@@ -384,10 +427,7 @@ class LoginResponse(BaseModel):
     redirect_url: Optional[str] = None
 
 def create_flask_session_cookie(user_id: int, username: str, existing_session: dict = None) -> str:
-    from dockerlabs.app import app as flask_app
-    from flask.sessions import SecureCookieSessionInterface
     import hashlib
-    import os
     
     session_data = existing_session or {}
     _id = hashlib.sha512(os.urandom(24)).hexdigest()
@@ -404,9 +444,6 @@ def create_flask_session_cookie(user_id: int, username: str, existing_session: d
 
 @api_router.post("/auth/login", response_model=LoginResponse)
 def api_auth_login(data: LoginRequest, request: Request, flask_session: dict = Depends(get_flask_session), csrf_ok: bool = Depends(verify_csrf_token)):
-    from dockerlabs.app import app as flask_app
-    from dockerlabs.models import User
-    from werkzeug.security import check_password_hash
     
     with flask_app.app_context():
         user = User.query.filter_by(username=data.username.strip()).first()
@@ -468,7 +505,6 @@ def api_auth_register(data: RegisterRequest, csrf_ok: bool = Depends(verify_csrf
     if password != password2:
         return JSONResponse(status_code=400, content={"success": False, "message": "Las contraseñas no coinciden."})
     
-    import re
     if '/' in username or '\\' in username or '..' in username or '.' in username:
         return JSONResponse(status_code=400, content={"success": False, "message": "El nombre de usuario no puede contener caracteres especiales como /, \\, o puntos."})
     if username.lower() in ['admin', 'root', 'system', 'default', 'balulero', 'default-profile', 'logo', 'pingu']:
@@ -476,13 +512,6 @@ def api_auth_register(data: RegisterRequest, csrf_ok: bool = Depends(verify_csrf
     if not re.match(r'^[A-Za-z0-9_-]+$', username):
         return JSONResponse(status_code=400, content={"success": False, "message": "El nombre de usuario solo puede contener letras, números, guiones y guiones bajos."})
 
-    from dockerlabs.app import app as flask_app
-    from dockerlabs.models import User, Machine, Writeup, PendingWriteup, NameClaim
-    from werkzeug.security import generate_password_hash
-    from sqlalchemy.exc import IntegrityError
-    from dockerlabs.extensions import db as alchemy_db
-    import secrets
-    from datetime import datetime
 
     with flask_app.app_context():
         pwd_hash = generate_password_hash(password)
@@ -548,10 +577,6 @@ def api_auth_recover(data: RecoverRequest, csrf_ok: bool = Depends(verify_csrf_t
     if password != password2:
         return JSONResponse(status_code=400, content={"success": False, "message": "Las contraseñas no coinciden."})
 
-    from dockerlabs.app import app as flask_app
-    from dockerlabs.models import User
-    from werkzeug.security import check_password_hash, generate_password_hash
-    from dockerlabs.extensions import db as alchemy_db
 
     with flask_app.app_context():
         user_obj = User.query.filter_by(username=username).first()
@@ -597,10 +622,6 @@ def api_change_password(data: ChangePasswordRequest, flask_session: dict = Depen
     if data.new_password != data.confirm_password:
         return JSONResponse(status_code=400, content={"error": "Las contraseñas nuevas no coinciden."})
 
-    from dockerlabs.app import app as flask_app
-    from dockerlabs.models import User
-    from werkzeug.security import check_password_hash, generate_password_hash
-    from dockerlabs.extensions import db as alchemy_db
     
     with flask_app.app_context():
         user_obj = User.query.get(user_id)
@@ -623,9 +644,6 @@ def api_update_profile(data: UpdateProfileRequest, flask_session: dict = Depends
     if not data.email.strip():
         return JSONResponse(status_code=400, content={"error": "El email es obligatorio."})
 
-    from dockerlabs.app import app as flask_app
-    from dockerlabs.models import User
-    from dockerlabs.extensions import db as alchemy_db
     
     with flask_app.app_context():
         user_obj = User.query.get(user_id)
@@ -643,9 +661,6 @@ def api_update_social_links(data: UpdateSocialLinksRequest, flask_session: dict 
     if not user_id:
         return JSONResponse(status_code=401, content={"error": "Debes iniciar sesión"})
 
-    from dockerlabs.app import app as flask_app
-    from dockerlabs.models import User
-    from dockerlabs.extensions import db as alchemy_db
     
     with flask_app.app_context():
         user_obj = User.query.get(user_id)
@@ -684,7 +699,6 @@ async def upload_profile_photo(
 
     from PIL import Image
     import io
-    import os
     import logging
     from werkzeug.utils import secure_filename
     from dockerlabs import validators
@@ -714,9 +728,6 @@ async def upload_profile_photo(
     }
     mime_type = ext_to_mime.get(ext, 'image/jpeg')
 
-    from dockerlabs.app import app as flask_app
-    from dockerlabs.models import User
-    from dockerlabs.extensions import db as alchemy_db
     import time
     
     with flask_app.app_context():
@@ -765,9 +776,6 @@ def api_update_user_role(user_id: int, data: UpdateRoleRequest, flask_session: d
     if nuevo_rol not in ('jugador', 'moderador', 'admin'):
         return JSONResponse(status_code=400, content={"error": "Rol inválido"})
 
-    from dockerlabs.app import app as flask_app
-    from dockerlabs.models import User
-    from dockerlabs.extensions import db as alchemy_db
 
     with flask_app.app_context():
         user = User.query.get(user_id)
@@ -787,9 +795,6 @@ def api_delete_user(user_id: int, flask_session: dict = Depends(get_flask_sessio
     if caller_id == user_id:
         return JSONResponse(status_code=400, content={"error": "No puedes eliminar tu propia cuenta desde aquí."})
 
-    from dockerlabs.app import app as flask_app
-    from dockerlabs.models import User
-    from dockerlabs.extensions import db as alchemy_db
 
     with flask_app.app_context():
         user = User.query.get(user_id)
@@ -826,9 +831,7 @@ def api_request_username_change(data: RequestUsernameChangeRequest, flask_sessio
     if not _re.match(r'^[A-Za-z0-9_\-]{3,20}$', requested_username):
         return JSONResponse(status_code=400, content={"error": "El nombre debe tener entre 3 y 20 caracteres y solo letras, números, guion y guion bajo."})
 
-    from dockerlabs.app import app as flask_app
     from dockerlabs.models import User, UsernameChangeRequest
-    from dockerlabs.extensions import db as alchemy_db
 
     with flask_app.app_context():
         if User.query.filter_by(username=requested_username).first():
@@ -856,11 +859,8 @@ def api_approve_username_change(request_id: int, flask_session: dict = Depends(g
     if not caller_id or caller_role not in ('admin',):
         return JSONResponse(status_code=403, content={"error": "Acceso denegado"})
 
-    from dockerlabs.app import app as flask_app
     from dockerlabs.models import User, UsernameChangeRequest, Writeup, PendingWriteup, WriteupRanking, CreatorRanking
-    from dockerlabs.extensions import db as alchemy_db
     from sqlalchemy import func
-    from datetime import datetime
 
     with flask_app.app_context():
         req = UsernameChangeRequest.query.get(request_id)
@@ -920,10 +920,7 @@ def api_reject_username_change(request_id: int, data: RejectUsernameChangeReques
     if not caller_id or caller_role not in ('admin',):
         return JSONResponse(status_code=403, content={"error": "Acceso denegado"})
 
-    from dockerlabs.app import app as flask_app
     from dockerlabs.models import UsernameChangeRequest
-    from dockerlabs.extensions import db as alchemy_db
-    from datetime import datetime
 
     with flask_app.app_context():
         req = UsernameChangeRequest.query.get(request_id)
@@ -943,9 +940,7 @@ def api_revert_username_change(request_id: int, flask_session: dict = Depends(ge
     if not caller_id or caller_role not in ('admin', 'moderador'):
         return JSONResponse(status_code=403, content={"error": "Acceso denegado"})
 
-    from dockerlabs.app import app as flask_app
     from dockerlabs.models import UsernameChangeRequest
-    from dockerlabs.extensions import db as alchemy_db
 
     with flask_app.app_context():
         req = UsernameChangeRequest.query.get(request_id)
@@ -983,9 +978,7 @@ def api_toggle_guest_access(
     if caller_role not in ('admin', 'moderador'):
         return JSONResponse(status_code=403, content={"error": "Acceso denegado"})
 
-    from dockerlabs.app import app as flask_app
     from dockerlabs.models import Machine
-    from dockerlabs.extensions import db as alchemy_db
 
     with flask_app.app_context():
         maquina = Machine.query.get(machine_id)
@@ -1045,10 +1038,7 @@ async def api_upload_machine_logo(
     }
     logo_mime = ext_to_mime.get(ext, 'image/jpeg')
 
-    from dockerlabs.app import app as flask_app
     from dockerlabs.models import Machine
-    from dockerlabs.extensions import db as alchemy_db
-    import time as _time
 
     with flask_app.app_context():
         maq = Machine.query.get(machine_id)
@@ -1087,8 +1077,6 @@ def api_get_users(flask_session: dict = Depends(get_flask_session)):
     if caller_role != 'admin':
         return JSONResponse(status_code=403, content={"error": "Acceso denegado"})
 
-    from dockerlabs.app import app as flask_app
-    from dockerlabs.models import User
 
     with flask_app.app_context():
         users = User.query.order_by(User.username.asc()).all()
@@ -1105,10 +1093,7 @@ def api_rate_machine(data: RateMachineRequest, flask_session: dict = Depends(get
     if any(s < 1 or s > 5 for s in scores):
         return JSONResponse(status_code=400, content={"success": False, "message": "Las puntuaciones deben estar entre 1 y 5"})
 
-    from dockerlabs.app import app as flask_app
     from dockerlabs.models import Rating
-    from dockerlabs.extensions import db as alchemy_db
-    from datetime import datetime
 
     with flask_app.app_context():
         try:
@@ -1139,9 +1124,7 @@ def api_rate_machine(data: RateMachineRequest, flask_session: dict = Depends(get
 # ── Get Machine Rating ───────────────────────────────────────────
 @api_router.get("/get_machine_rating/{maquina_nombre}")
 def api_get_machine_rating(maquina_nombre: str, flask_session: dict = Depends(get_flask_session)):
-    from dockerlabs.app import app as flask_app
     from dockerlabs.models import Rating
-    from dockerlabs.extensions import db as alchemy_db
     from sqlalchemy import func
 
     with flask_app.app_context():
@@ -1191,7 +1174,6 @@ def api_check_completed_machine(machine_name: str, flask_session: dict = Depends
     if not user_id:
         return JSONResponse(status_code=401, content={"error": "Not authenticated"})
 
-    from dockerlabs.app import app as flask_app
     from dockerlabs.models import CompletedMachine
 
     with flask_app.app_context():
@@ -1208,9 +1190,7 @@ def api_toggle_completed_machine(data: ToggleCompletedRequest, flask_session: di
     if not machine_name:
         return JSONResponse(status_code=400, content={"error": "Machine name required", "success": False})
 
-    from dockerlabs.app import app as flask_app
     from dockerlabs.models import Machine, CompletedMachine
-    from dockerlabs.extensions import db as alchemy_db
 
     with flask_app.app_context():
         if not Machine.query.filter_by(nombre=machine_name).first():
@@ -1234,10 +1214,7 @@ def api_approve_nombre_claim(claim_id: int, flask_session: dict = Depends(get_fl
     if caller_role not in ('admin', 'moderador'):
         return JSONResponse(status_code=403, content={"error": "Acceso denegado"})
 
-    from dockerlabs.app import app as flask_app
     from dockerlabs.models import NameClaim, User
-    from dockerlabs.extensions import db as alchemy_db
-    from sqlalchemy.exc import IntegrityError
 
     with flask_app.app_context():
         claim = NameClaim.query.get(claim_id)
@@ -1278,9 +1255,7 @@ def api_reject_nombre_claim(claim_id: int, flask_session: dict = Depends(get_fla
     if caller_role not in ('admin', 'moderador'):
         return JSONResponse(status_code=403, content={"error": "Acceso denegado"})
 
-    from dockerlabs.app import app as flask_app
     from dockerlabs.models import NameClaim
-    from dockerlabs.extensions import db as alchemy_db
 
     with flask_app.app_context():
         claim = NameClaim.query.get(claim_id)
@@ -1296,9 +1271,7 @@ def api_revert_nombre_claim(claim_id: int, flask_session: dict = Depends(get_fla
     if caller_role not in ('admin', 'moderador'):
         return JSONResponse(status_code=403, content={"error": "Acceso denegado"})
 
-    from dockerlabs.app import app as flask_app
     from dockerlabs.models import NameClaim
-    from dockerlabs.extensions import db as alchemy_db
 
     with flask_app.app_context():
         claim = NameClaim.query.get(claim_id)
@@ -1346,10 +1319,8 @@ def api_submit_writeup(data: SubmitWriteupRequest, flask_session: dict = Depends
     url = data.url.strip()
     tipo = data.tipo.strip().lower()
 
-    from dockerlabs.app import app as flask_app
     from dockerlabs import validators
     from dockerlabs.models import Machine, PendingWriteup, Writeup
-    from dockerlabs.extensions import db as alchemy_db
 
     valid, err = validators.validate_machine_name(maquina)
     if not valid:
@@ -1386,9 +1357,7 @@ def api_aprobar_writeup_recibido(writeup_id: int, flask_session: dict = Depends(
     if caller_role not in ('admin', 'moderador'):
         return JSONResponse(status_code=403, content={"error": "Acceso denegado"})
 
-    from dockerlabs.app import app as flask_app
     from dockerlabs.models import User, PendingWriteup, Writeup, WriteupRanking
-    from dockerlabs.extensions import db as alchemy_db
     from sqlalchemy import func
 
     with flask_app.app_context():
@@ -1424,9 +1393,7 @@ def api_approve_writeup_edit(request_id: int, flask_session: dict = Depends(get_
     if caller_role not in ('admin', 'moderador'):
         return JSONResponse(status_code=403, content={"error": "Acceso denegado"})
 
-    from dockerlabs.app import app as flask_app
     from dockerlabs.models import Writeup, WriteupEditRequest
-    from dockerlabs.extensions import db as alchemy_db
 
     with flask_app.app_context():
         req = WriteupEditRequest.query.get(request_id)
@@ -1454,9 +1421,7 @@ def api_reject_writeup_edit(request_id: int, flask_session: dict = Depends(get_f
     if caller_role not in ('admin', 'moderador'):
         return JSONResponse(status_code=403, content={"error": "Acceso denegado"})
 
-    from dockerlabs.app import app as flask_app
     from dockerlabs.models import WriteupEditRequest
-    from dockerlabs.extensions import db as alchemy_db
 
     with flask_app.app_context():
         req = WriteupEditRequest.query.get(request_id)
@@ -1471,9 +1436,7 @@ def api_revert_writeup_edit(request_id: int, flask_session: dict = Depends(get_f
     if caller_role not in ('admin', 'moderador'):
         return JSONResponse(status_code=403, content={"error": "Acceso denegado"})
 
-    from dockerlabs.app import app as flask_app
     from dockerlabs.models import WriteupEditRequest
-    from dockerlabs.extensions import db as alchemy_db
 
     with flask_app.app_context():
         req = WriteupEditRequest.query.get(request_id)
@@ -1491,10 +1454,8 @@ def api_update_writeup_subido(writeup_id: int, data: UpdateWriteupRequest, flask
     if not user_id:
         return JSONResponse(status_code=403, content={"error": "Debes iniciar sesión."})
 
-    from dockerlabs.app import app as flask_app
     from dockerlabs import validators
     from dockerlabs.models import Writeup, WriteupEditRequest
-    from dockerlabs.extensions import db as alchemy_db
 
     valid, err = validators.validate_url(data.url)
     if not valid:
@@ -1547,9 +1508,7 @@ def api_delete_writeup_subido(writeup_id: int, flask_session: dict = Depends(get
     if caller_role not in ('admin', 'moderador'):
         return JSONResponse(status_code=403, content={"error": "Acceso denegado"})
 
-    from dockerlabs.app import app as flask_app
     from dockerlabs.models import Writeup
-    from dockerlabs.extensions import db as alchemy_db
 
     with flask_app.app_context():
         writeup = Writeup.query.get(writeup_id)
@@ -1568,10 +1527,8 @@ def api_update_writeup_recibido(writeup_id: int, data: UpdateWriteupRecibidoRequ
     if caller_role not in ('admin', 'moderador'):
         return JSONResponse(status_code=403, content={"error": "Acceso denegado"})
 
-    from dockerlabs.app import app as flask_app
     from dockerlabs import validators
     from dockerlabs.models import PendingWriteup
-    from dockerlabs.extensions import db as alchemy_db
 
     for val_fn, field in [(validators.validate_machine_name, data.maquina), (validators.validate_author_name, data.autor),
                           (validators.validate_url, data.url), (validators.validate_writeup_type, data.tipo)]:
@@ -1596,9 +1553,7 @@ def api_delete_writeup_recibido(writeup_id: int, flask_session: dict = Depends(g
     if caller_role not in ('admin', 'moderador'):
         return JSONResponse(status_code=403, content={"error": "Acceso denegado"})
 
-    from dockerlabs.app import app as flask_app
     from dockerlabs.models import PendingWriteup
-    from dockerlabs.extensions import db as alchemy_db
 
     with flask_app.app_context():
         pending = PendingWriteup.query.get(writeup_id)
@@ -1611,9 +1566,7 @@ def api_delete_writeup_recibido(writeup_id: int, flask_session: dict = Depends(g
 # ── Writeups por Máquina (pública) ──────────────────────────────
 @api_router.get("/writeups/{maquina_nombre}")
 def api_writeups_maquina(maquina_nombre: str, flask_session: dict = Depends(get_flask_session)):
-    from dockerlabs.app import app as flask_app
     from dockerlabs.models import Writeup, User
-    from dockerlabs.extensions import db as alchemy_db
     from sqlalchemy import func
 
     with flask_app.app_context():
@@ -1637,9 +1590,7 @@ def api_report_writeup(writeup_id: int, data: ReportWriteupRequest, flask_sessio
     if not user_id:
         return JSONResponse(status_code=401, content={"error": "Debes iniciar sesión para reportar"})
 
-    from dockerlabs.app import app as flask_app
     from dockerlabs.models import Writeup, WriteupReport
-    from dockerlabs.extensions import db as alchemy_db
 
     with flask_app.app_context():
         if not Writeup.query.get(writeup_id):
@@ -1660,9 +1611,7 @@ def api_ignore_report(report_id: int, flask_session: dict = Depends(get_flask_se
     if caller_role not in ('admin', 'moderador'):
         return JSONResponse(status_code=403, content={"error": "Acceso denegado"})
 
-    from dockerlabs.app import app as flask_app
     from dockerlabs.models import WriteupReport
-    from dockerlabs.extensions import db as alchemy_db
 
     with flask_app.app_context():
         report = WriteupReport.query.get(report_id)
@@ -1678,9 +1627,7 @@ def api_get_reports(flask_session: dict = Depends(get_flask_session)):
     if caller_role not in ('admin', 'moderador'):
         return JSONResponse(status_code=403, content={"error": "Acceso denegado"})
 
-    from dockerlabs.app import app as flask_app
     from dockerlabs.models import WriteupReport
-    from dockerlabs.extensions import db as alchemy_db
 
     with flask_app.app_context():
         reports_orm = WriteupReport.query.order_by(WriteupReport.created_at.desc()).all()
@@ -1705,9 +1652,7 @@ def api_list_writeups_recibidos(flask_session: dict = Depends(get_flask_session)
     if caller_role not in ('admin', 'moderador'):
         return JSONResponse(status_code=403, content={"error": "Acceso denegado"})
 
-    from dockerlabs.app import app as flask_app
     from dockerlabs.models import PendingWriteup, Machine
-    from dockerlabs.extensions import db as alchemy_db
 
     with flask_app.app_context():
         results = alchemy_db.session.query(PendingWriteup, Machine.id, Machine.imagen) \
@@ -1728,7 +1673,6 @@ def api_list_writeups_recibidos(flask_session: dict = Depends(get_flask_session)
 # ── Ranking Writeups y Creadores (pública) ───────────────────────
 @api_router.get("/writeups/ranking")
 def api_ranking_writeups_v2(flask_session: dict = Depends(get_flask_session)):
-    from dockerlabs.app import app as flask_app
     from dockerlabs.models import WriteupRanking
     from sqlalchemy import func
 
@@ -1743,9 +1687,7 @@ def api_author_profile(nombre: str, flask_session: dict = Depends(get_flask_sess
     if not nombre:
         return JSONResponse(status_code=400, content={"error": "Nombre requerido"})
 
-    from dockerlabs.app import app as flask_app
     from dockerlabs.models import User, Machine, Writeup
-    from dockerlabs.extensions import db as alchemy_db
     from sqlalchemy import func
     from dockerlabs.auth import get_profile_image_url
 
@@ -1778,10 +1720,7 @@ def api_approve_pending_machine(machine_id: int, flask_session: dict = Depends(g
     if caller_role not in ('admin', 'moderador'):
         return JSONResponse(status_code=403, content={"error": "Acceso denegado"})
 
-    from dockerlabs.app import app as flask_app
     from dockerlabs.models import PendingMachineSubmission
-    from dockerlabs.extensions import db as alchemy_db
-    from datetime import datetime
 
     with flask_app.app_context():
         sub = PendingMachineSubmission.query.get(machine_id)
@@ -1798,10 +1737,7 @@ def api_reject_pending_machine(machine_id: int, flask_session: dict = Depends(ge
     if caller_role not in ('admin', 'moderador'):
         return JSONResponse(status_code=403, content={"error": "Acceso denegado"})
 
-    from dockerlabs.app import app as flask_app
     from dockerlabs.models import PendingMachineSubmission
-    from dockerlabs.extensions import db as alchemy_db
-    from datetime import datetime
 
     with flask_app.app_context():
         sub = PendingMachineSubmission.query.get(machine_id)
@@ -1898,9 +1834,7 @@ def api_send_message(
     if url_pattern.search(content):
         return JSONResponse(status_code=400, content={"success": False, "message": "No se permiten enlaces"})
 
-    from dockerlabs.app import app as flask_app
     from dockerlabs.models import User, Mensajeria
-    from dockerlabs.extensions import db as alchemy_db
     from sqlalchemy import or_, and_
 
     with flask_app.app_context():
@@ -1949,9 +1883,7 @@ def api_get_conversations(flask_session: dict = Depends(get_flask_session)):
     if not user_id:
         return JSONResponse(status_code=401, content={"success": False, "message": "Debes iniciar sesión"})
 
-    from dockerlabs.app import app as flask_app
     from dockerlabs.models import User, Mensajeria
-    from dockerlabs.extensions import db as alchemy_db
     from sqlalchemy import or_, and_
 
     with flask_app.app_context():
@@ -2009,9 +1941,7 @@ def api_get_chat(username: str, flask_session: dict = Depends(get_flask_session)
     if not user_id:
         return JSONResponse(status_code=401, content={"success": False, "message": "Debes iniciar sesión"})
 
-    from dockerlabs.app import app as flask_app
     from dockerlabs.models import User, Mensajeria
-    from dockerlabs.extensions import db as alchemy_db
     from sqlalchemy import or_, and_
 
     with flask_app.app_context():
@@ -2061,9 +1991,7 @@ def api_delete_conversation(
     if not user_id:
         return JSONResponse(status_code=401, content={"success": False, "message": "Debes iniciar sesión"})
 
-    from dockerlabs.app import app as flask_app
     from dockerlabs.models import User, Mensajeria
-    from dockerlabs.extensions import db as alchemy_db
 
     with flask_app.app_context():
         other_user = User.query.filter_by(username=username).first()
@@ -2094,7 +2022,6 @@ def api_get_unread_count(flask_session: dict = Depends(get_flask_session)):
     if not user_id:
         return JSONResponse(status_code=401, content={"count": 0})
 
-    from dockerlabs.app import app as flask_app
     from dockerlabs.models import Mensajeria
 
     with flask_app.app_context():
@@ -2114,8 +2041,6 @@ def api_search_users(q: str = "", flask_session: dict = Depends(get_flask_sessio
     if not user_id:
         return JSONResponse(status_code=401, content={"users": []})
 
-    from dockerlabs.app import app as flask_app
-    from dockerlabs.models import User
 
     with flask_app.app_context():
         query = q.strip()
@@ -2160,10 +2085,7 @@ def api_broadcast_message(
     if url_pattern.search(content):
         return JSONResponse(status_code=400, content={"success": False, "message": "No se permiten enlaces en difusiones"})
 
-    from dockerlabs.app import app as flask_app
     from dockerlabs.models import User, Mensajeria
-    from dockerlabs.extensions import db as alchemy_db
-    from datetime import datetime
 
     with flask_app.app_context():
         sender_id = user_id
@@ -2225,9 +2147,7 @@ def api_list_writeups_subidos(
     if not user_id:
         return JSONResponse(status_code=401, content=[])
 
-    from dockerlabs.app import app as flask_app
     from dockerlabs.models import Writeup
-    from dockerlabs.extensions import db as alchemy_db
 
     with flask_app.app_context():
         query = Writeup.query
@@ -2278,9 +2198,7 @@ def api_list_maquinas_writeups_subidos(
     if not user_id:
         return JSONResponse(status_code=401, content={"maquinas": []})
 
-    from dockerlabs.app import app as flask_app
     from dockerlabs.models import Writeup, Machine
-    from dockerlabs.extensions import db as alchemy_db
     from sqlalchemy import func
 
     with flask_app.app_context():
@@ -2336,9 +2254,6 @@ def serve_profile_image(user_id: int):
     Sirve la imagen de perfil desde BD con fallback a disco.
     Equivalente a: /img/perfil/<int:user_id> en auth.py
     """
-    from dockerlabs.app import app as flask_app
-    from dockerlabs.models import User
-    import os
     import io
 
     BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
@@ -2399,9 +2314,7 @@ def serve_machine_logo(machine_id: int):
     Sirve el logo de la máquina desde BD con fallback a fichero estático.
     Equivalente a: /img/maquina/<int:machine_id> en maquinas.py
     """
-    from dockerlabs.app import app as flask_app
     from dockerlabs.models import Machine
-    import os
     import io
 
     BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
@@ -2469,11 +2382,8 @@ def api_validate_flag(
     if not user_id and not flask_session.get('bunkerlabs_guest'):
         raise HTTPException(status_code=401, detail="Sesión no válida")
 
-    from dockerlabs.app import app as flask_app
     from dockerlabs.models import Machine, CompletedMachine, User
-    from dockerlabs.extensions import db as alchemy_db
     from sqlalchemy import func
-    from sqlalchemy.exc import IntegrityError
 
     PUNTOS_MAP = {"Muy Fácil": 10, "Fácil": 20, "Medio": 30, "Difícil": 40}
 
@@ -2538,8 +2448,6 @@ def api_bunker_ranking():
     Equivalente a: GET /api/ranking en bunkerlabs.py
     Rate limit: 60 por minuto.
     """
-    from dockerlabs.app import app as flask_app
-    from dockerlabs.models import User
 
     with flask_app.app_context():
         # Solo usuarios con puntos > 0, ordenados por puntos descendente
@@ -2554,3 +2462,796 @@ def api_bunker_ranking():
             })
 
     return {"ranking": ranking}
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# BUNKERLABS API (Fase 5) - Endpoints restantes migrados desde bunkerlabs.py
+# ═══════════════════════════════════════════════════════════════════════════════
+
+class BunkerAccessLogEntry(BaseModel):
+    nombre: str
+    fecha: str
+
+class BunkerAccessLogsResponse(BaseModel):
+    logs: List[BunkerAccessLogEntry]
+
+class BunkerWriteupItem(BaseModel):
+    id: int
+    autor: str
+    url: str
+    tipo: str
+    locked: bool
+    created_at: Optional[str] = None
+
+class BunkerWriteupsResponse(BaseModel):
+    writeups: List[BunkerWriteupItem]
+
+class ToggleLockResponse(BaseModel):
+    message: str
+    locked: bool
+
+class UpdateFlagRequest(BaseModel):
+    flag: str
+
+class UpdateFlagResponse(BaseModel):
+    success: bool
+    message: str
+    machine_id: int
+    machine_name: str
+
+
+@api_router.get("/bunker/logs/{token_id}", response_model=BunkerAccessLogsResponse)
+def api_get_bunker_access_logs(
+    token_id: int,
+    flask_session: dict = Depends(get_flask_session)
+):
+    """
+    Obtener logs de acceso para un token BunkerLabs.
+    Equivalente a: GET /api/logs/<token_id> en bunkerlabs.py
+    Solo admin.
+    """
+    role = flask_session.get('role', '')
+    if role != 'admin':
+        raise HTTPException(status_code=403, detail="Acceso denegado")
+
+    from bunkerlabs.models import BunkerAccessLog
+
+    with flask_app.app_context():
+        logs = BunkerAccessLog.query.filter_by(token_id=token_id) \
+                                   .order_by(BunkerAccessLog.accessed_at.desc()).all()
+
+        result = []
+        for log in logs:
+            result.append({
+                "nombre": log.user_nombre,
+                "fecha": log.accessed_at.strftime('%d-%m-%Y %H:%M:%S')
+            })
+
+    return {"logs": result}
+
+
+@api_router.delete("/bunker/logs/{token_id}")
+def api_delete_bunker_access_logs(
+    token_id: int,
+    flask_session: dict = Depends(get_flask_session),
+    csrf_ok: bool = Depends(verify_csrf_token)
+):
+    """
+    Eliminar logs de acceso para un token BunkerLabs.
+    Equivalente a: POST /api/logs/<token_id>/delete en bunkerlabs.py
+    Solo admin. Requiere CSRF.
+    """
+    role = flask_session.get('role', '')
+    if role != 'admin':
+        raise HTTPException(status_code=403, detail="Acceso denegado")
+
+    from bunkerlabs.models import BunkerAccessLog
+
+    with flask_app.app_context():
+        try:
+            BunkerAccessLog.query.filter_by(token_id=token_id).delete()
+            alchemy_db.session.commit()
+            return {"message": "Historial eliminado correctamente"}
+        except Exception:
+            alchemy_db.session.rollback()
+            raise HTTPException(status_code=500, detail="Error al eliminar el historial")
+
+
+@api_router.get("/bunker/writeups/{maquina_nombre}", response_model=BunkerWriteupsResponse)
+def api_get_bunker_writeups(maquina_nombre: str):
+    """
+    Obtener writeups de una máquina BunkerLabs (Entornos Reales).
+    Equivalente a: GET /api/writeups/<maquina_nombre> en bunkerlabs.py
+    """
+    from bunkerlabs.models import BunkerWriteup
+
+    with flask_app.app_context():
+        writeups = BunkerWriteup.query.filter_by(maquina=maquina_nombre) \
+                                      .order_by(BunkerWriteup.created_at.desc()).all()
+
+        result = []
+        for w in writeups:
+            result.append({
+                "id": w.id,
+                "autor": w.autor,
+                "url": w.url,
+                "tipo": w.tipo,
+                "locked": w.locked,
+                "created_at": w.created_at.isoformat() if w.created_at else None
+            })
+
+    return {"writeups": result}
+
+
+@api_router.post("/bunker/admin/writeups/toggle-lock/{writeup_id}", response_model=ToggleLockResponse)
+def api_toggle_writeup_lock(
+    writeup_id: int,
+    flask_session: dict = Depends(get_flask_session),
+    csrf_ok: bool = Depends(verify_csrf_token)
+):
+    """
+    Alternar estado de bloqueo de un writeup BunkerLabs.
+    Equivalente a: POST /admin/writeups/toggle_lock/<writeup_id> en bunkerlabs.py
+    Solo admin. Requiere CSRF.
+    Rate limit: 20 por minuto.
+    """
+    role = flask_session.get('role', '')
+    if role != 'admin':
+        raise HTTPException(status_code=403, detail="Acceso denegado")
+
+    from bunkerlabs.models import BunkerWriteup
+
+    with flask_app.app_context():
+        writeup = BunkerWriteup.query.get(writeup_id)
+        if not writeup:
+            raise HTTPException(status_code=404, detail="Writeup no encontrado")
+
+        try:
+            writeup.locked = not writeup.locked
+            alchemy_db.session.commit()
+            return {"message": "Estado actualizado", "locked": writeup.locked}
+        except Exception as e:
+            alchemy_db.session.rollback()
+            raise HTTPException(status_code=500, detail=str(e))
+
+
+@api_router.post("/bunker/admin/machines/update-flag/{machine_id}", response_model=UpdateFlagResponse)
+def api_update_machine_flag(
+    machine_id: int,
+    data: UpdateFlagRequest,
+    flask_session: dict = Depends(get_flask_session),
+    csrf_ok: bool = Depends(verify_csrf_token)
+):
+    """
+    Actualizar flag (pin) de una máquina BunkerLabs.
+    Equivalente a: POST /admin/machines/update_flag/<machine_id> en bunkerlabs.py
+    Solo admin. Requiere CSRF.
+    """
+    role = flask_session.get('role', '')
+    if role != 'admin':
+        raise HTTPException(status_code=403, detail="Acceso denegado")
+
+    from dockerlabs.models import Machine
+
+    with flask_app.app_context():
+        machine = Machine.query.get(machine_id)
+        if not machine or machine.origen != 'bunker':
+            raise HTTPException(status_code=404, detail="Máquina no encontrada")
+
+        if not data.flag.strip():
+            raise HTTPException(status_code=400, detail="La flag no puede estar vacía")
+
+        try:
+            machine.pin = data.flag.strip()
+            alchemy_db.session.commit()
+            return {
+                "success": True,
+                "message": f"Flag actualizada para {machine.nombre}",
+                "machine_id": machine_id,
+                "machine_name": machine.nombre
+            }
+        except Exception as e:
+            alchemy_db.session.rollback()
+            raise HTTPException(status_code=500, detail=str(e))
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# PÁGINAS HTML - Fase 4a: Páginas principales migradas desde Flask
+# ═══════════════════════════════════════════════════════════════════════════════
+# NOTA: Estas páginas se sirven desde FastAPI pero mantienen compatibilidad
+# con los templates Jinja2 originales de Flask.
+
+@pages_router.get("/", response_class=HTMLResponse)
+def index_page(request: Request, flask_session: dict = Depends(get_flask_session)):
+    """
+    Página principal (home).
+    Equivalente a: GET / en app.py
+    """
+    from dockerlabs.models import Machine, Category, CompletedMachine
+    from sqlalchemy import func
+
+    with flask_app.app_context():
+        # Obtener máquinas con categorías
+        query = alchemy_db.session.query(Machine, Category.categoria).filter(
+            Machine.origen == 'docker'
+        ).outerjoin(
+            Category, (Machine.id == Category.machine_id) & (Category.origen == 'docker')
+        ).order_by(Machine.id.asc()).all()
+
+        all_maquinas = []
+        for m, cat_name in query:
+            all_maquinas.append({
+                'id': m.id,
+                'nombre': m.nombre,
+                'dificultad': m.dificultad,
+                'clase': m.clase,
+                'color': m.color,
+                'autor': m.autor,
+                'enlace_autor': m.enlace_autor,
+                'fecha': m.fecha,
+                'imagen': m.imagen,
+                'imagen_url': f"/api/img/maquina/{m.id}",
+                'descripcion': m.descripcion,
+                'link_descarga': m.link_descarga,
+                'categoria': cat_name
+            })
+
+        # Ordenar por fecha (más recientes primero)
+        maquinas_con_fecha = []
+        for m_dict in all_maquinas:
+            fecha_str = m_dict['fecha']
+            try:
+                parts = fecha_str.split('/')
+                if len(parts) == 3:
+                    fecha_iso = f"{parts[2]}-{parts[1]}-{parts[0]}"
+                    maquinas_con_fecha.append((m_dict, fecha_iso))
+            except Exception:
+                pass
+
+        maquinas_con_fecha.sort(key=lambda x: x[1], reverse=True)
+
+        # Top 2 más recientes
+        machine_ranks = {}
+        top_2_items = maquinas_con_fecha[:2]
+        for idx, (m, _) in enumerate(top_2_items):
+            machine_ranks[m['id']] = idx + 1
+
+        top_2_ids = {m['id'] for m, _ in top_2_items}
+        top_2 = [m for m, _ in top_2_items]
+        rest = [m for m in all_maquinas if m['id'] not in top_2_ids]
+        maquinas = top_2 + rest
+
+        # Máquinas completadas del usuario
+        completed_machines = []
+        user_id = flask_session.get('user_id')
+        if user_id:
+            comp_objs = CompletedMachine.query.filter_by(user_id=user_id).all()
+            completed_machines = [c.machine_name.strip() for c in comp_objs]
+
+        single_machine = len(maquinas) == 1
+
+        categorias_map = {}
+        for m in maquinas:
+            categorias_map[m['id']] = m['categoria'] if m['categoria'] else ''
+
+    # Crear sesión compatible con Flask para plantillas
+    session_data = {}
+    if user_id:
+        session_data = {
+            'user_id': user_id,
+            'username': flask_session.get('username'),
+            'role': flask_session.get('role')
+        }
+
+    context = {
+        "request": request,
+        "maquinas": maquinas,
+        "completed_machines": completed_machines,
+        "machine_ranks": machine_ranks,
+        "single_machine": single_machine,
+        "categorias_map": categorias_map,
+        "current_user": {"is_authenticated": bool(user_id), "id": user_id},
+        "session": session_data,
+        "csrf_token_value": secrets.token_urlsafe(32),
+        "url_for": url_for,
+        "g": {"csp_nonce": secrets.token_urlsafe(32)}
+    }
+    return templates.TemplateResponse(request, "dockerlabs/home.html", context)
+
+
+@pages_router.get("/dashboard", response_class=HTMLResponse)
+def dashboard_page(request: Request, flask_session: dict = Depends(get_flask_session)):
+    """
+    Dashboard de usuario.
+    Equivalente a: GET /dashboard en app.py
+    Requiere autenticación.
+    """
+    user_id = flask_session.get('user_id')
+    if not user_id:
+        return RedirectResponse(url="/login", status_code=302)
+
+    role = flask_session.get('role', '')
+    if role not in ['admin', 'moderador', 'jugador']:
+        raise HTTPException(status_code=403, detail="Acceso denegado")
+
+    from dockerlabs.models import Machine
+
+    with flask_app.app_context():
+        maquinas = Machine.query.filter_by(origen='docker') \
+                                .with_entities(Machine.id, Machine.nombre, Machine.autor) \
+                                .order_by(Machine.nombre.asc()).all()
+
+        current_username = flask_session.get('username')
+        profile_image_url = get_fastapi_profile_image_url(
+            username=current_username,
+            user_id=user_id
+        )
+
+    # Crear sesión compatible con Flask para plantillas
+    session_data = {}
+    if user_id:
+        session_data = {
+            'user_id': user_id,
+            'username': current_username,
+            'role': role
+        }
+
+    context = {
+        "request": request,
+        "maquinas": maquinas,
+        "profile_image_url": profile_image_url,
+        "user": {"id": user_id, "username": current_username, "role": role},
+        "current_user_role": role,
+        "session": session_data,
+        "csrf_token_value": secrets.token_urlsafe(32),
+        "get_profile_image_url": get_fastapi_profile_image_url,
+        "url_for": url_for,
+        "g": {"csp_nonce": secrets.token_urlsafe(32)}
+    }
+    return templates.TemplateResponse(request, "dockerlabs/admin/dashboard.html", context)
+
+
+@pages_router.get("/login", response_class=HTMLResponse)
+def login_page(request: Request, flask_session: dict = Depends(get_flask_session)):
+    """
+    Página de login.
+    Equivalente a: GET /login en auth.py
+    """
+    # Si ya está autenticado, redirigir al dashboard
+    user_id = flask_session.get('user_id')
+    if user_id:
+        return RedirectResponse(url="/dashboard", status_code=302)
+
+    # Generar y almacenar CSRF token en la sesión
+    csrf_token = secrets.token_urlsafe(32)
+    flask_session["csrf_token"] = csrf_token
+
+    # Crear contexto para la plantilla
+    context = {
+        "request": request,
+        "csrf_token_value": csrf_token,
+        "url_for": url_for,
+        "g": {"csp_nonce": secrets.token_urlsafe(32)},
+        "session": flask_session,
+        "success": None,
+        "remaining": None
+    }
+    
+    return templates.TemplateResponse(request, "dockerlabs/auth/login.html", context)
+
+
+@pages_router.get("/register", response_class=HTMLResponse)
+def register_page(request: Request, flask_session: dict = Depends(get_flask_session)):
+    """
+    Página de registro.
+    Equivalente a: GET /register en auth.py
+    """
+    # Si ya está autenticado, redirigir al dashboard
+    if flask_session.get('user_id'):
+        return RedirectResponse(url="/dashboard", status_code=302)
+
+    # Generar y almacenar CSRF token en la sesión
+    csrf_token = secrets.token_urlsafe(32)
+    flask_session["csrf_token"] = csrf_token
+    
+    # Crear sesión compatible con Flask para plantillas
+    session_data = {}
+    if flask_session.get('user_id'):
+        session_data = {
+            'user_id': flask_session.get('user_id'),
+            'username': flask_session.get('username'),
+            'role': flask_session.get('role')
+        }
+
+    context = {
+        "remaining": request.query_params.get('remaining'),
+        "session": session_data,
+        "csrf_token_value": csrf_token,
+        "url_for": url_for,
+        "g": {"csp_nonce": secrets.token_urlsafe(32)}
+    }
+    return templates.TemplateResponse(request, "dockerlabs/auth/register.html", context)
+
+
+@pages_router.get("/recover", response_class=HTMLResponse)
+def recover_page(request: Request, flask_session: dict = Depends(get_flask_session)):
+    """
+    Página de recuperación de contraseña.
+    Equivalente a: GET /recover en auth.py
+    """
+    # Si ya está autenticado, redirigir al dashboard
+    if flask_session.get('user_id'):
+        return RedirectResponse(url="/dashboard", status_code=302)
+
+    # Generar y almacenar CSRF token en la sesión
+    csrf_token = secrets.token_urlsafe(32)
+    flask_session["csrf_token"] = csrf_token
+    
+    # Crear sesión compatible con Flask para plantillas
+    session_data = {}
+    if flask_session.get('user_id'):
+        session_data = {
+            'user_id': flask_session.get('user_id'),
+            'username': flask_session.get('username'),
+            'role': flask_session.get('role')
+        }
+
+    context = {
+        "session": session_data,
+        "csrf_token_value": csrf_token,
+        "url_for": url_for,
+        "g": {"csp_nonce": secrets.token_urlsafe(32)}
+    }
+    return templates.TemplateResponse(request, "dockerlabs/auth/recover.html", context)
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# PÁGINAS HTML - Fase 4b: Páginas de información
+# ═══════════════════════════════════════════════════════════════════════════════
+
+@pages_router.get("/instrucciones-uso", response_class=HTMLResponse)
+def instrucciones_uso_page(request: Request):
+    """Página de instrucciones de uso."""
+    return templates.TemplateResponse(request, "dockerlabs/info/instrucciones_uso.html", {"url_for": url_for, "session": {}, "g": {"csp_nonce": secrets.token_urlsafe(32)}})
+
+
+@pages_router.get("/soporte", response_class=HTMLResponse)
+def soporte_page(request: Request):
+    """Página de soporte."""
+    return templates.TemplateResponse(request, "dockerlabs/info/soporte.html", {"url_for": url_for, "session": {}, "g": {"csp_nonce": secrets.token_urlsafe(32)}})
+
+
+@pages_router.get("/equipo", response_class=HTMLResponse)
+def equipo_page(request: Request):
+    """Página del equipo."""
+    return templates.TemplateResponse(request, "dockerlabs/equipo.html", {"url_for": url_for, "session": {}, "g": {"csp_nonce": secrets.token_urlsafe(32)}})
+
+
+@pages_router.get("/enviar-maquina", response_class=HTMLResponse)
+def enviar_maquina_page(request: Request):
+    """Página para enviar máquina."""
+    return templates.TemplateResponse(request, "dockerlabs/info/enviar_maquina.html", {"url_for": url_for, "session": {}, "g": {"csp_nonce": secrets.token_urlsafe(32)}})
+
+
+@pages_router.get("/como-se-crea-una-maquina", response_class=HTMLResponse)
+def como_se_crea_page(request: Request):
+    """Página de cómo crear una máquina."""
+    return templates.TemplateResponse(request, "dockerlabs/info/como_se_crea_una_maquina.html", {"url_for": url_for, "session": {}, "g": {"csp_nonce": secrets.token_urlsafe(32)}})
+
+
+@pages_router.get("/agradecimientos", response_class=HTMLResponse)
+def agradecimientos_page(request: Request):
+    """Página de agradecimientos."""
+    return templates.TemplateResponse(request, "dockerlabs/info/agradecimientos.html", {"url_for": url_for, "session": {}, "g": {"csp_nonce": secrets.token_urlsafe(32)}})
+
+
+@pages_router.get("/terminos-condiciones", response_class=HTMLResponse)
+def terminos_condiciones_page(request: Request):
+    """Página de términos y condiciones."""
+    return templates.TemplateResponse(request, "dockerlabs/info/terminos-condiciones.html", {"url_for": url_for, "session": {}, "g": {"csp_nonce": secrets.token_urlsafe(32)}})
+
+
+@pages_router.get("/bug-bounty", response_class=HTMLResponse)
+def bug_bounty_page(request: Request):
+    """Página de bug bounty."""
+    return templates.TemplateResponse(request, "dockerlabs/bug_bounty.html", {"url_for": url_for, "session": {}, "g": {"csp_nonce": secrets.token_urlsafe(32)}})
+
+
+@pages_router.get("/politica-privacidad", response_class=HTMLResponse)
+def politica_privacidad_page(request: Request):
+    """Página de política de privacidad."""
+    return templates.TemplateResponse(request, "politicas/politica_privacidad.html", {"url_for": url_for, "session": {}, "g": {"csp_nonce": secrets.token_urlsafe(32)}})
+
+
+@pages_router.get("/politica-cookies", response_class=HTMLResponse)
+def politica_cookies_page(request: Request):
+    """Página de política de cookies."""
+    return templates.TemplateResponse(request, "politicas/politica_cookies.html", {"url_for": url_for, "session": {}, "g": {"csp_nonce": secrets.token_urlsafe(32)}})
+
+
+@pages_router.get("/condiciones-uso", response_class=HTMLResponse)
+def condiciones_uso_page(request: Request):
+    """Página de condiciones de uso."""
+    return templates.TemplateResponse(request, "politicas/condiciones_uso.html", {"url_for": url_for, "session": {}, "g": {"csp_nonce": secrets.token_urlsafe(32)}})
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# PÁGINAS HTML - Fase 4c: Páginas de administración
+# ═══════════════════════════════════════════════════════════════════════════════
+
+def require_auth_and_role(flask_session: dict, allowed_roles: list):
+    """Helper para verificar autenticación y roles."""
+    user_id = flask_session.get('user_id')
+    role = flask_session.get('role', '')
+    if not user_id:
+        return False, RedirectResponse(url="/login", status_code=302)
+    if role not in allowed_roles:
+        return False, RedirectResponse(url="/", status_code=302)
+    return True, None
+
+
+@pages_router.get("/gestion-usuarios", response_class=HTMLResponse)
+def gestion_usuarios_page(request: Request, flask_session: dict = Depends(get_flask_session)):
+    """Página de gestión de usuarios. Solo admin/moderador."""
+    ok, redirect = require_auth_and_role(flask_session, ['admin', 'moderador'])
+    if not ok:
+        return redirect
+
+
+    with flask_app.app_context():
+        usuarios = User.query.order_by(User.id.asc()).all()
+
+    return templates.TemplateResponse(
+        request,
+        "dockerlabs/admin/gestion_usuarios.html",
+        {
+            "usuarios": usuarios,
+            "session": flask_session,
+            "g": {"csp_nonce": secrets.token_urlsafe(32)}
+        }
+    )
+
+
+@pages_router.get("/gestion-maquinas", response_class=HTMLResponse)
+def gestion_maquinas_page(request: Request, flask_session: dict = Depends(get_flask_session)):
+    """Página de gestión de máquinas. Solo admin/moderador/jugador."""
+    ok, redirect = require_auth_and_role(flask_session, ['admin', 'moderador', 'jugador'])
+    if not ok:
+        return redirect
+
+    from dockerlabs.models import Machine, Category
+
+    with flask_app.app_context():
+        current_username = flask_session.get('username', '')
+        role = flask_session.get('role', '')
+
+        if role in ('admin', 'moderador'):
+            maquinas_docker = Machine.query.filter_by(origen='docker').order_by(Machine.id.asc()).all()
+            maquinas_bunker = Machine.query.filter_by(origen='bunker').order_by(Machine.id.asc()).all()
+        else:
+            if current_username:
+                maquinas_docker = Machine.query.filter_by(origen='docker', autor=current_username).order_by(Machine.id.asc()).all()
+                maquinas_bunker = Machine.query.filter_by(origen='bunker', autor=current_username).order_by(Machine.id.asc()).all()
+            else:
+                maquinas_docker = []
+                maquinas_bunker = []
+
+        # Obtener categorías
+        categorias_map = {}
+        if maquinas_docker:
+            docker_cats = Category.query.filter_by(origen='docker').all()
+            docker_lookup = {c.machine_id: c.categoria for c in docker_cats}
+            for m in maquinas_docker:
+                categorias_map[('docker', m.id)] = docker_lookup.get(m.id, '')
+
+        if maquinas_bunker:
+            bunker_ids = [m.id for m in maquinas_bunker]
+            if bunker_ids:
+                bunker_cats = Category.query.filter(
+                    Category.origen == 'bunker',
+                    Category.machine_id.in_(bunker_ids)
+                ).all()
+                bunker_lookup = {c.machine_id: c.categoria for c in bunker_cats}
+                for m in maquinas_bunker:
+                    categorias_map[('bunker', m.id)] = bunker_lookup.get(m.id, '')
+
+    return templates.TemplateResponse(
+        request,
+        "dockerlabs/admin/gestion_maquinas.html",
+        {
+            "maquinas_docker": maquinas_docker,
+            "maquinas_bunker": maquinas_bunker,
+            "current_username": current_username,
+            "categorias_map": categorias_map,
+            "session": flask_session,
+            "g": {"csp_nonce": secrets.token_urlsafe(32)}
+        }
+    )
+
+
+@pages_router.get("/backups", response_class=HTMLResponse)
+def backups_page(request: Request, flask_session: dict = Depends(get_flask_session)):
+    """Página de backups. Solo admin."""
+    ok, redirect = require_auth_and_role(flask_session, ['admin'])
+    if not ok:
+        return redirect
+
+    return templates.TemplateResponse(
+        request,
+        "dockerlabs/admin/backups.html",
+        {
+            "session": flask_session,
+            "g": {"csp_nonce": secrets.token_urlsafe(32)}
+        }
+    )
+
+
+@pages_router.get("/pending-machines", response_class=HTMLResponse)
+def pending_machines_page(request: Request, flask_session: dict = Depends(get_flask_session)):
+    """Página de máquinas pendientes. Admin/moderador."""
+    ok, redirect = require_auth_and_role(flask_session, ['admin', 'moderador'])
+    if not ok:
+        return redirect
+
+    from dockerlabs.models import PendingMachineSubmission
+
+    with flask_app.app_context():
+        machines = PendingMachineSubmission.query.order_by(
+            PendingMachineSubmission.submitted_at.desc()
+        ).all()
+
+    return templates.TemplateResponse(
+        request,
+        "dockerlabs/admin/pending_machines.html",
+        {
+            "machines": machines,
+            "session": flask_session,
+            "g": {"csp_nonce": secrets.token_urlsafe(32)}
+        }
+    )
+
+
+@pages_router.get("/user-pending", response_class=HTMLResponse)
+def user_pending_page(request: Request, flask_session: dict = Depends(get_flask_session)):
+    """Página de máquinas pendientes del usuario."""
+    user_id = flask_session.get('user_id')
+    if not user_id:
+        return RedirectResponse(url="/login", status_code=302)
+
+    return templates.TemplateResponse(
+        request,
+        "dockerlabs/user/user_pending.html",
+        {
+            "username": flask_session.get('username'),
+            "session": flask_session,
+            "g": {"csp_nonce": secrets.token_urlsafe(32)}
+        }
+    )
+
+
+@pages_router.get("/writeups-recibidos", response_class=HTMLResponse)
+def writeups_recibidos_page(request: Request, flask_session: dict = Depends(get_flask_session)):
+    """Página de writeups recibidos. Admin/moderador."""
+    ok, redirect = require_auth_and_role(flask_session, ['admin', 'moderador'])
+    if not ok:
+        return redirect
+
+    return templates.TemplateResponse(
+        request,
+        "dockerlabs/user/writeups_recibidos.html",
+        {
+            "session": flask_session,
+            "g": {"csp_nonce": secrets.token_urlsafe(32)}
+        }
+    )
+
+
+@pages_router.get("/writeups-publicados", response_class=HTMLResponse)
+def writeups_publicados_page(request: Request, flask_session: dict = Depends(get_flask_session)):
+    """Página de writeups publicados. Admin/moderador/jugador."""
+    ok, redirect = require_auth_and_role(flask_session, ['admin', 'moderador', 'jugador'])
+    if not ok:
+        return redirect
+
+
+    with flask_app.app_context():
+        user = User.query.get(flask_session.get('user_id')) if flask_session.get('user_id') else None
+
+    return templates.TemplateResponse(
+        request,
+        "dockerlabs/user/writeups_publicados.html",
+        {
+            "user": user,
+            "session": flask_session,
+            "g": {"csp_nonce": secrets.token_urlsafe(32)}
+        }
+    )
+
+
+@pages_router.get("/peticiones-writeups", response_class=HTMLResponse)
+def peticiones_writeups_page(request: Request, flask_session: dict = Depends(get_flask_session)):
+    """Página de peticiones de writeups. Admin/moderador."""
+    ok, redirect = require_auth_and_role(flask_session, ['admin', 'moderador'])
+    if not ok:
+        return redirect
+
+    from dockerlabs.models import WriteupEditRequest
+
+    with flask_app.app_context():
+        requests = WriteupEditRequest.query.order_by(WriteupEditRequest.id.desc()).all()
+
+    return templates.TemplateResponse(
+        request,
+        "dockerlabs/admin/peticiones_writeups.html",
+        {
+            "peticiones": requests,
+            "session": flask_session,
+            "g": {"csp_nonce": secrets.token_urlsafe(32)}
+        }
+    )
+
+
+@pages_router.get("/estadisticas", response_class=HTMLResponse)
+def estadisticas_page(request: Request):
+    """Página de estadísticas de la plataforma."""
+    from dockerlabs.models import Machine, Writeup, User
+
+    def get_distribution_by_year(items, date_extractor):
+        """Helper para calcular distribución por año."""
+        year_counts = {}
+        total = 0
+        for item in items:
+            try:
+                year = date_extractor(item)
+                if year:
+                    year_counts[year] = year_counts.get(year, 0) + 1
+                    total += 1
+            except:
+                continue
+
+        distribution = {}
+        if total > 0:
+            for year, count in year_counts.items():
+                distribution[year] = round((count / total) * 100, 2)
+
+        return dict(sorted(distribution.items()))
+
+    with flask_app.app_context():
+        # Máquinas
+        machines = Machine.query.all()
+        def machine_date_extractor(m):
+            try:
+                parts = m.fecha.split('/')
+                if len(parts) == 3:
+                    return int(parts[2])
+            except:
+                return None
+            return None
+
+        machine_stats = get_distribution_by_year(machines, machine_date_extractor)
+
+        # Writeups
+        writeups = Writeup.query.all()
+        def writeup_date_extractor(w):
+            return w.created_at.year if w.created_at else None
+
+        writeup_stats = get_distribution_by_year(writeups, writeup_date_extractor)
+
+        # Usuarios
+        users = User.query.all()
+        def user_date_extractor(u):
+            return u.created_at.year if u.created_at else None
+
+        user_stats = get_distribution_by_year(users, user_date_extractor)
+
+    return templates.TemplateResponse(
+        request,
+        "dockerlabs/user/estadisticas.html",
+        {
+            "machine_stats": machine_stats,
+            "writeup_stats": writeup_stats,
+            "user_stats": user_stats,
+            "session": {},
+            "g": {"csp_nonce": secrets.token_urlsafe(32)}
+        }
+    )

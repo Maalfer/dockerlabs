@@ -62,46 +62,13 @@ def get_profile_image_static_path(username, user_id=None):
 def get_profile_image_url(username=None, user_id=None):
     """Devuelve la URL del endpoint /img/perfil/<id> para el usuario."""
     if user_id:
-        return url_for('auth.serve_profile_image', user_id=user_id)
+        return f'/api/img/perfil/{user_id}'
     if username:
         from .models import User as _User
         user = _User.query.filter_by(username=username).first()
         if user:
-            return url_for('auth.serve_profile_image', user_id=user.id)
+            return f'/api/img/perfil/{user.id}'
     return url_for('static', filename='dockerlabs/images/balu.webp')
-
-
-@auth_bp.route('/img/perfil/<int:user_id>')
-def serve_profile_image(user_id):
-    """
-    Sirve la imagen de perfil desde la BD (fallback a disco).
-    ---
-    tags:
-      - User
-    parameters:
-      - name: user_id
-        in: path
-        type: integer
-        required: true
-    responses:
-      200:
-        description: Imagen de perfil.
-    """
-    from .models import User as _User
-    user = _User.query.get(user_id)
-    if user and user.profile_image_data:
-        mime = user.profile_image_mime or 'image/jpeg'
-        return send_file(io.BytesIO(user.profile_image_data), mimetype=mime)
-    # Fallback a disco
-    disk_path = get_profile_image_static_path(
-        user.username if user else None,
-        user_id=user_id
-    )
-    if disk_path and disk_path != 'dockerlabs/images/balu.webp':
-        full_path = os.path.join(BASE_DIR, 'static', disk_path)
-        if os.path.exists(full_path):
-            return send_file(full_path)
-    return redirect(url_for('static', filename='dockerlabs/images/balu.webp'))
 
 
 def load_username_change_requests():
@@ -140,36 +107,6 @@ def load_username_change_requests():
         
     return rows
 
-@auth_bp.route('/register', methods=['GET'])
-@limiter.limit("5 per minute")
-def register():
-    """
-    User registration endpoint (Página HTML).
-    La lógica de registro (POST) ha sido migrada a FastAPI (/api/auth/register).
-    """
-    remaining = session.pop('rate_limit_remaining', None)
-    return render_template('dockerlabs/auth/register.html', remaining=remaining)
-
-@auth_bp.route('/recover', methods=['GET'])
-@limiter.limit("5 per minute")
-def recover():
-    """
-    Password recovery endpoint (Página HTML).
-    La lógica de recuperación (POST) ha sido migrada a FastAPI (/api/auth/recover).
-    """
-    return render_template('dockerlabs/auth/recover.html')
-
-@auth_bp.route('/login', methods=['GET'])
-@limiter.limit("5 per minute")
-def login():
-    """
-    User login endpoint (Página HTML).
-    La validación de credenciales (POST) ha sido migrada a FastAPI (/api/auth/login).
-    """
-    success = request.args.get('success')
-    remaining = session.pop('rate_limit_remaining', None)
-    return render_template('dockerlabs/auth/login.html', success=success, remaining=remaining)
-
 @auth_bp.route('/logout')
 
 def logout():
@@ -184,24 +121,65 @@ def logout():
     """
     logout_user()
     session.clear()
-    return redirect(url_for('index'))
+    return redirect('/')
 
-@auth_bp.route('/gestion-usuarios')
-@role_required('admin', 'moderador')
-
-def gestion_usuarios():
+@auth_bp.route('/request_username_change', methods=['POST'])
+@login_required
+@csrf_protect
+def request_username_change():
     """
-    Admin user management page.
-    ---
-    tags:
-      - Admin
-    responses:
-      200:
-        description: List of users.
+    Handle username change request form submission.
+    Este endpoint maneja el formulario HTML y redirige.
+    La lógica API está en FastAPI: POST /api/auth/request_username_change
     """
-    usuarios = User.query.order_by(User.id.asc()).all()
+    from .models import UsernameChangeRequest
+    from .extensions import db as alchemy_db
+    import re as _re
 
-    return render_template('dockerlabs/admin/gestion_usuarios.html', usuarios=usuarios)
+    user_id = session.get('user_id')
+    old_username = (session.get('username') or '').strip()
+    requested_username = (request.form.get('requested_username') or '').strip()
+    reason = (request.form.get('reason') or '').strip()
+    contacto_opcional = (request.form.get('contacto_opcional') or '').strip()
 
+    if not user_id:
+        flash("Debes iniciar sesión para solicitar un cambio de nombre.", "warning")
+        return redirect('/dashboard')
 
+    if not requested_username:
+        flash("Debes proporcionar un nuevo nombre de usuario.", "danger")
+        return redirect('/dashboard')
+
+    # Validar formato del username
+    if not _re.match(r'^[a-zA-Z0-9_-]{3,20}$', requested_username):
+        flash("El nombre de usuario debe tener entre 3 y 20 caracteres y solo puede contener letras, números, guiones y guiones bajos.", "danger")
+        return redirect('/dashboard')
+
+    # Verificar si ya existe una solicitud pendiente
+    existing = UsernameChangeRequest.query.filter_by(
+        user_id=user_id,
+        estado='pendiente'
+    ).first()
+
+    if existing:
+        flash("Ya tienes una solicitud de cambio de nombre pendiente.", "warning")
+        return redirect('/dashboard')
+
+    try:
+        new_request = UsernameChangeRequest(
+            user_id=user_id,
+            old_username=old_username,
+            requested_username=requested_username,
+            reason=reason,
+            contacto_opcional=contacto_opcional,
+            estado='pendiente'
+        )
+        alchemy_db.session.add(new_request)
+        alchemy_db.session.commit()
+        flash("Solicitud enviada correctamente. El equipo de administración la revisará pronto.", "success")
+    except Exception as e:
+        alchemy_db.session.rollback()
+        flash(f"Error al enviar la solicitud: {str(e)}", "danger")
+
+    return redirect('/dashboard')
 

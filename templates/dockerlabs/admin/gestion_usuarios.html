@@ -24,6 +24,7 @@
             <input type="text" id="userSearchInput"
                 class="form-control form-control-sm bg-dark text-light border-secondary"
                 placeholder="Buscar por usuario, email o rol..." autocomplete="off">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token_value }}">
         </div>
     </div>
 
@@ -81,7 +82,7 @@
                         {% if current_user_role == 'admin' %}
                         <select class="form-select form-select-sm role-select"
                                 data-user-id="{{ usuario.id }}"
-                                data-csrf="{{ csrf_token() }}">
+                                data-csrf="{{ csrf_token_value }}">
                             <option value="jugador" {% if usuario.role=='jugador' %}selected{% endif %}>Jugador</option>
                             <option value="moderador" {% if usuario.role=='moderador' %}selected{% endif %}>Moderador</option>
                             <option value="admin" {% if usuario.role=='admin' %}selected{% endif %}>Admin</option>
@@ -97,7 +98,7 @@
                     <td class="text-center">
                         <button type="button" class="btn btn-sm btn-danger delete-user-btn"
                                 data-user-id="{{ usuario.id }}"
-                                data-csrf="{{ csrf_token() }}">
+                                data-csrf="{{ csrf_token_value }}">
                             Eliminar
                         </button>
                     </td>

@@ -110,27 +110,6 @@ def error_403_page():
     """
     return render_template('dockerlabs/403.html')
 
-@main_bp.route('/instrucciones-uso')
-def instrucciones_uso():
-    """
-    Página de instrucciones.
-    ---
-    tags:
-      - Páginas
-    responses:
-      200:
-        description: Instrucciones.
-    """
-    return render_template('dockerlabs/info/instrucciones_uso.html')
-
-
-@main_bp.route('/backups')
-@login_required
-@role_required('admin')
-def backups_page():
-    return render_template('dockerlabs/admin/backups.html')
-
-
 @main_bp.route('/backups/download', methods=['POST'])
 @login_required
 @role_required('admin')
@@ -183,7 +162,7 @@ def restore_backup():
     upload = request.files.get('backup_zip')
     if not upload or not (upload.filename or '').lower().endswith('.zip'):
         flash("Debes proporcionar un archivo .zip", "danger")
-        return redirect(url_for('main.backups_page'))
+        return redirect('/backups')
 
     lock_fh = _acquire_db_lock()
     try:
@@ -207,7 +186,7 @@ def restore_backup():
                             db_candidates.append(os.path.join(root, fn))
                 if len(db_candidates) != 1:
                     flash("El .zip debe contener exactamente un archivo .db (o el nombre esperado).", "danger")
-                    return redirect(url_for('main.backups_page'))
+                    return redirect('/backups')
                 candidate_db = db_candidates[0]
 
             candidate_wal = None
@@ -257,207 +236,20 @@ def restore_backup():
                 os.replace(db_paths['journal'] + '.tmp', db_paths['journal'])
 
         flash("Backup restaurado correctamente.", "success")
-        return redirect(url_for('main.backups_page'))
+        return redirect('/backups')
     except zipfile.BadZipFile:
         flash("El archivo .zip no es válido.", "danger")
-        return redirect(url_for('main.backups_page'))
+        return redirect('/backups')
     except Exception as e:
         flash(f"Error al restaurar el backup: {str(e)}", "danger")
-        return redirect(url_for('main.backups_page'))
+        return redirect('/backups')
     finally:
         try:
             fcntl.flock(lock_fh.fileno(), fcntl.LOCK_UN)
         finally:
             lock_fh.close()
 
-@main_bp.route('/soporte')
-def soporte():
-  return render_template('dockerlabs/info/soporte.html')
-
-@main_bp.route('/equipo')
-def equipo():
-    """
-    Página del equipo.
-    ---
-    tags:
-      - Páginas
-    responses:
-      200:
-        description: Página del equipo.
-    """
-    return render_template("dockerlabs/equipo.html")
-
-
-@main_bp.route('/enviar-maquina')
-def enviar_maquina():
-    """
-    Página enviar máquina.
-    ---
-    tags:
-      - Páginas
-    responses:
-      200:
-        description: Página para enviar máquina.
-    """
-    return render_template('dockerlabs/info/enviar_maquina.html')
-
-@main_bp.route('/como-se-crea-una-maquina')
-def como_se_crea():
-    """
-    Página de cómo crear una máquina.
-    ---
-    tags:
-      - Páginas
-    responses:
-      200:
-        description: Página de tutorial.
-    """
-    return render_template('dockerlabs/info/como_se_crea_una_maquina.html')
-
-@main_bp.route('/agradecimientos')
-def agradecimientos():
-    """
-    Página de agradecimientos.
-    ---
-    tags:
-      - Páginas
-    responses:
-      200:
-        description: Agradecimientos.
-    """
-    return render_template('dockerlabs/info/agradecimientos.html')
-
-@main_bp.route('/politica-privacidad')
-def politica_privacidad():
-    """
-    Política de privacidad.
-    ---
-    tags:
-      - Legal
-    responses:
-      200:
-        description: Política de privacidad.
-    """
-    return render_template('politicas/politica_privacidad.html')
-
-@main_bp.route('/politica-cookies')
-def politica_cookies():
-    """
-    Política de cookies.
-    ---
-    tags:
-      - Legal
-    responses:
-      200:
-        description: Política de cookies.
-    """
-    return render_template('politicas/politica_cookies.html')
-
-@main_bp.route('/condiciones-uso')
-def condiciones_uso():
-    """
-    Condiciones de uso.
-    ---
-    tags:
-      - Legal
-    responses:
-      200:
-        description: Condiciones de uso.
-    """
-    return render_template('politicas/condiciones_uso.html')
-
-@main_bp.route('/estadisticas')
-def estadisticas():
-    """
-    Página de estadísticas.
-    ---
-    tags:
-      - Páginas
-    responses:
-      200:
-        description: Estadísticas de la plataforma.
-    """
-    # Helper to calculate percentages per year
-    def get_distribution_by_year(items, date_extractor):
-        year_counts = defaultdict(int)
-        total = 0
-        for item in items:
-            try:
-                year = date_extractor(item)
-                if year:
-                    year_counts[year] += 1
-                    total += 1
-            except:
-                continue
-        
-        distribution = {}
-        if total > 0:
-            for year, count in year_counts.items():
-                distribution[year] = round((count / total) * 100, 2)
-        
-        # Return sorted by year
-        return dict(sorted(distribution.items()))
-
-    # --- Machines ---
-    machines = Machine.query.all()
-    def machine_date_extractor(m):
-        # Format is dd/mm/yyyy
-        return datetime.strptime(m.fecha, "%d/%m/%Y").year
-
-    machine_stats = get_distribution_by_year(machines, machine_date_extractor)
-
-    # --- Writeups ---
-    writeups = Writeup.query.all()
-    def writeup_date_extractor(w):
-        return w.created_at.year if w.created_at else None
-
-    writeup_stats = get_distribution_by_year(writeups, writeup_date_extractor)
-
-    # --- Users ---
-    users = User.query.all()
-    def user_date_extractor(u):
-        return u.created_at.year if u.created_at else None
-
-    user_stats = get_distribution_by_year(users, user_date_extractor)
-
-    return render_template('dockerlabs/user/estadisticas.html', 
-                         machine_stats=machine_stats,
-                         writeup_stats=writeup_stats,
-                         user_stats=user_stats)
-
-
 # =========================
 # PENDING MACHINES (ADMIN)
 # =========================
 
-@main_bp.route('/pending-machines')
-@login_required
-@role_required('admin', 'moderador')
-def pending_machines():
-    machines = PendingMachineSubmission.query.order_by(
-        PendingMachineSubmission.submitted_at.desc()
-    ).all()
-
-    return render_template(
-        "dockerlabs/admin/pending.html",
-        machines=machines
-    )
-
-
-
-@main_bp.route("/user-pending")
-@login_required
-def user_pending_machines():
-
-    username = session.get("username")
-
-    machines = PendingMachineSubmission.query.filter_by(
-        autor_solicitante=username
-    ).order_by(
-        PendingMachineSubmission.submitted_at.desc()
-    ).all()
-
-    return render_template(
-        "dockerlabs/auth/user-pending.html",
-        machines=machines
-    )

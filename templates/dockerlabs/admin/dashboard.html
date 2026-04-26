@@ -194,13 +194,13 @@
                         {% if current_user_role == 'admin' and c.estado == 'pendiente' %}
                         <div class="claim-actions d-flex gap-2 mt-2">
                             <form method="post" action="{{ url_for('maquinas.approve_claim', claim_id=c.id) }}">
-                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token_value }}">
                                 <button type="submit" class="btn btn-sm btn-success">
                                     <i class="bi bi-check-circle"></i> Aprobar
                                 </button>
                             </form>
                             <form method="post" action="{{ url_for('maquinas.reject_claim', claim_id=c.id) }}">
-                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token_value }}">
                                 <button type="submit" class="btn btn-sm btn-danger">
                                     <i class="bi bi-x-circle"></i> Rechazar
                                 </button>
@@ -222,7 +222,7 @@
         <button type="button" class="modal-close-button" onclick="closeUsernameChangeModal()">&times;</button>
         <h3>Solicitar cambio de nombre de usuario</h3>
         <form method="POST" action="{{ url_for('auth.request_username_change') }}">
-            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token_value }}">
 
             <div class="form-group">
                 <label for="requested_username_input">Nuevo nombre</label>
@@ -258,7 +258,7 @@
             máquina es tuya.
         </p>
         <form method="post" action="{{ url_for('maquinas.reclamar_maquina') }}" class="claim-form">
-            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token_value }}">
             <div class="form-group mb-3">
                 <label for="maquina_nombre"><i class="bi bi-cpu"></i> Máquina</label>
                 <select id="maquina_nombre" name="maquina_nombre" class="form-control" required>

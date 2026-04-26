@@ -50,7 +50,7 @@
         {% endif %}
 
         <form id="login-form" class="login-form">
-            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token_value }}">
 
             <div class="auth-grid">
                 <!-- Left Column: Inputs -->
@@ -70,8 +70,13 @@
 
                 <!-- Right Column: Actions -->
                 <div class="auth-column-right">
-                    <button type="submit" class="btn-login">
-                        <i class="fas fa-sign-in-alt"></i> Entrar
+                    <button type="submit" class="btn-login" id="login-btn">
+                        <span class="btn-text"><i class="fas fa-sign-in-alt"></i> Entrar</span>
+                        <span class="btn-loader" style="display: none;">
+                            <span class="loader-dot"></span>
+                            <span class="loader-dot"></span>
+                            <span class="loader-dot"></span>
+                        </span>
                     </button>
 
                     <div class="logo-display">
@@ -96,14 +101,43 @@
     </div>
 </div>
 
+<style>
+    .btn-loader {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+    }
+    .loader-dot {
+        width: 6px;
+        height: 6px;
+        background: currentColor;
+        border-radius: 50%;
+        animation: loader-bounce 1.4s infinite ease-in-out both;
+    }
+    .loader-dot:nth-child(1) { animation-delay: -0.32s; }
+    .loader-dot:nth-child(2) { animation-delay: -0.16s; }
+    @keyframes loader-bounce {
+        0%, 80%, 100% { transform: scale(0); }
+        40% { transform: scale(1); }
+    }
+    .btn-login.loading .btn-text { display: none; }
+    .btn-login.loading .btn-loader { display: inline-flex !important; }
+    .btn-login:disabled { opacity: 0.8; cursor: not-allowed; }
+</style>
+
 <script nonce="{{ g.csp_nonce }}">
 document.addEventListener("DOMContentLoaded", function() {
     const form = document.getElementById("login-form");
     const errorBox = document.getElementById("login-error");
     const errorText = document.getElementById("login-error-text");
+    const loginBtn = document.getElementById("login-btn");
     
     form.addEventListener("submit", async function(e) {
         e.preventDefault();
+        
+        // Mostrar animación de carga
+        loginBtn.classList.add("loading");
+        loginBtn.disabled = true;
         
         const username = form.username.value;
         const password = form.password.value;
@@ -126,10 +160,16 @@ document.addEventListener("DOMContentLoaded", function() {
             } else {
                 errorBox.style.display = "block";
                 errorText.textContent = data.message || "Error al iniciar sesión";
+                // Restaurar botón
+                loginBtn.classList.remove("loading");
+                loginBtn.disabled = false;
             }
         } catch (error) {
             errorBox.style.display = "block";
             errorText.textContent = "Error de conexión con el servidor.";
+            // Restaurar botón
+            loginBtn.classList.remove("loading");
+            loginBtn.disabled = false;
         }
     });
 });

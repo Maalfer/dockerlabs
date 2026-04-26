@@ -294,12 +294,16 @@ def delete_bunker_token(token_id):
     return redirect(url_for('bunkerlabs.accesos_bunkerlabs'))
 
 
+# NOTA: Endpoint migrado a FastAPI - POST /api/bunker/validate-flag
+# Mantenido temporalmente por compatibilidad con frontend JS
+# TODO: Actualizar frontend para usar /api/bunker/validate-flag y eliminar este
 @bunkerlabs_bp.route('/subir-flag', methods=['POST'])
 @csrf_protect
 @extensions.limiter.limit("10 per minute", methods=["POST"])
 def subir_flag():
     """
     Submit a flag for BunkerLabs machine.
+    Migrado a FastAPI: POST /api/bunker/validate-flag
     ---
     tags:
       - BunkerLabs
@@ -388,11 +392,15 @@ def subir_flag():
     else:
         return jsonify({'error': 'Flag incorrecta.'}), 401
 
+# NOTA: Endpoint migrado a FastAPI - GET /api/bunker/ranking
+# Mantenido temporalmente por compatibilidad con frontend JS
+# TODO: Actualizar frontend para usar /api/bunker/ranking y eliminar este
 @bunkerlabs_bp.route('/api/ranking', methods=['GET'])
 @extensions.limiter.limit("60 per minute", methods=["GET"])
 def bunker_ranking():
     """
     Get BunkerLabs player ranking.
+    Migrado a FastAPI: GET /api/bunker/ranking
     ---
     tags:
       - BunkerLabs
@@ -416,11 +424,14 @@ def bunker_ranking():
 
     return jsonify(ranking), 200
 
+# NOTA: Endpoint migrado a FastAPI - GET /api/bunker/logs/{token_id}
+# Mantenido temporalmente por compatibilidad
 @bunkerlabs_bp.route('/api/logs/<int:token_id>', methods=['GET'])
 @role_required('admin')
 def get_bunker_access_logs(token_id):
     """
     Get access logs for a specific Bunker token.
+    Migrado a FastAPI: GET /api/bunker/logs/{token_id}
     ---
     tags:
       - BunkerLabs
@@ -445,12 +456,15 @@ def get_bunker_access_logs(token_id):
         
     return jsonify(data), 200
 
+# NOTA: Endpoint migrado a FastAPI - DELETE /api/bunker/logs/{token_id}
+# Mantenido temporalmente por compatibilidad
 @bunkerlabs_bp.route('/api/logs/<int:token_id>/delete', methods=['POST'])
 @role_required('admin')
 @csrf_protect
 def delete_bunker_access_logs(token_id):
     """
     Delete access logs for a token.
+    Migrado a FastAPI: DELETE /api/bunker/logs/{token_id}
     ---
     tags:
       - Admin
@@ -466,9 +480,12 @@ def delete_bunker_access_logs(token_id):
         alchemy_db.session.rollback()
         return jsonify({'error': 'Error al eliminar el historial.'}), 500
 
+# NOTA: Endpoint migrado a FastAPI - GET /api/bunker/writeups/{maquina_nombre}
+# Mantenido temporalmente por compatibilidad
 @bunkerlabs_bp.route('/api/writeups/<string:maquina_nombre>', methods=['GET'])
 def get_writeups(maquina_nombre):
-    """Obtener writeups de una máquina de Entornos Reales."""
+    """Obtener writeups de una máquina de Entornos Reales.
+    Migrado a FastAPI: GET /api/bunker/writeups/{maquina_nombre}"""
     from .models import BunkerWriteup
     
     writeups = BunkerWriteup.query.filter_by(maquina=maquina_nombre).order_by(BunkerWriteup.created_at.desc()).all()
@@ -525,12 +542,15 @@ def add_writeup():
     
     return redirect(url_for('bunkerlabs.accesos_bunkerlabs'))
 
+# NOTA: Endpoint migrado a FastAPI - POST /api/bunker/admin/writeups/toggle-lock/{writeup_id}
+# Mantenido temporalmente por compatibilidad
 @bunkerlabs_bp.route('/admin/writeups/toggle_lock/<int:writeup_id>', methods=['POST'])
 @role_required('admin')
 @csrf_protect
 @extensions.limiter.limit("20 per minute", methods=["POST"])
 def toggle_writeup_lock(writeup_id):
-    """Alternar estado de bloqueo de writeup."""
+    """Alternar estado de bloqueo de writeup.
+    Migrado a FastAPI: POST /api/bunker/admin/writeups/toggle-lock/{writeup_id}"""
     from .models import BunkerWriteup
     
     writeup = BunkerWriteup.query.get(writeup_id)
@@ -571,11 +591,14 @@ def delete_writeup(writeup_id):
     return redirect(url_for('bunkerlabs.accesos_bunkerlabs'))
 
 
+# NOTA: Endpoint migrado a FastAPI - POST /api/bunker/admin/machines/update-flag/{machine_id}
+# Mantenido temporalmente por compatibilidad
 @bunkerlabs_bp.route('/admin/machines/update_flag/<int:machine_id>', methods=['POST'])
 @role_required('admin')
 @csrf_protect
 def update_machine_flag(machine_id):
-    """Update flag (pin) for a BunkerLabs machine"""
+    """Update flag (pin) for a BunkerLabs machine.
+    Migrado a FastAPI: POST /api/bunker/admin/machines/update-flag/{machine_id}"""
     try:
         machine = Machine.query.get(machine_id)
         if not machine or machine.origen != 'bunker':

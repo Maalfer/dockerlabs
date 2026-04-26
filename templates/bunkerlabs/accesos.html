@@ -44,7 +44,7 @@
                     <h5>Nuevo acceso</h5>
                 </div>
                 <form method="post">
-                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token_value }}">
 
                     <div class="mb-3">
                         <label for="nombre" class="form-label small uppercase fw-bold">Nombre del usuario</label>
@@ -131,7 +131,7 @@
                                     <form method="post"
                                         action="{{ url_for('bunkerlabs.delete_bunker_token', token_id=t.id) }}"
                                         class="d-inline">
-                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token_value }}">
                                         <button type="submit" class="btn btn-sm border-danger text-danger"
                                             style="padding: 2px 8px; font-size: 0.7rem; background: rgba(239, 68, 68, 0.1);"
                                             onclick="return confirm('¿Eliminar este acceso?')">
@@ -163,7 +163,7 @@
                 </div>
 
                 <form method="post" action="/bunkerlabs/admin/writeups/add" id="addWriteupForm">
-                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token_value }}">
 
                     <div class="mb-3">
                         <label for="writeup_maquina" class="form-label">Máquina</label>
@@ -261,7 +261,7 @@
                                     </button>
                                     <form method="post" action="/bunkerlabs/admin/writeups/delete/{{ w.id }}"
                                         class="d-inline" onsubmit="return confirm('¿Eliminar este writeup?');">
-                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token_value }}">
                                         <button type="submit" class="btn btn-sm btn-outline-danger border-0">
                                             <i class="bi bi-trash"></i>
                                         </button>
