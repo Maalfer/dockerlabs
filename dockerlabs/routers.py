@@ -32,7 +32,10 @@ def url_for(endpoint, **kwargs):
         'auth.login': '/login',
         'auth.register': '/register',
         'auth.recover': '/recover',
+        'auth.logout': '/logout',
+        'auth.gestion_usuarios': '/gestion-usuarios',
         'bunkerlabs.bunkerlabs_login': '/bunkerlabs/login',
+        'bunkerlabs.accesos_bunkerlabs': '/bunkerlabs/accesos',
         'main.home': '/',
         'main.dashboard': '/dashboard',
         'main.instrucciones_uso': '/instrucciones-uso',
@@ -45,6 +48,18 @@ def url_for(endpoint, **kwargs):
         'main.politica_privacidad': '/politica-privacidad',
         'main.politica_cookies': '/politica-cookies',
         'main.condiciones_uso': '/condiciones-uso',
+        'main.estadisticas': '/estadisticas',
+        'main.backups_page': '/backups',
+        'main.pending_machines': '/pending-machines',
+        'main.user_pending_machines': '/user-pending',
+        'dashboard': '/dashboard',
+        'index': '/',
+        'peticiones': '/peticiones-writeups',
+        'writeups.writeups_publicados': '/writeups-publicados',
+        'writeups.writeups_recibidos': '/writeups-recibidos',
+        'maquinas.maquinas_hechas': '/maquinas-hechas',
+        'maquinas.gestion_maquinas': '/gestion-maquinas',
+        'maquinas.add_maquina_page': '/add-maquina',
     }
     
     # Si está en el mapeo, usar la ruta de FastAPI
@@ -426,7 +441,7 @@ class LoginResponse(BaseModel):
     message: Optional[str] = None
     redirect_url: Optional[str] = None
 
-def create_flask_session_cookie(user_id: int, username: str, existing_session: dict = None) -> str:
+def create_flask_session_cookie(user_id: int, username: str, role: str = 'jugador', existing_session: dict = None) -> str:
     import hashlib
     
     session_data = existing_session or {}
@@ -437,6 +452,7 @@ def create_flask_session_cookie(user_id: int, username: str, existing_session: d
     session_data['_id'] = _id
     session_data['user_id'] = user_id
     session_data['username'] = username
+    session_data['role'] = role
     
     session_interface = SecureCookieSessionInterface()
     serializer = session_interface.get_signing_serializer(flask_app)
@@ -450,7 +466,7 @@ def api_auth_login(data: LoginRequest, request: Request, flask_session: dict = D
         if user is None or not check_password_hash(user.password_hash, data.password):
             return JSONResponse(status_code=401, content={"success": False, "message": "Usuario o contraseña incorrectos."})
             
-        cookie_val = create_flask_session_cookie(user.id, user.username, existing_session=flask_session)
+        cookie_val = create_flask_session_cookie(user.id, user.username, user.role, existing_session=flask_session)
         
         response = JSONResponse(content={"success": True, "redirect_url": "/dashboard"})
         # Configurar la cookie de sesión de manera compatible con Flask
@@ -2811,6 +2827,17 @@ def dashboard_page(request: Request, flask_session: dict = Depends(get_flask_ses
     return templates.TemplateResponse(request, "dockerlabs/admin/dashboard.html", context)
 
 
+@pages_router.get("/logout")
+def logout_page(request: Request):
+    """
+    Logout endpoint.
+    Equivalente a: GET /logout en auth.py
+    """
+    response = RedirectResponse(url="/", status_code=302)
+    response.delete_cookie(key="session", path="/")
+    return response
+
+
 @pages_router.get("/login", response_class=HTMLResponse)
 def login_page(request: Request, flask_session: dict = Depends(get_flask_session)):
     """
@@ -2826,6 +2853,14 @@ def login_page(request: Request, flask_session: dict = Depends(get_flask_session
     csrf_token = secrets.token_urlsafe(32)
     flask_session["csrf_token"] = csrf_token
 
+    # Actualizar la cookie de sesión para incluir el CSRF token
+    cookie_val = create_flask_session_cookie(
+        flask_session.get('user_id') or 0,
+        flask_session.get('username') or '',
+        flask_session.get('role') or 'jugador',
+        existing_session=flask_session
+    )
+
     # Crear contexto para la plantilla
     context = {
         "request": request,
@@ -2837,7 +2872,15 @@ def login_page(request: Request, flask_session: dict = Depends(get_flask_session
         "remaining": None
     }
     
-    return templates.TemplateResponse(request, "dockerlabs/auth/login.html", context)
+    response = templates.TemplateResponse(request, "dockerlabs/auth/login.html", context)
+    response.set_cookie(
+        key="session",
+        value=cookie_val,
+        httponly=True,
+        path="/",
+        samesite="lax"
+    )
+    return response
 
 
 @pages_router.get("/register", response_class=HTMLResponse)
@@ -2853,6 +2896,14 @@ def register_page(request: Request, flask_session: dict = Depends(get_flask_sess
     # Generar y almacenar CSRF token en la sesión
     csrf_token = secrets.token_urlsafe(32)
     flask_session["csrf_token"] = csrf_token
+
+    # Actualizar la cookie de sesión para incluir el CSRF token
+    cookie_val = create_flask_session_cookie(
+        flask_session.get('user_id') or 0,
+        flask_session.get('username') or '',
+        flask_session.get('role') or 'jugador',
+        existing_session=flask_session
+    )
     
     # Crear sesión compatible con Flask para plantillas
     session_data = {}
@@ -2870,7 +2921,15 @@ def register_page(request: Request, flask_session: dict = Depends(get_flask_sess
         "url_for": url_for,
         "g": {"csp_nonce": secrets.token_urlsafe(32)}
     }
-    return templates.TemplateResponse(request, "dockerlabs/auth/register.html", context)
+    response = templates.TemplateResponse(request, "dockerlabs/auth/register.html", context)
+    response.set_cookie(
+        key="session",
+        value=cookie_val,
+        httponly=True,
+        path="/",
+        samesite="lax"
+    )
+    return response
 
 
 @pages_router.get("/recover", response_class=HTMLResponse)
@@ -2886,6 +2945,14 @@ def recover_page(request: Request, flask_session: dict = Depends(get_flask_sessi
     # Generar y almacenar CSRF token en la sesión
     csrf_token = secrets.token_urlsafe(32)
     flask_session["csrf_token"] = csrf_token
+
+    # Actualizar la cookie de sesión para incluir el CSRF token
+    cookie_val = create_flask_session_cookie(
+        flask_session.get('user_id') or 0,
+        flask_session.get('username') or '',
+        flask_session.get('role') or 'jugador',
+        existing_session=flask_session
+    )
     
     # Crear sesión compatible con Flask para plantillas
     session_data = {}
@@ -2902,7 +2969,15 @@ def recover_page(request: Request, flask_session: dict = Depends(get_flask_sessi
         "url_for": url_for,
         "g": {"csp_nonce": secrets.token_urlsafe(32)}
     }
-    return templates.TemplateResponse(request, "dockerlabs/auth/recover.html", context)
+    response = templates.TemplateResponse(request, "dockerlabs/auth/recover.html", context)
+    response.set_cookie(
+        key="session",
+        value=cookie_val,
+        httponly=True,
+        path="/",
+        samesite="lax"
+    )
+    return response
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -3217,7 +3292,6 @@ def estadisticas_page(request: Request):
         return dict(sorted(distribution.items()))
 
     with flask_app.app_context():
-        # Máquinas
         machines = Machine.query.all()
         def machine_date_extractor(m):
             try:
