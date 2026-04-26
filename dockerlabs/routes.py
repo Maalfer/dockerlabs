@@ -1,9 +1,20 @@
-from flask import Blueprint, render_template, request, session, redirect
+from flask import Blueprint, render_template, request, session, redirect, flash, url_for
 from flask_limiter.errors import RateLimitExceeded
-from dockerlabs.models import User, Machine, Writeup
+
 from datetime import datetime
 import re
 from collections import defaultdict
+
+from dockerlabs.models import (
+    User,
+    Machine,
+    Writeup,
+    PendingMachineSubmission
+)
+
+from dockerlabs.extensions import db
+from .decorators import role_required
+from flask_login import login_required
 
 main_bp = Blueprint('main', __name__)
 
@@ -213,3 +224,66 @@ def estadisticas():
                          machine_stats=machine_stats,
                          writeup_stats=writeup_stats,
                          user_stats=user_stats)
+
+
+# =========================
+# PENDING MACHINES (ADMIN)
+# =========================
+
+@main_bp.route('/pending-machines')
+@login_required
+@role_required('admin', 'moderador')
+def pending_machines():
+    machines = PendingMachineSubmission.query.order_by(
+        PendingMachineSubmission.submitted_at.desc()
+    ).all()
+
+    return render_template(
+        "dockerlabs/pending.html",
+        machines=machines
+    )
+
+@main_bp.route("/pending-machines/approve/<int:id>", methods=["POST"])
+@login_required
+@role_required('admin', 'moderador')
+def approve_machine(id):
+    sub = PendingMachineSubmission.query.get_or_404(id)
+
+    sub.estado = "aprobado"
+    sub.reviewed_at = datetime.utcnow()
+
+    db.session.commit()
+
+    flash("Máquina aprobada", "success")
+    return redirect(url_for("main.pending_machines"))
+
+@main_bp.route("/pending-machines/reject/<int:id>", methods=["POST"])
+@login_required
+@role_required('admin', 'moderador')
+def reject_machine(id):
+    sub = PendingMachineSubmission.query.get_or_404(id)
+
+    sub.estado = "rechazado"
+    sub.reviewed_at = datetime.utcnow()
+
+    db.session.commit()
+
+    flash("Máquina rechazada", "warning")
+    return redirect(url_for("main.pending_machines"))
+
+@main_bp.route("/user-pending")
+@login_required
+def user_pending_machines():
+
+    username = session.get("username")
+
+    machines = PendingMachineSubmission.query.filter_by(
+        autor_solicitante=username
+    ).order_by(
+        PendingMachineSubmission.submitted_at.desc()
+    ).all()
+
+    return render_template(
+        "dockerlabs/user-pending.html",
+        machines=machines
+    )

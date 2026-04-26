@@ -190,6 +190,15 @@
                     <div class="user-info"><span class="user-name">Máquinas Completadas</span></div>
                     <i class="bi bi-check-circle" style="color: #64748b;"></i>
                 </a>
+		<a href="{{ url_for('main.user_pending_machines') }}" class="ranking-item">
+    			<div class="user-info">
+        			<span class="user-name">
+            				Mis máquinas enviadas
+        			</span>
+    			</div>
+    		    <i class="bi bi-hdd-stack" style="color:#64748b;"></i>
+		</a>
+
                 {% if current_user_role in ['admin', 'moderador'] %}
                 <a href="{{ url_for('peticiones') }}" class="ranking-item">
                     <div class="user-info"><span class="user-name">Peticiones</span></div>
@@ -199,6 +208,16 @@
                     <div class="user-info"><span class="user-name">Gestión Usuarios</span></div>
                     <i class="bi bi-people" style="color: #64748b;"></i>
                 </a>
+                <a href="{{ url_for('main.pending_machines') }}" class="ranking-item">
+   			 <div class="user-info">
+        			<span class="user-name">
+            				Aprobar Máquinas
+        			</span>
+    			</div>
+
+    		   <i class="bi bi-hdd-stack" style="color:#64748b;"></i>
+		</a>
+
                 {% endif %}
                 <a href="{{ url_for('maquinas.gestion_maquinas') }}" class="ranking-item">
                     <div class="user-info"><span class="user-name">Gestión Máquinas</span></div>

@@ -1,0 +1,108 @@
+{% extends "dockerlabs/base.html" %}
+
+{% block content %}
+<div class="container mt-5">
+
+    <h1 class="mb-4 text-center">🧪 Máquinas Pendientes</h1>
+
+    {% if machines|length == 0 %}
+        <div class="alert alert-info text-center">
+            No hay máquinas pendientes 🎉
+        </div>
+    {% endif %}
+
+    <div class="row g-4">
+
+        {% for m in machines %}
+
+        <div class="col-md-6 col-lg-4">
+
+            <div class="card shadow-lg border-0 h-100">
+
+                <div class="card-body d-flex flex-column">
+
+                    <h5 class="card-title">
+                        {{ m.nombre }}
+                    </h5>
+
+                    <!-- ESTADO -->
+                    <div class="mb-2">
+                        {% if m.estado == "pendiente" %}
+                            <span class="badge bg-warning">⏳ Pendiente</span>
+                        {% elif m.estado == "aprobado" %}
+                            <span class="badge bg-success">✔ Aprobado</span>
+                        {% elif m.estado == "rechazado" %}
+                            <span class="badge bg-danger">✖ Rechazado</span>
+                        {% else %}
+                            <span class="badge bg-secondary">Desconocido</span>
+                        {% endif %}
+                    </div>
+
+                    <span class="badge bg-secondary mb-2">
+                        {{ m.dificultad }}
+                    </span>
+
+                    <p class="card-text small">
+                        {{ m.descripcion or "Sin descripción" }}
+                    </p>
+
+                    <hr>
+
+                    <p class="mb-1">
+                        <strong>👤 Usuario:</strong> {{ m.discord_user }}
+                    </p>
+
+                    <p class="mb-1">
+                        <strong>📂 Categoría:</strong> {{ m.categoria or "-" }}
+                    </p>
+
+                    <p class="mb-3">
+                        <strong>🏷️ Tags:</strong> {{ m.tags or "-" }}
+                    </p>
+
+                    {% if m.link_maquina %}
+                        <a href="{% if m.link_maquina.startswith('http') %}{{ m.link_maquina }}{% else %}https://{{ m.link_maquina }}{% endif %}"
+   target="_blank"
+   rel="noopener noreferrer"
+   class="btn btn-sm btn-outline-primary mb-2">
+    🔗 Ver máquina
+</a>
+
+                    {% endif %}
+
+                    {% if m.writeup_url %}
+                        <a href="{% if m.writeup_url.startswith('http') %}{{ m.writeup_url }}{% else %}https://{{ m.writeup_url }}{% endif %}" target="_blank" class="btn btn-sm btn-outline-dark mb-2">
+                            📄 Writeup
+                        </a>
+                    {% endif %}
+
+                    <!-- BOTONES SOLO SI ESTÁ PENDIENTE -->
+                    {% if m.estado == "pendiente" %}
+                    <div class="mt-auto d-flex justify-content-between gap-2">
+
+                        <form method="POST" action="{{ url_for('main.approve_machine', id=m.id) }}">
+                            <button class="btn btn-success btn-sm">
+                                ✔ Aprobar
+                            </button>
+                        </form>
+
+                        <form method="POST" action="{{ url_for('main.reject_machine', id=m.id) }}">
+                            <button class="btn btn-danger btn-sm">
+                                ✖ Rechazar
+                            </button>
+                        </form>
+
+                    </div>
+                    {% endif %}
+
+                </div>
+            </div>
+
+        </div>
+
+        {% endfor %}
+
+    </div>
+
+</div>
+{% endblock %}

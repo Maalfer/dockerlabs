@@ -1177,3 +1177,8 @@ def maquinas_hechas():
         completed_count=completed_count,
         completion_percentage=completion_percentage
     )
+
+@role_required('admin','moderador')
+def approve_machine(id):
+    pass
+

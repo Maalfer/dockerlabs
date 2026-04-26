@@ -222,6 +222,33 @@ class CompletedMachine(db.Model):
                            
     user = db.relationship('User', backref=db.backref('completed_machines_rel', cascade='all, delete-orphan'))
 
+class PendingMachineSubmission(db.Model):
+    __tablename__ = 'pending_machine_submissions'
+
+    id = db.Column(db.Integer, primary_key=True)
+    nombre = db.Column(db.String, nullable=False)
+    link_maquina = db.Column(db.String, nullable=False)
+    dificultad = db.Column(db.String, nullable=False)
+    categoria = db.Column(db.String)
+    tags = db.Column(db.String)
+    descripcion = db.Column(db.Text)
+    notas = db.Column(db.Text)
+    writeup_url = db.Column(db.String)
+    discord_user = db.Column(db.String, nullable=False)
+    autor_solicitante = db.Column(db.String)
+    estado = db.Column(
+        db.String,
+        default="pendiente"
+    )
+
+    submitted_at = db.Column(
+        db.DateTime,
+        default=datetime.utcnow
+    )
+
+    reviewed_by = db.Column(db.Integer)
+    reviewed_at = db.Column(db.DateTime)
+
 
 class Mensajeria(db.Model):
     __tablename__ = 'mensajeria'
