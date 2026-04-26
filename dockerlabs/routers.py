@@ -1534,8 +1534,8 @@ async def api_revert_writeup_edit(request_id: int, flask_session: dict = Depends
         return {"message": "Petición revertida a pendiente.", "success": True}
 
 # ── CRUD Writeups Subidos (publicados) ───────────────────────────
-@api_router.put("/writeups/subidos/{writeup_id}")
-def api_update_writeup_subido(writeup_id: int, data: UpdateWriteupRequest, flask_session: dict = Depends(get_flask_session), csrf_ok: bool = Depends(verify_csrf_token)):
+@api_router.post("/writeups/subidos/{writeup_id}/update")
+async def api_update_writeup_subido(writeup_id: int, data: UpdateWriteupRequest, flask_session: dict = Depends(get_flask_session), csrf_ok: bool = Depends(verify_csrf_token)):
     user_id = flask_session.get('user_id')
     username = flask_session.get('username', '').strip()
     caller_role = flask_session.get('role', '')
@@ -1590,8 +1590,8 @@ def api_update_writeup_subido(writeup_id: int, data: UpdateWriteupRequest, flask
             alchemy_db.session.rollback()
             return JSONResponse(status_code=500, content={"error": str(e)})
 
-@api_router.delete("/writeups/subidos/{writeup_id}")
-def api_delete_writeup_subido(writeup_id: int, flask_session: dict = Depends(get_flask_session), csrf_ok: bool = Depends(verify_csrf_token)):
+@api_router.post("/writeups/subidos/{writeup_id}/delete")
+async def api_delete_writeup_subido(writeup_id: int, flask_session: dict = Depends(get_flask_session), csrf_ok: bool = Depends(verify_csrf_token)):
     caller_role = flask_session.get('role', '')
     if caller_role not in ('admin', 'moderador'):
         return JSONResponse(status_code=403, content={"error": "Acceso denegado"})
@@ -1609,8 +1609,8 @@ def api_delete_writeup_subido(writeup_id: int, flask_session: dict = Depends(get
         return {"message": "Writeup eliminado correctamente"}
 
 # ── CRUD Writeups Recibidos (pendientes) ─────────────────────────
-@api_router.put("/writeups/recibidos/{writeup_id}")
-def api_update_writeup_recibido(writeup_id: int, data: UpdateWriteupRecibidoRequest, flask_session: dict = Depends(get_flask_session), csrf_ok: bool = Depends(verify_csrf_token)):
+@api_router.post("/writeups/recibidos/{writeup_id}/update")
+async def api_update_writeup_recibido(writeup_id: int, data: UpdateWriteupRecibidoRequest, flask_session: dict = Depends(get_flask_session), csrf_ok: bool = Depends(verify_csrf_token)):
     caller_role = flask_session.get('role', '')
     if caller_role not in ('admin', 'moderador'):
         return JSONResponse(status_code=403, content={"error": "Acceso denegado"})
@@ -1635,8 +1635,8 @@ def api_update_writeup_recibido(writeup_id: int, data: UpdateWriteupRecibidoRequ
         alchemy_db.session.commit()
         return {"message": "Writeup actualizado correctamente"}
 
-@api_router.delete("/writeups/recibidos/{writeup_id}")
-def api_delete_writeup_recibido(writeup_id: int, flask_session: dict = Depends(get_flask_session), csrf_ok: bool = Depends(verify_csrf_token)):
+@api_router.post("/writeups/recibidos/{writeup_id}/delete")
+async def api_delete_writeup_recibido(writeup_id: int, flask_session: dict = Depends(get_flask_session), csrf_ok: bool = Depends(verify_csrf_token)):
     caller_role = flask_session.get('role', '')
     if caller_role not in ('admin', 'moderador'):
         return JSONResponse(status_code=403, content={"error": "Acceso denegado"})
@@ -1693,8 +1693,8 @@ def api_report_writeup(writeup_id: int, data: ReportWriteupRequest, flask_sessio
             return JSONResponse(status_code=500, content={"error": "Error al guardar el reporte"})
 
 # ── Ignorar Reporte ──────────────────────────────────────────────
-@api_router.post("/admin/reports/{report_id}/ignore")
-def api_ignore_report(report_id: int, flask_session: dict = Depends(get_flask_session), csrf_ok: bool = Depends(verify_csrf_token)):
+@api_router.post("/writeups/reports/{report_id}/ignore")
+async def api_ignore_report(report_id: int, flask_session: dict = Depends(get_flask_session), csrf_ok: bool = Depends(verify_csrf_token)):
     caller_role = flask_session.get('role', '')
     if caller_role not in ('admin', 'moderador'):
         return JSONResponse(status_code=403, content={"error": "Acceso denegado"})
@@ -1802,8 +1802,8 @@ def api_author_profile(nombre: str, flask_session: dict = Depends(get_flask_sess
         }
 
 # ── Pending Machines Approve/Reject (routes.py) ──────────────────
-@api_router.post("/admin/pending-machines/{machine_id}/approve")
-def api_approve_pending_machine(machine_id: int, flask_session: dict = Depends(get_flask_session), csrf_ok: bool = Depends(verify_csrf_token)):
+@api_router.post("/api/admin/pending-machines/{machine_id}/approve")
+async def api_approve_pending_machine(machine_id: int, flask_session: dict = Depends(get_flask_session), csrf_ok: bool = Depends(verify_csrf_token)):
     caller_role = flask_session.get('role', '')
     if caller_role not in ('admin', 'moderador'):
         return JSONResponse(status_code=403, content={"error": "Acceso denegado"})
@@ -1819,8 +1819,8 @@ def api_approve_pending_machine(machine_id: int, flask_session: dict = Depends(g
         alchemy_db.session.commit()
         return {"message": "Máquina aprobada", "success": True}
 
-@api_router.post("/admin/pending-machines/{machine_id}/reject")
-def api_reject_pending_machine(machine_id: int, flask_session: dict = Depends(get_flask_session), csrf_ok: bool = Depends(verify_csrf_token)):
+@api_router.post("/api/admin/pending-machines/{machine_id}/reject")
+async def api_reject_pending_machine(machine_id: int, flask_session: dict = Depends(get_flask_session), csrf_ok: bool = Depends(verify_csrf_token)):
     caller_role = flask_session.get('role', '')
     if caller_role not in ('admin', 'moderador'):
         return JSONResponse(status_code=403, content={"error": "Acceso denegado"})
@@ -3339,7 +3339,7 @@ def _create_sqlite_snapshot_db(tmp_dir):
     return snapshot_path
 
 @pages_router.post("/backups/download")
-def download_backup(flask_session: dict = Depends(get_flask_session), csrf_ok: bool = Depends(verify_csrf_token)):
+async def download_backup(flask_session: dict = Depends(get_flask_session), csrf_ok: bool = Depends(verify_csrf_token)):
     ok, redirect = require_auth_and_role(flask_session, ['admin'])
     if not ok:
         return redirect
@@ -4030,7 +4030,7 @@ def api_reclamar_maquina(
 
 
 @api_router.post("/claims/{claim_id}/approve")
-def api_approve_claim(claim_id: int, flask_session: dict = Depends(get_flask_session), csrf_ok: bool = Depends(verify_csrf_token)):
+async def api_approve_claim(claim_id: int, flask_session: dict = Depends(get_flask_session), csrf_ok: bool = Depends(verify_csrf_token)):
     """API: Aprobar reclamación de máquina. Solo admin."""
     ok, _ = require_auth_and_role(flask_session, ['admin'])
     if not ok:
@@ -4054,7 +4054,7 @@ def api_approve_claim(claim_id: int, flask_session: dict = Depends(get_flask_ses
 
 
 @api_router.post("/claims/{claim_id}/reject")
-def api_reject_claim(claim_id: int, flask_session: dict = Depends(get_flask_session), csrf_ok: bool = Depends(verify_csrf_token)):
+async def api_reject_claim(claim_id: int, flask_session: dict = Depends(get_flask_session), csrf_ok: bool = Depends(verify_csrf_token)):
     """API: Rechazar reclamación. Solo admin."""
     ok, _ = require_auth_and_role(flask_session, ['admin'])
     if not ok:
@@ -4073,7 +4073,7 @@ def api_reject_claim(claim_id: int, flask_session: dict = Depends(get_flask_sess
 
 
 @api_router.post("/claims/{claim_id}/revert")
-def api_revert_claim(claim_id: int, flask_session: dict = Depends(get_flask_session), csrf_ok: bool = Depends(verify_csrf_token)):
+async def api_revert_claim(claim_id: int, flask_session: dict = Depends(get_flask_session), csrf_ok: bool = Depends(verify_csrf_token)):
     """API: Revertir reclamación a pendiente. Admin/moderador."""
     ok, _ = require_auth_and_role(flask_session, ['admin', 'moderador'])
     if not ok:
@@ -4088,7 +4088,7 @@ def api_revert_claim(claim_id: int, flask_session: dict = Depends(get_flask_sess
 
 
 @api_router.post("/machine-edit-requests/{request_id}/approve")
-def api_approve_machine_edit(request_id: int, flask_session: dict = Depends(get_flask_session), csrf_ok: bool = Depends(verify_csrf_token)):
+async def api_approve_machine_edit(request_id: int, flask_session: dict = Depends(get_flask_session), csrf_ok: bool = Depends(verify_csrf_token)):
     """API: Aprobar edición de máquina. Admin/moderador."""
     ok, _ = require_auth_and_role(flask_session, ['admin', 'moderador'])
     if not ok:
@@ -4118,7 +4118,7 @@ def api_approve_machine_edit(request_id: int, flask_session: dict = Depends(get_
 
 
 @api_router.post("/machine-edit-requests/{request_id}/reject")
-def api_reject_machine_edit(request_id: int, flask_session: dict = Depends(get_flask_session), csrf_ok: bool = Depends(verify_csrf_token)):
+async def api_reject_machine_edit(request_id: int, flask_session: dict = Depends(get_flask_session), csrf_ok: bool = Depends(verify_csrf_token)):
     """API: Rechazar edición de máquina. Admin/moderador."""
     ok, _ = require_auth_and_role(flask_session, ['admin', 'moderador'])
     if not ok:
@@ -4133,7 +4133,7 @@ def api_reject_machine_edit(request_id: int, flask_session: dict = Depends(get_f
 
 
 @api_router.post("/machine-edit-requests/{request_id}/revert")
-def api_revert_machine_edit(request_id: int, flask_session: dict = Depends(get_flask_session), csrf_ok: bool = Depends(verify_csrf_token)):
+async def api_revert_machine_edit(request_id: int, flask_session: dict = Depends(get_flask_session), csrf_ok: bool = Depends(verify_csrf_token)):
     """API: Revertir edición a pendiente. Admin/moderador."""
     ok, _ = require_auth_and_role(flask_session, ['admin', 'moderador'])
     if not ok:
