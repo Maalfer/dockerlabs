@@ -197,7 +197,7 @@
 
         grid.innerHTML = '<div class="loading">Cargando máquinas...</div>';
 
-        fetch(`/api/writeups_subidos/maquinas?filter=${filter}`)
+        fetch(`/api/writeups_subidos/maquinas?filter_mode=${filter}`)
             .then(response => response.json().then(data => ({ ok: response.ok, data })))
             .then(result => {
                 if (!result.ok) {
@@ -205,7 +205,7 @@
                     return;
                 }
 
-                allMachines = result.data;
+                allMachines = result.data.maquinas || [];
 
                 if (!Array.isArray(allMachines) || allMachines.length === 0) {
                     grid.innerHTML = '<div class="empty-state">No hay writeups publicados todavía</div>';
@@ -240,7 +240,7 @@
         modal.style.display = "flex";
         document.body.style.overflow = "hidden";
 
-        const params = new URLSearchParams({ maquina: machineName, filter: filter });
+        const params = new URLSearchParams({ maquina: machineName, filter_mode: filter });
         fetch(`/api/writeups_subidos?${params.toString()}`)
             .then(response => response.json().then(data => ({ ok: response.ok, data })))
             .then(result => {

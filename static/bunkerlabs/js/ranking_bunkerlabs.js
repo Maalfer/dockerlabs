@@ -27,7 +27,7 @@ function ranking() {
                 border-radius: 16px;
                 z-index: 10001;
                 color: #e2e8f0;
-                font-family: 'Inter', sans-serif;
+                font-family: 'Fira Code', monospace;
                 opacity: 0;
                 transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
                 display: flex;
@@ -141,7 +141,7 @@ function ranking() {
     popup.querySelector('.bunker-rank-close').onclick = close;
     overlay.onclick = (e) => { if (e.target === overlay) close(); };
 
-    fetch('/bunkerlabs/api/ranking')
+    fetch('/api/bunker/ranking')
         .then(r => r.json())
         .then(data => {
             data.sort((a, b) => b.puntos - a.puntos);

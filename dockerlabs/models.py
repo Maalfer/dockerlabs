@@ -1,9 +1,9 @@
 from .extensions import db
 from datetime import datetime
-from flask_login import UserMixin
 from sqlalchemy.orm import deferred
+from sqlalchemy import func
 
-class User(db.Model, UserMixin):
+class User(db.Model):
     __tablename__ = 'users'
 
     id = db.Column(db.Integer, primary_key=True)
@@ -24,6 +24,12 @@ class User(db.Model, UserMixin):
     # Imagen de perfil almacenada en BD
     profile_image_data = deferred(db.Column(db.LargeBinary, nullable=True))
     profile_image_mime = deferred(db.Column(db.String(50), nullable=True))
+
+    __table_args__ = (
+        db.Index('idx_users_username', 'username'),
+        db.Index('idx_users_email', 'email'),
+        db.Index('idx_users_role', 'role'),
+    )
 
     __repr__ = lambda self: f'<User {self.username}>'
 
@@ -80,7 +86,13 @@ class Writeup(db.Model):
     tipo = db.Column(db.String, nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
-    __table_args__ = (db.UniqueConstraint('maquina', 'autor', 'url'),)
+    __table_args__ = (
+        db.UniqueConstraint('maquina', 'autor', 'url'),
+        db.Index('idx_writeups_maquina', 'maquina'),
+        db.Index('idx_writeups_autor', 'autor'),
+        db.Index('idx_writeups_tipo', 'tipo'),
+        db.Index('idx_writeups_created_at', 'created_at'),
+    )
 
     def __repr__(self):
         return f'<Writeup {self.maquina} by {self.autor}>'
@@ -104,6 +116,8 @@ class WriteupRanking(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     nombre = db.Column(db.String, unique=True, nullable=False)
     puntos = db.Column(db.Integer, nullable=False)
+
+    user = db.relationship('User', foreign_keys=[nombre], primaryjoin=lambda: func.lower(User.username) == func.lower(WriteupRanking.nombre))
 
     def __repr__(self):
         return f'<WriteupRanking {self.nombre}: {self.puntos}>'
@@ -152,6 +166,8 @@ class CreatorRanking(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     nombre = db.Column(db.String, unique=True, nullable=False)
     maquinas = db.Column(db.Integer, nullable=False)
+
+    user = db.relationship('User', foreign_keys=[nombre], primaryjoin=lambda: func.lower(User.username) == func.lower(CreatorRanking.nombre))
 
 class MachineClaim(db.Model):
     __tablename__ = 'maquina_claims'
@@ -272,6 +288,15 @@ class Mensajeria(db.Model):
     sender = db.relationship('User', foreign_keys=[sender_id], backref=db.backref('sent_messages', lazy='dynamic'))
     receiver = db.relationship('User', foreign_keys=[receiver_id], backref=db.backref('received_messages', lazy='dynamic'))
 
+    __table_args__ = (
+        db.Index('idx_mensajeria_sender_id', 'sender_id'),
+        db.Index('idx_mensajeria_receiver_id', 'receiver_id'),
+        db.Index('idx_mensajeria_timestamp', 'timestamp'),
+        db.Index('idx_mensajeria_read', 'read'),
+        db.Index('idx_mensajeria_sender_read', 'sender_id', 'read'),
+        db.Index('idx_mensajeria_receiver_read', 'receiver_id', 'read'),
+    )
+
     def __repr__(self):
         return f'<Message {self.id} from {self.sender_id} to {self.receiver_id}>'
 
@@ -285,6 +310,13 @@ class Notification(db.Model):
     read = db.Column(db.Boolean, default=False)
 
     sender = db.relationship('User', backref=db.backref('sent_notifications', lazy='dynamic'))
+
+    __table_args__ = (
+        db.Index('idx_notificaciones_sender_id', 'sender_id'),
+        db.Index('idx_notificaciones_created_at', 'created_at'),
+        db.Index('idx_notificaciones_read', 'read'),
+        db.Index('idx_notificaciones_sender_read', 'sender_id', 'read'),
+    )
 
     def __repr__(self):
         return f'<Notification {self.id}: {self.title}>'

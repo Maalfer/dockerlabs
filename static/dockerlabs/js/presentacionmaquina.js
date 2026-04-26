@@ -5,8 +5,6 @@ function presentacion(nombre, dificultad, color, autor_nombre, autor_enlace, fec
         const style = document.createElement('style');
         style.id = styleId;
         style.textContent = `
-            @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-
             .overlay, .overlay-rating {
                 position: fixed;
                 top: 0;
@@ -42,7 +40,7 @@ function presentacion(nombre, dificultad, color, autor_nombre, autor_enlace, fec
                 opacity: 0;
                 transform: translate(-50%, -50%) scale(0.95);
                 transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-                font-family: 'Inter', sans-serif;
+                font-family: 'Fira Code', monospace;
                 margin: 0;
             }
 
@@ -483,7 +481,7 @@ function presentacion(nombre, dificultad, color, autor_nombre, autor_enlace, fec
                 width: min(400px, 90%);
                 text-align: center;
                 box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
-                font-family: 'Inter', sans-serif;
+                font-family: 'Fira Code', monospace;
                 color: #f8fafc;
             }
             .rating-row {

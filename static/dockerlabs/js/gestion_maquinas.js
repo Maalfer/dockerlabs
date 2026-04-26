@@ -19,6 +19,48 @@ function mostrarPanelMaquinas(origen) {
     }
 }
 
+// Search functionality
+document.addEventListener('DOMContentLoaded', function() {
+    const searchInput = document.getElementById('searchInput');
+    
+    if (searchInput) {
+        // Search on Enter key press
+        searchInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                performSearch();
+            }
+        });
+        
+        // Optional: Search with debounce on typing
+        let searchTimeout;
+        searchInput.addEventListener('input', function() {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(performSearch, 500);
+        });
+    }
+});
+
+function performSearch() {
+    const searchInput = document.getElementById('searchInput');
+    const searchTerm = searchInput.value.trim();
+    
+    // Get current URL parameters
+    const urlParams = new URLSearchParams(window.location.search);
+    
+    // Update or add search parameter
+    if (searchTerm) {
+        urlParams.set('search', searchTerm);
+    } else {
+        urlParams.delete('search');
+    }
+    
+    // Reset to page 1 when searching
+    urlParams.set('page', '1');
+    
+    // Reload page with new parameters
+    window.location.href = `${window.location.pathname}?${urlParams.toString()}`;
+}
+
 // Upload machine logo via AJAX
 function uploadMachineLogo(machineId, origen) {
     const fileInput = document.getElementById(`logo-input-${origen}-${machineId}`);

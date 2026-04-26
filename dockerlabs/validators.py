@@ -1,5 +1,6 @@
 import re
 from urllib.parse import urlparse
+import bleach
 
 def validate_machine_name(name):
            
@@ -77,22 +78,31 @@ def validate_writeup_type(type_name):
         
     return True, None
 
-def validate_image_content(file_stream):
-           
+def validate_image_content(file_stream, max_size_mb=5):
+
     try:
         from PIL import Image
 
         header = file_stream.read(1024)
         file_stream.seek(0)
-        
+
         if not header:
             return False, "Archivo vacío"
 
+        # Validate file size
+        file_stream.seek(0, 2)  # Seek to end
+        file_size = file_stream.tell()
+        file_stream.seek(0)  # Seek back to start
+
+        max_size_bytes = max_size_mb * 1024 * 1024
+        if file_size > max_size_bytes:
+            return False, f"El archivo es demasiado grande (máximo {max_size_mb}MB)"
+
         img = Image.open(file_stream)
-        img.verify()                   
-        
+        img.verify()
+
         if img.format not in ['JPEG', 'PNG', 'GIF', 'WEBP']:
-                                            
+
             file_stream.seek(0)
             return False, f"Formato de imagen no permitido: {img.format}"
 
@@ -101,3 +111,66 @@ def validate_image_content(file_stream):
     except Exception as e:
         file_stream.seek(0)
         return False, "El archivo no es una imagen válida o está corrupto"
+
+def sanitize_html(text, allowed_tags=None, allowed_attributes=None):
+    """
+    Sanitiza texto HTML para prevenir XSS.
+    Por defecto, permite etiquetas básicas de formato.
+    """
+    if not text:
+        return text
+
+    if allowed_tags is None:
+        allowed_tags = ['b', 'i', 'u', 'em', 'strong', 'a', 'p', 'br', 'ul', 'ol', 'li', 'code', 'pre']
+
+    if allowed_attributes is None:
+        allowed_attributes = {
+            'a': ['href', 'title'],
+            '*': ['class']
+        }
+
+    try:
+        return bleach.clean(
+            text,
+            tags=allowed_tags,
+            attributes=allowed_attributes,
+            strip=True
+        )
+    except Exception:
+        return text
+
+def sanitize_text(text):
+    """
+    Sanitiza texto plano eliminando cualquier HTML/JS potencialmente peligroso.
+    """
+    if not text:
+        return text
+
+    try:
+        return bleach.clean(text, tags=[], attributes={}, strip=True)
+    except Exception:
+        return text
+
+def validate_password_complexity(password):
+    """
+    Valida la complejidad de la contraseña.
+    Requiere: mínimo 8 caracteres, 1 mayúscula, 1 minúscula, 1 número, 1 carácter especial
+    """
+    if not password:
+        return False, "La contraseña es obligatoria"
+    
+    if len(password) < 8:
+        return False, "La contraseña debe tener al menos 8 caracteres"
+    
+    if len(password) > 128:
+        return False, "La contraseña no puede exceder 128 caracteres"
+    
+    has_upper = any(c.isupper() for c in password)
+    has_lower = any(c.islower() for c in password)
+    has_digit = any(c.isdigit() for c in password)
+    has_special = any(c in "!@#$%^&*()_+-=[]{}|;:,.<>?" for c in password)
+    
+    if not (has_upper and has_lower and has_digit and has_special):
+        return False, "La contraseña debe contener al menos una mayúscula, una minúscula, un número y un carácter especial (!@#$%^&*()_+-=[]{}|;:,.<>?)"
+    
+    return True, None

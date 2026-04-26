@@ -4,13 +4,42 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}DockerLabs{% endblock %}</title>
+    <title>{% block title %}DockerLabs - Plataforma de Ciberseguridad y Hacking Ético{% endblock %}</title>
 
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;700&display=swap">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <!-- SEO Meta Tags -->
+    <meta name="description" content="DockerLabs es una plataforma de ciberseguridad y hacking ético del Pinguino de Mario. Aprende hacking con CTF, laboratorios vulnerables y desafíos prácticos. Mejora tus habilidades en seguridad informática.">
+    <meta name="keywords" content="ciberseguridad, hacking ético, CTF, laboratorios vulnerables, seguridad informática, pentesting, DockerLabs, Pinguino de Mario, aprender hacking, desafíos de seguridad">
+    <meta name="author" content="El Pinguino de Mario">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://dockerlabs.es{% block canonical_path %}{% endblock %}">
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://dockerlabs.es{% block og_path %}{% endblock %}">
+    <meta property="og:title" content="{% block og_title %}DockerLabs - Plataforma de Ciberseguridad y Hacking Ético{% endblock %}">
+    <meta property="og:description" content="DockerLabs es una plataforma de ciberseguridad y hacking ético del Pinguino de Mario. Aprende hacking con CTF, laboratorios vulnerables y desafíos prácticos.">
+    <meta property="og:image" content="https://dockerlabs.es/static/dockerlabs/images/logos/logo.png">
+    <meta property="og:site_name" content="DockerLabs">
+    <meta property="og:locale" content="es_ES">
+
+    <!-- Preconnect hints for performance -->
+    <link rel="preconnect" href="https://cdn.jsdelivr.net">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" media="print" onload="this.media='all'">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600;700&display=swap" media="print" onload="this.media='all'">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" media="print" onload="this.media='all'">
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js" defer></script>
     <meta name="csrf-token" content="{{ csrf_token_value }}">
+
+    <!-- Critical CSS inline to prevent FOUC -->
+    <style>
+        body {
+            background: radial-gradient(circle at top, #27354a 0%, #020617 60%, #020617 100%);
+            color: #f9fafb;
+        }
+    </style>
 
     {% if not no_default_styles %}
     <link rel="stylesheet" href="{{ url_for('static', filename='dockerlabs/css/styles.css') }}">
@@ -35,6 +64,40 @@
         }
     </script>
 
+    <!-- Structured Data JSON-LD -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "EducationalOrganization",
+        "name": "DockerLabs",
+        "alternateName": "DockerLabs - Pinguino de Mario",
+        "url": "https://dockerlabs.es",
+        "logo": "https://dockerlabs.es/static/dockerlabs/images/logos/logo.png",
+        "description": "DockerLabs es una plataforma de ciberseguridad y hacking ético del Pinguino de Mario. Aprende hacking con CTF, laboratorios vulnerables y desafíos prácticos.",
+        "founder": {
+            "@type": "Person",
+            "name": "El Pinguino de Mario"
+        },
+        "sameAs": [
+            "https://www.youtube.com/@pinguinodemario"
+        ],
+        "knowsAbout": [
+            "Ciberseguridad",
+            "Hacking Ético",
+            "CTF",
+            "Pentesting",
+            "Seguridad Informática",
+            "Laboratorios Vulnerables"
+        ],
+        "educationalLevel": "Todos los niveles",
+        "teaches": [
+            "Ciberseguridad",
+            "Hacking Ético",
+            "Pentesting",
+            "Análisis de Vulnerabilidades"
+        ]
+    }
+    </script>
 
     {% block extra_head %}{% endblock %}
 </head>
@@ -56,7 +119,7 @@
                 <a href="https://raiolanetworks.com/landing/hosting-...io/?utm_medium=affiliate&utm_source=5855&utm_campaign=Afiliados"
                     target="_blank">
                     <img src="{{ url_for('static', filename='dockerlabs/images/raiola.png') }}" alt="Raiola Networks"
-                        width="290" height="50">
+                        width="290" height="50" fetchpriority="high">
                 </a>
             </div>
         </div>
@@ -125,10 +188,16 @@
                     </div>
                     <i class="bi bi-chevron-right" style="color: #64748b;"></i>
                 </a>
+                <a href="{{ url_for('writeups.writeups_recibidos') }}" class="ranking-item">
+                    <div class="user-info">
+                        <span class="user-name">Mis writeups pendientes</span>
+                    </div>
+                    <i class="bi bi-chevron-right" style="color: #64748b;"></i>
+                </a>
                 {% if current_user_role in ['admin', 'moderador'] %}
                 <a href="{{ url_for('writeups.writeups_recibidos') }}" class="ranking-item">
                     <div class="user-info">
-                        <span class="user-name">Writeups recibidos</span>
+                        <span class="user-name">Gestión writeups recibidos (Admin)</span>
                     </div>
                     <i class="bi bi-chevron-right" style="color: #64748b;"></i>
                 </a>
@@ -298,34 +367,25 @@
     </div>
 
     <!-- Notifications Modal -->
-    <div id="notificationsModal" class="overlay">
-        <div class="popup" style="width: min(1100px, 95%); padding: 0; overflow: hidden; border-radius: 20px; max-height: 85vh; display: flex; flex-direction: column; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);">
-            <div class="modal-header" style="padding: 1.5rem 2rem; background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); display: flex; justify-content: space-between; align-items: center;">
-                <div style="display: flex; align-items: center; gap: 1rem;">
-                    <div style="background: linear-gradient(135deg, #3b82f6, #8b5cf6); padding: 0.75rem; border-radius: 12px; box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);">
-                        <i class="bi bi-bell" style="font-size: 1.5rem; color: white;"></i>
+    <div id="notificationsModal" class="claim-modal">
+        <div class="claim-modal-dialog notifications-modal-dialog">
+            <button type="button" class="modal-close-button" onclick="closeNotificationsModal()">&times;</button>
+            <h2>Notificaciones</h2>
+            <p class="modal-description">
+                Mantente al día con las últimas novedades de DockerLabs
+            </p>
+            <div id="notificationsList" class="notifications-list">
+                <div style="padding: 3rem 2rem; text-align: center; color: #64748b;">
+                    <div style="background: rgba(59, 130, 246, 0.1); padding: 2rem; border-radius: 20px; display: inline-block; margin-bottom: 1.5rem;">
+                        <i class="bi bi-bell" style="font-size: 4rem; color: #3b82f6;"></i>
                     </div>
-                    <div>
-                        <h2 class="modal-title" style="font-size: 1.5rem; margin: 0; color: #f8fafc; font-weight: 700;">Notificaciones</h2>
-                        <p style="margin: 0; color: #94a3b8; font-size: 0.85rem;">Mantente al día con las últimas novedades</p>
-                    </div>
+                    <p style="font-size: 1.2rem; margin-bottom: 0.5rem; color: #94a3b8;">Cargando notificaciones...</p>
                 </div>
-                <button class="modal-close-button" type="button" onclick="closeNotificationsModal()" style="background: rgba(148, 163, 184, 0.1); border: none; color: #94a3b8; font-size: 1.75rem; cursor: pointer; padding: 0.75rem; border-radius: 10px; transition: all 0.2s; width: 48px; height: 48px; display: flex; align-items: center; justify-content: center;">&times;</button>
             </div>
-            <div class="modal-body" style="padding: 0; flex: 1; overflow: hidden; display: flex; flex-direction: column; background: linear-gradient(180deg, #0f172a 0%, #1e293b 100%);">
-                <div id="notificationsList" class="notifications-list" style="flex: 1; overflow-y: auto;">
-                    <div style="padding: 3rem 2rem; text-align: center; color: #64748b;">
-                        <div style="background: rgba(59, 130, 246, 0.1); padding: 2rem; border-radius: 20px; display: inline-block; margin-bottom: 1.5rem;">
-                            <i class="bi bi-bell" style="font-size: 4rem; color: #3b82f6;"></i>
-                        </div>
-                        <p style="font-size: 1.2rem; margin-bottom: 0.5rem; color: #94a3b8;">Cargando notificaciones...</p>
-                    </div>
-                </div>
-                <button id="toggleReadNotifications" class="toggle-read-btn" style="display: none; padding: 1.25rem; background: linear-gradient(135deg, #1e293b 0%, #334155 100%); border-top: 1px solid #334155; color: #94a3b8; cursor: pointer; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 0.5rem; transition: all 0.3s;">
-                    <i class="bi bi-chevron-down"></i>
-                    <span>Ver notificaciones leídas</span>
-                </button>
-            </div>
+            <button id="toggleReadNotifications" class="toggle-read-btn" style="display: none;">
+                <i class="bi bi-chevron-down"></i>
+                <span>Ver notificaciones leídas</span>
+            </button>
         </div>
     </div>
 
@@ -342,14 +402,14 @@
             </p>
 
             <div class="footer-icons">
-                <a href="https://discord.gg/dD3yVejBUR" class="footer-icon" target="_blank"><i
-                        class="bi bi-discord"></i></a>
+                <a href="https://github.com/Maalfer/dockerlabs" class="footer-icon support-tooltip" target="_blank"
+                    data-tooltip="¿Nos das una ⭐?"><i class="bi bi-github github-pulse"></i></a>
                 <a href="https://es.linkedin.com/in/maalfer1" class="footer-icon" target="_blank"><i
                         class="bi bi-linkedin"></i></a>
                 <a href="https://t.me/elpinguinohack" class="footer-icon" target="_blank"><i
                         class="bi bi-telegram"></i></a>
-                <a href="https://github.com/Maalfer/dockerlabs" class="footer-icon support-tooltip" target="_blank"
-                    data-tooltip="¿Nos das una ⭐?"><i class="bi bi-github github-pulse"></i></a>
+                <a href="https://discord.gg/dD3yVejBUR" class="footer-icon" target="_blank"><i
+                        class="bi bi-discord"></i></a>
             </div>
         </div>
 

@@ -13,8 +13,6 @@ function subirwriteup(nombre) {
         const style = document.createElement('style');
         style.id = styleId;
         style.textContent = `
-            @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-
             .overlay {
                 position: fixed;
                 top: 0;
@@ -304,16 +302,15 @@ function showLoginRequiredModal() {
         const style = document.createElement('style');
         style.id = styleId;
         style.textContent = `
-            @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
             .overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(12px); z-index: 9998; opacity: 0; transition: opacity 0.2s ease; }
             .overlay.visible { opacity: 1; }
-            .popup { background: #1e293b; color: #f1f5f9; border: 1px solid rgba(148, 163, 184, 0.1); border-radius: 12px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); position: fixed; top: 50%; left: 50%; transform: translate(-50%, -48%) scale(0.96); z-index: 9999; padding: 1.5rem; width: min(420px, 90vw); text-align: center; opacity: 0; font-family: 'Inter', sans-serif; transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1); }
+            .popup { background: #1e293b; color: #f1f5f9; border: 1px solid rgba(148, 163, 184, 0.1); border-radius: 12px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); position: fixed; top: 50%; left: 50%; transform: translate(-50%, -48%) scale(0.96); z-index: 9999; padding: 1.5rem; width: min(420px, 90vw); text-align: center; opacity: 0; font-family: 'Fira Code', monospace; transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1); }
             .popup.visible { opacity: 1; transform: translate(-50%, -50%) scale(1); }
             .popup-header { margin-bottom: 1.5rem; text-align: left; padding-bottom: 1rem; border-bottom: 1px solid rgba(148, 163, 184, 0.1); }
             .popup-title { margin: 0; font-size: 1.25rem; font-weight: 600; color: #f8fafc; display: flex; align-items: center; gap: 0.5rem; }
-            .btn-primary { width: 100%; padding: 0.85rem; background: linear-gradient(135deg, #3b82f6, #2563eb); color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; transition: all 0.2s; font-family: 'Inter', sans-serif; margin-bottom: 0.75rem; }
+            .btn-primary { width: 100%; padding: 0.85rem; background: linear-gradient(135deg, #3b82f6, #2563eb); color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; transition: all 0.2s; font-family: 'Fira Code', monospace; margin-bottom: 0.75rem; }
             .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3); }
-            .btn-secondary { width: 100%; padding: 0.85rem; background: transparent; border: 1px solid #334155; color: #94a3b8; border-radius: 8px; font-size: 0.95rem; cursor: pointer; transition: all 0.2s; font-family: 'Inter', sans-serif; }
+            .btn-secondary { width: 100%; padding: 0.85rem; background: transparent; border: 1px solid #334155; color: #94a3b8; border-radius: 8px; font-size: 0.95rem; cursor: pointer; transition: all 0.2s; font-family: 'Fira Code', monospace; }
             .btn-secondary:hover { border-color: #475569; color: #f1f5f9; background: rgba(255,255,255,0.02); }
             .modal-close-button { position: absolute; top: 1.25rem; right: 1.25rem; background: transparent; border: none; color: #64748b; font-size: 1.25rem; cursor: pointer; padding: 4px; line-height: 1; border-radius: 4px; transition: color 0.1s; }
             .modal-close-button:hover { color: #f1f5f9; background: rgba(255,255,255,0.05); }

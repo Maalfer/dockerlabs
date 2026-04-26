@@ -46,20 +46,6 @@ function renderNotifications() {
     const unreadNotifications = notifications.filter(n => !n.read);
     const readNotifications = notifications.filter(n => n.read);
 
-    if (notifications.length === 0) {
-        container.innerHTML = `
-            <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 300px; padding: 3rem 2rem; text-align: center; color: #64748b;">
-                <div style="background: rgba(59, 130, 246, 0.1); padding: 2.5rem; border-radius: 50%; margin-bottom: 1.5rem; backdrop-filter: blur(10px);">
-                    <i class="bi bi-bell-slash" style="font-size: 4rem; color: #3b82f6; opacity: 0.6;"></i>
-                </div>
-                <p style="font-size: 1.3rem; margin-bottom: 0.5rem; color: #94a3b8; font-weight: 600;">No hay notificaciones</p>
-                <p style="font-size: 0.95rem; opacity: 0.7; max-width: 400px; line-height: 1.5;">Las notificaciones de admin y moderadores aparecerán aquí cuando te envíen mensajes importantes.</p>
-            </div>
-        `;
-        toggleBtn.style.display = 'none';
-        return;
-    }
-
     // Configurar marked
     if (typeof marked !== 'undefined') {
         marked.setOptions({
@@ -71,17 +57,57 @@ function renderNotifications() {
     // Renderizar notificaciones no leídas
     let html = unreadNotifications.map(notif => renderNotificationItem(notif)).join('');
 
-    // Renderizar notificaciones leídas solo si están expandidas
-    if (showReadNotifications && readNotifications.length > 0) {
-        html += `
-            <div class="read-notifications-section" style="margin-top: 1.5rem; padding-top: 1.5rem; border-top: 2px solid #334155;">
-                <div style="display: flex; align-items: center; gap: 0.5rem; color: #94a3b8; font-weight: 600; margin-bottom: 1rem;">
-                    <i class="bi bi-archive"></i>
-                    <span>Notificaciones leídas (${readNotifications.length})</span>
+    // Si no hay notificaciones no leídas y no se están mostrando las leídas, mostrar mensaje
+    if (unreadNotifications.length === 0 && !showReadNotifications) {
+        if (readNotifications.length > 0) {
+            // Hay notificaciones leídas pero no nuevas
+            html = `
+                <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 400px; padding: 3rem 2rem; text-align: center; color: #64748b;">
+                    <div style="background: linear-gradient(135deg, rgba(59, 130, 246, 0.15), rgba(139, 92, 246, 0.15)); padding: 3rem; border-radius: 50%; margin-bottom: 2rem; backdrop-filter: blur(10px); box-shadow: 0 8px 32px rgba(59, 130, 246, 0.2);">
+                        <i class="bi bi-check-circle" style="font-size: 5rem; color: #10b981; opacity: 0.7;"></i>
+                    </div>
+                    <p style="font-size: 1.5rem; margin-bottom: 0.75rem; color: #f8fafc; font-weight: 700;">¡Todo al día!</p>
+                    <p style="font-size: 1rem; opacity: 0.7; max-width: 450px; line-height: 1.6; color: #94a3b8;">No tienes notificaciones nuevas. Puedes ver tus notificaciones anteriores usando el botón de abajo.</p>
                 </div>
-                ${readNotifications.map(notif => renderNotificationItem(notif)).join('')}
-            </div>
-        `;
+            `;
+        } else {
+            // No hay notificaciones en absoluto
+            html = `
+                <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 400px; padding: 3rem 2rem; text-align: center; color: #64748b;">
+                    <div style="background: linear-gradient(135deg, rgba(59, 130, 246, 0.15), rgba(139, 92, 246, 0.15)); padding: 3rem; border-radius: 50%; margin-bottom: 2rem; backdrop-filter: blur(10px); box-shadow: 0 8px 32px rgba(59, 130, 246, 0.2);">
+                        <i class="bi bi-bell-slash" style="font-size: 5rem; color: #3b82f6; opacity: 0.7;"></i>
+                    </div>
+                    <p style="font-size: 1.5rem; margin-bottom: 0.75rem; color: #f8fafc; font-weight: 700;">No hay notificaciones</p>
+                    <p style="font-size: 1rem; opacity: 0.7; max-width: 450px; line-height: 1.6; color: #94a3b8;">Las notificaciones de admin y moderadores aparecerán aquí cuando te envíen mensajes importantes.</p>
+                </div>
+            `;
+        }
+    }
+
+    // Renderizar notificaciones leídas si están expandidas
+    if (showReadNotifications && readNotifications.length > 0) {
+        if (unreadNotifications.length > 0) {
+            html += `
+                <div class="read-notifications-section" style="margin-top: 1.5rem; padding-top: 1.5rem; border-top: 2px solid #334155;">
+                    <div style="display: flex; align-items: center; gap: 0.5rem; color: #94a3b8; font-weight: 600; margin-bottom: 1rem;">
+                        <i class="bi bi-archive"></i>
+                        <span>Notificaciones leídas (${readNotifications.length})</span>
+                    </div>
+                    ${readNotifications.map(notif => renderNotificationItem(notif)).join('')}
+                </div>
+            `;
+        } else {
+            // Solo hay notificaciones leídas, mostrarlas sin separador
+            html = `
+                <div class="read-notifications-section" style="padding-top: 1rem;">
+                    <div style="display: flex; align-items: center; gap: 0.5rem; color: #94a3b8; font-weight: 600; margin-bottom: 1rem;">
+                        <i class="bi bi-archive"></i>
+                        <span>Notificaciones leídas (${readNotifications.length})</span>
+                    </div>
+                    ${readNotifications.map(notif => renderNotificationItem(notif)).join('')}
+                </div>
+            `;
+        }
     }
 
     container.innerHTML = html;

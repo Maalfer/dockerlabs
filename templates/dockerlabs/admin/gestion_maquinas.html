@@ -14,13 +14,19 @@
     <header class="page-header">
         <h2 class="page-title">Gestión de Máquinas</h2>
 
-        <div class="platform-switcher">
-            <button type="button" id="btn-docker" class="platform-btn active" onclick="mostrarPanelMaquinas('docker')">
-                <i class="bi bi-box-seam"></i> DockerLabs
-            </button>
-            <button type="button" id="btn-bunker" class="platform-btn" onclick="mostrarPanelMaquinas('bunker')">
-                <i class="bi bi-shield-lock"></i> BunkerLabs
-            </button>
+        <div class="header-actions">
+            <div class="search-box">
+                <i class="bi bi-search"></i>
+                <input type="text" id="searchInput" placeholder="Buscar máquinas..." value="{{ search }}">
+            </div>
+            <div class="platform-switcher">
+                <button type="button" id="btn-docker" class="platform-btn active" onclick="mostrarPanelMaquinas('docker')">
+                    <i class="bi bi-box-seam"></i> DockerLabs
+                </button>
+                <button type="button" id="btn-bunker" class="platform-btn" onclick="mostrarPanelMaquinas('bunker')">
+                    <i class="bi bi-shield-lock"></i> BunkerLabs
+                </button>
+            </div>
         </div>
     </header>
 
@@ -180,6 +186,30 @@
                 </table>
             </div>
         </div>
+        
+        <!-- Paginación Docker -->
+        {% if docker_pages > 1 %}
+        <div class="pagination-container">
+            <div class="pagination-info">
+                Mostrando página {{ page }} de {{ docker_pages }} ({{ docker_total }} máquinas)
+            </div>
+            <div class="pagination-controls">
+                {% if docker_has_prev %}
+                <a href="?page={{ page - 1 }}&search={{ search }}" class="pagination-btn">
+                    <i class="bi bi-chevron-left"></i> Anterior
+                </a>
+                {% endif %}
+                
+                <span class="pagination-current">Página {{ page }}</span>
+                
+                {% if docker_has_next %}
+                <a href="?page={{ page + 1 }}&search={{ search }}" class="pagination-btn">
+                    Siguiente <i class="bi bi-chevron-right"></i>
+                </a>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
         {% endif %}
     </div>
 
@@ -335,6 +365,30 @@
                 </table>
             </div>
         </div>
+        
+        <!-- Paginación Bunker -->
+        {% if bunker_pages > 1 %}
+        <div class="pagination-container">
+            <div class="pagination-info">
+                Mostrando página {{ page }} de {{ bunker_pages }} ({{ bunker_total }} máquinas)
+            </div>
+            <div class="pagination-controls">
+                {% if bunker_has_prev %}
+                <a href="?page={{ page - 1 }}&search={{ search }}" class="pagination-btn">
+                    <i class="bi bi-chevron-left"></i> Anterior
+                </a>
+                {% endif %}
+                
+                <span class="pagination-current">Página {{ page }}</span>
+                
+                {% if bunker_has_next %}
+                <a href="?page={{ page + 1 }}&search={{ search }}" class="pagination-btn">
+                    Siguiente <i class="bi bi-chevron-right"></i>
+                </a>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
         {% endif %}
     </div>
 </div>

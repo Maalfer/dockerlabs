@@ -1,4 +1,5 @@
 const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
+const isAdminOrMod = currentUserRole === 'admin' || currentUserRole === 'moderador';
 
 function formatDate(dateStr) {
     if (!dateStr) return "-";
@@ -52,6 +53,23 @@ function renderRow(writeup) {
     const tr = document.createElement("tr");
     tr.dataset.id = writeup.id;
 
+    const actionsHTML = isAdminOrMod ? `
+        <button class="btn-action approve btn-aprobar" title="Aprobar">
+            <i class="bi bi-check-lg"></i>
+        </button>
+        <button class="btn-action delete btn-eliminar" title="Eliminar">
+            <i class="bi bi-trash"></i>
+        </button>
+        <a href="${url}" target="_blank" class="btn-action" style="background: rgba(59, 130, 246, 0.1); color: #60a5fa;" title="Ver Writeup">
+            <i class="bi bi-box-arrow-up-right"></i>
+        </a>
+    ` : `
+        <span class="text-muted text-sm">Pendiente de revisión</span>
+        <a href="${url}" target="_blank" class="btn-action" style="background: rgba(59, 130, 246, 0.1); color: #60a5fa;" title="Ver Writeup">
+            <i class="bi bi-box-arrow-up-right"></i>
+        </a>
+    `;
+
     tr.innerHTML = `
         <td>
             <div style="width: 40px; height: 40px; border-radius: 8px; background: rgba(255,255,255,0.1); display: flex; align-items: center; justify-content: center; overflow: hidden;">
@@ -61,10 +79,10 @@ function renderRow(writeup) {
         <td class="fw-bold text-white">${maquina}</td>
         <td>${autor}</td>
         <td>
-            <input type="text" class="input-minimal input-url" value="${url}" placeholder="URL del writeup">
+            <input type="text" class="input-minimal input-url" value="${url}" placeholder="URL del writeup" ${isAdminOrMod ? '' : 'readonly'}>
         </td>
         <td>
-            <select class="select-minimal input-tipo">
+            <select class="select-minimal input-tipo" ${isAdminOrMod ? '' : 'disabled'}>
                 <option value="video" ${tipo.toLowerCase() === "video" ? "selected" : ""}>Video</option>
                 <option value="texto" ${tipo.toLowerCase() !== "video" ? "selected" : ""}>Texto</option>
             </select>
@@ -72,30 +90,18 @@ function renderRow(writeup) {
         <td class="text-white text-sm">${created_at}</td>
         <td>
             <div class="d-flex gap-2">
-                <button class="btn-action approve btn-aprobar" title="Aprobar">
-                    <i class="bi bi-check-lg"></i>
-                </button>
-                <button class="btn-action delete btn-eliminar" title="Eliminar">
-                    <i class="bi bi-trash"></i>
-                </button>
-                <a href="${url}" target="_blank" class="btn-action" style="background: rgba(59, 130, 246, 0.1); color: #60a5fa;" title="Ver Writeup">
-                    <i class="bi bi-box-arrow-up-right"></i>
-                </a>
+                ${actionsHTML}
             </div>
         </td>
     `;
 
-    const btnAprobar = tr.querySelector(".btn-aprobar");
-    btnAprobar.addEventListener("click", () => handleAprobar(tr));
+    if (isAdminOrMod) {
+        const btnAprobar = tr.querySelector(".btn-aprobar");
+        btnAprobar.addEventListener("click", () => handleAprobar(tr));
 
-    const btnEliminar = tr.querySelector(".btn-eliminar");
-    btnEliminar.addEventListener("click", () => handleEliminar(tr));
-
-    // Update fields via AJAX if needed (not strictly requested but good for persistence in UI)
-    // For now we just keep the input values for approval logic if we implement editing capabilities later.
-    // The current backend for approval takes fields from the DB, not from the request body unless we update BEFORE approving.
-    // Assuming standard flow: just approve what's there. The user mentioned "Puedes editar los datos..." in previous text.
-    // We might need to implement UPDATE on change? The previous code didn't do it explicitly on change.
+        const btnEliminar = tr.querySelector(".btn-eliminar");
+        btnEliminar.addEventListener("click", () => handleEliminar(tr));
+    }
 
     return tr;
 }
@@ -115,7 +121,7 @@ function handleAprobar(row) {
         return;
     }
 
-    fetch(`/api/writeups_recibidos/${id}/aprobar`, {
+    fetch(`/api/writeups/recibidos/${id}/aprobar`, {
         method: "POST",
         headers: {
             "Content-Type": "application/json",
@@ -149,7 +155,7 @@ function handleEliminar(row) {
         return;
     }
 
-    fetch(`/api/writeups_recibidos/${id}`, {
+    fetch(`/api/writeups/recibidos/${id}`, {
         method: "DELETE",
         headers: {
             "X-CSRFToken": csrfToken
@@ -183,7 +189,7 @@ function cargarWriteups() {
         </tr>
     `;
 
-    fetch("/api/writeups_recibidos")
+    fetch("/api/writeups/recibidos/list")
         .then(response => response.json().then(data => ({ ok: response.ok, status: response.status, data })))
         .then(result => {
             tbody.innerHTML = "";
@@ -236,7 +242,7 @@ function cargarReportes() {
         </tr>
     `;
 
-    fetch("/api/writeup_reports")
+    fetch("/api/admin/writeup_reports")
         .then(response => response.json().then(data => ({ ok: response.ok, status: response.status, data })))
         .then(result => {
             tbody.innerHTML = "";
@@ -360,7 +366,7 @@ function handleIgnorarReporte(reportId, row) {
         return;
     }
 
-    fetch(`/api/reports/${reportId}/ignore`, {
+    fetch(`/api/writeups/reports/${reportId}/ignore`, {
         method: "POST",
         headers: {
             "X-CSRFToken": csrfToken

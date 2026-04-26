@@ -1,8 +1,15 @@
-from .extensions import db as alchemy_db
-from .models import User, Machine, Category, Mensajeria, Notification
-from bunkerlabs.models import BunkerAccessToken, BunkerSolve, BunkerAccessLog, BunkerWriteup
-from sqlalchemy import event
+import os
+from sqlalchemy import create_engine, event
+from sqlalchemy.orm import sessionmaker, scoped_session, declarative_base
 from sqlalchemy.engine import Engine
+
+BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+DATABASE_PATH = os.path.join(BASE_DIR, 'database', 'dockerlabs.db')
+
+engine = create_engine(
+    f"sqlite:///{DATABASE_PATH}",
+    connect_args={"check_same_thread": False}
+)
 
 @event.listens_for(Engine, "connect")
 def set_sqlite_pragma(dbapi_connection, connection_record):
@@ -14,5 +21,14 @@ def set_sqlite_pragma(dbapi_connection, connection_record):
     cursor.execute("PRAGMA mmap_size=3000000000")
     cursor.close()
 
+db_session = scoped_session(sessionmaker(autocommit=False, autoflush=False, bind=engine))
+
+class _Base:
+    query = db_session.query_property()
+
+Base = declarative_base(cls=_Base)
+
 def init_db():
-    alchemy_db.create_all()
+    import dockerlabs.models
+    import bunkerlabs.models
+    Base.metadata.create_all(bind=engine)
