@@ -3,130 +3,372 @@
 {% block title %}Gestión de Usuarios - DockerLabs{% endblock %}
 
 {% block extra_head %}
-<link rel="stylesheet" href="{{ url_for('static', filename='dockerlabs/css/admin/gestion_usuarios.css') }}">
+<style>
+    /* Override all container constraints */
+    .container,
+    .container-fluid,
+    .container-sm,
+    .container-md,
+    .container-lg,
+    .container-xl,
+    .container-xxl {
+        max-width: none !important;
+        width: 100% !important;
+    }
+    
+    .gestion-usuarios-container {
+        max-width: 2000px !important;
+        width: 100% !important;
+        margin: 0 auto;
+        padding: 2rem;
+    }
+
+    .gestion-usuarios-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 2rem;
+    }
+
+    .gestion-usuarios-header h2 {
+        margin: 0;
+        font-size: 1.75rem;
+        font-weight: 600;
+        color: #e2e8f0;
+    }
+
+    .search-box {
+        position: relative;
+        width: 300px;
+    }
+
+    .search-box input {
+        width: 100%;
+        padding: 0.75rem 1rem 0.75rem 2.5rem;
+        border: 1px solid #334155;
+        border-radius: 0.5rem;
+        background: #1e293b;
+        color: #e2e8f0;
+        font-size: 0.875rem;
+        transition: all 0.2s;
+    }
+
+    .search-box input:focus {
+        outline: none;
+        border-color: #3b82f6;
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    }
+
+    .search-box i {
+        position: absolute;
+        left: 0.75rem;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #64748b;
+    }
+
+    .users-table {
+        width: 100%;
+        border-collapse: collapse;
+        background: #1e293b;
+        border-radius: 0.75rem;
+        overflow: hidden;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    }
+
+    .users-table thead {
+        background: #0f172a;
+    }
+
+    .users-table th {
+        padding: 1rem;
+        text-align: left;
+        font-weight: 600;
+        font-size: 0.875rem;
+        color: #94a3b8;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+
+    .users-table td {
+        padding: 1rem;
+        border-top: 1px solid #334155;
+        color: #e2e8f0;
+    }
+
+    .users-table tbody tr:hover {
+        background: #334155;
+    }
+
+    .role-badge {
+        display: inline-block;
+        padding: 0.25rem 0.75rem;
+        border-radius: 9999px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+    }
+
+    .role-badge.admin {
+        background: #dc2626;
+        color: white;
+    }
+
+    .role-badge.moderador {
+        background: #f59e0b;
+        color: white;
+    }
+
+    .role-badge.jugador {
+        background: #10b981;
+        color: white;
+    }
+
+    .role-select {
+        padding: 0.375rem 0.5rem;
+        border: 1px solid #334155;
+        border-radius: 0.375rem;
+        background: #0f172a;
+        color: #e2e8f0;
+        font-size: 0.875rem;
+        cursor: pointer;
+    }
+
+    .role-select:focus {
+        outline: none;
+        border-color: #3b82f6;
+    }
+
+    .btn-delete {
+        padding: 0.375rem 0.75rem;
+        background: #dc2626;
+        color: white;
+        border: none;
+        border-radius: 0.375rem;
+        font-size: 0.875rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .btn-delete:hover {
+        background: #b91c1c;
+    }
+
+    .pagination {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 0.5rem;
+        margin-top: 2rem;
+    }
+
+    .pagination button {
+        padding: 0.5rem 1rem;
+        border: 1px solid #334155;
+        background: #1e293b;
+        color: #e2e8f0;
+        border-radius: 0.375rem;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .pagination button:hover:not(:disabled) {
+        background: #334155;
+        border-color: #475569;
+    }
+
+    .pagination button:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+
+    .pagination .page-info {
+        color: #94a3b8;
+        font-size: 0.875rem;
+    }
+
+    .pagination .current-page {
+        background: #3b82f6;
+        border-color: #3b82f6;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 4rem 2rem;
+        color: #64748b;
+    }
+
+    .empty-state i {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+        display: block;
+    }
+
+    .user-cell, .email-cell {
+        font-family: 'Fira Code', monospace;
+        font-size: 0.875rem;
+    }
+
+    .toggle-btn {
+        background: none;
+        border: none;
+        color: #64748b;
+        cursor: pointer;
+        padding: 0.25rem;
+        margin-left: 0.5rem;
+        transition: color 0.2s;
+    }
+
+    .toggle-btn:hover {
+        color: #e2e8f0;
+    }
+</style>
 {% endblock %}
 
 {% block content %}
 <div class="gestion-usuarios-container">
-    <h2 class="mb-4">Gestión de Usuarios</h2>
-
-    {% if usuarios|length == 0 %}
-    <div class="alert alert-info">
-        No hay usuarios registrados.
-    </div>
-    {% else %}
-
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <div class="input-group input-group-sm" style="max-width: 320px;">
-            <span class="input-group-text bg-dark border-secondary text-muted">
-                <i class="bi bi-search"></i>
-            </span>
-            <input type="text" id="userSearchInput"
-                class="form-control form-control-sm bg-dark text-light border-secondary"
-                placeholder="Buscar por usuario, email o rol..." autocomplete="off">
-            <input type="hidden" name="csrf_token" value="{{ csrf_token_value }}">
+    <div class="gestion-usuarios-header">
+        <h2>Gestión de Usuarios</h2>
+        <div class="search-box">
+            <i class="bi bi-search"></i>
+            <input type="text" id="userSearchInput" placeholder="Buscar usuario, email o rol..." value="{{ search }}">
         </div>
     </div>
 
-    <div class="table-responsive">
-        <table class="table table-striped align-middle" id="gestionUsuariosTable">
-            <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>
-                        Usuario
-                        <button type="button" class="btn btn-sm btn-secondary ms-2" id="toggleUsersBtn"
-                            onclick="toggleUsers()">
-                            <i class="bi bi-eye" id="toggleUsersIcon"></i>
-                        </button>
-                    </th>
-                    {% if current_user_role == 'admin' %}
-                    <th>
-                        Email
-                        <button type="button" class="btn btn-sm btn-secondary ms-2" id="toggleEmailsBtn"
-                            onclick="toggleEmails()">
-                            <i class="bi bi-eye" id="toggleEmailsIcon"></i>
-                        </button>
-                    </th>
-                    <th>PIN</th>
-                    {% endif %}
-                    <th>Rol</th>
-                    <th>Creado</th>
-                    {% if current_user_role == 'admin' %}
-                    <th class="text-center">Acciones</th>
-                    {% endif %}
-                </tr>
-            </thead>
-            <tbody>
-                {% for usuario in usuarios %}
-                <tr>
-                    <td>{{ usuario.id }}</td>
-                    <td class="user-cell" data-user="{{ usuario.username }}">
-                        <span class="user-censored">***************</span>
-                        <span class="user-real" style="display: none;">{{ usuario.username }}</span>
-                    </td>
-                    {% if current_user_role == 'admin' %}
-                    <td class="email-cell" data-email="{{ usuario.email }}">
-                        <span class="email-censored">***************</span>
-                        <span class="email-real" style="display: none;">{{ usuario.email }}</span>
-                    </td>
-                    <td>
-                        {% if usuario.recovery_pin_plain %}
-                        <span class="badge bg-info text-dark">{{ usuario.recovery_pin_plain }}</span>
-                        {% else %}
-                        <span class="text-muted small">N/A</span>
-                        {% endif %}
-                    </td>
-                    {% endif %}
-                    <td>
-                        {% if current_user_role == 'admin' %}
-                        <select class="form-select form-select-sm role-select"
-                                data-user-id="{{ usuario.id }}"
-                                data-csrf="{{ csrf_token_value }}">
-                            <option value="jugador" {% if usuario.role=='jugador' %}selected{% endif %}>Jugador</option>
-                            <option value="moderador" {% if usuario.role=='moderador' %}selected{% endif %}>Moderador</option>
-                            <option value="admin" {% if usuario.role=='admin' %}selected{% endif %}>Admin</option>
-                        </select>
-                        {% else %}
-                        <span class="badge bg-secondary">{{ usuario.role|capitalize }}</span>
-                        {% endif %}
-                    </td>
-
-                    <td>{{ usuario.created_at }}</td>
-
-                    {% if current_user_role == 'admin' %}
-                    <td class="text-center">
-                        <button type="button" class="btn btn-sm btn-danger delete-user-btn"
-                                data-user-id="{{ usuario.id }}"
-                                data-csrf="{{ csrf_token_value }}">
-                            Eliminar
-                        </button>
-                    </td>
-                    {% endif %}
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-
+    {% if total == 0 %}
+    <div class="empty-state">
+        <i class="bi bi-people"></i>
+        <p>No hay usuarios registrados.</p>
     </div>
+    {% else %}
+
+    <table class="users-table">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>
+                    Usuario
+                    <button type="button" class="toggle-btn" onclick="toggleUsers()">
+                        <i class="bi bi-eye" id="toggleUsersIcon"></i>
+                    </button>
+                </th>
+                {% if current_user_role == 'admin' %}
+                <th>
+                    Email
+                    <button type="button" class="toggle-btn" onclick="toggleEmails()">
+                        <i class="bi bi-eye" id="toggleEmailsIcon"></i>
+                    </button>
+                </th>
+                <th>PIN</th>
+                {% endif %}
+                <th>Rol</th>
+                <th>Creado</th>
+                {% if current_user_role == 'admin' %}
+                <th>Acciones</th>
+                {% endif %}
+            </tr>
+        </thead>
+        <tbody>
+            {% for usuario in usuarios %}
+            <tr>
+                <td>{{ usuario.id }}</td>
+                <td class="user-cell" data-user="{{ usuario.username }}">
+                    <span class="user-censored">•••••••••••••</span>
+                    <span class="user-real" style="display: none;">{{ usuario.username }}</span>
+                </td>
+                {% if current_user_role == 'admin' %}
+                <td class="email-cell" data-email="{{ usuario.email }}">
+                    <span class="email-censored">•••••••••••••</span>
+                    <span class="email-real" style="display: none;">{{ usuario.email }}</span>
+                </td>
+                <td>
+                    {% if usuario.recovery_pin_plain %}
+                    <code style="background: #0f172a; padding: 0.25rem 0.5rem; border-radius: 0.25rem; font-size: 0.75rem;">{{ usuario.recovery_pin_plain }}</code>
+                    {% else %}
+                    <span style="color: #64748b; font-size: 0.875rem;">—</span>
+                    {% endif %}
+                </td>
+                {% endif %}
+                <td>
+                    {% if current_user_role == 'admin' %}
+                    <select class="role-select" data-user-id="{{ usuario.id }}" data-csrf="{{ csrf_token_value }}">
+                        <option value="jugador" {% if usuario.role=='jugador' %}selected{% endif %}>Jugador</option>
+                        <option value="moderador" {% if usuario.role=='moderador' %}selected{% endif %}>Moderador</option>
+                        <option value="admin" {% if usuario.role=='admin' %}selected{% endif %}>Admin</option>
+                    </select>
+                    {% else %}
+                    <span class="role-badge {{ usuario.role }}">{{ usuario.role|capitalize }}</span>
+                    {% endif %}
+                </td>
+                <td style="color: #94a3b8; font-size: 0.875rem;">{{ usuario.created_at.strftime('%Y-%m-%d') if usuario.created_at else '—' }}</td>
+                {% if current_user_role == 'admin' %}
+                <td>
+                    <button type="button" class="btn-delete delete-user-btn" data-user-id="{{ usuario.id }}" data-csrf="{{ csrf_token_value }}">
+                        <i class="bi bi-trash"></i> Eliminar
+                    </button>
+                </td>
+                {% endif %}
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    {% if total_pages > 1 %}
+    <div class="pagination">
+        <button onclick="goToPage({{ page - 1 }})" {% if not has_prev %}disabled{% endif %}>
+            <i class="bi bi-chevron-left"></i> Anterior
+        </button>
+        {% for p in range(1, total_pages + 1) %}
+            {% if p == page %}
+            <button class="current-page">{{ p }}</button>
+            {% elif p <= 3 or p > total_pages - 3 or (p >= page - 1 and p <= page + 1) %}
+            <button onclick="goToPage({{ p }})">{{ p }}</button>
+            {% elif p == 4 or p == total_pages - 3 %}
+            <span style="color: #64748b;">...</span>
+            {% endif %}
+        {% endfor %}
+        <button onclick="goToPage({{ page + 1 }})" {% if not has_next %}disabled{% endif %}>
+            Siguiente <i class="bi bi-chevron-right"></i>
+        </button>
+        <span class="page-info">Página {{ page }} de {{ total_pages }} ({{ total }} usuarios)</span>
+    </div>
+    {% endif %}
     {% endif %}
 </div>
 
 <script nonce="{{ g.csp_nonce }}">
-    document.addEventListener('DOMContentLoaded', function () {
-        const input = document.getElementById('userSearchInput');
-        const table = document.getElementById('gestionUsuariosTable');
-        if (input && table) {
-            const rows = Array.from(table.querySelectorAll('tbody tr'));
-            input.addEventListener('input', function () {
-                const term = this.value.trim().toLowerCase();
-                rows.forEach(tr => {
-                    tr.style.display = (!term || tr.innerText.toLowerCase().includes(term)) ? '' : 'none';
-                });
-            });
+    function goToPage(page) {
+        const search = document.getElementById('userSearchInput').value;
+        const url = new URL(window.location);
+        url.searchParams.set('page', page);
+        if (search) {
+            url.searchParams.set('search', search);
+        } else {
+            url.searchParams.delete('search');
         }
+        window.location.href = url.toString();
+    }
 
-        // --- Cambio de rol via AJAX ---
+    document.addEventListener('DOMContentLoaded', function () {
+        const searchInput = document.getElementById('userSearchInput');
+        let debounceTimer;
+
+        searchInput.addEventListener('input', function () {
+            clearTimeout(debounceTimer);
+            debounceTimer = setTimeout(() => {
+                const url = new URL(window.location);
+                if (this.value.trim()) {
+                    url.searchParams.set('search', this.value.trim());
+                } else {
+                    url.searchParams.delete('search');
+                }
+                url.searchParams.set('page', '1');
+                window.location.href = url.toString();
+            }, 500);
+        });
+
+        // Role change
         document.querySelectorAll('.role-select').forEach(function (sel) {
             sel.addEventListener('change', async function () {
                 const userId = this.dataset.userId;
@@ -150,10 +392,10 @@
             });
         });
 
-        // --- Eliminar usuario via AJAX ---
+        // Delete user
         document.querySelectorAll('.delete-user-btn').forEach(function (btn) {
             btn.addEventListener('click', async function () {
-                if (!confirm('¿Seguro que quieres eliminar este usuario?')) return;
+                if (!confirm('¿Seguro que quieres eliminar este usuario? Esta acción no se puede deshacer.')) return;
                 const userId = this.dataset.userId;
                 const csrf = this.dataset.csrf;
                 try {
@@ -164,7 +406,7 @@
                     });
                     const data = await res.json();
                     if (res.ok && data.success) {
-                        this.closest('tr').remove();
+                        location.reload();
                     } else {
                         alert('Error: ' + (data.error || 'No se pudo eliminar el usuario.'));
                     }
@@ -175,7 +417,6 @@
         });
     });
 
-    // Toggle email visibility
     let emailsVisible = false;
     function toggleEmails() {
         emailsVisible = !emailsVisible;
@@ -184,7 +425,6 @@
         document.getElementById('toggleEmailsIcon').className = emailsVisible ? 'bi bi-eye-slash' : 'bi bi-eye';
     }
 
-    // Toggle user visibility
     let usersVisible = false;
     function toggleUsers() {
         usersVisible = !usersVisible;

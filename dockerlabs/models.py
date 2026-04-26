@@ -275,3 +275,17 @@ class Mensajeria(db.Model):
     def __repr__(self):
         return f'<Message {self.id} from {self.sender_id} to {self.receiver_id}>'
 
+class Notification(db.Model):
+    __tablename__ = 'notificaciones'
+    id = db.Column(db.Integer, primary_key=True)
+    sender_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='CASCADE'), nullable=False)
+    title = db.Column(db.String(200), nullable=False)
+    content = db.Column(db.Text, nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    read = db.Column(db.Boolean, default=False)
+
+    sender = db.relationship('User', backref=db.backref('sent_notifications', lazy='dynamic'))
+
+    def __repr__(self):
+        return f'<Notification {self.id}: {self.title}>'
+

@@ -9,6 +9,7 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;700&display=swap">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <meta name="csrf-token" content="{{ csrf_token_value }}">
 
     {% if not no_default_styles %}
@@ -76,6 +77,11 @@
             <button type="button" onclick="openMessagingModal()" class="btn-auth msg-btn">
                 <i class="bi bi-envelope"></i>
                 <span id="msg-badge" class="msg-badge">0</span>
+            </button>
+
+            <button type="button" onclick="openNotificationsModal()" class="btn-auth notification-btn">
+                <i class="bi bi-bell"></i>
+                <span id="notification-badge" class="notification-badge">0</span>
             </button>
 
             <button type="button" onclick="openGestionWriteupsModal()" class="btn-auth">
@@ -241,7 +247,7 @@
 
     <!-- Messaging Modal -->
     <div id="messagingModal" class="overlay">
-        <div class="popup" style="width: min(800px, 95%); padding: 0; overflow: hidden; border-radius: 15px;">
+        <div class="popup" style="width: min(1000px, 95%); padding: 0; overflow: hidden; border-radius: 15px;">
             <div class="modal-header" style="padding: 1rem; border-bottom: 1px solid #334155; background: #0f172a;">
                 <h2 class="modal-title" style="font-size: 1.25rem;">Mensajes</h2>
             </div>
@@ -250,12 +256,6 @@
                     <button class="msg-new-btn" onclick="showNewMessageInput()">
                         <i class="bi bi-pencil-square"></i> Nuevo Mensaje
                     </button>
-                    {% if current_user_role == 'admin' %}
-                    <button class="msg-new-btn" style="background: #eab308; margin-top: 0.5rem;"
-                        onclick="showBroadcastInput()">
-                        <i class="bi bi-megaphone"></i> Difusión
-                    </button>
-                    {% endif %}
                     <div id="msgNew" style="display:none; padding:1rem;">
                         <input type="text" id="newMsgUser" class="msg-input" placeholder="Buscar usuario..."
                             autocomplete="off">
@@ -263,18 +263,6 @@
                         <button class="btn-auth"
                             style="padding: 0.5rem; margin-top:0.5rem; width:100%; background:#ef4444; color: #ffffff; font-weight: bold;"
                             onclick="cancelNewMessage()">Cancelar</button>
-                    </div>
-                    <div id="msgBroadcast" style="display:none; padding:1rem;">
-                        <p style="color:#eab308; font-size:0.9rem; margin-bottom:0.5rem;">⚠️ Mensaje a TODOS los
-                            usuarios</p>
-                        <textarea id="broadcastContent" class="msg-input" rows="3"
-                            placeholder="Escribe tu anuncio..."></textarea>
-                        <button class="btn-auth"
-                            style="padding: 0.5rem; margin-top:0.5rem; width:100%; background:#eab308; color: #000000; font-weight: bold;"
-                            onclick="sendBroadcast()">Enviar Difusión</button>
-                        <button class="btn-auth"
-                            style="padding: 0.5rem; margin-top:0.5rem; width:100%; background:#ef4444; color: #ffffff; font-weight: bold;"
-                            onclick="cancelBroadcast()">Cancelar</button>
                     </div>
                     <div class="msg-list" id="msgList">
                         <!-- Conversations go here -->
@@ -305,6 +293,38 @@
                         <button class="msg-send-btn" onclick="sendMessage()"><i class="bi bi-send"></i></button>
                     </div>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notifications Modal -->
+    <div id="notificationsModal" class="overlay">
+        <div class="popup" style="width: min(1100px, 95%); padding: 0; overflow: hidden; border-radius: 20px; max-height: 85vh; display: flex; flex-direction: column; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);">
+            <div class="modal-header" style="padding: 1.5rem 2rem; background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); display: flex; justify-content: space-between; align-items: center;">
+                <div style="display: flex; align-items: center; gap: 1rem;">
+                    <div style="background: linear-gradient(135deg, #3b82f6, #8b5cf6); padding: 0.75rem; border-radius: 12px; box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);">
+                        <i class="bi bi-bell" style="font-size: 1.5rem; color: white;"></i>
+                    </div>
+                    <div>
+                        <h2 class="modal-title" style="font-size: 1.5rem; margin: 0; color: #f8fafc; font-weight: 700;">Notificaciones</h2>
+                        <p style="margin: 0; color: #94a3b8; font-size: 0.85rem;">Mantente al día con las últimas novedades</p>
+                    </div>
+                </div>
+                <button class="modal-close-button" type="button" onclick="closeNotificationsModal()" style="background: rgba(148, 163, 184, 0.1); border: none; color: #94a3b8; font-size: 1.75rem; cursor: pointer; padding: 0.75rem; border-radius: 10px; transition: all 0.2s; width: 48px; height: 48px; display: flex; align-items: center; justify-content: center;">&times;</button>
+            </div>
+            <div class="modal-body" style="padding: 0; flex: 1; overflow: hidden; display: flex; flex-direction: column; background: linear-gradient(180deg, #0f172a 0%, #1e293b 100%);">
+                <div id="notificationsList" class="notifications-list" style="flex: 1; overflow-y: auto;">
+                    <div style="padding: 3rem 2rem; text-align: center; color: #64748b;">
+                        <div style="background: rgba(59, 130, 246, 0.1); padding: 2rem; border-radius: 20px; display: inline-block; margin-bottom: 1.5rem;">
+                            <i class="bi bi-bell" style="font-size: 4rem; color: #3b82f6;"></i>
+                        </div>
+                        <p style="font-size: 1.2rem; margin-bottom: 0.5rem; color: #94a3b8;">Cargando notificaciones...</p>
+                    </div>
+                </div>
+                <button id="toggleReadNotifications" class="toggle-read-btn" style="display: none; padding: 1.25rem; background: linear-gradient(135deg, #1e293b 0%, #334155 100%); border-top: 1px solid #334155; color: #94a3b8; cursor: pointer; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 0.5rem; transition: all 0.3s;">
+                    <i class="bi bi-chevron-down"></i>
+                    <span>Ver notificaciones leídas</span>
+                </button>
             </div>
         </div>
     </div>
@@ -346,6 +366,8 @@
         function closeDashboardModal() { document.getElementById('dashboardModal').classList.remove('visible'); }
         function openMenuModal() { document.getElementById('menuModal').classList.add('visible'); }
         function closeMenuModal() { document.getElementById('menuModal').classList.remove('visible'); }
+        function openNotificationsModal() { document.getElementById('notificationsModal').classList.add('visible'); }
+        function closeNotificationsModal() { document.getElementById('notificationsModal').classList.remove('visible'); }
 
         document.addEventListener('DOMContentLoaded', function () {
 
@@ -367,6 +389,13 @@
             if (menuModal) {
                 menuModal.addEventListener('click', function (e) {
                     if (e.target === menuModal) closeMenuModal();
+                });
+            }
+
+            const notificationsModal = document.getElementById('notificationsModal');
+            if (notificationsModal) {
+                notificationsModal.addEventListener('click', function (e) {
+                    if (e.target === notificationsModal) closeNotificationsModal();
                 });
             }
 
@@ -407,6 +436,7 @@
     <script src="{{ url_for('static', filename='dockerlabs/js/utils.js') }}"></script>
     {% if session.get('user_id') %}
     <script src="{{ url_for('static', filename='dockerlabs/js/messaging.js') }}"></script>
+    <script src="{{ url_for('static', filename='dockerlabs/js/notifications.js') }}"></script>
     {% endif %}
     {% block scripts %}{% endblock %}
 </body>

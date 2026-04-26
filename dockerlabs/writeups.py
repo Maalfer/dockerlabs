@@ -1,10 +1,17 @@
-from flask import Blueprint, render_template, session
-from .decorators import role_required, get_current_role
-from .models import User, WriteupEditRequest
+"""
+WRITEUPS - Funciones de utilidad (recalcular_ranking_writeups).
 
-writeups_bp = Blueprint('writeups', __name__)
+Todas las rutas Flask de este módulo han sido migradas a FastAPI (routers.py).
+Este módulo solo conserva recalcular_ranking_writeups(), llamada desde
+routers.py tras operaciones que modifican writeups aprobados.
+"""
+
+from .models import Writeup, Machine, WriteupRanking
+from .extensions import db as alchemy_db
+
 
 def recalcular_ranking_writeups():
+    """Recalcula el ranking de autores de writeups por puntos."""
     puntos_por_dificultad = {
         "muy fácil": 1, "muy facil": 1,
         "fácil": 2, "facil": 2,
@@ -12,35 +19,25 @@ def recalcular_ranking_writeups():
         "difícil": 4, "dificil": 4,
     }
 
-    results = alchemy_db.session.query(Writeup.autor, Machine.dificultad)        .join(Machine, Writeup.maquina == Machine.nombre).all()
-    
+    results = (
+        alchemy_db.session.query(Writeup.autor, Machine.dificultad)
+        .join(Machine, Writeup.maquina == Machine.nombre)
+        .all()
+    )
+
     ranking = {}
     for autor, dificultad in results:
-        if not autor: continue
+        if not autor:
+            continue
         dificultad_lower = (dificultad or "").strip().lower()
         puntos = puntos_por_dificultad.get(dificultad_lower, 1)
         ranking[autor] = ranking.get(autor, 0) + puntos
 
-    WriteupRanking.query.delete()           
-
-    for autor, puntos in ranking.items():
-        entry = WriteupRanking(nombre=autor, puntos=puntos)
-        alchemy_db.session.add(entry)
-    
-    alchemy_db.session.commit()
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+    try:
+        WriteupRanking.query.delete()
+        for autor, puntos in ranking.items():
+            alchemy_db.session.add(WriteupRanking(nombre=autor, puntos=puntos))
+        alchemy_db.session.commit()
+    except Exception:
+        alchemy_db.session.rollback()
+        raise

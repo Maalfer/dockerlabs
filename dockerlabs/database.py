@@ -1,5 +1,5 @@
 from .extensions import db as alchemy_db
-from .models import User, Machine, Category, Mensajeria
+from .models import User, Machine, Category, Mensajeria, Notification
 from bunkerlabs.models import BunkerAccessToken, BunkerSolve, BunkerAccessLog, BunkerWriteup
 from sqlalchemy import event
 from sqlalchemy.engine import Engine

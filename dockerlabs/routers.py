@@ -8,6 +8,12 @@ from datetime import datetime
 import secrets
 import re
 import os
+import io
+import shutil
+import sqlite3
+import tempfile
+import zipfile
+import fcntl
 
 # Importaciones Flask (necesarias durante la migración)
 from dockerlabs.app import app as flask_app
@@ -15,10 +21,6 @@ from dockerlabs.models import User, Machine, Writeup, PendingMachineSubmission, 
 from dockerlabs.extensions import db as alchemy_db
 from werkzeug.security import check_password_hash, generate_password_hash
 from flask.sessions import SecureCookieSessionInterface
-
-# Configurar Jinja2 templates
-BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
-templates = Jinja2Templates(directory=os.path.join(BASE_DIR, 'templates'))
 
 # Función url_for personalizada para compatibilidad con Flask
 def url_for(endpoint, **kwargs):
@@ -50,24 +52,69 @@ def url_for(endpoint, **kwargs):
         'main.condiciones_uso': '/condiciones-uso',
         'main.estadisticas': '/estadisticas',
         'main.backups_page': '/backups',
+        'main.download_backup': '/backups/download',
+        'main.restore_backup': '/backups/restore',
         'main.pending_machines': '/pending-machines',
         'main.user_pending_machines': '/user-pending',
-        'dashboard': '/dashboard',
-        'index': '/',
-        'peticiones': '/peticiones-writeups',
-        'writeups.writeups_publicados': '/writeups-publicados',
-        'writeups.writeups_recibidos': '/writeups-recibidos',
+        'main.approve_machine': '/api/admin/pending-machines/{id}/approve',
+        'main.reject_machine': '/api/admin/pending-machines/{id}/reject',
+        'main.bug_bounty': '/bug-bounty',
+        # Auth
+        'auth.login': '/login',
+        'auth.register': '/register',
+        'auth.recover': '/recover',
+        'auth.logout': '/logout',
+        'auth.gestion_usuarios': '/gestion-usuarios',
+        # BunkerLabs
+        'bunkerlabs.bunkerlabs_login': '/bunkerlabs/login',
+        'bunkerlabs.bunkerlabs_home': '/bunkerlabs',
+        'bunkerlabs.bunkerlabs_logout': '/bunkerlabs/logout',
+        'bunkerlabs.bunkerlabs_guest': '/bunkerlabs/guest',
+        'bunkerlabs.accesos_bunkerlabs': '/bunkerlabs/accesos',
+        'bunkerlabs.delete_bunker_token': '/bunkerlabs/accesos/{token_id}/delete',
+        # Máquinas
         'maquinas.maquinas_hechas': '/maquinas-hechas',
         'maquinas.gestion_maquinas': '/gestion-maquinas',
         'maquinas.add_maquina_page': '/add-maquina',
+        'maquinas.actualizar_maquina': '/gestion-maquinas/actualizar',
+        'maquinas.eliminar_maquina': '/gestion-maquinas/eliminar',
+        'maquinas.serve_machine_logo': '/img/maquina/{machine_id}',
+        # Writeups
+        'writeups.writeups_publicados': '/writeups-publicados',
+        'writeups.writeups_recibidos': '/writeups-recibidos',
+        # Misc
+        'dashboard': '/dashboard',
+        'index': '/',
+        'peticiones': '/peticiones-writeups',
     }
-    
+
     # Si está en el mapeo, usar la ruta de FastAPI
     if endpoint in flask_to_fastapi:
-        return flask_to_fastapi[endpoint]
-    
+        path = flask_to_fastapi[endpoint]
+        # Sustituir parámetros dinámicos {param} con los kwargs recibidos
+        used_keys = set()
+        import re as _re
+        def replace_param(match, _kw=kwargs):
+            key = match.group(1)
+            used_keys.add(key)
+            return str(_kw.get(key, match.group(0)))
+        path = _re.sub(r'\{(\w+)\}', replace_param, path)
+        # Parámetros restantes como query string
+        qs_params = {k: v for k, v in kwargs.items() if k not in used_keys and k != '_external'}
+        if qs_params:
+            from urllib.parse import urlencode
+            path = f"{path}?{urlencode(qs_params)}"
+        return path
+
     # Para otros endpoints, devolver el nombre del endpoint
     return f"/{endpoint}"
+
+# Configurar Jinja2 templates
+BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+templates = Jinja2Templates(directory=os.path.join(BASE_DIR, 'templates'))
+
+# Sobrescribir url_for en el entorno de Jinja2 para usar nuestra función personalizada
+templates.env.globals['url_for'] = url_for
 
 # --- Modelos Pydantic ---
 
@@ -196,16 +243,28 @@ def get_flask_session(request: Request) -> dict:
     except:
         return {}
 
-def verify_csrf_token(request: Request, flask_session: dict = Depends(get_flask_session)):
+async def verify_csrf_token(request: Request, flask_session: dict = Depends(get_flask_session)):
     """Verifica el token CSRF tal y como lo hacía @csrf_protect de Flask."""
+    if request.method not in ("POST", "PUT", "DELETE", "PATCH"):
+        return True
+
     session_token = flask_session.get("csrf_token")
-    header_token = request.headers.get("X-CSRFToken") or request.headers.get("X-CSRF-Token")
-    if not session_token or not header_token or not secrets.compare_digest(str(session_token), str(header_token)):
+    token = request.headers.get("X-CSRFToken") or request.headers.get("X-CSRF-Token")
+
+    if not token and request.method == "POST":
+        content_type = request.headers.get("content-type", "")
+        if "application/x-www-form-urlencoded" in content_type or "multipart/form-data" in content_type:
+            form = await request.form()
+            token = form.get("csrf_token")
+
+    if not session_token or not token or not secrets.compare_digest(str(session_token), str(token)):
         raise HTTPException(status_code=403, detail="CSRF token missing or invalid")
     return True
 
 def get_fastapi_profile_image_url(username: Optional[str] = None, user_id: Optional[int] = None) -> str:
-    """Helper to bypass Flask's url_for dependency in FastAPI."""
+    """Helper to bypass Flask's url_for dependency in FastAPI.
+    Genera URLs consistentes con el endpoint /img/perfil/{user_id} en pages_router.
+    """
     if user_id:
         return f"/img/perfil/{user_id}"
     if username:
@@ -441,6 +500,11 @@ class LoginResponse(BaseModel):
     message: Optional[str] = None
     redirect_url: Optional[str] = None
 
+def set_flask_session_cookie(existing_session: dict) -> str:
+    session_interface = SecureCookieSessionInterface()
+    serializer = session_interface.get_signing_serializer(flask_app)
+    return serializer.dumps(existing_session)
+
 def create_flask_session_cookie(user_id: int, username: str, role: str = 'jugador', existing_session: dict = None) -> str:
     import hashlib
     
@@ -459,7 +523,7 @@ def create_flask_session_cookie(user_id: int, username: str, role: str = 'jugado
     return serializer.dumps(session_data)
 
 @api_router.post("/auth/login", response_model=LoginResponse)
-def api_auth_login(data: LoginRequest, request: Request, flask_session: dict = Depends(get_flask_session), csrf_ok: bool = Depends(verify_csrf_token)):
+async def api_auth_login(data: LoginRequest, request: Request, flask_session: dict = Depends(get_flask_session), csrf_ok: bool = Depends(verify_csrf_token)):
     
     with flask_app.app_context():
         user = User.query.filter_by(username=data.username.strip()).first()
@@ -503,7 +567,7 @@ class RecoverResponse(BaseModel):
     message: Optional[str] = None
 
 @api_router.post("/auth/register", response_model=RegisterResponse)
-def api_auth_register(data: RegisterRequest, csrf_ok: bool = Depends(verify_csrf_token)):
+async def api_auth_register(data: RegisterRequest, csrf_ok: bool = Depends(verify_csrf_token)):
     username = data.username.strip()
     email = data.email.strip()
     password = data.password
@@ -582,7 +646,7 @@ def api_auth_register(data: RegisterRequest, csrf_ok: bool = Depends(verify_csrf
 
 
 @api_router.post("/auth/recover", response_model=RecoverResponse)
-def api_auth_recover(data: RecoverRequest, csrf_ok: bool = Depends(verify_csrf_token)):
+async def api_auth_recover(data: RecoverRequest, csrf_ok: bool = Depends(verify_csrf_token)):
     username = data.username.strip()
     pin = data.pin.strip()
     password = data.password
@@ -630,7 +694,7 @@ class UpdateSocialLinksRequest(BaseModel):
     youtube_url: Optional[str] = None
 
 @api_router.post("/change_password")
-def api_change_password(data: ChangePasswordRequest, flask_session: dict = Depends(get_flask_session), csrf_ok: bool = Depends(verify_csrf_token)):
+async def api_change_password(data: ChangePasswordRequest, flask_session: dict = Depends(get_flask_session), csrf_ok: bool = Depends(verify_csrf_token)):
     user_id = flask_session.get('user_id')
     if not user_id:
         return JSONResponse(status_code=401, content={"error": "Debes iniciar sesión"})
@@ -652,7 +716,7 @@ def api_change_password(data: ChangePasswordRequest, flask_session: dict = Depen
         return {"message": "Contraseña actualizada correctamente.", "success": True}
 
 @api_router.post("/update_profile")
-def api_update_profile(data: UpdateProfileRequest, flask_session: dict = Depends(get_flask_session), csrf_ok: bool = Depends(verify_csrf_token)):
+async def api_update_profile(data: UpdateProfileRequest, flask_session: dict = Depends(get_flask_session), csrf_ok: bool = Depends(verify_csrf_token)):
     user_id = flask_session.get('user_id')
     if not user_id:
         return JSONResponse(status_code=401, content={"error": "Debes iniciar sesión"})
@@ -672,7 +736,7 @@ def api_update_profile(data: UpdateProfileRequest, flask_session: dict = Depends
         return {"message": "Perfil actualizado correctamente.", "success": True}
 
 @api_router.post("/update_social_links")
-def api_update_social_links(data: UpdateSocialLinksRequest, flask_session: dict = Depends(get_flask_session), csrf_ok: bool = Depends(verify_csrf_token)):
+async def api_update_social_links(data: UpdateSocialLinksRequest, flask_session: dict = Depends(get_flask_session), csrf_ok: bool = Depends(verify_csrf_token)):
     user_id = flask_session.get('user_id')
     if not user_id:
         return JSONResponse(status_code=401, content={"error": "Debes iniciar sesión"})
@@ -782,16 +846,24 @@ class RejectUsernameChangeRequest(BaseModel):
     decision_reason: Optional[str] = "Rechazado por moderador/admin"
 
 @api_router.post("/admin/update_user_role/{user_id}")
-def api_update_user_role(user_id: int, data: UpdateRoleRequest, flask_session: dict = Depends(get_flask_session), csrf_ok: bool = Depends(verify_csrf_token)):
+async def api_update_user_role(user_id: int, data: UpdateRoleRequest, flask_session: dict = Depends(get_flask_session), csrf_ok: bool = Depends(verify_csrf_token)):
     caller_id = flask_session.get('user_id')
-    caller_role = flask_session.get('role', '')
-    if not caller_id or caller_role not in ('admin',):
+    caller_role = flask_session.get('role', '').lower()
+    
+    # Debug logging
+    print(f"DEBUG: caller_id={caller_id}, caller_role={caller_role}")
+    
+    if not caller_id or caller_role not in ('admin', 'moderador', 'moderator'):
+        print(f"DEBUG: Access denied - caller_role not in allowed roles")
         return JSONResponse(status_code=403, content={"error": "Acceso denegado"})
 
     nuevo_rol = data.role.strip().lower()
-    if nuevo_rol not in ('jugador', 'moderador', 'admin'):
+    if nuevo_rol not in ('jugador', 'moderador', 'moderator', 'admin'):
         return JSONResponse(status_code=400, content={"error": "Rol inválido"})
 
+    # Los moderadores no pueden asignar rol de admin
+    if caller_role in ('moderador', 'moderator') and nuevo_rol == 'admin':
+        return JSONResponse(status_code=403, content={"error": "Los moderadores no pueden asignar rol de admin"})
 
     with flask_app.app_context():
         user = User.query.get(user_id)
@@ -802,7 +874,7 @@ def api_update_user_role(user_id: int, data: UpdateRoleRequest, flask_session: d
         return {"message": f"Rol de {user.username} actualizado a {nuevo_rol}", "success": True}
 
 @api_router.post("/admin/delete_user/{user_id}")
-def api_delete_user(user_id: int, flask_session: dict = Depends(get_flask_session), csrf_ok: bool = Depends(verify_csrf_token)):
+async def api_delete_user(user_id: int, flask_session: dict = Depends(get_flask_session), csrf_ok: bool = Depends(verify_csrf_token)):
     caller_id = flask_session.get('user_id')
     caller_role = flask_session.get('role', '')
     if not caller_id or caller_role not in ('admin',):
@@ -829,7 +901,7 @@ def api_delete_user(user_id: int, flask_session: dict = Depends(get_flask_sessio
             return JSONResponse(status_code=500, content={"error": f"Error al eliminar el usuario: {str(e)}"})
 
 @api_router.post("/auth/request_username_change")
-def api_request_username_change(data: RequestUsernameChangeRequest, flask_session: dict = Depends(get_flask_session), csrf_ok: bool = Depends(verify_csrf_token)):
+async def api_request_username_change(data: RequestUsernameChangeRequest, flask_session: dict = Depends(get_flask_session), csrf_ok: bool = Depends(verify_csrf_token)):
     import re as _re
     user_id = flask_session.get('user_id')
     old_username = flask_session.get('username')
@@ -869,7 +941,7 @@ def api_request_username_change(data: RequestUsernameChangeRequest, flask_sessio
             return JSONResponse(status_code=500, content={"error": "Error al procesar la solicitud."})
 
 @api_router.post("/admin/approve_username_change/{request_id}")
-def api_approve_username_change(request_id: int, flask_session: dict = Depends(get_flask_session), csrf_ok: bool = Depends(verify_csrf_token)):
+async def api_approve_username_change(request_id: int, flask_session: dict = Depends(get_flask_session), csrf_ok: bool = Depends(verify_csrf_token)):
     caller_id = flask_session.get('user_id')
     caller_role = flask_session.get('role', '')
     if not caller_id or caller_role not in ('admin',):
@@ -930,7 +1002,7 @@ def api_approve_username_change(request_id: int, flask_session: dict = Depends(g
         return {"message": msg, "success": True, "conflict_count": conflict_count}
 
 @api_router.post("/admin/reject_username_change/{request_id}")
-def api_reject_username_change(request_id: int, data: RejectUsernameChangeRequest, flask_session: dict = Depends(get_flask_session), csrf_ok: bool = Depends(verify_csrf_token)):
+async def api_reject_username_change(request_id: int, data: RejectUsernameChangeRequest, flask_session: dict = Depends(get_flask_session), csrf_ok: bool = Depends(verify_csrf_token)):
     caller_id = flask_session.get('user_id')
     caller_role = flask_session.get('role', '')
     if not caller_id or caller_role not in ('admin',):
@@ -950,7 +1022,7 @@ def api_reject_username_change(request_id: int, data: RejectUsernameChangeReques
         return {"message": "Petición rechazada correctamente.", "success": True}
 
 @api_router.post("/admin/revert_username_change/{request_id}")
-def api_revert_username_change(request_id: int, flask_session: dict = Depends(get_flask_session), csrf_ok: bool = Depends(verify_csrf_token)):
+async def api_revert_username_change(request_id: int, flask_session: dict = Depends(get_flask_session), csrf_ok: bool = Depends(verify_csrf_token)):
     caller_id = flask_session.get('user_id')
     caller_role = flask_session.get('role', '')
     if not caller_id or caller_role not in ('admin', 'moderador'):
@@ -1197,7 +1269,7 @@ def api_check_completed_machine(machine_name: str, flask_session: dict = Depends
         return {"completed": completed is not None}
 
 @api_router.post("/toggle_completed_machine")
-def api_toggle_completed_machine(data: ToggleCompletedRequest, flask_session: dict = Depends(get_flask_session), csrf_ok: bool = Depends(verify_csrf_token)):
+async def api_toggle_completed_machine(data: ToggleCompletedRequest, flask_session: dict = Depends(get_flask_session), csrf_ok: bool = Depends(verify_csrf_token)):
     user_id = flask_session.get('user_id')
     if not user_id:
         return JSONResponse(status_code=401, content={"error": "Not authenticated", "success": False})
@@ -1225,7 +1297,7 @@ def api_toggle_completed_machine(data: ToggleCompletedRequest, flask_session: di
 
 # ── Nombre-Claims (app.py) ───────────────────────────────────────
 @api_router.post("/admin/nombre-claims/{claim_id}/approve")
-def api_approve_nombre_claim(claim_id: int, flask_session: dict = Depends(get_flask_session), csrf_ok: bool = Depends(verify_csrf_token)):
+async def api_approve_nombre_claim(claim_id: int, flask_session: dict = Depends(get_flask_session), csrf_ok: bool = Depends(verify_csrf_token)):
     caller_role = flask_session.get('role', '')
     if caller_role not in ('admin', 'moderador'):
         return JSONResponse(status_code=403, content={"error": "Acceso denegado"})
@@ -1266,7 +1338,7 @@ def api_approve_nombre_claim(claim_id: int, flask_session: dict = Depends(get_fl
             return JSONResponse(status_code=500, content={"error": str(e)})
 
 @api_router.post("/admin/nombre-claims/{claim_id}/reject")
-def api_reject_nombre_claim(claim_id: int, flask_session: dict = Depends(get_flask_session), csrf_ok: bool = Depends(verify_csrf_token)):
+async def api_reject_nombre_claim(claim_id: int, flask_session: dict = Depends(get_flask_session), csrf_ok: bool = Depends(verify_csrf_token)):
     caller_role = flask_session.get('role', '')
     if caller_role not in ('admin', 'moderador'):
         return JSONResponse(status_code=403, content={"error": "Acceso denegado"})
@@ -1282,7 +1354,7 @@ def api_reject_nombre_claim(claim_id: int, flask_session: dict = Depends(get_fla
         return {"message": "Claim rechazado.", "success": True}
 
 @api_router.post("/admin/nombre-claims/{claim_id}/revert")
-def api_revert_nombre_claim(claim_id: int, flask_session: dict = Depends(get_flask_session), csrf_ok: bool = Depends(verify_csrf_token)):
+async def api_revert_nombre_claim(claim_id: int, flask_session: dict = Depends(get_flask_session), csrf_ok: bool = Depends(verify_csrf_token)):
     caller_role = flask_session.get('role', '')
     if caller_role not in ('admin', 'moderador'):
         return JSONResponse(status_code=403, content={"error": "Acceso denegado"})
@@ -1323,8 +1395,8 @@ class RejectUsernameRequest(BaseModel):
     decision_reason: Optional[str] = "Rechazado por moderador/admin"
 
 # ── Subir Writeup ────────────────────────────────────────────────
-@api_router.post("/writeups/submit")
-def api_submit_writeup(data: SubmitWriteupRequest, flask_session: dict = Depends(get_flask_session), csrf_ok: bool = Depends(verify_csrf_token)):
+@api_router.post("/submit_writeup")
+async def api_submit_writeup(data: SubmitWriteupRequest, flask_session: dict = Depends(get_flask_session), csrf_ok: bool = Depends(verify_csrf_token)):
     import re as _re, urllib.parse as _up
     user_id = flask_session.get('user_id')
     autor = flask_session.get('username', '').strip()
@@ -1368,7 +1440,7 @@ def api_submit_writeup(data: SubmitWriteupRequest, flask_session: dict = Depends
 
 # ── Aprobar Writeup Recibido ─────────────────────────────────────
 @api_router.post("/writeups/recibidos/{writeup_id}/aprobar")
-def api_aprobar_writeup_recibido(writeup_id: int, flask_session: dict = Depends(get_flask_session), csrf_ok: bool = Depends(verify_csrf_token)):
+async def api_aprobar_writeup_recibido(writeup_id: int, flask_session: dict = Depends(get_flask_session), csrf_ok: bool = Depends(verify_csrf_token)):
     caller_role = flask_session.get('role', '')
     if caller_role not in ('admin', 'moderador'):
         return JSONResponse(status_code=403, content={"error": "Acceso denegado"})
@@ -1404,7 +1476,7 @@ def api_aprobar_writeup_recibido(writeup_id: int, flask_session: dict = Depends(
 
 # ── Aprobar/Rechazar/Revertir WriteupEditRequest ─────────────────
 @api_router.post("/writeups/edit-requests/{request_id}/approve")
-def api_approve_writeup_edit(request_id: int, flask_session: dict = Depends(get_flask_session), csrf_ok: bool = Depends(verify_csrf_token)):
+async def api_approve_writeup_edit(request_id: int, flask_session: dict = Depends(get_flask_session), csrf_ok: bool = Depends(verify_csrf_token)):
     caller_role = flask_session.get('role', '')
     if caller_role not in ('admin', 'moderador'):
         return JSONResponse(status_code=403, content={"error": "Acceso denegado"})
@@ -1432,7 +1504,7 @@ def api_approve_writeup_edit(request_id: int, flask_session: dict = Depends(get_
         return {"message": "Petición de edición aprobada.", "success": True}
 
 @api_router.post("/writeups/edit-requests/{request_id}/reject")
-def api_reject_writeup_edit(request_id: int, flask_session: dict = Depends(get_flask_session), csrf_ok: bool = Depends(verify_csrf_token)):
+async def api_reject_writeup_edit(request_id: int, flask_session: dict = Depends(get_flask_session), csrf_ok: bool = Depends(verify_csrf_token)):
     caller_role = flask_session.get('role', '')
     if caller_role not in ('admin', 'moderador'):
         return JSONResponse(status_code=403, content={"error": "Acceso denegado"})
@@ -1447,7 +1519,7 @@ def api_reject_writeup_edit(request_id: int, flask_session: dict = Depends(get_f
         return {"message": "Petición rechazada.", "success": True}
 
 @api_router.post("/writeups/edit-requests/{request_id}/revert")
-def api_revert_writeup_edit(request_id: int, flask_session: dict = Depends(get_flask_session), csrf_ok: bool = Depends(verify_csrf_token)):
+async def api_revert_writeup_edit(request_id: int, flask_session: dict = Depends(get_flask_session), csrf_ok: bool = Depends(verify_csrf_token)):
     caller_role = flask_session.get('role', '')
     if caller_role not in ('admin', 'moderador'):
         return JSONResponse(status_code=403, content={"error": "Acceso denegado"})
@@ -2261,19 +2333,18 @@ def api_list_maquinas_writeups_subidos(
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# SERVING DE IMÁGENES - Migrado desde auth.py y maquinas.py
+# SERVING DE IMÁGENES - Rutas sin prefijo /api (pages_router)
+# Se exponen en /img/perfil/{id} y /img/maquina/{id}
+# También se añaden alias /api/img/perfil/{id} y /api/img/maquina/{id}
+# por retrocompatibilidad con auth.py (get_profile_image_url)
 # ═══════════════════════════════════════════════════════════════════════════════
 
-@api_router.get("/img/perfil/{user_id}")
-def serve_profile_image(user_id: int):
+def _serve_profile_image_logic(user_id: int):
     """
-    Sirve la imagen de perfil desde BD con fallback a disco.
-    Equivalente a: /img/perfil/<int:user_id> en auth.py
+    Lógica compartida para servir la imagen de perfil desde BD con fallback a disco.
     """
-    import io
-
-    BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
-    PROFILE_UPLOAD_FOLDER = os.path.join(BASE_DIR, 'static', 'dockerlabs', 'images', 'perfiles')
+    _BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+    PROFILE_UPLOAD_FOLDER = os.path.join(_BASE_DIR, 'static', 'dockerlabs', 'images', 'perfiles')
     ALLOWED_PROFILE_EXTENSIONS = {'.jpg', '.jpeg', '.png', '.gif', '.webp'}
     default_image = "dockerlabs/images/balu.webp"
 
@@ -2300,65 +2371,96 @@ def serve_profile_image(user_id: int):
     with flask_app.app_context():
         user = User.query.get(user_id)
 
-        # Intentar desde BD
-        if user and user.profile_image_data:
-            mime = user.profile_image_mime or 'image/jpeg'
-            return StreamingResponse(
-                io.BytesIO(user.profile_image_data),
-                media_type=mime
-            )
+        # Primero intentar desde la base de datos (campo deferred)
+        if user:
+            try:
+                image_data = user.profile_image_data
+                if image_data:
+                    mime = user.profile_image_mime or 'image/jpeg'
+                    return StreamingResponse(
+                        io.BytesIO(image_data),
+                        media_type=mime,
+                        headers={"Cache-Control": "public, max-age=3600"}
+                    )
+            except Exception:
+                pass  # Si el campo deferred falla, continúa con el fallback a disco
 
         # Fallback a disco
         disk_path = get_profile_image_static_path(user.username if user else None, uid=user_id)
         if disk_path and disk_path != default_image:
-            full_path = os.path.join(BASE_DIR, 'static', disk_path)
+            full_path = os.path.join(_BASE_DIR, 'static', disk_path)
             if os.path.exists(full_path):
-                from fastapi.responses import FileResponse
-                return FileResponse(full_path)
+                return FileResponse(full_path, headers={"Cache-Control": "public, max-age=3600"})
 
     # Default fallback
-    default_path = os.path.join(BASE_DIR, 'static', default_image)
+    default_path = os.path.join(_BASE_DIR, 'static', default_image)
     if os.path.exists(default_path):
-        from fastapi.responses import FileResponse
         return FileResponse(default_path)
     raise HTTPException(status_code=404, detail="Imagen no encontrada")
 
 
-@api_router.get("/img/maquina/{machine_id}")
-def serve_machine_logo(machine_id: int):
+def _serve_machine_logo_logic(machine_id: int):
     """
-    Sirve el logo de la máquina desde BD con fallback a fichero estático.
-    Equivalente a: /img/maquina/<int:machine_id> en maquinas.py
+    Lógica compartida para servir el logo de máquina desde BD con fallback a disco.
     """
-    from dockerlabs.models import Machine
-    import io
-
-    BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+    _BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 
     with flask_app.app_context():
         machine = Machine.query.get(machine_id)
 
-        # Desde BD
-        if machine and machine.logo_data:
-            mime = machine.logo_mime or 'image/jpeg'
-            return StreamingResponse(
-                io.BytesIO(machine.logo_data),
-                media_type=mime
-            )
+        # Primero intentar desde la base de datos
+        if machine:
+            try:
+                logo_data = machine.logo_data
+                if logo_data:
+                    mime = machine.logo_mime or 'image/jpeg'
+                    return StreamingResponse(
+                        io.BytesIO(logo_data),
+                        media_type=mime,
+                        headers={"Cache-Control": "public, max-age=3600"}
+                    )
+            except Exception:
+                pass
 
         # Fallback a fichero estático
         if machine and machine.imagen:
-            full_path = os.path.join(BASE_DIR, 'static', machine.imagen)
+            full_path = os.path.join(_BASE_DIR, 'static', machine.imagen)
             if os.path.exists(full_path):
-                from fastapi.responses import FileResponse
-                return FileResponse(full_path)
+                return FileResponse(full_path, headers={"Cache-Control": "public, max-age=3600"})
 
     # Default logo
-    default_logo = os.path.join(BASE_DIR, 'static', 'dockerlabs', 'images', 'logos', 'logo.png')
+    default_logo = os.path.join(_BASE_DIR, 'static', 'dockerlabs', 'images', 'logos', 'logo.png')
     if os.path.exists(default_logo):
-        from fastapi.responses import FileResponse
         return FileResponse(default_logo)
     raise HTTPException(status_code=404, detail="Logo no encontrado")
+
+
+# Rutas principales (sin prefijo /api): usadas por las plantillas HTML y get_fastapi_profile_image_url
+@pages_router.get("/img/perfil/{user_id}")
+def serve_profile_image(user_id: int):
+    """Sirve la imagen de perfil: primero desde BD, luego desde disco, luego imagen por defecto."""
+    return _serve_profile_image_logic(user_id)
+
+
+@pages_router.get("/img/maquina/{machine_id}")
+def serve_machine_logo(machine_id: int):
+    """Sirve el logo de la máquina: primero desde BD, luego desde disco, luego logo por defecto."""
+    return _serve_machine_logo_logic(machine_id)
+
+
+# Alias con prefijo /api: retrocompatibilidad con auth.py (get_profile_image_url genera /api/img/perfil/)
+@api_router.get("/img/perfil/{user_id}")
+def serve_profile_image_api(user_id: int):
+    """Alias /api/img/perfil/{user_id} → delega en la lógica principal."""
+    return _serve_profile_image_logic(user_id)
+
+
+@api_router.get("/img/maquina/{machine_id}")
+def serve_machine_logo_api(machine_id: int):
+    """Alias /api/img/maquina/{machine_id} → delega en la lógica principal."""
+    return _serve_machine_logo_logic(machine_id)
+
+
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -3072,9 +3174,32 @@ def gestion_usuarios_page(request: Request, flask_session: dict = Depends(get_fl
     if not ok:
         return redirect
 
+    # Pagination parameters
+    page = int(request.query_params.get('page', 1))
+    per_page = int(request.query_params.get('per_page', 10))
+    search = request.query_params.get('search', '').strip()
 
     with flask_app.app_context():
-        usuarios = User.query.order_by(User.id.asc()).all()
+        query = User.query
+
+        # Apply search filter
+        if search:
+            query = query.filter(
+                (User.username.ilike(f'%{search}%')) |
+                (User.email.ilike(f'%{search}%')) |
+                (User.role.ilike(f'%{search}%'))
+            )
+
+        # Get total count
+        total = query.count()
+
+        # Apply pagination
+        usuarios = query.order_by(User.id.asc()).offset((page - 1) * per_page).limit(per_page).all()
+
+        # Calculate pagination info
+        total_pages = (total + per_page - 1) // per_page
+        has_prev = page > 1
+        has_next = page < total_pages
 
     return templates.TemplateResponse(
         request,
@@ -3082,7 +3207,15 @@ def gestion_usuarios_page(request: Request, flask_session: dict = Depends(get_fl
         {
             "usuarios": usuarios,
             "session": flask_session,
-            "g": {"csp_nonce": secrets.token_urlsafe(32)}
+            "g": {"csp_nonce": secrets.token_urlsafe(32)},
+            "page": page,
+            "per_page": per_page,
+            "total": total,
+            "total_pages": total_pages,
+            "has_prev": has_prev,
+            "has_next": has_next,
+            "search": search,
+            "current_user_role": flask_session.get('role', '')
         }
     )
 
@@ -3159,6 +3292,207 @@ def backups_page(request: Request, flask_session: dict = Depends(get_flask_sessi
             "g": {"csp_nonce": secrets.token_urlsafe(32)}
         }
     )
+
+def _get_db_paths():
+    db_path = flask_app.config.get('DATABASE')
+    if not db_path:
+        raise RuntimeError("DATABASE path is not configured")
+    return {
+        "db": db_path,
+        "wal": f"{db_path}-wal",
+        "shm": f"{db_path}-shm",
+        "journal": f"{db_path}-journal",
+    }
+
+def _acquire_db_lock():
+    db_paths = _get_db_paths()
+    lock_path = f"{db_paths['db']}.lock"
+    os.makedirs(os.path.dirname(db_paths['db']), exist_ok=True)
+    lock_fh = open(lock_path, 'a+')
+    fcntl.flock(lock_fh.fileno(), fcntl.LOCK_EX)
+    return lock_fh
+
+def _create_sqlite_snapshot_db(tmp_dir):
+    db_paths = _get_db_paths()
+    src_db = db_paths['db']
+    snapshot_path = os.path.join(tmp_dir, os.path.basename(src_db))
+
+    if not os.path.exists(src_db):
+        raise FileNotFoundError("Database file not found")
+
+    src = sqlite3.connect(src_db)
+    try:
+        try:
+            src.execute("PRAGMA wal_checkpoint(FULL);")
+        except Exception:
+            pass
+
+        dest = sqlite3.connect(snapshot_path)
+        try:
+            src.backup(dest)
+            dest.commit()
+        finally:
+            dest.close()
+    finally:
+        src.close()
+
+    return snapshot_path
+
+@pages_router.post("/backups/download")
+def download_backup(flask_session: dict = Depends(get_flask_session), csrf_ok: bool = Depends(verify_csrf_token)):
+    ok, redirect = require_auth_and_role(flask_session, ['admin'])
+    if not ok:
+        return redirect
+
+    lock_fh = _acquire_db_lock()
+    try:
+        alchemy_db.session.remove()
+        alchemy_db.engine.dispose()
+
+        with tempfile.TemporaryDirectory(prefix="dockerlabs_backup_") as tmp_dir:
+            snapshot_db_path = _create_sqlite_snapshot_db(tmp_dir)
+
+            db_paths = _get_db_paths()
+            extras = []
+            for k in ('wal', 'shm', 'journal'):
+                p = db_paths[k]
+                if os.path.exists(p) and os.path.isfile(p):
+                    extras.append(p)
+
+            zip_bytes = io.BytesIO()
+            with zipfile.ZipFile(zip_bytes, 'w', compression=zipfile.ZIP_DEFLATED) as zf:
+                zf.write(snapshot_db_path, arcname=os.path.basename(snapshot_db_path))
+                for p in extras:
+                    zf.write(p, arcname=os.path.basename(p))
+
+            zip_bytes.seek(0)
+            return StreamingResponse(
+                zip_bytes,
+                media_type='application/zip',
+                headers={'Content-Disposition': 'attachment; filename="dockerlabs_sqlite_backup.zip"'}
+            )
+    finally:
+        try:
+            fcntl.flock(lock_fh.fileno(), fcntl.LOCK_UN)
+        finally:
+            lock_fh.close()
+
+@pages_router.post("/backups/restore")
+async def restore_backup(
+    backup_zip: UploadFile = File(...),
+    flask_session: dict = Depends(get_flask_session),
+    csrf_ok: bool = Depends(verify_csrf_token)
+):
+    ok, redirect = require_auth_and_role(flask_session, ['admin'])
+    if not ok:
+        return redirect
+
+    if not backup_zip or not (backup_zip.filename or '').lower().endswith('.zip'):
+        flask_session['_flashes'] = [('danger', 'Debes proporcionar un archivo .zip')]
+        cookie = set_flask_session_cookie(flask_session)
+        resp = RedirectResponse(url='/backups', status_code=302)
+        resp.set_cookie("session", cookie, httponly=True, path="/", samesite="lax")
+        return resp
+
+    lock_fh = _acquire_db_lock()
+    try:
+        with tempfile.TemporaryDirectory(prefix="dockerlabs_restore_") as tmp_dir:
+            zip_path = os.path.join(tmp_dir, 'upload.zip')
+            
+            content = await backup_zip.read()
+            with open(zip_path, "wb") as f:
+                f.write(content)
+
+            extract_dir = os.path.join(tmp_dir, 'extracted')
+            os.makedirs(extract_dir, exist_ok=True)
+            with zipfile.ZipFile(zip_path, 'r') as zf:
+                zf.extractall(extract_dir)
+
+            db_paths = _get_db_paths()
+            expected_db_name = os.path.basename(db_paths['db'])
+            candidate_db = os.path.join(extract_dir, expected_db_name)
+            if not os.path.exists(candidate_db):
+                db_candidates = []
+                for root, _, files in os.walk(extract_dir):
+                    for fn in files:
+                        if fn.lower().endswith('.db'):
+                            db_candidates.append(os.path.join(root, fn))
+                if len(db_candidates) != 1:
+                    flask_session['_flashes'] = [('danger', 'El .zip debe contener exactamente un archivo .db (o el nombre esperado).')]
+                    cookie = set_flask_session_cookie(flask_session)
+                    resp = RedirectResponse(url='/backups', status_code=302)
+                    resp.set_cookie("session", cookie, httponly=True, path="/", samesite="lax")
+                    return resp
+                candidate_db = db_candidates[0]
+
+            candidate_wal = None
+            candidate_shm = None
+            candidate_journal = None
+            for fn in os.listdir(extract_dir):
+                if fn == os.path.basename(db_paths['wal']):
+                    candidate_wal = os.path.join(extract_dir, fn)
+                elif fn == os.path.basename(db_paths['shm']):
+                    candidate_shm = os.path.join(extract_dir, fn)
+                elif fn == os.path.basename(db_paths['journal']):
+                    candidate_journal = os.path.join(extract_dir, fn)
+
+            alchemy_db.session.remove()
+            alchemy_db.engine.dispose()
+
+            db_dir = os.path.dirname(db_paths['db'])
+            os.makedirs(db_dir, exist_ok=True)
+
+            for p in (db_paths['wal'], db_paths['shm'], db_paths['journal']):
+                try:
+                    if os.path.exists(p):
+                        os.remove(p)
+                except Exception:
+                    pass
+
+            with tempfile.NamedTemporaryFile(dir=db_dir, prefix='.restore_tmp.', suffix='.db', delete=False) as tmp_db_fh:
+                tmp_db_path = tmp_db_fh.name
+            try:
+                shutil.copyfile(candidate_db, tmp_db_path)
+                os.replace(tmp_db_path, db_paths['db'])
+            finally:
+                try:
+                    if os.path.exists(tmp_db_path):
+                        os.remove(tmp_db_path)
+                except Exception:
+                    pass
+
+            if candidate_wal:
+                shutil.copyfile(candidate_wal, db_paths['wal'] + '.tmp')
+                os.replace(db_paths['wal'] + '.tmp', db_paths['wal'])
+            if candidate_shm:
+                shutil.copyfile(candidate_shm, db_paths['shm'] + '.tmp')
+                os.replace(db_paths['shm'] + '.tmp', db_paths['shm'])
+            if candidate_journal:
+                shutil.copyfile(candidate_journal, db_paths['journal'] + '.tmp')
+                os.replace(db_paths['journal'] + '.tmp', db_paths['journal'])
+
+        flask_session['_flashes'] = [('success', 'Backup restaurado correctamente.')]
+        cookie = set_flask_session_cookie(flask_session)
+        resp = RedirectResponse(url='/backups', status_code=302)
+        resp.set_cookie("session", cookie, httponly=True, path="/", samesite="lax")
+        return resp
+    except zipfile.BadZipFile:
+        flask_session['_flashes'] = [('danger', 'El archivo .zip no es válido.')]
+        cookie = set_flask_session_cookie(flask_session)
+        resp = RedirectResponse(url='/backups', status_code=302)
+        resp.set_cookie("session", cookie, httponly=True, path="/", samesite="lax")
+        return resp
+    except Exception as e:
+        flask_session['_flashes'] = [('danger', f'Error al restaurar el backup: {str(e)}')]
+        cookie = set_flask_session_cookie(flask_session)
+        resp = RedirectResponse(url='/backups', status_code=302)
+        resp.set_cookie("session", cookie, httponly=True, path="/", samesite="lax")
+        return resp
+    finally:
+        try:
+            fcntl.flock(lock_fh.fileno(), fcntl.LOCK_UN)
+        finally:
+            lock_fh.close()
 
 
 @pages_router.get("/pending-machines", response_class=HTMLResponse)
@@ -3329,3 +3663,922 @@ def estadisticas_page(request: Request):
             "g": {"csp_nonce": secrets.token_urlsafe(32)}
         }
     )
+
+
+# Notification endpoints
+class SendNotificationRequest(BaseModel):
+    title: str
+    content: str
+
+
+@api_router.post("/notifications/send")
+def api_send_notification(
+    request_data: SendNotificationRequest,
+    flask_session: dict = Depends(get_flask_session)
+):
+    """Enviar una notificación (solo admin/moderador)."""
+    user_id = flask_session.get('user_id')
+    if not user_id:
+        return JSONResponse(status_code=401, content={"success": False, "message": "Debes iniciar sesión"})
+
+    from dockerlabs.models import User, Notification
+
+    with flask_app.app_context():
+        user = User.query.get(user_id)
+        if not user or user.role not in ['admin', 'moderador']:
+            return JSONResponse(status_code=403, content={"success": False, "message": "No tienes permisos"})
+
+        if not request_data.title or not request_data.content:
+            return JSONResponse(status_code=400, content={"success": False, "message": "Título y contenido son requeridos"})
+
+        if len(request_data.title) > 200:
+            return JSONResponse(status_code=400, content={"success": False, "message": "Título demasiado largo (máximo 200 caracteres)"})
+
+        notification = Notification(
+            sender_id=user_id,
+            title=request_data.title,
+            content=request_data.content
+        )
+        alchemy_db.session.add(notification)
+        alchemy_db.session.commit()
+
+    return {"success": True, "message": "Notificación enviada"}
+
+
+@api_router.get("/notifications")
+def api_get_notifications(flask_session: dict = Depends(get_flask_session)):
+    """Obtener notificaciones del usuario."""
+    user_id = flask_session.get('user_id')
+    if not user_id:
+        return JSONResponse(status_code=401, content={"success": False, "message": "Debes iniciar sesión"})
+
+    from dockerlabs.models import Notification, User
+
+    with flask_app.app_context():
+        notifications = Notification.query.order_by(Notification.created_at.desc()).limit(50).all()
+        result = []
+        for notif in notifications:
+            sender = User.query.get(notif.sender_id)
+            result.append({
+                "id": notif.id,
+                "title": notif.title,
+                "content": notif.content,
+                "created_at": notif.created_at.isoformat(),
+                "read": notif.read,
+                "sender": sender.username if sender else "Desconocido"
+            })
+
+        unread_count = Notification.query.filter_by(read=False).count()
+
+    return {"success": True, "notifications": result, "unread_count": unread_count}
+
+
+@api_router.post("/notifications/{notification_id}/read")
+def api_mark_notification_read(
+    notification_id: int,
+    flask_session: dict = Depends(get_flask_session)
+):
+    """Marcar notificación como leída."""
+    user_id = flask_session.get('user_id')
+    if not user_id:
+        return JSONResponse(status_code=401, content={"success": False, "message": "Debes iniciar sesión"})
+
+    from dockerlabs.models import Notification
+
+    with flask_app.app_context():
+        notification = Notification.query.get(notification_id)
+        if not notification:
+            return JSONResponse(status_code=404, content={"success": False, "message": "Notificación no encontrada"})
+
+        notification.read = True
+        alchemy_db.session.commit()
+
+    return {"success": True}
+
+
+@api_router.delete("/notifications/{notification_id}")
+def api_delete_notification(
+    notification_id: int,
+    flask_session: dict = Depends(get_flask_session)
+):
+    """Eliminar notificación."""
+    user_id = flask_session.get('user_id')
+    if not user_id:
+        return JSONResponse(status_code=401, content={"success": False, "message": "Debes iniciar sesión"})
+
+    from dockerlabs.models import Notification
+
+    with flask_app.app_context():
+        notification = Notification.query.get(notification_id)
+        if not notification:
+            return JSONResponse(status_code=404, content={"success": False, "message": "Notificación no encontrada"})
+
+        alchemy_db.session.delete(notification)
+        alchemy_db.session.commit()
+
+    return {"success": True, "message": "Notificación eliminada"}
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# MÁQUINAS - Migrado desde maquinas.py
+# ═══════════════════════════════════════════════════════════════════════════════
+
+from dockerlabs.models import MachineClaim, MachineEditRequest
+
+class ActualizarMaquinaRequest(BaseModel):
+    id: int
+    origen: str
+    nombre: str
+    dificultad: str
+    autor: str
+    enlace_autor: Optional[str] = ""
+    fecha: str
+    imagen: Optional[str] = ""
+    descripcion: str
+    link_descarga: str
+    categoria: Optional[str] = ""
+
+class ReclamarMaquinaRequest(BaseModel):
+    maquina_nombre: str
+    contacto: str
+    prueba: str
+
+class AddMaquinaRequest(BaseModel):
+    nombre: str
+    dificultad: Optional[str] = ""
+    autor: str
+    fecha: str
+    descripcion: str
+    link_descarga: str
+    imagen: Optional[str] = ""
+    destino: Optional[str] = "docker"
+    pin: Optional[str] = ""
+    entorno_real: Optional[bool] = False
+    categoria: Optional[str] = ""
+
+def _difficulty_to_color_clase(dificultad: str):
+    d = dificultad.strip().lower()
+    if "muy" in d:
+        return "muy-facil", "Muy Fácil", "#43959b"
+    elif "facil" in d or "fácil" in d:
+        return "facil", "Fácil", "#8bc34a"
+    elif "medio" in d:
+        return "medio", "Medio", "#e0a553"
+    else:
+        return "dificil", "Difícil", "#d83c31"
+
+
+@api_router.post("/gestion-maquinas/actualizar")
+async def api_actualizar_maquina(
+    data: ActualizarMaquinaRequest,
+    flask_session: dict = Depends(get_flask_session),
+    csrf_ok: bool = Depends(verify_csrf_token)
+):
+    """API: Actualizar datos de una máquina."""
+    role = flask_session.get('role', '')
+    username = (flask_session.get('username') or '').strip()
+    user_id = flask_session.get('user_id')
+
+    if not user_id:
+        return JSONResponse(status_code=401, content={"error": "No autenticado"})
+    if data.origen not in ('docker', 'bunker'):
+        return JSONResponse(status_code=400, content={"error": "Origen inválido"})
+
+    clase, dificultad_texto, color = _difficulty_to_color_clase(data.dificultad)
+
+    with flask_app.app_context():
+        maquina = Machine.query.get(data.id)
+        if not maquina:
+            return JSONResponse(status_code=404, content={"error": "Máquina no encontrada"})
+
+        if role not in ('admin', 'moderador'):
+            if role == 'jugador' and maquina.autor == username:
+                import json as _json
+                nuevos_datos = _json.dumps({
+                    "nombre": data.nombre, "dificultad": dificultad_texto,
+                    "clase": clase, "color": color, "autor": data.autor,
+                    "enlace_autor": data.enlace_autor, "fecha": data.fecha,
+                    "imagen": data.imagen, "descripcion": data.descripcion,
+                    "link_descarga": data.link_descarga
+                })
+                try:
+                    edit_req = MachineEditRequest(machine_id=data.id, origen=data.origen, autor=username, nuevos_datos=nuevos_datos, estado='pendiente')
+                    alchemy_db.session.add(edit_req)
+                    alchemy_db.session.commit()
+                    return {"success": True, "message": "Solicitud de edición enviada para revisión"}
+                except Exception as e:
+                    alchemy_db.session.rollback()
+                    return JSONResponse(status_code=500, content={"error": str(e)})
+            return JSONResponse(status_code=403, content={"error": "Acceso denegado"})
+
+        try:
+            maquina.nombre = data.nombre
+            maquina.dificultad = dificultad_texto
+            maquina.clase = clase
+            maquina.color = color
+            maquina.autor = data.autor
+            maquina.enlace_autor = data.enlace_autor or ""
+            maquina.fecha = data.fecha
+            maquina.imagen = data.imagen or ""
+            maquina.descripcion = data.descripcion
+            maquina.link_descarga = data.link_descarga
+            alchemy_db.session.commit()
+
+            cat_obj = Category.query.filter_by(machine_id=data.id, origen=data.origen).first()
+            if data.categoria:
+                if cat_obj:
+                    cat_obj.categoria = data.categoria
+                else:
+                    alchemy_db.session.add(Category(machine_id=data.id, origen=data.origen, categoria=data.categoria))
+            else:
+                if cat_obj:
+                    alchemy_db.session.delete(cat_obj)
+            alchemy_db.session.commit()
+
+            if data.origen == 'docker':
+                from dockerlabs.maquinas import recalcular_ranking_creadores
+                recalcular_ranking_creadores()
+
+            return {"success": True, "message": "Máquina actualizada correctamente"}
+        except Exception as e:
+            alchemy_db.session.rollback()
+            return JSONResponse(status_code=500, content={"error": str(e)})
+
+
+@api_router.post("/gestion-maquinas/eliminar")
+def api_eliminar_maquina(
+    machine_id: int,
+    origen: str,
+    flask_session: dict = Depends(get_flask_session),
+    csrf_ok: bool = Depends(verify_csrf_token)
+):
+    """API: Eliminar una máquina. Solo admin/moderador."""
+    role = flask_session.get('role', '')
+    user_id = flask_session.get('user_id')
+    if not user_id or role not in ('admin', 'moderador'):
+        return JSONResponse(status_code=403, content={"error": "Acceso denegado"})
+    if origen not in ('docker', 'bunker'):
+        return JSONResponse(status_code=400, content={"error": "Origen inválido"})
+
+    with flask_app.app_context():
+        maquina = Machine.query.get(machine_id)
+        if not maquina:
+            return JSONResponse(status_code=404, content={"error": "Máquina no encontrada"})
+        try:
+            if origen == 'bunker':
+                from bunkerlabs.models import BunkerSolve
+                BunkerSolve.query.filter_by(machine_id=machine_id).delete()
+            alchemy_db.session.delete(maquina)
+            alchemy_db.session.commit()
+            if origen == 'docker':
+                from dockerlabs.maquinas import recalcular_ranking_creadores
+                recalcular_ranking_creadores()
+            return {"success": True, "message": "Máquina eliminada correctamente"}
+        except Exception as e:
+            alchemy_db.session.rollback()
+            return JSONResponse(status_code=500, content={"error": str(e)})
+
+
+@pages_router.get("/add-maquina", response_class=HTMLResponse)
+def add_maquina_page_get(request: Request, flask_session: dict = Depends(get_flask_session)):
+    """Página de añadir máquina. Solo admin."""
+    ok, redir = require_auth_and_role(flask_session, ['admin'])
+    if not ok:
+        return redir
+    return templates.TemplateResponse(
+        request,
+        "dockerlabs/info/add-maquina.html",
+        {"error": None, "session": flask_session, "g": {"csp_nonce": secrets.token_urlsafe(32)}}
+    )
+
+
+@api_router.post("/add-maquina")
+async def api_add_maquina(
+    data: AddMaquinaRequest,
+    flask_session: dict = Depends(get_flask_session),
+    csrf_ok: bool = Depends(verify_csrf_token)
+):
+    """API: Añadir una nueva máquina. Solo admin."""
+    role = flask_session.get('role', '')
+    user_id = flask_session.get('user_id')
+    if not user_id or role != 'admin':
+        return JSONResponse(status_code=403, content={"error": "Acceso denegado"})
+
+    with flask_app.app_context():
+        if not User.query.filter_by(username=data.autor).first():
+            return JSONResponse(status_code=400, content={"error": "El autor no es un usuario registrado"})
+
+        try:
+            from datetime import datetime as _dt
+            fecha = _dt.strptime(data.fecha, "%Y-%m-%d").strftime("%d/%m/%Y")
+        except ValueError:
+            return JSONResponse(status_code=400, content={"error": "Formato de fecha inválido (YYYY-MM-DD)"})
+
+        user_obj = User.query.get(user_id)
+        enlace_autor = ""
+        if user_obj:
+            enlace_autor = user_obj.youtube_url or user_obj.github_url or user_obj.linkedin_url or ""
+
+        imagen = data.imagen or "dockerlabs/images/logos/logo.png"
+
+        if data.destino == 'bunker' and data.entorno_real:
+            clase, dificultad_texto, color = "real", "Real", "#ffffff"
+        else:
+            clase, dificultad_texto, color = _difficulty_to_color_clase(data.dificultad)
+
+        try:
+            new_machine = Machine(
+                nombre=data.nombre, dificultad=dificultad_texto, clase=clase, color=color,
+                autor=data.autor, enlace_autor=enlace_autor, fecha=fecha, imagen=imagen,
+                descripcion=data.descripcion, link_descarga=data.link_descarga,
+                pin=data.pin if data.destino == 'bunker' else None,
+                origen=data.destino or 'docker'
+            )
+            alchemy_db.session.add(new_machine)
+            alchemy_db.session.commit()
+            if data.destino == 'docker':
+                from dockerlabs.maquinas import recalcular_ranking_creadores
+                recalcular_ranking_creadores()
+            redirect_url = '/bunkerlabs' if data.destino == 'bunker' else '/'
+            return {"success": True, "message": "Máquina añadida correctamente", "redirect_url": redirect_url}
+        except Exception as e:
+            alchemy_db.session.rollback()
+            return JSONResponse(status_code=500, content={"error": str(e)})
+
+
+@api_router.post("/reclamar-maquina")
+def api_reclamar_maquina(
+    data: ReclamarMaquinaRequest,
+    flask_session: dict = Depends(get_flask_session),
+    csrf_ok: bool = Depends(verify_csrf_token)
+):
+    """API: Reclamar autoría de una máquina."""
+    user_id = flask_session.get('user_id')
+    username = (flask_session.get('username') or '').strip()
+    role = flask_session.get('role', '')
+    if not user_id or role not in ('jugador', 'admin', 'moderador'):
+        return JSONResponse(status_code=403, content={"error": "Acceso denegado"})
+
+    with flask_app.app_context():
+        try:
+            alchemy_db.session.add(MachineClaim(user_id=user_id, username=username, maquina_nombre=data.maquina_nombre, contacto=data.contacto, prueba=data.prueba, estado='pendiente'))
+            alchemy_db.session.commit()
+            return {"success": True, "message": "Reclamación enviada correctamente"}
+        except Exception as e:
+            alchemy_db.session.rollback()
+            return JSONResponse(status_code=500, content={"error": str(e)})
+
+
+@api_router.post("/claims/{claim_id}/approve")
+def api_approve_claim(claim_id: int, flask_session: dict = Depends(get_flask_session), csrf_ok: bool = Depends(verify_csrf_token)):
+    """API: Aprobar reclamación de máquina. Solo admin."""
+    ok, _ = require_auth_and_role(flask_session, ['admin'])
+    if not ok:
+        return JSONResponse(status_code=403, content={"error": "Acceso denegado"})
+    with flask_app.app_context():
+        claim = MachineClaim.query.get(claim_id)
+        if not claim:
+            return JSONResponse(status_code=404, content={"error": "No encontrada"})
+        try:
+            maquina = Machine.query.filter_by(nombre=claim.maquina_nombre).first()
+            if maquina:
+                maquina.autor = claim.username
+            claim.estado = 'aprobada'
+            alchemy_db.session.commit()
+            from dockerlabs.maquinas import recalcular_ranking_creadores
+            recalcular_ranking_creadores()
+            return {"success": True}
+        except Exception as e:
+            alchemy_db.session.rollback()
+            return JSONResponse(status_code=500, content={"error": str(e)})
+
+
+@api_router.post("/claims/{claim_id}/reject")
+def api_reject_claim(claim_id: int, flask_session: dict = Depends(get_flask_session), csrf_ok: bool = Depends(verify_csrf_token)):
+    """API: Rechazar reclamación. Solo admin."""
+    ok, _ = require_auth_and_role(flask_session, ['admin'])
+    if not ok:
+        return JSONResponse(status_code=403, content={"error": "Acceso denegado"})
+    with flask_app.app_context():
+        claim = MachineClaim.query.get(claim_id)
+        if not claim:
+            return JSONResponse(status_code=404, content={"error": "No encontrada"})
+        try:
+            alchemy_db.session.delete(claim)
+            alchemy_db.session.commit()
+            return {"success": True}
+        except Exception as e:
+            alchemy_db.session.rollback()
+            return JSONResponse(status_code=500, content={"error": str(e)})
+
+
+@api_router.post("/claims/{claim_id}/revert")
+def api_revert_claim(claim_id: int, flask_session: dict = Depends(get_flask_session), csrf_ok: bool = Depends(verify_csrf_token)):
+    """API: Revertir reclamación a pendiente. Admin/moderador."""
+    ok, _ = require_auth_and_role(flask_session, ['admin', 'moderador'])
+    if not ok:
+        return JSONResponse(status_code=403, content={"error": "Acceso denegado"})
+    with flask_app.app_context():
+        claim = MachineClaim.query.get(claim_id)
+        if not claim:
+            return JSONResponse(status_code=404, content={"error": "No encontrada"})
+        claim.estado = 'pendiente'
+        alchemy_db.session.commit()
+        return {"success": True}
+
+
+@api_router.post("/machine-edit-requests/{request_id}/approve")
+def api_approve_machine_edit(request_id: int, flask_session: dict = Depends(get_flask_session), csrf_ok: bool = Depends(verify_csrf_token)):
+    """API: Aprobar edición de máquina. Admin/moderador."""
+    ok, _ = require_auth_and_role(flask_session, ['admin', 'moderador'])
+    if not ok:
+        return JSONResponse(status_code=403, content={"error": "Acceso denegado"})
+    with flask_app.app_context():
+        req = MachineEditRequest.query.get(request_id)
+        if not req:
+            return JSONResponse(status_code=404, content={"error": "No encontrada"})
+        try:
+            import json as _json
+            nuevos = _json.loads(req.nuevos_datos)
+        except Exception:
+            nuevos = {}
+        maquina = Machine.query.get(req.machine_id)
+        if maquina:
+            for field in ("nombre","dificultad","clase","color","autor","enlace_autor","fecha","imagen","descripcion","link_descarga"):
+                val = nuevos.get(field)
+                if val:
+                    setattr(maquina, field, val)
+            alchemy_db.session.commit()
+            if req.origen == 'docker':
+                from dockerlabs.maquinas import recalcular_ranking_creadores
+                recalcular_ranking_creadores()
+        req.estado = 'aprobada'
+        alchemy_db.session.commit()
+        return {"success": True}
+
+
+@api_router.post("/machine-edit-requests/{request_id}/reject")
+def api_reject_machine_edit(request_id: int, flask_session: dict = Depends(get_flask_session), csrf_ok: bool = Depends(verify_csrf_token)):
+    """API: Rechazar edición de máquina. Admin/moderador."""
+    ok, _ = require_auth_and_role(flask_session, ['admin', 'moderador'])
+    if not ok:
+        return JSONResponse(status_code=403, content={"error": "Acceso denegado"})
+    with flask_app.app_context():
+        req = MachineEditRequest.query.get(request_id)
+        if not req:
+            return JSONResponse(status_code=404, content={"error": "No encontrada"})
+        req.estado = 'rechazada'
+        alchemy_db.session.commit()
+        return {"success": True}
+
+
+@api_router.post("/machine-edit-requests/{request_id}/revert")
+def api_revert_machine_edit(request_id: int, flask_session: dict = Depends(get_flask_session), csrf_ok: bool = Depends(verify_csrf_token)):
+    """API: Revertir edición a pendiente. Admin/moderador."""
+    ok, _ = require_auth_and_role(flask_session, ['admin', 'moderador'])
+    if not ok:
+        return JSONResponse(status_code=403, content={"error": "Acceso denegado"})
+    with flask_app.app_context():
+        req = MachineEditRequest.query.get(request_id)
+        if not req:
+            return JSONResponse(status_code=404, content={"error": "No encontrada"})
+        req.estado = 'pendiente'
+        alchemy_db.session.commit()
+        return {"success": True}
+
+
+@pages_router.get("/maquinas-hechas", response_class=HTMLResponse)
+def maquinas_hechas_page(request: Request, flask_session: dict = Depends(get_flask_session)):
+    """Página de máquinas completadas por el usuario."""
+    user_id = flask_session.get('user_id')
+    if not user_id:
+        return RedirectResponse(url="/login", status_code=302)
+
+    with flask_app.app_context():
+        results = alchemy_db.session.query(
+            CompletedMachine.machine_name,
+            CompletedMachine.completed_at,
+            Machine.id,
+            Machine.dificultad,
+            Machine.color,
+            Machine.imagen,
+            Machine.clase,
+            Machine.autor
+        ).outerjoin(Machine, CompletedMachine.machine_name == Machine.nombre) \
+         .filter(CompletedMachine.user_id == user_id) \
+         .order_by(CompletedMachine.completed_at.desc()).all()
+
+        completed_machines = []
+        for row in results:
+            completed_machines.append({
+                "machine_name": row.machine_name,
+                "completed_at": row.completed_at.isoformat() if row.completed_at else None,
+                "machine_id": row.id,
+                "machine_logo_url": f'/img/maquina/{row.id}' if row.id else '/static/dockerlabs/images/logos/logo.png',
+                "dificultad": row.dificultad,
+                "color": row.color,
+                "imagen": row.imagen,
+                "clase": row.clase,
+                "autor": row.autor
+            })
+
+        total_machines = Machine.query.filter_by(origen='docker').count()
+        completed_count = len(completed_machines)
+        completion_percentage = round((completed_count / total_machines * 100), 1) if total_machines > 0 else 0
+
+    return templates.TemplateResponse(
+        request,
+        "dockerlabs/maquinas_hechas.html",
+        {
+            "completed_machines": completed_machines,
+            "total_machines": total_machines,
+            "completed_count": completed_count,
+            "completion_percentage": completion_percentage,
+            "session": flask_session,
+            "g": {"csp_nonce": secrets.token_urlsafe(32)}
+        }
+    )
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# AUTH - Migrado desde auth.py
+# ═══════════════════════════════════════════════════════════════════════════════
+
+from fastapi import Form
+
+@pages_router.post("/request_username_change")
+async def form_request_username_change(
+    request: Request,
+    requested_username: str = Form(...),
+    reason: str = Form(""),
+    contacto_opcional: str = Form(""),
+    flask_session: dict = Depends(get_flask_session),
+    csrf_ok: bool = Depends(verify_csrf_token)
+):
+    """
+    Versión form-based de solicitud de cambio de nombre.
+    Equivalente a POST /request_username_change en auth.py (Flask).
+    Redirige con mensaje flash en la sesión.
+    """
+    import re as _re
+
+    user_id = flask_session.get('user_id')
+    old_username = (flask_session.get('username') or '').strip()
+
+    def redirect_with_flash(msg: str, category: str = "danger"):
+        flask_session['_flashes'] = [(category, msg)]
+        cookie = set_flask_session_cookie(flask_session)
+        resp = RedirectResponse(url='/dashboard', status_code=302)
+        resp.set_cookie("session", cookie, httponly=True, path="/", samesite="lax")
+        return resp
+
+    if not user_id:
+        return redirect_with_flash("Debes iniciar sesión para solicitar un cambio de nombre.", "warning")
+
+    requested_username = requested_username.strip()
+    if not requested_username:
+        return redirect_with_flash("Debes proporcionar un nuevo nombre de usuario.")
+
+    if not _re.match(r'^[a-zA-Z0-9_-]{3,20}$', requested_username):
+        return redirect_with_flash("El nombre debe tener entre 3 y 20 caracteres y solo letras, números, guiones y guiones bajos.")
+
+    with flask_app.app_context():
+        from dockerlabs.models import UsernameChangeRequest as UCR
+        existing = UCR.query.filter_by(user_id=user_id, estado='pendiente').first()
+        if existing:
+            return redirect_with_flash("Ya tienes una solicitud de cambio de nombre pendiente.", "warning")
+
+        try:
+            new_req = UCR(
+                user_id=user_id,
+                old_username=old_username,
+                requested_username=requested_username,
+                reason=(reason or '').strip(),
+                contacto_opcional=(contacto_opcional or '').strip(),
+                estado='pendiente'
+            )
+            alchemy_db.session.add(new_req)
+            alchemy_db.session.commit()
+            return redirect_with_flash("Solicitud enviada correctamente. El equipo de administración la revisará pronto.", "success")
+        except Exception as e:
+            alchemy_db.session.rollback()
+            return redirect_with_flash(f"Error al enviar la solicitud: {str(e)}")
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# BUNKERLABS - Páginas HTML migradas desde bunkerlabs/bunkerlabs.py
+# ═══════════════════════════════════════════════════════════════════════════════
+
+from bunkerlabs.models import BunkerAccessToken, BunkerSolve, BunkerAccessLog
+
+class CreateBunkerTokenRequest(BaseModel):
+    nombre: str
+    password: str
+
+class AddBunkerWriteupRequest(BaseModel):
+    maquina: str
+    autor: str
+    url: str
+    tipo: str
+    locked: Optional[bool] = False
+
+
+@pages_router.get("/bunkerlabs/login", response_class=HTMLResponse)
+@pages_router.post("/bunkerlabs/login", response_class=HTMLResponse)
+async def bunkerlabs_login_page(
+    request: Request,
+    flask_session: dict = Depends(get_flask_session),
+    csrf_ok: bool = Depends(verify_csrf_token)
+):
+    """Login de BunkerLabs."""
+    if flask_session.get('bunkerlabs_ok'):
+        return RedirectResponse(url='/bunkerlabs', status_code=302)
+
+    error = None
+
+    if request.method == "POST":
+        form = await request.form()
+        token_introducido = (form.get('password') or '').strip()
+
+        if not token_introducido:
+            error = "Debes introducir una contraseña de acceso."
+        else:
+            with flask_app.app_context():
+                token_obj = BunkerAccessToken.query.filter_by(token=token_introducido, activo=1).first()
+                if token_obj:
+                    docker_username = flask_session.get('username')
+                    if docker_username:
+                        token_obj.nombre = docker_username
+                        token_obj.last_accessed = datetime.utcnow()
+                        alchemy_db.session.add(BunkerAccessLog(token_id=token_obj.id, user_nombre=docker_username, accessed_at=datetime.utcnow()))
+                        alchemy_db.session.commit()
+                        flask_session['bunkerlabs_nombre'] = docker_username
+                    else:
+                        flask_session['bunkerlabs_nombre'] = token_obj.nombre
+                        token_obj.last_accessed = datetime.utcnow()
+                        alchemy_db.session.add(BunkerAccessLog(token_id=token_obj.id, user_nombre=token_obj.nombre, accessed_at=datetime.utcnow()))
+                        alchemy_db.session.commit()
+
+                    flask_session['bunkerlabs_ok'] = True
+                    flask_session['bunkerlabs_id'] = token_obj.id
+                    cookie = set_flask_session_cookie(flask_session)
+                    resp = RedirectResponse(url='/bunkerlabs', status_code=302)
+                    resp.set_cookie("session", cookie, httponly=True, path="/", samesite="lax")
+                    return resp
+                else:
+                    error = "Contraseña incorrecta o inactiva."
+
+    csrf_token = flask_session.get("csrf_token")
+    if not csrf_token:
+        csrf_token = secrets.token_urlsafe(32)
+        flask_session["csrf_token"] = csrf_token
+        
+    context = {
+        "error": error, 
+        "session": flask_session, 
+        "csrf_token_value": csrf_token,
+        "g": {"csp_nonce": secrets.token_urlsafe(32)}
+    }
+    
+    response = templates.TemplateResponse(request, "bunkerlabs/login-bunkerlabs.html", context)
+    response.set_cookie("session", set_flask_session_cookie(flask_session), httponly=True, path="/", samesite="lax")
+    return response
+
+
+@pages_router.get("/bunkerlabs/guest")
+def bunkerlabs_guest(request: Request, flask_session: dict = Depends(get_flask_session)):
+    """Acceso en modo invitado a BunkerLabs."""
+    is_unauthenticated = flask_session.get('user_id') is None
+    flask_session['bunkerlabs_ok'] = True
+    flask_session['bunkerlabs_guest'] = True
+    flask_session['bunkerlabs_nombre'] = "Invitado"
+    flask_session['bunkerlabs_id'] = None
+    flask_session['bunkerlabs_unauthenticated'] = is_unauthenticated
+    cookie = set_flask_session_cookie(flask_session)
+    resp = RedirectResponse(url='/bunkerlabs', status_code=302)
+    resp.set_cookie("session", cookie, httponly=True, path="/", samesite="lax")
+    return resp
+
+
+@pages_router.get("/bunkerlabs/logout")
+def bunkerlabs_logout(request: Request, flask_session: dict = Depends(get_flask_session)):
+    """Logout de BunkerLabs. Limpia las claves de sesión de BunkerLabs."""
+    for key in ('bunkerlabs_ok', 'bunkerlabs_guest', 'bunkerlabs_nombre', 'bunkerlabs_id'):
+        flask_session.pop(key, None)
+    cookie = set_flask_session_cookie(flask_session)
+    resp = RedirectResponse(url='/bunkerlabs/login', status_code=302)
+    resp.set_cookie("session", cookie, httponly=True, path="/", samesite="lax")
+    return resp
+
+
+@pages_router.get("/bunkerlabs", response_class=HTMLResponse)
+@pages_router.get("/bunkerlabs/", response_class=HTMLResponse)
+async def bunkerlabs_home(
+    request: Request,
+    token: Optional[str] = None,
+    flask_session: dict = Depends(get_flask_session)
+):
+    """Página principal de BunkerLabs."""
+    if token:
+        with flask_app.app_context():
+            token_obj = BunkerAccessToken.query.filter_by(token=token, activo=1).first()
+            if token_obj:
+                docker_username = flask_session.get('username')
+                docker_user_id = flask_session.get('user_id')
+                if docker_username and docker_user_id:
+                    token_obj.nombre = docker_username
+                    flask_session['bunkerlabs_nombre'] = docker_username
+                    flask_session['bunkerlabs_anonymous'] = False
+                else:
+                    flask_session['bunkerlabs_nombre'] = 'Anónimo'
+                    flask_session['bunkerlabs_anonymous'] = True
+                flask_session['bunkerlabs_ok'] = True
+                token_obj.last_accessed = datetime.utcnow()
+                alchemy_db.session.add(BunkerAccessLog(token_id=token_obj.id, user_nombre=flask_session['bunkerlabs_nombre'], accessed_at=datetime.utcnow()))
+                alchemy_db.session.commit()
+                cookie = set_flask_session_cookie(flask_session)
+                resp = RedirectResponse(url='/bunkerlabs', status_code=302)
+                resp.set_cookie("session", cookie, httponly=True, path="/", samesite="lax")
+                return resp
+            else:
+                flask_session['_flashes'] = [('error', 'El enlace de acceso no es válido o está inactivo.')]
+                cookie = set_flask_session_cookie(flask_session)
+                resp = RedirectResponse(url='/bunkerlabs/login', status_code=302)
+                resp.set_cookie("session", cookie, httponly=True, path="/", samesite="lax")
+                return resp
+
+    if 'bunkerlabs_nombre' not in flask_session or not flask_session.get('bunkerlabs_ok'):
+        return RedirectResponse(url='/bunkerlabs/login', status_code=302)
+
+    with flask_app.app_context():
+        maquinas = Machine.query.filter_by(origen='bunker').order_by(Machine.id.asc()).all()
+
+    return templates.TemplateResponse(
+        request,
+        "bunkerlabs/home.html",
+        {
+            "maquinas": maquinas,
+            "is_guest": flask_session.get('bunkerlabs_guest', False),
+            "is_anonymous": flask_session.get('bunkerlabs_anonymous', False),
+            "is_unauthenticated_guest": flask_session.get('bunkerlabs_unauthenticated', False),
+            "session": flask_session,
+            "g": {"csp_nonce": secrets.token_urlsafe(32)}
+        }
+    )
+
+
+@pages_router.get("/bunkerlabs/accesos", response_class=HTMLResponse)
+@pages_router.post("/bunkerlabs/accesos", response_class=HTMLResponse)
+async def accesos_bunkerlabs(
+    request: Request,
+    flask_session: dict = Depends(get_flask_session),
+    csrf_ok: bool = Depends(verify_csrf_token)
+):
+    """Gestión de accesos de BunkerLabs. Solo admin."""
+    ok, redir = require_auth_and_role(flask_session, ['admin'])
+    if not ok:
+        return redir
+
+    error = None
+    success = None
+
+    if request.method == "POST":
+        form = await request.form()
+        nombre = (form.get('nombre') or '').strip()
+        password = (form.get('password') or '').strip()
+
+        if not nombre or not password:
+            error = "El nombre y la contraseña son obligatorios."
+        else:
+            with flask_app.app_context():
+                try:
+                    from sqlalchemy.exc import IntegrityError as _IE
+                    alchemy_db.session.add(BunkerAccessToken(nombre=nombre, token=password))
+                    alchemy_db.session.commit()
+                    success = f"Acceso creado correctamente para {nombre}"
+                except _IE:
+                    alchemy_db.session.rollback()
+                    error = "Error: Esa contraseña ya existe."
+
+    with flask_app.app_context():
+        from bunkerlabs.models import BunkerWriteup
+        tokens = BunkerAccessToken.query.order_by(BunkerAccessToken.created_at.desc()).all()
+        real_machines = Machine.query.filter_by(origen='bunker', clase='real').order_by(Machine.nombre.asc()).all()
+        writeups = BunkerWriteup.query.order_by(BunkerWriteup.created_at.desc()).all()
+        bunker_machines = Machine.query.filter_by(origen='bunker').order_by(Machine.nombre.asc()).all()
+
+    csrf_token = flask_session.get("csrf_token")
+    if not csrf_token:
+        csrf_token = secrets.token_urlsafe(32)
+        flask_session["csrf_token"] = csrf_token
+
+    context = {
+        "tokens": tokens,
+        "error": error,
+        "success": success,
+        "real_machines": real_machines,
+        "writeups": writeups,
+        "bunker_machines": bunker_machines,
+        "session": flask_session,
+        "csrf_token_value": csrf_token,
+        "g": {"csp_nonce": secrets.token_urlsafe(32)}
+    }
+
+    response = templates.TemplateResponse(request, "bunkerlabs/accesos.html", context)
+    response.set_cookie("session", set_flask_session_cookie(flask_session), httponly=True, path="/", samesite="lax")
+    return response
+
+
+@pages_router.post("/bunkerlabs/accesos/{token_id}/delete")
+def delete_bunker_token(
+    token_id: int,
+    flask_session: dict = Depends(get_flask_session),
+    csrf_ok: bool = Depends(verify_csrf_token)
+):
+    """Eliminar token de acceso a BunkerLabs. Solo admin."""
+    ok, redir = require_auth_and_role(flask_session, ['admin'])
+    if not ok:
+        return JSONResponse(status_code=403, content={"error": "Acceso denegado"})
+
+    with flask_app.app_context():
+        token_obj = BunkerAccessToken.query.get(token_id)
+        if token_obj:
+            alchemy_db.session.delete(token_obj)
+            alchemy_db.session.commit()
+    return RedirectResponse(url='/bunkerlabs/accesos', status_code=302)
+
+
+@pages_router.post("/bunkerlabs/admin/writeups/add")
+async def add_bunker_writeup(
+    request: Request,
+    flask_session: dict = Depends(get_flask_session),
+    csrf_ok: bool = Depends(verify_csrf_token)
+):
+    """Añadir writeup para máquina de Entornos Reales. Solo admin."""
+    ok, redir = require_auth_and_role(flask_session, ['admin'])
+    if not ok:
+        return JSONResponse(status_code=403, content={"error": "Acceso denegado"})
+
+    form = await request.form()
+    maquina = (form.get('maquina') or '').strip()
+    autor = (form.get('autor') or '').strip()
+    url_val = (form.get('url') or '').strip()
+    tipo = (form.get('tipo') or '').strip()
+    locked = 'locked' in form
+
+    if not all([maquina, autor, url_val, tipo]) or tipo not in ['texto', 'video']:
+        flask_session['_flashes'] = [('error', 'Todos los campos son obligatorios y el tipo debe ser texto o video.')]
+        cookie = set_flask_session_cookie(flask_session)
+        resp = RedirectResponse(url='/bunkerlabs/accesos', status_code=302)
+        resp.set_cookie("session", cookie, httponly=True, path="/", samesite="lax")
+        return resp
+
+    with flask_app.app_context():
+        from bunkerlabs.models import BunkerWriteup
+        from sqlalchemy.exc import IntegrityError as _IE
+        try:
+            alchemy_db.session.add(BunkerWriteup(maquina=maquina, autor=autor, url=url_val, tipo=tipo, locked=locked))
+            alchemy_db.session.commit()
+            flask_session['_flashes'] = [('success', f'Writeup añadido correctamente para {maquina}')]
+        except _IE:
+            alchemy_db.session.rollback()
+            flask_session['_flashes'] = [('error', 'Error: Este writeup ya existe.')]
+        except Exception as e:
+            alchemy_db.session.rollback()
+            flask_session['_flashes'] = [('error', f'Error al añadir writeup: {str(e)}')]
+
+    cookie = set_flask_session_cookie(flask_session)
+    resp = RedirectResponse(url='/bunkerlabs/accesos', status_code=302)
+    resp.set_cookie("session", cookie, httponly=True, path="/", samesite="lax")
+    return resp
+
+
+@pages_router.post("/bunkerlabs/admin/writeups/delete/{writeup_id}")
+def delete_bunker_writeup(
+    writeup_id: int,
+    flask_session: dict = Depends(get_flask_session),
+    csrf_ok: bool = Depends(verify_csrf_token)
+):
+    """Eliminar writeup de BunkerLabs. Solo admin."""
+    ok, redir = require_auth_and_role(flask_session, ['admin'])
+    if not ok:
+        return JSONResponse(status_code=403, content={"error": "Acceso denegado"})
+
+    with flask_app.app_context():
+        from bunkerlabs.models import BunkerWriteup
+        writeup = BunkerWriteup.query.get(writeup_id)
+        if writeup:
+            try:
+                alchemy_db.session.delete(writeup)
+                alchemy_db.session.commit()
+                flask_session['_flashes'] = [('success', 'Writeup eliminado correctamente.')]
+            except Exception as e:
+                alchemy_db.session.rollback()
+                flask_session['_flashes'] = [('error', f'Error al eliminar writeup: {str(e)}')]
+        else:
+            flask_session['_flashes'] = [('error', 'Writeup no encontrado.')]
+
+    cookie = set_flask_session_cookie(flask_session)
+    resp = RedirectResponse(url='/bunkerlabs/accesos', status_code=302)
+    resp.set_cookie("session", cookie, httponly=True, path="/", samesite="lax")
+    return resp
