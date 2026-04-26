@@ -1,6 +1,7 @@
 from .extensions import db
 from datetime import datetime
 from flask_login import UserMixin
+from sqlalchemy.orm import deferred
 
 class User(db.Model, UserMixin):
     __tablename__ = 'users'
@@ -21,8 +22,8 @@ class User(db.Model, UserMixin):
     youtube_url = db.Column(db.String(255))
 
     # Imagen de perfil almacenada en BD
-    profile_image_data = db.Column(db.LargeBinary, nullable=True)
-    profile_image_mime = db.Column(db.String(50), nullable=True)
+    profile_image_data = deferred(db.Column(db.LargeBinary, nullable=True))
+    profile_image_mime = deferred(db.Column(db.String(50), nullable=True))
 
     __repr__ = lambda self: f'<User {self.username}>'
 
@@ -46,8 +47,8 @@ class Machine(db.Model):
     origen = db.Column(db.String, nullable=False, default='docker')
 
     # Logo almacenado en BD
-    logo_data = db.Column(db.LargeBinary, nullable=True)
-    logo_mime = db.Column(db.String(50), nullable=True)
+    logo_data = deferred(db.Column(db.LargeBinary, nullable=True))
+    logo_mime = deferred(db.Column(db.String(50), nullable=True))
 
     __table_args__ = (
         db.Index('idx_maquinas_autor', 'autor'),

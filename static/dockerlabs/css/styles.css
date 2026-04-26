@@ -2146,7 +2146,7 @@ footer {
 .colaboradores-grid {
     margin-top: 2.5rem;
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    grid-template-columns: repeat(4, 1fr);
     gap: 2.25rem;
 }
 
@@ -2473,7 +2473,7 @@ footer {
 }
 
 .admins-grid {
-    grid-template-columns: repeat(3, minmax(0, 280px)) !important;
+    grid-template-columns: repeat(4, 1fr) !important;
     justify-content: center;
 }
 

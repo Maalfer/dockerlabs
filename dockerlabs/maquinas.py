@@ -93,7 +93,7 @@ def gestion_maquinas():
                 categorias_map[('bunker', m.id)] = bunker_cats_lookup.get(m.id, '')
 
     return render_template(
-        'dockerlabs/gestion_maquinas.html',
+        'dockerlabs/admin/gestion_maquinas.html',
         maquinas_docker=maquinas_docker,
         maquinas_bunker=maquinas_bunker,
         current_username=current_username,
@@ -192,7 +192,7 @@ def actualizar_maquina():
 
             return redirect(url_for('maquinas.gestion_maquinas'))
 
-        return render_template('dockerlabs/403.html'), 403
+        return render_template('dockerlabs/errors/403.html'), 403
 
     try:
         if origen == 'docker':
@@ -298,7 +298,7 @@ def eliminar_maquina():
     maquina_autor = maquina.autor
     
     if role not in ('admin', 'moderador') and not (role == 'jugador' and maquina_autor == username):
-        return render_template('dockerlabs/403.html'), 403
+        return render_template('dockerlabs/errors/403.html'), 403
 
     try:
         if origen == 'bunker':
@@ -734,7 +734,7 @@ def add_maquina_page():
             else:
                 return redirect(url_for('index'))
 
-    return render_template('dockerlabs/add-maquina.html', error=error)
+    return render_template('dockerlabs/info/add-maquina.html', error=error)
 
 @maquinas_bp.route('/api/get_users', methods=['GET'])
 @role_required('admin')

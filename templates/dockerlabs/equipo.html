@@ -1,21 +1,13 @@
 {% extends "dockerlabs/base.html" %}
 
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='dockerlabs/css/equipo.css') }}">
+{% endblock %}
+
 {% block content %}
 
-<style>
-    .link-dark {
-        color: #0d6efd !important;
-        text-decoration: none;
-        font-weight: 500;
-    }
-
-    .link-dark:hover {
-        text-decoration: underline;
-    }
-</style>
-
 <div class="container mt-5 equipo-page">
-    <h1 class="title" style="text-align: center; font-weight: bold;">Equipo de DockerLabs</h1>
+    <h1 class="title">Equipo de DockerLabs</h1>
 
     <!-- ADMINISTRADORES -->
     <div class="section-label">
@@ -57,6 +49,14 @@
                 </div>
             </a>
 
+            <a href="https://github.com/D1se0" target="_blank" class="colaborador">
+                <img src="{{ get_profile_image_url(username='d1se0') }}" alt="d1se0">
+                <span class="colaborador-name">d1se0</span>
+                <div class="role-badge role-admin">
+                    <i class="bi bi-shield-fill-check"></i> Administrador
+                </div>
+            </a>
+
         </div>
     </div>
 
@@ -92,15 +92,7 @@
     <p class="colaboradores-desc" style="text-align: center;">¿Quieres aparecer aquí? Para colaborar en DockerLabs puede consultar <a href="https://github.com/0xR00/dockerlabs/blob/new/contributing-repo/CONTRIBUTING.md">AQUÍ</a></p>
     <div class="card p-4 mt-2 mb-5 colaboradores-card">
         <div class="colaboradores-mosaic">
-
-            <a href="https://www.youtube.com/@Hacking_Community" target="_blank" class="colaborador">
-                <img src="{{ get_profile_image_url(username='Dise0') }}" alt="Dise0">
-                <span class="colaborador-name">Dise0</span>
-                <div class="role-badge" style="background: #ff0000; color: white;">
-                    <i class="bi bi-youtube"></i> YouTube
-                </div>
-            </a>
-
+            <!-- Los colaboradores se agregarán aquí -->
         </div>
     </div>
 </div>

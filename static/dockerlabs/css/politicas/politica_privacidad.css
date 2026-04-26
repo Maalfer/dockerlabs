@@ -1,0 +1,10 @@
+/* Estilos para página de política de privacidad */
+.policy-content {
+    line-height: 1.8;
+    color: #cbd5e1;
+}
+
+.policy-content h3 {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    padding-bottom: 0.5rem;
+}

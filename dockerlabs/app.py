@@ -167,7 +167,7 @@ def restrict_swagger_access():
 
         role = get_current_role()
         if role not in ('admin', 'moderador'):
-            return render_template('dockerlabs/403.html'), 403
+            return render_template('dockerlabs/errors/403.html'), 403
 
 
 decorators.get_current_role = get_current_role
@@ -208,7 +208,7 @@ def terminos_condiciones():
       200:
         description: Página de términos.
     """
-    return render_template('dockerlabs/terminos-condiciones.html')
+    return render_template('dockerlabs/info/terminos-condiciones.html')
 
 @app.route('/bug-bounty')
 def bug_bounty():
@@ -245,7 +245,7 @@ def dashboard():
     profile_image_url = get_profile_image_url(username=current_username, user_id=current_user_id)
 
     return render_template(
-        'dockerlabs/dashboard.html',
+        'dockerlabs/admin/dashboard.html',
         maquinas=maquinas,
         profile_image_url=profile_image_url,
         user=g.user
@@ -535,7 +535,7 @@ def index():
 
 @app.errorhandler(404)
 def page_not_found(e):
-    return render_template('dockerlabs/404.html'), 404
+    return render_template('dockerlabs/errors/404.html'), 404
 
 from bunkerlabs import bunkerlabs_bp
 app.register_blueprint(bunkerlabs_bp, url_prefix='/bunkerlabs')

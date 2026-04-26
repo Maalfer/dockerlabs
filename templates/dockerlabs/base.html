@@ -16,6 +16,8 @@
     {% endif %}
     <link rel="stylesheet" href="{{ url_for('static', filename='dockerlabs/css/base.css') }}">
 
+    {% block extra_css %}{% endblock %}
+
     <link rel="icon" href="{{ url_for('static', filename='dockerlabs/images/logos/logo.png') }}" type="image/png">
 
     <script nonce="{{ csp_nonce }}">
@@ -137,7 +139,7 @@
                 <h2 class="modal-title">Menú</h2>
             </div>
             <div class="ranking-list two-columns">
-                <a href="https://app.secur0.com/vulnerability-disclosure/Dockerlabs" target="_blank"
+                <a href="https://app.secur0.com/programs/vdp/Dockerlabs" target="_blank"
                     class="ranking-item">
                     <div class="user-info"><span class="user-name">Programa VDP</span></div>
                     <i class="bi bi-box-arrow-up-right" style="color: #64748b; font-size: 0.9rem;"></i>

@@ -266,7 +266,7 @@ def register():
                         error = f"Error al crear usuario: {str(e)}"
 
     remaining = session.pop('rate_limit_remaining', None)
-    return render_template('dockerlabs/register.html', error=error, pending_message=pending_message, recovery_pin=recovery_pin)
+    return render_template('dockerlabs/auth/register.html', error=error, pending_message=pending_message, recovery_pin=recovery_pin)
 
 @auth_bp.route('/recover', methods=['GET', 'POST'])
 @csrf_protect
@@ -320,7 +320,7 @@ def recover():
                     else:
                          error = "Error en la fecha de emisión del PIN. Contacta al soporte."
 
-    return render_template('dockerlabs/recover.html', error=error)
+    return render_template('dockerlabs/auth/recover.html', error=error)
 
 @auth_bp.route('/login', methods=['GET', 'POST'])
 @csrf_protect
@@ -357,7 +357,7 @@ def login():
             return redirect(url_for('dashboard'))
 
     remaining = session.pop('rate_limit_remaining', None)
-    return render_template('dockerlabs/login.html', error=error, success=success)
+    return render_template('dockerlabs/auth/login.html', error=error, success=success)
 
 @auth_bp.route('/logout')
 
@@ -686,7 +686,7 @@ def gestion_usuarios():
     """
     usuarios = User.query.order_by(User.id.asc()).all()
 
-    return render_template('dockerlabs/gestion_usuarios.html', usuarios=usuarios)
+    return render_template('dockerlabs/admin/gestion_usuarios.html', usuarios=usuarios)
 
 @auth_bp.route('/update_user_role/<int:user_id>', methods=['POST'])
 @role_required('admin')

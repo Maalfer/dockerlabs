@@ -73,11 +73,11 @@ def _create_sqlite_snapshot_db(tmp_dir):
 
 @main_bp.app_errorhandler(403)
 def forbidden_error(error):
-    return render_template('dockerlabs/403.html'), 403
+    return render_template('dockerlabs/errors/403.html'), 403
 
 @main_bp.app_errorhandler(404)
 def not_found_error(error):
-    return render_template('dockerlabs/404.html'), 404
+    return render_template('dockerlabs/errors/404.html'), 404
 
 @main_bp.app_errorhandler(RateLimitExceeded)
 def handle_rate_limit(e):
@@ -121,14 +121,14 @@ def instrucciones_uso():
       200:
         description: Instrucciones.
     """
-    return render_template('dockerlabs/instrucciones_uso.html')
+    return render_template('dockerlabs/info/instrucciones_uso.html')
 
 
 @main_bp.route('/backups')
 @login_required
 @role_required('admin')
 def backups_page():
-    return render_template('dockerlabs/backups.html')
+    return render_template('dockerlabs/admin/backups.html')
 
 
 @main_bp.route('/backups/download', methods=['POST'])
@@ -272,7 +272,7 @@ def restore_backup():
 
 @main_bp.route('/soporte')
 def soporte():
-  return render_template('dockerlabs/soporte.html')
+  return render_template('dockerlabs/info/soporte.html')
 
 @main_bp.route('/equipo')
 def equipo():
@@ -285,7 +285,7 @@ def equipo():
       200:
         description: Página del equipo.
     """
-    return render_template('dockerlabs/equipo.html')
+    return render_template("dockerlabs/equipo.html")
 
 
 @main_bp.route('/enviar-maquina')
@@ -299,7 +299,7 @@ def enviar_maquina():
       200:
         description: Página para enviar máquina.
     """
-    return render_template('dockerlabs/enviar_maquina.html')
+    return render_template('dockerlabs/info/enviar_maquina.html')
 
 @main_bp.route('/como-se-crea-una-maquina')
 def como_se_crea():
@@ -312,7 +312,7 @@ def como_se_crea():
       200:
         description: Página de tutorial.
     """
-    return render_template('dockerlabs/como_se_crea_una_maquina.html')
+    return render_template('dockerlabs/info/como_se_crea_una_maquina.html')
 
 @main_bp.route('/agradecimientos')
 def agradecimientos():
@@ -325,7 +325,7 @@ def agradecimientos():
       200:
         description: Agradecimientos.
     """
-    return render_template('dockerlabs/agradecimientos.html')
+    return render_template('dockerlabs/info/agradecimientos.html')
 
 @main_bp.route('/politica-privacidad')
 def politica_privacidad():
@@ -420,7 +420,7 @@ def estadisticas():
 
     user_stats = get_distribution_by_year(users, user_date_extractor)
 
-    return render_template('dockerlabs/estadisticas.html', 
+    return render_template('dockerlabs/user/estadisticas.html', 
                          machine_stats=machine_stats,
                          writeup_stats=writeup_stats,
                          user_stats=user_stats)
@@ -439,7 +439,7 @@ def pending_machines():
     ).all()
 
     return render_template(
-        "dockerlabs/pending.html",
+        "dockerlabs/admin/pending.html",
         machines=machines
     )
 
@@ -484,6 +484,6 @@ def user_pending_machines():
     ).all()
 
     return render_template(
-        "dockerlabs/user-pending.html",
+        "dockerlabs/auth/user-pending.html",
         machines=machines
     )
