@@ -7,7 +7,6 @@
     - [Dependencias](#dependencias)
     - [Configurar y desplegar DockerLabs](#configurar-y-desplegar-dockerlabs)
         - [Activar servicio de memcached](#activar-servicio-de-memcached)
-        - [.env](#env)
         - [Desplegar DockerLabs](#desplegar-dockerlabs)
 - [¿Qué ocurre después de abrir una Pull Request?](#qué-ocurre-después-de-abrir-una-pull-request)
 - [Reportar vulnerabilidades (VDP)](#reportar-vulnerabilidades-vdp)
@@ -31,12 +30,9 @@ Para realizar cambios seguros y que no ocasionen problemas con la plataforma, re
 # Desplegar DockerLabs en local
 
 ## Dependencias
-Para desplegar DockerLabs requeriremos de las siguientes dependencias: `memcached,flask,flask_httpauth,flask-limiter,flask-sqlalchemy,flask-login,pymemcache,pillow,python-dotenv,uvicorn,asgiref,flasgger,gunicorn`
+Para desplegar DockerLabs requeriremos de las siguientes dependencias: `flask,flask_httpauth,flask-limiter,flask-sqlalchemy,flask-login,pillow,uvicorn,asgiref,gunicorn,fastapi`
 
-Para instalar `memcached` podremos hacerlo mediante `apt`:
-```bash
-sudo apt install memcached
-```
+# memcached eliminado - rate limiting configurado para Cloudflare
 
 Para instalar las dependencias en Python, el repositorio de DockerLabs deja un [requeriments.txt](/requirements.txt) donde están indicadas todas las dependencias que hacen funcionar la plataforma. Para instalarlas:
 > [!WARNING]
@@ -57,9 +53,6 @@ DockerLabs emplea `memcached` para el sistema de caché y rate limit. Así que r
 service start memcached
 ```
 
-### .env
-En el repositorio verás que ofrecemos un `.env.example`, donde contiene la `SECRET_KEY`. Podremos usar la que se da de ejemplo o crear una clave a nuestro gusto. El archivo debe llamarse `.env`.
-
 ### Desplegar DockerLabs
 Una vez todo preparado podemos lanzar DockerLabs, para ello ejecutaremos el script [run.py](/run.py):
 
@@ -67,8 +60,8 @@ Una vez todo preparado podemos lanzar DockerLabs, para ello ejecutaremos el scri
 (venv) root@b3e19df7fedc:~/dockerlabs# python3 run.py 
 INFO:     Will watch for changes in these directories: ['/root/dockerlabs']
 INFO:     Uvicorn running on http://0.0.0.0:5000 (Press CTRL+C to quit)
-INFO:     Started reloader process [29] using StatReload
-WARNING: SECRET_KEY not set. Using a temporary generated key.
+INFO:     Started reloader process [29]
+INFO:     Waiting for application startup.
 INFO:     Started server process [31]
 INFO:     Waiting for application startup.
 INFO:     ASGI 'lifespan' protocol appears unsupported.

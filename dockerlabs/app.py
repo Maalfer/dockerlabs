@@ -1,16 +1,13 @@
 import os
 import json
-import re
 import secrets
 from datetime import datetime, timedelta
 from functools import wraps
 from urllib.parse import urlparse, urljoin
 
 from flask import Flask, render_template, request, jsonify, redirect, url_for, session, g, flash, send_from_directory
-from flask_httpauth import HTTPBasicAuth
 from flask_login import LoginManager, current_user
 from flask_limiter.errors import RateLimitExceeded
-from flasgger import Swagger
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
 
@@ -24,55 +21,16 @@ from .models import User
 from .decorators import get_current_role, generate_csrf_token, csrf_protect, role_required, generate_token, verify_token
 from .auth import auth_bp, get_profile_image_static_path, get_profile_image_url, load_username_change_requests
 from .maquinas import maquinas_bp, recalcular_ranking_creadores
-from .api import api_bp
-
+from .helpers import render_403_error, render_404_error
 BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
-PROFILE_UPLOAD_FOLDER = os.path.join(BASE_DIR, 'static', 'images', 'perfiles')
-MACHINE_LOGOS_FOLDER = os.path.join(BASE_DIR, 'static', 'images', 'logos')
-LOGO_UPLOAD_FOLDER = os.path.join(BASE_DIR, 'static', 'images', 'logos')
-ALLOWED_PROFILE_EXTENSIONS = {'.jpg', '.jpeg', '.png', '.gif', '.webp'}
-ALLOWED_LOGO_EXTENSIONS = {'.jpg', '.jpeg', '.png', '.gif', '.webp', '.svg'}
 
 app = Flask(__name__, static_folder=os.path.join(BASE_DIR, 'static'), template_folder=os.path.join(BASE_DIR, 'templates'))
-auth = HTTPBasicAuth()
-
-from dotenv import load_dotenv
-load_dotenv()
-
-swagger_config = {
-    "headers": [],
-    "specs": [
-        {
-            "endpoint": 'apispec',
-            "route": '/apispec.json',
-            "rule_filter": lambda rule: True,
-            "model_filter": lambda tag: True,
-        }
-    ],
-    "static_url_path": "/flasgger_static",
-    "swagger_ui": True,
-    "specs_route": "/docs/"
-}
-
-app.config['SWAGGER'] = {
-    'title': 'API DockerLabs',
-    'uiversion': 3,
-    'ui_params': {
-        'queryConfigEnabled': False
-    }
-}
-
-swagger = Swagger(app, config=swagger_config)
 
 app.config['SESSION_COOKIE_SECURE'] = True                                  
 app.config['SESSION_COOKIE_HTTPONLY'] = True
 app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
 
-app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY')
-
-if not app.config['SECRET_KEY']:
-    app.config['SECRET_KEY'] = secrets.token_hex(32)
-    print("WARNING: SECRET_KEY not set. Using a temporary generated key.")                                                  
+app.config['SECRET_KEY'] = secrets.token_hex(32)                                                  
 
 login_manager = LoginManager()
 login_manager.login_view = 'auth.login'
@@ -156,25 +114,10 @@ def load_logged_in_user():
     else:
         g.user = None
 
-@app.before_request
-def restrict_swagger_access():
-    if request.path.startswith('/docs') or request.path.startswith('/apispec.json') or request.path.startswith('/flasgger_static'):
-        if request.args.get('configUrl'):
-            return "Configuration by URL is disabled.", 403
-        
-        if not current_user.is_authenticated:
-            return redirect(url_for('auth.login', next=request.url))
-
-        role = get_current_role()
-        if role not in ('admin', 'moderador'):
-            return render_template('dockerlabs/errors/403.html'), 403
-
-
 decorators.get_current_role = get_current_role
 
 app.register_blueprint(auth_bp)
 app.register_blueprint(maquinas_bp)
-app.register_blueprint(api_bp)
 
 @app.context_processor
 def inject_globals():
@@ -199,42 +142,15 @@ def obtener_dificultades():
 
 @app.route('/terminos-condiciones')
 def terminos_condiciones():
-    """
-    Página de términos y condiciones.
-    ---
-    tags:
-      - Páginas
-    responses:
-      200:
-        description: Página de términos.
-    """
     return render_template('dockerlabs/info/terminos-condiciones.html')
 
 @app.route('/bug-bounty')
 def bug_bounty():
-    """
-    Página de Bug Bounty.
-    ---
-    tags:
-      - Páginas
-    responses:
-      200:
-        description: Página de Bug Bounty.
-    """
     return render_template('dockerlabs/bug_bounty.html')
 
 @app.route('/dashboard')
 @role_required('admin', 'moderador', 'jugador')
 def dashboard():
-    """
-    Panel de usuario (Dashboard).
-    ---
-    tags:
-      - Páginas
-    responses:
-      200:
-        description: Dashboard del usuario.
-    """
     from .models import Machine
 
     maquinas = Machine.query.filter_by(origen='docker').with_entities(Machine.id, Machine.nombre, Machine.autor).order_by(Machine.nombre.asc()).all()
@@ -255,15 +171,6 @@ def dashboard():
 @role_required('admin', 'moderador')
 @limiter.limit("20 per minute")
 def peticiones():
-    """
-    Gestión de peticiones de administración.
-    ---
-    tags:
-      - Admin
-    responses:
-      200:
-        description: Página de peticiones.
-    """
     from .models import MachineClaim, NameClaim, WriteupEditRequest, MachineEditRequest, Writeup, UsernameChangeRequest
 
     claims_objs = MachineClaim.query.order_by(MachineClaim.created_at.desc(), MachineClaim.id.desc()).all()
@@ -325,7 +232,7 @@ def peticiones():
     username_change_requests = load_username_change_requests()
 
     return render_template(
-        'dockerlabs/peticiones.html',
+        'dockerlabs/admin/peticiones.html',
         claims=claims,
         envios_maquinas=envios_maquinas,
         peticiones_nombres=peticiones_nombres,
@@ -334,136 +241,9 @@ def peticiones():
         username_change_requests=username_change_requests
     )
 
-from urllib.parse import urlparse, urljoin
-
-@app.route('/nombre-claims/<int:claim_id>/approve', methods=['POST'])
-@role_required('admin', 'moderador')
-@csrf_protect
-@limiter.limit("5 per minute", methods=["POST"])
-def approve_nombre_claim(claim_id):
-    """
-    Aprobar reclamación de nombre de usuario.
-    ---
-    tags:
-      - Admin
-    responses:
-      302:
-        description: Redirigir a peticiones.
-    """
-    def is_safe_url(target):
-        host_url = request.host_url
-        ref = urljoin(host_url, target)
-        return urlparse(ref).netloc == urlparse(host_url).netloc
-
-    ref = request.referrer
-    if not ref or not is_safe_url(ref):
-        safe_redirect = url_for('peticiones')
-    else:
-        safe_redirect = ref
-
-    from .models import NameClaim, User
-    from sqlalchemy.exc import IntegrityError
-    
-    claim = NameClaim.query.get(claim_id)
-
-    if claim is None:
-        return redirect(safe_redirect)
-
-    existing = User.query.filter((User.username == claim.nombre_solicitado) | (User.email == claim.email)).first()
-
-    if existing:
-        claim.estado = 'rechazada'
-        alchemy_db.session.commit()
-        return redirect(safe_redirect)
-
-    try:
-                         
-        new_user = User(
-            username=claim.nombre_solicitado,
-            email=claim.email,
-            password_hash=claim.password_hash,
-            role='jugador'
-        )
-        alchemy_db.session.add(new_user)
-
-        claim.estado = 'aprobada'
-        
-        alchemy_db.session.commit()
-    except IntegrityError:
-        alchemy_db.session.rollback()
-        claim.estado = 'rechazada'
-        alchemy_db.session.commit()
-    except Exception:
-        alchemy_db.session.rollback()
-
-    return redirect(safe_redirect)
-
-from urllib.parse import urlparse, urljoin
-
-@app.route('/nombre-claims/<int:claim_id>/reject', methods=['POST'])
-@role_required('admin', 'moderador')
-@csrf_protect
-@limiter.limit("5 per minute", methods=["POST"])
-def reject_nombre_claim(claim_id):
-    """
-    Rechazar reclamación de nombre de usuario.
-    ---
-    tags:
-      - Admin
-    responses:
-      302:
-        description: Redirigir a peticiones.
-    """
-    def is_safe_url(target):
-        host_url = request.host_url
-        ref = urljoin(host_url, target)
-        return urlparse(ref).netloc == urlparse(host_url).netloc
-
-    ref = request.referrer
-    if not ref or not is_safe_url(ref):
-        safe_redirect = url_for('peticiones')
-    else:
-        safe_redirect = ref
-
-    from .models import NameClaim
-    claim = NameClaim.query.get(claim_id)
-    if claim:
-        claim.estado = 'rechazada'
-        alchemy_db.session.commit()
-        
-    return redirect(safe_redirect)
-
-@app.route('/nombre-claims/<int:claim_id>/revert', methods=['POST'])
-@role_required('admin', 'moderador')
-@csrf_protect
-def revert_nombre_claim(claim_id):
-    """
-    Revertir estado de reclamación de nombre.
-    ---
-    tags:
-      - Admin
-    responses:
-      302:
-        description: Redirigir a peticiones.
-    """
-    from .models import NameClaim
-    claim = NameClaim.query.get(claim_id)
-    if claim:
-        claim.estado = 'pendiente'
-        alchemy_db.session.commit()
-    return redirect(url_for('peticiones'))
 
 @app.route('/')
 def index():
-    """
-    Página de inicio.
-    ---
-    tags:
-      - Páginas
-    responses:
-      200:
-        description: Página de bienvenida.
-    """
     from .models import Machine, Category, CompletedMachine, User
     from sqlalchemy import func
     from .extensions import db as alchemy_db
@@ -490,7 +270,6 @@ def index():
             'imagen_url': url_for('maquinas.serve_machine_logo', machine_id=m.id),
             'descripcion': m.descripcion,
             'link_descarga': m.link_descarga,
-            'posicion': m.posicion,
             'categoria': cat_name
         }
         all_maquinas.append(d)
@@ -535,7 +314,7 @@ def index():
 
 @app.errorhandler(404)
 def page_not_found(e):
-    return render_template('dockerlabs/errors/404.html'), 404
+    return render_404_error()
 
 from bunkerlabs import bunkerlabs_bp
 app.register_blueprint(bunkerlabs_bp, url_prefix='/bunkerlabs')

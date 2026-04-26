@@ -41,7 +41,6 @@ class Machine(db.Model):
     imagen = db.Column(db.String, nullable=False)
     descripcion = db.Column(db.Text, nullable=False)
     link_descarga = db.Column(db.String, nullable=False)
-    posicion = db.Column(db.String, nullable=False, default='izquierda')
     pin = db.Column(db.String, nullable=True)
     guest_access = db.Column(db.Boolean, default=False)
     origen = db.Column(db.String, nullable=False, default='docker')

@@ -1,11 +1,10 @@
 FROM python:3.11-slim-bookworm
 
 # Install system dependencies
-# memcached: required for rate limiting
 # gcc, libffi-dev: often required for building python extensions
 # libjpeg-dev, zlib1g-dev: required for Pillow
+# memcached eliminado - rate limiting configurado para Cloudflare
 RUN apt-get update && apt-get install -y \
-    memcached \
     gcc \
     libffi-dev \
     libjpeg-dev \

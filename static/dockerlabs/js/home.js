@@ -219,10 +219,8 @@ function sortByDate(order) {
     }
 
     const list = document.querySelector('.lista');
-    const leftColumn = document.querySelector('.columna-izquierda');
-    const rightColumn = document.querySelector('.columna-derecha');
-
-    if (!leftColumn || !rightColumn) {
+    
+    // Código legacy de columnas izquierda/derecha eliminado - ya no se usa
         const items = Array.from(document.querySelectorAll('.maquina-item'));
         items.sort((a, b) => {
             const getDate = (element) => {

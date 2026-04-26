@@ -1,15 +1,10 @@
 flask
-flask_httpauth
 flask-limiter
 flask-sqlalchemy
 flask-login
-pymemcache
 pillow
-python-dotenv
 uvicorn
 asgiref
-flasgger
 gunicorn
 fastapi
-
-# Hay que tener memcached instalado en el vps
+slowapi

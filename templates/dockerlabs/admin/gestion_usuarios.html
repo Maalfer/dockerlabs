@@ -79,16 +79,13 @@
                     {% endif %}
                     <td>
                         {% if current_user_role == 'admin' %}
-                        <form method="post" action="{{ url_for('auth.update_user_role', user_id=usuario.id) }}">
-                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                            <select name="role" class="form-select form-select-sm" onchange="this.form.submit()">
-                                <option value="jugador" {% if usuario.role=='jugador' %}selected{% endif %}>Jugador
-                                </option>
-                                <option value="moderador" {% if usuario.role=='moderador' %}selected{% endif %}>
-                                    Moderador</option>
-                                <option value="admin" {% if usuario.role=='admin' %}selected{% endif %}>Admin</option>
-                            </select>
-                        </form>
+                        <select class="form-select form-select-sm role-select"
+                                data-user-id="{{ usuario.id }}"
+                                data-csrf="{{ csrf_token() }}">
+                            <option value="jugador" {% if usuario.role=='jugador' %}selected{% endif %}>Jugador</option>
+                            <option value="moderador" {% if usuario.role=='moderador' %}selected{% endif %}>Moderador</option>
+                            <option value="admin" {% if usuario.role=='admin' %}selected{% endif %}>Admin</option>
+                        </select>
                         {% else %}
                         <span class="badge bg-secondary">{{ usuario.role|capitalize }}</span>
                         {% endif %}
@@ -98,13 +95,11 @@
 
                     {% if current_user_role == 'admin' %}
                     <td class="text-center">
-                        <form method="post" action="{{ url_for('auth.delete_user', user_id=usuario.id) }}"
-                            onsubmit="return confirm('¿Seguro que quieres eliminar este usuario?');">
-                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                            <button type="submit" class="btn btn-sm btn-danger">
-                                Eliminar
-                            </button>
-                        </form>
+                        <button type="button" class="btn btn-sm btn-danger delete-user-btn"
+                                data-user-id="{{ usuario.id }}"
+                                data-csrf="{{ csrf_token() }}">
+                            Eliminar
+                        </button>
                     </td>
                     {% endif %}
                 </tr>
@@ -116,78 +111,85 @@
     {% endif %}
 </div>
 
-<script>
+<script nonce="{{ g.csp_nonce }}">
     document.addEventListener('DOMContentLoaded', function () {
         const input = document.getElementById('userSearchInput');
         const table = document.getElementById('gestionUsuariosTable');
-        if (!input || !table) return;
-
-        const rows = Array.from(table.querySelectorAll('tbody tr'));
-
-        function filtrarUsuarios() {
-            const term = input.value.trim().toLowerCase();
-
-            rows.forEach((tr) => {
-                const text = tr.innerText.toLowerCase();
-                if (!term || text.includes(term)) {
-                    tr.style.display = '';
-                } else {
-                    tr.style.display = 'none';
-                }
+        if (input && table) {
+            const rows = Array.from(table.querySelectorAll('tbody tr'));
+            input.addEventListener('input', function () {
+                const term = this.value.trim().toLowerCase();
+                rows.forEach(tr => {
+                    tr.style.display = (!term || tr.innerText.toLowerCase().includes(term)) ? '' : 'none';
+                });
             });
         }
 
-        input.addEventListener('input', filtrarUsuarios);
+        // --- Cambio de rol via AJAX ---
+        document.querySelectorAll('.role-select').forEach(function (sel) {
+            sel.addEventListener('change', async function () {
+                const userId = this.dataset.userId;
+                const csrf = this.dataset.csrf;
+                const role = this.value;
+                try {
+                    const res = await fetch(`/api/admin/update_user_role/${userId}`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrf },
+                        body: JSON.stringify({ role })
+                    });
+                    const data = await res.json();
+                    if (!res.ok) {
+                        alert('Error: ' + (data.error || 'No se pudo actualizar el rol.'));
+                        location.reload();
+                    }
+                } catch (e) {
+                    alert('Error de conexión.');
+                    location.reload();
+                }
+            });
+        });
+
+        // --- Eliminar usuario via AJAX ---
+        document.querySelectorAll('.delete-user-btn').forEach(function (btn) {
+            btn.addEventListener('click', async function () {
+                if (!confirm('¿Seguro que quieres eliminar este usuario?')) return;
+                const userId = this.dataset.userId;
+                const csrf = this.dataset.csrf;
+                try {
+                    const res = await fetch(`/api/admin/delete_user/${userId}`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrf },
+                        body: JSON.stringify({})
+                    });
+                    const data = await res.json();
+                    if (res.ok && data.success) {
+                        this.closest('tr').remove();
+                    } else {
+                        alert('Error: ' + (data.error || 'No se pudo eliminar el usuario.'));
+                    }
+                } catch (e) {
+                    alert('Error de conexión.');
+                }
+            });
+        });
     });
 
     // Toggle email visibility
     let emailsVisible = false;
-
     function toggleEmails() {
         emailsVisible = !emailsVisible;
-        const censoredSpans = document.querySelectorAll('.email-censored');
-        const realSpans = document.querySelectorAll('.email-real');
-        const icon = document.getElementById('toggleEmailsIcon');
-
-        censoredSpans.forEach(span => {
-            span.style.display = emailsVisible ? 'none' : 'inline';
-        });
-
-        realSpans.forEach(span => {
-            span.style.display = emailsVisible ? 'inline' : 'none';
-        });
-
-        // Update icon
-        if (emailsVisible) {
-            icon.className = 'bi bi-eye-slash';
-        } else {
-            icon.className = 'bi bi-eye';
-        }
+        document.querySelectorAll('.email-censored').forEach(s => s.style.display = emailsVisible ? 'none' : 'inline');
+        document.querySelectorAll('.email-real').forEach(s => s.style.display = emailsVisible ? 'inline' : 'none');
+        document.getElementById('toggleEmailsIcon').className = emailsVisible ? 'bi bi-eye-slash' : 'bi bi-eye';
     }
 
     // Toggle user visibility
     let usersVisible = false;
-
     function toggleUsers() {
         usersVisible = !usersVisible;
-        const censoredSpans = document.querySelectorAll('.user-censored');
-        const realSpans = document.querySelectorAll('.user-real');
-        const icon = document.getElementById('toggleUsersIcon');
-
-        censoredSpans.forEach(span => {
-            span.style.display = usersVisible ? 'none' : 'inline';
-        });
-
-        realSpans.forEach(span => {
-            span.style.display = usersVisible ? 'inline' : 'none';
-        });
-
-        // Update icon
-        if (usersVisible) {
-            icon.className = 'bi bi-eye-slash';
-        } else {
-            icon.className = 'bi bi-eye';
-        }
+        document.querySelectorAll('.user-censored').forEach(s => s.style.display = usersVisible ? 'none' : 'inline');
+        document.querySelectorAll('.user-real').forEach(s => s.style.display = usersVisible ? 'inline' : 'none');
+        document.getElementById('toggleUsersIcon').className = usersVisible ? 'bi bi-eye-slash' : 'bi bi-eye';
     }
 </script>
 {% endblock %}

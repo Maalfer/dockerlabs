@@ -1,12 +1,7 @@
 #!/bin/bash
 
-# Start memcached service in the background
-# Since we are running as a non-root user, we don't need -u root
-echo "Starting memcached service..."
-memcached -d
-
-# Give memcached a moment to start
-sleep 2
+# memcached eliminado - rate limiting configurado para Cloudflare
+echo "Starting application without memcached..."
 
 # Check if database files exist (optional, mostly for info)
 if [ -f "/app/dockerlabs.db" ]; then

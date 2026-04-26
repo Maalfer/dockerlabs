@@ -14,33 +14,27 @@
             <p>Únete a la comunidad de DockerLabs</p>
         </div>
 
-        {% if error %}
-        <div class="alert alert-danger">
+        <div class="alert alert-danger" id="register-error" style="display: none;">
             <i class="fas fa-exclamation-circle"></i>
-            <span>{{ error }}</span>
+            <span id="register-error-text"></span>
         </div>
-        {% endif %}
 
-        {% if pending_message %}
-        <div class="alert alert-info">
+        <div class="alert alert-info" id="register-pending" style="display: none;">
             <i class="fas fa-info-circle"></i>
-            <span>{{ pending_message }}</span>
+            <span id="register-pending-text"></span>
         </div>
-        {% endif %}
 
-        {% if recovery_pin %}
-        <div class="alert alert-success">
+        <div class="alert alert-success" id="register-success" style="display: none;">
             <i class="fas fa-check-circle"></i>
             <div>
                 <strong>¡Cuenta creada exitosamente!</strong>
-                <div class="pin-display">{{ recovery_pin }}</div>
+                <div class="pin-display" id="register-pin"></div>
                 <div class="pin-warning">
                     <i class="fas fa-shield-alt"></i>
                     Guarda este PIN en un lugar seguro. Lo necesitarás para recuperar tu contraseña.
                 </div>
             </div>
         </div>
-        {% endif %}
 
         {% if remaining %}
         <div class="alert alert-warning" id="rl-warning">
@@ -69,7 +63,7 @@
         </script>
         {% endif %}
 
-        <form method="post" class="register-form">
+        <form id="register-form" class="register-form">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
             <div class="auth-grid">
@@ -136,4 +130,64 @@
         </div>
     </div>
 </div>
+
+<script nonce="{{ g.csp_nonce }}">
+document.addEventListener("DOMContentLoaded", function() {
+    const form = document.getElementById("register-form");
+    const errorBox = document.getElementById("register-error");
+    const errorText = document.getElementById("register-error-text");
+    const pendingBox = document.getElementById("register-pending");
+    const pendingText = document.getElementById("register-pending-text");
+    const successBox = document.getElementById("register-success");
+    const pinDisplay = document.getElementById("register-pin");
+    
+    form.addEventListener("submit", async function(e) {
+        e.preventDefault();
+        
+        // Esconder alertas
+        errorBox.style.display = "none";
+        pendingBox.style.display = "none";
+        successBox.style.display = "none";
+        
+        const data = {
+            username: form.username.value,
+            email: form.email.value,
+            password: form.password.value,
+            password2: form.password2.value,
+            terms: form.terms.checked
+        };
+        const csrfToken = form.csrf_token.value;
+        
+        try {
+            const response = await fetch("/api/auth/register", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRFToken": csrfToken
+                },
+                body: JSON.stringify(data)
+            });
+            
+            const result = await response.json();
+            
+            if (response.ok && result.success) {
+                form.style.display = "none";
+                if (result.pending_message) {
+                    pendingBox.style.display = "block";
+                    pendingText.textContent = result.pending_message;
+                } else if (result.recovery_pin) {
+                    successBox.style.display = "block";
+                    pinDisplay.textContent = result.recovery_pin;
+                }
+            } else {
+                errorBox.style.display = "block";
+                errorText.textContent = result.message || "Error al registrar la cuenta";
+            }
+        } catch (error) {
+            errorBox.style.display = "block";
+            errorText.textContent = "Error de conexión con el servidor.";
+        }
+    });
+});
+</script>
 {% endblock %}

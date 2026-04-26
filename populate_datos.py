@@ -112,7 +112,6 @@ def populate_machines():
                 imagen="logo.png",
                 descripcion=f"Máquina {dificultad} de Linux creada por {autor}. Entorno Docker.",
                 link_descarga=f"https://dockerlabs.es/machines/{nombre.lower()}.zip",
-                posicion="izquierda" if i % 2 == 0 else "derecha",
                 origen="docker",
                 guest_access=False
             )
@@ -150,7 +149,6 @@ def populate_machines():
                 imagen="logo.png",
                 descripcion=f"Máquina {dificultad} de Linux en entorno real (Bunker). PIN: {pin}",
                 link_descarga=f"http://192.168.1.{random.randint(10, 250)}",
-                posicion="izquierda" if i % 2 == 0 else "derecha",
                 origen="bunker",
                 pin=pin,
                 guest_access=random.choice([True, False])

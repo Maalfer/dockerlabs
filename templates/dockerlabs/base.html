@@ -61,9 +61,8 @@
         </div>
 
         <h1 style="margin:0;text-align:center;">
-            <a href="{{ url_for('bunkerlabs.bunkerlabs_home') }}" id="dockerlabs-link"
-                onmouseover="this.innerText='BunkerLabs'" onmouseout="this.innerText='DockerLabs'">
-                DockerLabs
+            <a href="{{ url_for('bunkerlabs.bunkerlabs_login') }}" id="dockerlabs-link" class="brand-title">
+                <span class="brand-text" data-original="DockerLabs" data-hover="BunkerLabs">DockerLabs</span>
             </a>
         </h1>
 
@@ -160,10 +159,7 @@
                     <div class="user-info"><span class="user-name">Estadísticas</span></div>
                     <i class="bi bi-bar-chart-line" style="color: #64748b;"></i>
                 </a>
-                <a href="/docs/" target="_blank" class="ranking-item">
-                    <div class="user-info"><span class="user-name">Swagger UI</span></div>
-                    <i class="bi bi-file-code" style="color: #64748b;"></i>
-                </a>
+                <!-- Swagger UI eliminado - migración a FastAPI planificada -->
                 <a href="{{ url_for('main.agradecimientos') }}" class="ranking-item">
                     <div class="user-info"><span class="user-name">Agradecimientos</span></div>
                     <i class="bi bi-heart" style="color: #64748b;"></i>
@@ -381,31 +377,30 @@
                     const isMobile = window.innerWidth <= 768;
 
                     if (isMobile) {
-                        // In mobile, prevent default and go to dockerlabs.es
+                        // In mobile, go to dockerlabs.es
                         event.preventDefault();
                         window.location.href = 'https://dockerlabs.es';
-                    }
-                    // In desktop, let the default href work (BunkerLabs)
-                });
-
-                // Remove hover effect in mobile
-                function updateHoverEffect() {
-                    const isMobile = window.innerWidth <= 768;
-
-                    if (isMobile) {
-                        dockerlabsLink.onmouseover = null;
-                        dockerlabsLink.onmouseout = null;
-                        dockerlabsLink.innerText = 'DockerLabs';
                     } else {
-                        dockerlabsLink.onmouseover = function () { this.innerText = 'BunkerLabs'; };
-                        dockerlabsLink.onmouseout = function () { this.innerText = 'DockerLabs'; };
+                        // In desktop, go to BunkerLabs login
+                        window.location.href = '/bunkerlabs/login';
                     }
-                }
-
-                updateHoverEffect();
-                window.addEventListener('resize', updateHoverEffect);
+                });
             }
 
+            const brandTitle = document.querySelector('.brand-title');
+            const brandText = document.querySelector('.brand-text');
+            
+            if (brandTitle && brandText) {
+                brandTitle.addEventListener('mouseenter', function() {
+                    const hoverText = brandText.getAttribute('data-hover');
+                    brandText.textContent = hoverText;
+                });
+                
+                brandTitle.addEventListener('mouseleave', function() {
+                    const originalText = brandText.getAttribute('data-original');
+                    brandText.textContent = originalText;
+                });
+            }
         });
     </script>
 

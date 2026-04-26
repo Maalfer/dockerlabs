@@ -14,11 +14,9 @@
             <p>Accede a tu cuenta de DockerLabs</p>
         </div>
 
-        {% if error %}
-        <div class="alert alert-danger">
-            <i class="fas fa-exclamation-circle"></i> {{ error }}
+        <div class="alert alert-danger" id="login-error" style="display: none;">
+            <i class="fas fa-exclamation-circle"></i> <span id="login-error-text"></span>
         </div>
-        {% endif %}
 
         {% if success %}
         <div class="alert alert-success">
@@ -51,7 +49,7 @@
         </script>
         {% endif %}
 
-        <form method="post" class="login-form">
+        <form id="login-form" class="login-form">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
             <div class="auth-grid">
@@ -97,4 +95,43 @@
         </div>
     </div>
 </div>
+
+<script nonce="{{ g.csp_nonce }}">
+document.addEventListener("DOMContentLoaded", function() {
+    const form = document.getElementById("login-form");
+    const errorBox = document.getElementById("login-error");
+    const errorText = document.getElementById("login-error-text");
+    
+    form.addEventListener("submit", async function(e) {
+        e.preventDefault();
+        
+        const username = form.username.value;
+        const password = form.password.value;
+        const csrfToken = form.csrf_token.value;
+        
+        try {
+            const response = await fetch("/api/auth/login", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRFToken": csrfToken
+                },
+                body: JSON.stringify({username: username, password: password})
+            });
+            
+            const data = await response.json();
+            
+            if (response.ok && data.success) {
+                window.location.href = data.redirect_url || "/dashboard";
+            } else {
+                errorBox.style.display = "block";
+                errorText.textContent = data.message || "Error al iniciar sesión";
+            }
+        } catch (error) {
+            errorBox.style.display = "block";
+            errorText.textContent = "Error de conexión con el servidor.";
+        }
+    });
+});
+</script>
 {% endblock %}

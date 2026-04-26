@@ -443,33 +443,7 @@ def pending_machines():
         machines=machines
     )
 
-@main_bp.route("/pending-machines/approve/<int:id>", methods=["POST"])
-@login_required
-@role_required('admin', 'moderador')
-def approve_machine(id):
-    sub = PendingMachineSubmission.query.get_or_404(id)
 
-    sub.estado = "aprobado"
-    sub.reviewed_at = datetime.utcnow()
-
-    db.session.commit()
-
-    flash("Máquina aprobada", "success")
-    return redirect(url_for("main.pending_machines"))
-
-@main_bp.route("/pending-machines/reject/<int:id>", methods=["POST"])
-@login_required
-@role_required('admin', 'moderador')
-def reject_machine(id):
-    sub = PendingMachineSubmission.query.get_or_404(id)
-
-    sub.estado = "rechazado"
-    sub.reviewed_at = datetime.utcnow()
-
-    db.session.commit()
-
-    flash("Máquina rechazada", "warning")
-    return redirect(url_for("main.pending_machines"))
 
 @main_bp.route("/user-pending")
 @login_required

@@ -6,14 +6,14 @@
 <div class="container" style="padding-top: 80px; max-width: 500px;">
     <h2>Recuperar contraseña</h2>
 
-    {% if error %}
-    <div class="alert alert-danger mt-3">{{ error }}</div>
-    {% endif %}
-    {% if success %}
-    <div class="alert alert-success mt-3">{{ success }}</div>
-    <a href="{{ url_for('auth.login') }}" class="btn btn-primary mt-3">Ir a Iniciar sesión</a>
-    {% else %}
-    <form method="post" action="{{ url_for('auth.recover') }}">
+    <div class="alert alert-danger mt-3" id="recover-error" style="display: none;"></div>
+    
+    <div id="recover-success-container" style="display: none;">
+        <div class="alert alert-success mt-3" id="recover-success"></div>
+        <a href="{{ url_for('auth.login') }}" class="btn btn-primary mt-3">Ir a Iniciar sesión</a>
+    </div>
+
+    <form id="recover-form">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
         <div class="mb-3">
@@ -38,6 +38,54 @@
 
         <button type="submit" class="btn btn-primary">Restablecer contraseña</button>
     </form>
-    {% endif %}
 </div>
+
+<script nonce="{{ g.csp_nonce }}">
+document.addEventListener("DOMContentLoaded", function() {
+    const form = document.getElementById("recover-form");
+    const errorBox = document.getElementById("recover-error");
+    const successContainer = document.getElementById("recover-success-container");
+    const successBox = document.getElementById("recover-success");
+    
+    form.addEventListener("submit", async function(e) {
+        e.preventDefault();
+        
+        errorBox.style.display = "none";
+        successContainer.style.display = "none";
+        
+        const data = {
+            username: form.username.value,
+            pin: form.pin.value,
+            password: form.password.value,
+            password2: form.password2.value
+        };
+        const csrfToken = form.csrf_token.value;
+        
+        try {
+            const response = await fetch("/api/auth/recover", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRFToken": csrfToken
+                },
+                body: JSON.stringify(data)
+            });
+            
+            const result = await response.json();
+            
+            if (response.ok && result.success) {
+                form.style.display = "none";
+                successContainer.style.display = "block";
+                successBox.textContent = result.message || "Contraseña actualizada correctamente.";
+            } else {
+                errorBox.style.display = "block";
+                errorBox.textContent = result.message || "Error al recuperar contraseña.";
+            }
+        } catch (error) {
+            errorBox.style.display = "block";
+            errorBox.textContent = "Error de conexión con el servidor.";
+        }
+    });
+});
+</script>
 {% endblock %}
