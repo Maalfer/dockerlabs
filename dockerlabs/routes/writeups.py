@@ -541,7 +541,7 @@ def register_writeup_routes(api_router, get_flask_session, verify_csrf_token, al
         username = (flask_session.get("username") or "").strip()
 
         query = (
-            alchemy_db.session.query(Writeup.maquina, func.count().label("total"), Machine.imagen)
+            alchemy_db.session.query(Writeup.maquina, func.count().label("total"), Machine.imagen, Machine.logo_path, Machine.id)
             .outerjoin(Machine, Writeup.maquina == Machine.nombre)
             .filter(Writeup.maquina != None, Writeup.maquina != "")  # noqa: E711
         )
@@ -550,13 +550,18 @@ def register_writeup_routes(api_router, get_flask_session, verify_csrf_token, al
             if filter_mode == "mine" and username:
                 query = query.filter(Writeup.autor == username)
 
-        results = query.group_by(Writeup.maquina, Machine.imagen).order_by(func.lower(Writeup.maquina)).all()
+        results = query.group_by(Writeup.maquina, Machine.imagen, Machine.logo_path, Machine.id).order_by(func.lower(Writeup.maquina)).all()
 
         maquinas = []
-        for maquina_nombre, total, imagen in results:
-            imagen_rel = (imagen or "").strip()
+        for maquina_nombre, total, imagen, logo_path, machine_id in results:
             imagen_url = None
-            if imagen_rel:
+            
+            # Usar el endpoint dinámico que sirve desde el sistema correcto (nuevo o antiguo)
+            if machine_id:
+                imagen_url = f"/img/maquina/{machine_id}"
+            # Fallback al sistema antiguo (imagen estática)
+            elif imagen:
+                imagen_rel = imagen.strip()
                 if imagen_rel.startswith("dockerlabs/") or imagen_rel.startswith("bunkerlabs/"):
                     static_path = imagen_rel
                 elif "/" in imagen_rel:

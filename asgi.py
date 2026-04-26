@@ -13,16 +13,18 @@ from dockerlabs.routers import api_router, pages_router
 # Inicializar Base de Datos
 init_db()
 
-# Rate limiter simple por IP
+# Rate limiter inteligente por IP
 rate_limit_store = defaultdict(list)
-RATE_LIMIT = 100  # requests por minuto
+# Límites diferenciados por tipo de request
+API_RATE_LIMIT = 300  # requests API por minuto
+STATIC_RATE_LIMIT = 1000  # archivos estáticos por minuto (más permisivo)
+IMAGE_RATE_LIMIT = 500  # imágenes por minuto
 RATE_WINDOW = 60  # segundos
 
-# Rate limiter para FastAPI
-# Configuración: 100 peticiones por minuto por IP (global)
+# Rate limiter para FastAPI con límites más permisivos
 limiter = Limiter(
     key_func=get_remote_address,
-    default_limits=["100/minute"],
+    default_limits=["300/minute"],  # Aumentado de 100 a 300
     storage_uri="memory://"
 )
 
@@ -35,12 +37,27 @@ fastapi_app = FastAPI(
 fastapi_app.state.limiter = limiter
 fastapi_app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
-# Middleware de Rate Limiting
+# Middleware de Rate Limiting Inteligente
 @fastapi_app.middleware("http")
 async def rate_limit_middleware(request: Request, call_next):
     # Obtener IP del cliente
     client_ip = request.client.host if request.client else "unknown"
     current_time = time.time()
+    path = request.url.path
+    
+    # Excluir completamente del rate limit: archivos estáticos, imágenes, y carga de imágenes
+    if path.startswith("/static/") or path.startswith("/img/") or path.startswith("/database/"):
+        # No aplicar rate limit a estos recursos
+        response = await call_next(request)
+        return response
+    
+    # Determinar el límite según el tipo de request
+    if path.startswith("/api/"):
+        # Límite moderado para API
+        limit = API_RATE_LIMIT
+    else:
+        # Límite estándar para páginas
+        limit = API_RATE_LIMIT
     
     # Limpiar requests antiguos (más de RATE_WINDOW segundos)
     rate_limit_store[client_ip] = [
@@ -49,10 +66,10 @@ async def rate_limit_middleware(request: Request, call_next):
     ]
     
     # Verificar si excede el límite
-    if len(rate_limit_store[client_ip]) >= RATE_LIMIT:
+    if len(rate_limit_store[client_ip]) >= limit:
         return JSONResponse(
             status_code=429,
-            content={"error": "Rate limit exceeded", "detail": f"Maximum {RATE_LIMIT} requests per {RATE_WINDOW} seconds"}
+            content={"error": "Rate limit exceeded", "detail": f"Maximum {limit} requests per {RATE_WINDOW} seconds"}
         )
     
     # Registrar este request

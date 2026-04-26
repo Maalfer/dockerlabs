@@ -231,7 +231,7 @@ function subirwriteup(nombre) {
             return;
         }
 
-        fetch('/subirwriteups', {
+        fetch('/api/submit_writeup', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',

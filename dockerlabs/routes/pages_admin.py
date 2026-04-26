@@ -25,83 +25,83 @@ def register_pages_admin_routes(
     alchemy_db,
 ):
     @pages_router.get("/instrucciones-uso", response_class=HTMLResponse)
-    def instrucciones_uso_page(request: Request):
+    def instrucciones_uso_page(request: Request, flask_session: dict = Depends(get_flask_session)):
         return templates.TemplateResponse(
             request,
             "dockerlabs/info/instrucciones_uso.html",
-            {"url_for": url_for, "session": {}, "g": {"csp_nonce": secrets.token_urlsafe(32)}},
+            {"url_for": url_for, "session": flask_session, "g": {"csp_nonce": secrets.token_urlsafe(32)}},
         )
 
     @pages_router.get("/soporte", response_class=HTMLResponse)
-    def soporte_page(request: Request):
+    def soporte_page(request: Request, flask_session: dict = Depends(get_flask_session)):
         return templates.TemplateResponse(
-            request, "dockerlabs/info/soporte.html", {"url_for": url_for, "session": {}, "g": {"csp_nonce": secrets.token_urlsafe(32)}}
+            request, "dockerlabs/info/soporte.html", {"url_for": url_for, "session": flask_session, "g": {"csp_nonce": secrets.token_urlsafe(32)}}
         )
 
     @pages_router.get("/equipo", response_class=HTMLResponse)
-    def equipo_page(request: Request):
+    def equipo_page(request: Request, flask_session: dict = Depends(get_flask_session)):
         return templates.TemplateResponse(
-            request, "dockerlabs/equipo.html", {"url_for": url_for, "session": {}, "g": {"csp_nonce": secrets.token_urlsafe(32)}}
+            request, "dockerlabs/equipo.html", {"url_for": url_for, "session": flask_session, "g": {"csp_nonce": secrets.token_urlsafe(32)}}
         )
 
     @pages_router.get("/enviar-maquina", response_class=HTMLResponse)
-    def enviar_maquina_page(request: Request):
+    def enviar_maquina_page(request: Request, flask_session: dict = Depends(get_flask_session)):
         return templates.TemplateResponse(
             request,
             "dockerlabs/info/enviar_maquina.html",
-            {"url_for": url_for, "session": {}, "g": {"csp_nonce": secrets.token_urlsafe(32)}},
+            {"url_for": url_for, "session": flask_session, "g": {"csp_nonce": secrets.token_urlsafe(32)}},
         )
 
     @pages_router.get("/como-se-crea-una-maquina", response_class=HTMLResponse)
-    def como_se_crea_page(request: Request):
+    def como_se_crea_page(request: Request, flask_session: dict = Depends(get_flask_session)):
         return templates.TemplateResponse(
             request,
             "dockerlabs/info/como_se_crea_una_maquina.html",
-            {"url_for": url_for, "session": {}, "g": {"csp_nonce": secrets.token_urlsafe(32)}},
+            {"url_for": url_for, "session": flask_session, "g": {"csp_nonce": secrets.token_urlsafe(32)}},
         )
 
     @pages_router.get("/agradecimientos", response_class=HTMLResponse)
-    def agradecimientos_page(request: Request):
+    def agradecimientos_page(request: Request, flask_session: dict = Depends(get_flask_session)):
         return templates.TemplateResponse(
             request,
             "dockerlabs/info/agradecimientos.html",
-            {"url_for": url_for, "session": {}, "g": {"csp_nonce": secrets.token_urlsafe(32)}},
+            {"url_for": url_for, "session": flask_session, "g": {"csp_nonce": secrets.token_urlsafe(32)}},
         )
 
     @pages_router.get("/terminos-condiciones", response_class=HTMLResponse)
-    def terminos_condiciones_page(request: Request):
+    def terminos_condiciones_page(request: Request, flask_session: dict = Depends(get_flask_session)):
         return templates.TemplateResponse(
             request,
             "dockerlabs/info/terminos-condiciones.html",
-            {"url_for": url_for, "session": {}, "g": {"csp_nonce": secrets.token_urlsafe(32)}},
+            {"url_for": url_for, "session": flask_session, "g": {"csp_nonce": secrets.token_urlsafe(32)}},
         )
 
     @pages_router.get("/bug-bounty", response_class=HTMLResponse)
-    def bug_bounty_page(request: Request):
+    def bug_bounty_page(request: Request, flask_session: dict = Depends(get_flask_session)):
         return templates.TemplateResponse(
-            request, "dockerlabs/bug_bounty.html", {"url_for": url_for, "session": {}, "g": {"csp_nonce": secrets.token_urlsafe(32)}}
+            request, "dockerlabs/bug_bounty.html", {"url_for": url_for, "session": flask_session, "g": {"csp_nonce": secrets.token_urlsafe(32)}}
         )
 
     @pages_router.get("/politica-privacidad", response_class=HTMLResponse)
-    def politica_privacidad_page(request: Request):
+    def politica_privacidad_page(request: Request, flask_session: dict = Depends(get_flask_session)):
         return templates.TemplateResponse(
             request,
             "politicas/politica_privacidad.html",
-            {"url_for": url_for, "session": {}, "g": {"csp_nonce": secrets.token_urlsafe(32)}},
+            {"url_for": url_for, "session": flask_session, "g": {"csp_nonce": secrets.token_urlsafe(32)}},
         )
 
     @pages_router.get("/politica-cookies", response_class=HTMLResponse)
-    def politica_cookies_page(request: Request):
+    def politica_cookies_page(request: Request, flask_session: dict = Depends(get_flask_session)):
         return templates.TemplateResponse(
             request,
             "politicas/politica_cookies.html",
-            {"url_for": url_for, "session": {}, "g": {"csp_nonce": secrets.token_urlsafe(32)}},
+            {"url_for": url_for, "session": flask_session, "g": {"csp_nonce": secrets.token_urlsafe(32)}},
         )
 
     @pages_router.get("/condiciones-uso", response_class=HTMLResponse)
-    def condiciones_uso_page(request: Request):
+    def condiciones_uso_page(request: Request, flask_session: dict = Depends(get_flask_session)):
         return templates.TemplateResponse(
-            request, "politicas/condiciones_uso.html", {"url_for": url_for, "session": {}, "g": {"csp_nonce": secrets.token_urlsafe(32)}}
+            request, "politicas/condiciones_uso.html", {"url_for": url_for, "session": flask_session, "g": {"csp_nonce": secrets.token_urlsafe(32)}}
         )
 
     @pages_router.get("/gestion-usuarios", response_class=HTMLResponse)
@@ -124,12 +124,14 @@ def register_pages_admin_routes(
         has_prev = page > 1
         has_next = page < total_pages
 
+        csrf_token = flask_session.get("csrf_token") or secrets.token_urlsafe(32)
         return templates.TemplateResponse(
             request,
             "dockerlabs/admin/gestion_usuarios.html",
             {
                 "usuarios": usuarios,
                 "session": flask_session,
+                "csrf_token_value": csrf_token,
                 "g": {"csp_nonce": secrets.token_urlsafe(32)},
                 "page": page,
                 "per_page": per_page,
@@ -221,9 +223,12 @@ def register_pages_admin_routes(
 
     @pages_router.get("/backups", response_class=HTMLResponse)
     def backups_page(request: Request, flask_session: dict = Depends(get_flask_session)):
-        ok, redirect = require_auth_and_role(flask_session, ["admin"])
-        if not ok:
-            return redirect
+        user_id = flask_session.get('user_id')
+        role = flask_session.get('role', '')
+        if not user_id:
+            return RedirectResponse(url="/login", status_code=302)
+        if role != 'admin':
+            return RedirectResponse(url="/", status_code=302)
         return templates.TemplateResponse(
             request,
             "dockerlabs/admin/backups.html",
@@ -270,12 +275,16 @@ def register_pages_admin_routes(
 
     @pages_router.post("/backups/download")
     async def download_backup(
+        request: Request,
         flask_session: dict = Depends(get_flask_session),
         csrf_ok: bool = Depends(verify_csrf_token),
     ):
-        ok, redirect = require_auth_and_role(flask_session, ["admin"])
-        if not ok:
-            return redirect
+        user_id = flask_session.get('user_id')
+        role = flask_session.get('role', '')
+        if not user_id:
+            return JSONResponse(status_code=401, content={"error": "Debes iniciar sesión"})
+        if role != 'admin':
+            return JSONResponse(status_code=403, content={"error": "Acceso denegado"})
 
         lock_fh = _acquire_db_lock()
         try:
@@ -325,9 +334,12 @@ def register_pages_admin_routes(
         flask_session: dict = Depends(get_flask_session),
         csrf_ok: bool = Depends(verify_csrf_token),
     ):
-        ok, redirect = require_auth_and_role(flask_session, ["admin"])
-        if not ok:
-            return redirect
+        user_id = flask_session.get('user_id')
+        role = flask_session.get('role', '')
+        if not user_id:
+            return JSONResponse(status_code=401, content={"error": "Debes iniciar sesión"})
+        if role != 'admin':
+            return JSONResponse(status_code=403, content={"error": "Acceso denegado"})
 
         if not backup_zip or not (backup_zip.filename or "").lower().endswith(".zip"):
             flask_session["_flashes"] = [("danger", "Debes proporcionar un archivo .zip")]
@@ -473,10 +485,11 @@ def register_pages_admin_routes(
         if not ok:
             return redirect
         user = User.query.get(flask_session.get("user_id")) if flask_session.get("user_id") else None
+        csrf_token = flask_session.get("csrf_token") or secrets.token_urlsafe(32)
         return templates.TemplateResponse(
             request,
             "dockerlabs/user/writeups_recibidos.html",
-            {"session": flask_session, "user": user, "g": {"csp_nonce": secrets.token_urlsafe(32)}},
+            {"session": flask_session, "user": user, "csrf_token_value": csrf_token, "g": {"csp_nonce": secrets.token_urlsafe(32)}},
         )
 
     @pages_router.get("/writeups-publicados", response_class=HTMLResponse)
@@ -485,10 +498,11 @@ def register_pages_admin_routes(
         if not ok:
             return redirect
         user = User.query.get(flask_session.get("user_id")) if flask_session.get("user_id") else None
+        csrf_token = flask_session.get("csrf_token") or secrets.token_urlsafe(32)
         return templates.TemplateResponse(
             request,
             "dockerlabs/user/writeups_publicados.html",
-            {"user": user, "session": flask_session, "g": {"csp_nonce": secrets.token_urlsafe(32)}},
+            {"user": user, "session": flask_session, "csrf_token_value": csrf_token, "g": {"csp_nonce": secrets.token_urlsafe(32)}},
         )
 
     @pages_router.get("/peticiones-writeups", response_class=HTMLResponse)
@@ -506,53 +520,54 @@ def register_pages_admin_routes(
         )
 
     @pages_router.get("/estadisticas", response_class=HTMLResponse)
-    def estadisticas_page(request: Request):
+    def estadisticas_page(request: Request, flask_session: dict = Depends(get_flask_session)):
         from dockerlabs.models import Machine, Writeup
 
         def get_distribution_by_year(items, date_extractor):
-            year_counts = {}
-            total = 0
+            """Calculate distribution by year."""
+            years = {}
             for item in items:
-                try:
-                    year = date_extractor(item)
-                    if year:
-                        year_counts[year] = year_counts.get(year, 0) + 1
-                        total += 1
-                except Exception:
-                    continue
-            distribution = {}
-            if total > 0:
-                for year, count in year_counts.items():
-                    distribution[year] = round((count / total) * 100, 2)
-            return dict(sorted(distribution.items()))
+                year = date_extractor(item).year
+                years[year] = years.get(year, 0) + 1
+            return years
+
+        def get_distribution_by_month(items, date_extractor):
+            """Calculate distribution by month."""
+            months = {}
+            for item in items:
+                date = date_extractor(item)
+                month_key = f"{date.year}-{date.month:02d}"
+                months[month_key] = months.get(month_key, 0) + 1
+            return months
 
         machines = Machine.query.all()
-
-        def machine_date_extractor(m):
-            try:
-                parts = m.fecha.split("/")
-                if len(parts) == 3:
-                    return int(parts[2])
-            except Exception:
-                return None
-            return None
-
-        machine_stats = get_distribution_by_year(machines, machine_date_extractor)
         writeups = Writeup.query.all()
-
-        def writeup_date_extractor(w):
-            return w.created_at.year if w.created_at else None
-
-        writeup_stats = get_distribution_by_year(writeups, writeup_date_extractor)
         users = User.query.all()
 
-        def user_date_extractor(u):
-            return u.created_at.year if u.created_at else None
+        machine_stats = {
+            "total": len(machines),
+            "by_dificultad": get_distribution_by_field(machines, "dificultad"),
+            "by_origen": get_distribution_by_field(machines, "origen"),
+            "by_year": get_distribution_by_year(machines, lambda m: datetime.strptime(m.fecha, "%Y-%m-%d")),
+            "by_month": get_distribution_by_month(machines, lambda m: datetime.strptime(m.fecha, "%Y-%m-%d")),
+        }
 
-        user_stats = get_distribution_by_year(users, user_date_extractor)
+        writeup_stats = {
+            "total": len(writeups),
+            "by_tipo": get_distribution_by_field(writeups, "tipo"),
+            "by_year": get_distribution_by_year(writeups, lambda w: w.created_at),
+            "by_month": get_distribution_by_month(writeups, lambda w: w.created_at),
+        }
+
+        user_stats = {
+            "total": len(users),
+            "by_role": get_distribution_by_field(users, "role"),
+            "by_year": get_distribution_by_year(users, lambda u: u.created_at),
+            "by_month": get_distribution_by_month(users, lambda u: u.created_at),
+        }
+
         return templates.TemplateResponse(
             request,
             "dockerlabs/user/estadisticas.html",
-            {"machine_stats": machine_stats, "writeup_stats": writeup_stats, "user_stats": user_stats, "session": {}, "g": {"csp_nonce": secrets.token_urlsafe(32)}},
+            {"machine_stats": machine_stats, "writeup_stats": writeup_stats, "user_stats": user_stats, "session": flask_session, "g": {"csp_nonce": secrets.token_urlsafe(32)}},
         )
-

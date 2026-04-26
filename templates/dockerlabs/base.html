@@ -194,14 +194,6 @@
                     </div>
                     <i class="bi bi-chevron-right" style="color: #64748b;"></i>
                 </a>
-                {% if current_user_role in ['admin', 'moderador'] %}
-                <a href="{{ url_for('writeups.writeups_recibidos') }}" class="ranking-item">
-                    <div class="user-info">
-                        <span class="user-name">Gestión writeups recibidos (Admin)</span>
-                    </div>
-                    <i class="bi bi-chevron-right" style="color: #64748b;"></i>
-                </a>
-                {% endif %}
             </div>
         </div>
     </div>

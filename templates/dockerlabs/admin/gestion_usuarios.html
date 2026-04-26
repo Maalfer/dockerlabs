@@ -384,6 +384,9 @@
                     if (!res.ok) {
                         alert('Error: ' + (data.error || 'No se pudo actualizar el rol.'));
                         location.reload();
+                    } else {
+                        alert('✓ Rol actualizado correctamente: ' + data.message);
+                        location.reload();
                     }
                 } catch (e) {
                     alert('Error de conexión.');

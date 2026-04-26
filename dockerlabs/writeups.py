@@ -19,6 +19,7 @@ def recalcular_ranking_writeups():
         "difícil": 4, "dificil": 4,
     }
 
+    # Primero: writeups con máquina asociada (con dificultad conocida)
     results = (
         alchemy_db.session.query(Writeup.autor, Machine.dificultad)
         .join(Machine, Writeup.maquina == Machine.nombre)
@@ -32,6 +33,19 @@ def recalcular_ranking_writeups():
         dificultad_lower = (dificultad or "").strip().lower()
         puntos = puntos_por_dificultad.get(dificultad_lower, 1)
         ranking[autor] = ranking.get(autor, 0) + puntos
+
+    # Segundo: writeups sin máquina asociada (asignar 1 punto por defecto)
+    writeups_sin_maquina = (
+        alchemy_db.session.query(Writeup.autor)
+        .outerjoin(Machine, Writeup.maquina == Machine.nombre)
+        .filter(Machine.id == None)
+        .all()
+    )
+
+    for (autor,) in writeups_sin_maquina:
+        if not autor:
+            continue
+        ranking[autor] = ranking.get(autor, 0) + 1  # 1 punto por defecto
 
     try:
         WriteupRanking.query.delete()
