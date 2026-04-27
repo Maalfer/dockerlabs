@@ -1,5 +1,6 @@
 function subirwriteup(nombre) {
-    nombre = escapeHtml(nombre);
+    // No escapar HTML aquí - el nombre se envía tal cual a la API
+    // La sanitización se hace en el backend si es necesario
 
     // Check if user is authenticated
     if (typeof currentUser === "undefined" || currentUser === "") {
