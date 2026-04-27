@@ -69,22 +69,14 @@
                 titleColor: '#f8fafc',
                 bodyColor: '#cbd5e1',
                 borderColor: '#334155',
-                borderWidth: 1,
-                callbacks: {
-                    label: function (context) {
-                        return context.parsed.y + '%';
-                    }
-                }
+                borderWidth: 1
             }
         },
         scales: {
             y: {
                 beginAtZero: true,
-                max: 100,
                 ticks: {
-                    callback: function (value) {
-                        return value + '%';
-                    }
+                    precision: 0
                 },
                 grid: {
                     color: '#334155'
@@ -111,14 +103,14 @@
     const getLabels = (stats) => Object.keys(stats);
     const getData = (stats) => Object.values(stats);
 
-    // --- Machines Chart ---
+    // --- Machines Chart (by year) ---
     new Chart(document.getElementById('machinesChart'), {
         type: 'bar',
         data: {
-            labels: getLabels(machineStats),
+            labels: getLabels(machineStats.by_year || {}),
             datasets: [{
-                label: 'Máquinas (%)',
-                data: getData(machineStats),
+                label: 'Máquinas',
+                data: getData(machineStats.by_year || {}),
                 backgroundColor: 'rgba(59, 130, 246, 0.5)', // Blue
                 borderColor: '#3b82f6',
                 borderWidth: 1,
@@ -128,14 +120,14 @@
         options: commonOptions
     });
 
-    // --- Writeups Chart ---
+    // --- Writeups Chart (by year) ---
     new Chart(document.getElementById('writeupsChart'), {
-        type: 'bar', // Using Bar for consistency, could be Line
+        type: 'bar',
         data: {
-            labels: getLabels(writeupStats),
+            labels: getLabels(writeupStats.by_year || {}),
             datasets: [{
-                label: 'Writeups (%)',
-                data: getData(writeupStats),
+                label: 'Writeups',
+                data: getData(writeupStats.by_year || {}),
                 backgroundColor: 'rgba(16, 185, 129, 0.5)', // Emerald
                 borderColor: '#10b981',
                 borderWidth: 1,
@@ -145,14 +137,14 @@
         options: commonOptions
     });
 
-    // --- Users Chart ---
+    // --- Users Chart (by year) ---
     new Chart(document.getElementById('usersChart'), {
         type: 'bar',
         data: {
-            labels: getLabels(userStats),
+            labels: getLabels(userStats.by_year || {}),
             datasets: [{
-                label: 'Usuarios (%)',
-                data: getData(userStats),
+                label: 'Usuarios',
+                data: getData(userStats.by_year || {}),
                 backgroundColor: 'rgba(245, 158, 11, 0.5)', // Amber
                 borderColor: '#f59e0b',
                 borderWidth: 1,

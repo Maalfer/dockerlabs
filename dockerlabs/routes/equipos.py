@@ -8,7 +8,7 @@ from fastapi.responses import JSONResponse, FileResponse
 from pydantic import BaseModel
 from sqlalchemy import func
 
-from dockerlabs.models import Team, TeamMember, TeamInvitation, TeamJoinRequest, User, WriteupRanking
+from dockerlabs.models import Team, TeamMember, TeamInvitation, TeamJoinRequest, User, WriteupRanking, Notification
 
 # Constants
 MAX_TEAM_MEMBERS = 5
@@ -141,6 +141,13 @@ def register_equipos_routes(api_router, get_flask_session, verify_csrf_token, al
         if not team:
             return JSONResponse(status_code=404, content={"success": False, "message": "Equipo no encontrado"})
 
+        # Check if current user is a member
+        user_id = get_current_user_id(flask_session)
+        is_member = False
+        if user_id:
+            membership = TeamMember.query.filter_by(team_id=team_id, user_id=user_id).first()
+            is_member = membership is not None
+
         # Get members with their details
         members = []
         total_puntos = 0
@@ -177,7 +184,8 @@ def register_equipos_routes(api_router, get_flask_session, verify_csrf_token, al
                 'members': members,
                 'puntos': total_puntos,
                 'member_count': len(members),
-                'max_members': MAX_TEAM_MEMBERS
+                'max_members': MAX_TEAM_MEMBERS,
+                'is_member': is_member
             }
         }
 
@@ -373,6 +381,17 @@ def register_equipos_routes(api_router, get_flask_session, verify_csrf_token, al
         )
         alchemy_db.session.add(invitation)
 
+        # Create notification for invited user
+        inviter = User.query.get(user_id)
+        notification = Notification(
+            sender_id=user_id,
+            receiver_id=invited_user.id,
+            title=f"Invitación al equipo {team.nombre}",
+            content=f"{inviter.username if inviter else 'Alguien'} te ha invitado a unirte al equipo {team.nombre}",
+            notification_type="team_invitation"
+        )
+        alchemy_db.session.add(notification)
+
         try:
             alchemy_db.session.commit()
             return {
@@ -529,6 +548,20 @@ def register_equipos_routes(api_router, get_flask_session, verify_csrf_token, al
         # Create join request
         join_request = TeamJoinRequest(team_id=team_id, user_id=user_id)
         alchemy_db.session.add(join_request)
+
+        # Create notifications for all team members
+        team_members = TeamMember.query.filter_by(team_id=team_id).all()
+        for tm in team_members:
+            member = User.query.get(tm.user_id)
+            if member:
+                notification = Notification(
+                    sender_id=user_id,
+                    receiver_id=member.id,
+                    title=f"Solicitud para unirse a {team.nombre}",
+                    content=f"Un usuario quiere unirse a tu equipo {team.nombre}",
+                    notification_type="team_join_request"
+                )
+                alchemy_db.session.add(notification)
 
         try:
             alchemy_db.session.commit()

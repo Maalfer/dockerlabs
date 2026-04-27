@@ -12,19 +12,10 @@ function initializeDashboard() {
     if (btn) {
         btn.addEventListener('click', changePassword);
     }
-
-
-    loadProfileData();
-
 }
 
 function cancelEdit() {
     resetForm();
-}
-
-function getCsrfToken() {
-    const meta = document.querySelector('meta[name="csrf-token"]');
-    return meta ? meta.getAttribute('content') : '';
 }
 
 function handlePhotoUpload(event) {
@@ -398,25 +389,14 @@ function showAlert(message, type = 'info') {
     }, 5000);
 }
 
-function loadProfileData() {
-    console.log('Cargando datos del perfil...');
-}
-
 function openClaimMachineModal() {
-    const modal = document.getElementById('claimMachineModal');
-    if (modal) modal.classList.add('visible');
+    openModal('claimMachineModal');
 }
 
 function closeClaimMachineModal() {
-    const modal = document.getElementById('claimMachineModal');
-    if (modal) modal.classList.remove('visible');
+    closeModal('claimMachineModal');
 }
 
 document.addEventListener('DOMContentLoaded', function () {
-    const claimModal = document.getElementById('claimMachineModal');
-    if (claimModal) {
-        claimModal.addEventListener('click', function (e) {
-            if (e.target === claimModal) closeClaimMachineModal();
-        });
-    }
+    initModalCloseOnClickOutside('claimMachineModal');
 });

@@ -1,3 +1,4 @@
+from typing import Optional
 from fastapi import Depends, Request
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
@@ -17,6 +18,8 @@ def configure_limiter(global_limiter):
 class SendNotificationRequest(BaseModel):
     title: str
     content: str
+    receiver_id: Optional[int] = None
+    notification_type: Optional[str] = None
 
 
 def register_notification_routes(api_router, get_flask_session, alchemy_db):
@@ -44,7 +47,13 @@ def register_notification_routes(api_router, get_flask_session, alchemy_db):
                 content={"success": False, "message": "Título demasiado largo (máximo 200 caracteres)"},
             )
 
-        notification = Notification(sender_id=user_id, title=request_data.title, content=request_data.content)
+        notification = Notification(
+            sender_id=user_id,
+            receiver_id=request_data.receiver_id,
+            title=request_data.title,
+            content=request_data.content,
+            notification_type=request_data.notification_type
+        )
         alchemy_db.session.add(notification)
         alchemy_db.session.commit()
 
@@ -57,7 +66,10 @@ def register_notification_routes(api_router, get_flask_session, alchemy_db):
         if not user_id:
             return JSONResponse(status_code=401, content={"success": False, "message": "Debes iniciar sesión"})
 
-        notifications = Notification.query.order_by(Notification.created_at.desc()).limit(50).all()
+        # Get notifications for this user (either global or user-specific)
+        notifications = Notification.query.filter(
+            (Notification.receiver_id == user_id) | (Notification.receiver_id == None)
+        ).order_by(Notification.created_at.desc()).limit(50).all()
         result = []
         for notif in notifications:
             sender = User.query.get(notif.sender_id)
@@ -69,10 +81,11 @@ def register_notification_routes(api_router, get_flask_session, alchemy_db):
                     "created_at": notif.created_at.isoformat(),
                     "read": notif.read,
                     "sender": sender.username if sender else "Desconocido",
+                    "notification_type": notif.notification_type,
                 }
             )
 
-        unread_count = Notification.query.filter_by(read=False).count()
+        unread_count = Notification.query.filter_by(receiver_id=user_id, read=False).count()
         return {"success": True, "notifications": result, "unread_count": unread_count}
 
     @api_router.post("/notifications/{notification_id}/read")

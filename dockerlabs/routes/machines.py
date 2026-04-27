@@ -1,7 +1,7 @@
 import secrets
 from typing import Optional
 
-from fastapi import Depends, Request
+from fastapi import Depends, Form, Request
 from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
 from pydantic import BaseModel
 from slowapi import Limiter
@@ -77,7 +77,17 @@ def register_machine_routes(
     @api_router.post("/gestion-maquinas/actualizar")
     async def api_actualizar_maquina(
         request: Request,
-        data: ActualizarMaquinaRequest,
+        id: int = Form(...),
+        origen: str = Form(...),
+        nombre: str = Form(...),
+        dificultad: str = Form(...),
+        autor: str = Form(...),
+        enlace_autor: str = Form(""),
+        fecha: str = Form(...),
+        imagen: str = Form(""),
+        descripcion: str = Form(...),
+        link_descarga: str = Form(...),
+        categoria: str = Form(""),
         flask_session: dict = Depends(get_flask_session),
         csrf_ok: bool = Depends(verify_csrf_token),
     ):
@@ -88,12 +98,12 @@ def register_machine_routes(
 
         if not user_id:
             return JSONResponse(status_code=401, content={"error": "No autenticado"})
-        if data.origen not in ("docker", "bunker"):
+        if origen not in ("docker", "bunker"):
             return JSONResponse(status_code=400, content={"error": "Origen inválido"})
 
-        clase, dificultad_texto, color = _difficulty_to_color_clase(data.dificultad)
+        clase, dificultad_texto, color = _difficulty_to_color_clase(dificultad)
 
-        maquina = Machine.query.get(data.id)
+        maquina = Machine.query.get(id)
         if not maquina:
             return JSONResponse(status_code=404, content={"error": "Máquina no encontrada"})
 
@@ -103,22 +113,22 @@ def register_machine_routes(
 
                 nuevos_datos = _json.dumps(
                     {
-                        "nombre": data.nombre,
+                        "nombre": nombre,
                         "dificultad": dificultad_texto,
                         "clase": clase,
                         "color": color,
-                        "autor": data.autor,
-                        "enlace_autor": data.enlace_autor,
-                        "fecha": data.fecha,
-                        "imagen": data.imagen,
-                        "descripcion": data.descripcion,
-                        "link_descarga": data.link_descarga,
+                        "autor": autor,
+                        "enlace_autor": enlace_autor,
+                        "fecha": fecha,
+                        "imagen": imagen,
+                        "descripcion": descripcion,
+                        "link_descarga": link_descarga,
                     }
                 )
                 try:
                     edit_req = MachineEditRequest(
-                        machine_id=data.id,
-                        origen=data.origen,
+                        machine_id=id,
+                        origen=origen,
                         autor=username,
                         nuevos_datos=nuevos_datos,
                         estado="pendiente",
@@ -132,30 +142,30 @@ def register_machine_routes(
             return JSONResponse(status_code=403, content={"error": "Acceso denegado"})
 
         try:
-            maquina.nombre = data.nombre
+            maquina.nombre = nombre
             maquina.dificultad = dificultad_texto
             maquina.clase = clase
             maquina.color = color
-            maquina.autor = data.autor
-            maquina.enlace_autor = data.enlace_autor or ""
-            maquina.fecha = data.fecha
-            maquina.imagen = data.imagen or ""
-            maquina.descripcion = data.descripcion
-            maquina.link_descarga = data.link_descarga
+            maquina.autor = autor
+            maquina.enlace_autor = enlace_autor or ""
+            maquina.fecha = fecha
+            maquina.imagen = imagen or ""
+            maquina.descripcion = descripcion
+            maquina.link_descarga = link_descarga
             alchemy_db.session.commit()
 
-            cat_obj = Category.query.filter_by(machine_id=data.id, origen=data.origen).first()
-            if data.categoria:
+            cat_obj = Category.query.filter_by(machine_id=id, origen=origen).first()
+            if categoria:
                 if cat_obj:
-                    cat_obj.categoria = data.categoria
+                    cat_obj.categoria = categoria
                 else:
-                    alchemy_db.session.add(Category(machine_id=data.id, origen=data.origen, categoria=data.categoria))
+                    alchemy_db.session.add(Category(machine_id=id, origen=origen, categoria=categoria))
             else:
                 if cat_obj:
                     alchemy_db.session.delete(cat_obj)
             alchemy_db.session.commit()
 
-            if data.origen == "docker":
+            if origen == "docker":
                 from dockerlabs.maquinas import recalcular_ranking_creadores
 
                 recalcular_ranking_creadores()
@@ -168,8 +178,8 @@ def register_machine_routes(
     @api_router.post("/gestion-maquinas/eliminar")
     async def api_eliminar_maquina(
         request: Request,
-        machine_id: int,
-        origen: str,
+        id: int = Form(...),
+        origen: str = Form(...),
         flask_session: dict = Depends(get_flask_session),
         csrf_ok: bool = Depends(verify_csrf_token),
     ):
@@ -181,14 +191,14 @@ def register_machine_routes(
         if origen not in ("docker", "bunker"):
             return JSONResponse(status_code=400, content={"error": "Origen inválido"})
 
-        maquina = Machine.query.get(machine_id)
+        maquina = Machine.query.get(id)
         if not maquina:
             return JSONResponse(status_code=404, content={"error": "Máquina no encontrada"})
         try:
             if origen == "bunker":
                 from bunkerlabs.models import BunkerSolve
 
-                BunkerSolve.query.filter_by(machine_id=machine_id).delete()
+                BunkerSolve.query.filter_by(machine_id=id).delete()
             alchemy_db.session.delete(maquina)
             alchemy_db.session.commit()
             if origen == "docker":

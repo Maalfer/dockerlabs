@@ -53,7 +53,6 @@ class BunkerWriteup(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
     __table_args__ = (
-        db.UniqueConstraint('maquina', 'autor', 'url', name='unique_bunker_writeup'),
         db.Index('idx_bunker_writeups_maquina', 'maquina'),
     )
 

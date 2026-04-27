@@ -281,27 +281,55 @@ let currentNotificationsTab = 'notificaciones';
 
 function switchNotificationsTab(tab) {
     currentNotificationsTab = tab;
-
-    // Update button styles
     const btnNotif = document.getElementById('tab-btn-notificaciones');
     const btnInvit = document.getElementById('tab-btn-invitaciones');
+    const btnSolic = document.getElementById('tab-btn-solicitudes');
 
     if (tab === 'notificaciones') {
         btnNotif.style.background = 'rgba(59, 130, 246, 0.15)';
         btnNotif.style.color = '#3b82f6';
         btnInvit.style.background = 'transparent';
         btnInvit.style.color = '#64748b';
+        if (btnSolic) {
+            btnSolic.style.background = 'transparent';
+            btnSolic.style.color = '#64748b';
+        }
         document.getElementById('tab-notificaciones').style.display = 'block';
         document.getElementById('tab-invitaciones').style.display = 'none';
+        if (document.getElementById('tab-solicitudes')) {
+            document.getElementById('tab-solicitudes').style.display = 'none';
+        }
         loadNotifications();
-    } else {
+    } else if (tab === 'invitaciones') {
         btnInvit.style.background = 'rgba(139, 92, 246, 0.15)';
         btnInvit.style.color = '#8b5cf6';
         btnNotif.style.background = 'transparent';
         btnNotif.style.color = '#64748b';
+        if (btnSolic) {
+            btnSolic.style.background = 'transparent';
+            btnSolic.style.color = '#64748b';
+        }
         document.getElementById('tab-notificaciones').style.display = 'none';
         document.getElementById('tab-invitaciones').style.display = 'block';
+        if (document.getElementById('tab-solicitudes')) {
+            document.getElementById('tab-solicitudes').style.display = 'none';
+        }
         loadInvitaciones();
+    } else if (tab === 'solicitudes') {
+        if (btnSolic) {
+            btnSolic.style.background = 'rgba(34, 197, 94, 0.15)';
+            btnSolic.style.color = '#22c55e';
+        }
+        btnNotif.style.background = 'transparent';
+        btnNotif.style.color = '#64748b';
+        btnInvit.style.background = 'transparent';
+        btnInvit.style.color = '#64748b';
+        document.getElementById('tab-notificaciones').style.display = 'none';
+        document.getElementById('tab-invitaciones').style.display = 'none';
+        if (document.getElementById('tab-solicitudes')) {
+            document.getElementById('tab-solicitudes').style.display = 'block';
+        }
+        loadSolicitudes();
     }
 }
 
@@ -436,7 +464,151 @@ function updateInvitacionesBadge(count) {
     }
 }
 
-// Update original loadNotifications to also update invitaciones badge
+async function loadSolicitudes() {
+    const container = document.getElementById('solicitudesList');
+    if (!container) return;
+
+    container.innerHTML = `
+        <div style="padding: 3rem 2rem; text-align: center; color: #64748b;">
+            <div style="background: rgba(34, 197, 94, 0.1); padding: 2rem; border-radius: 20px; display: inline-block; margin-bottom: 1.5rem;">
+                <i class="bi bi-arrow-repeat" style="font-size: 4rem; color: #22c55e; animation: spin 1s linear infinite;"></i>
+            </div>
+            <p style="font-size: 1.2rem; margin-bottom: 0.5rem; color: #94a3b8;">Cargando solicitudes...</p>
+        </div>
+    `;
+
+    try {
+        // First get user's team
+        const teamResponse = await fetch('/api/equipos/mi-equipo/info');
+        const teamData = await teamResponse.json();
+
+        if (!teamData.success || !teamData.tiene_equipo) {
+            container.innerHTML = `
+                <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 300px; padding: 3rem 2rem; text-align: center; color: #64748b;">
+                    <div style="background: linear-gradient(135deg, rgba(34, 197, 94, 0.15), rgba(59, 130, 246, 0.15)); padding: 3rem; border-radius: 50%; margin-bottom: 2rem; backdrop-filter: blur(10px); box-shadow: 0 8px 32px rgba(34, 197, 94, 0.2);">
+                        <i class="bi bi-people" style="font-size: 5rem; color: #22c55e; opacity: 0.7;"></i>
+                    </div>
+                    <p style="font-size: 1.5rem; margin-bottom: 0.75rem; color: #f8fafc; font-weight: 700;">No tienes equipo</p>
+                    <p style="font-size: 1rem; opacity: 0.7; max-width: 450px; line-height: 1.6; color: #94a3b8;">Las solicitudes para unirse a tu equipo aparecerán aquí cuando seas miembro de uno.</p>
+                </div>
+            `;
+            return;
+        }
+
+        const teamId = teamData.team.id;
+
+        // Get join requests for the team
+        const response = await fetch(`/api/equipos/${teamId}/solicitudes`);
+        const data = await response.json();
+
+        if (data.success) {
+            updateSolicitudesBadge(data.solicitudes.length);
+
+            if (data.solicitudes.length === 0) {
+                container.innerHTML = `
+                    <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 300px; padding: 3rem 2rem; text-align: center; color: #64748b;">
+                        <div style="background: linear-gradient(135deg, rgba(34, 197, 94, 0.15), rgba(59, 130, 246, 0.15)); padding: 3rem; border-radius: 50%; margin-bottom: 2rem; backdrop-filter: blur(10px); box-shadow: 0 8px 32px rgba(34, 197, 94, 0.2);">
+                            <i class="bi bi-inbox" style="font-size: 5rem; color: #22c55e; opacity: 0.7;"></i>
+                        </div>
+                        <p style="font-size: 1.5rem; margin-bottom: 0.75rem; color: #f8fafc; font-weight: 700;">No hay solicitudes</p>
+                        <p style="font-size: 1rem; opacity: 0.7; max-width: 450px; line-height: 1.6; color: #94a3b8;">Las solicitudes para unirse a tu equipo aparecerán aquí.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = data.solicitudes.map(req => `
+                <div class="notification-item" data-request-id="${req.id}" style="border-left: 3px solid #22c55e;">
+                    <div class="notification-header">
+                        <div class="notification-title" style="color: #22c55e;">
+                            <i class="bi bi-person-plus-fill"></i>
+                            Solicitud para unirse
+                        </div>
+                        <div class="notification-meta">
+                            <span class="notification-date">
+                                <i class="bi bi-clock"></i> ${formatDate(req.created_at)}
+                            </span>
+                        </div>
+                    </div>
+                    <div class="notification-content">
+                        <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem;">
+                            <img src="${req.user.profile_image_url}" style="width: 48px; height: 48px; border-radius: 50%; object-fit: cover; border: 2px solid #22c55e;">
+                            <div>
+                                <div style="font-weight: 600; color: #f1f5f9; font-size: 1.1rem;">${escapeHtml(req.user.username)}</div>
+                                <div style="font-size: 0.85rem; color: #64748b;">
+                                    ${req.user.puntos} pts
+                                </div>
+                            </div>
+                        </div>
+                        <p style="color: #94a3b8; margin: 0;">
+                            Quiere unirse a tu equipo
+                        </p>
+                    </div>
+                    <div class="notification-actions" style="display: flex; gap: 0.5rem; margin-top: 0.75rem;">
+                        <button class="notification-mark-read-btn" onclick="responderSolicitudNotif(${req.id}, true)" style="background: #22c55e; color: white;">
+                            <i class="bi bi-check-lg"></i> Aceptar
+                        </button>
+                        <button class="notification-delete-btn" onclick="responderSolicitudNotif(${req.id}, false)" style="background: transparent; color: #64748b; border: 1px solid #334155;">
+                            <i class="bi bi-x-lg"></i> Rechazar
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        } else {
+            container.innerHTML = `
+                <div style="padding: 2rem; text-align: center; color: #ef4444;">
+                    <i class="bi bi-exclamation-triangle" style="font-size: 3rem; margin-bottom: 1rem;"></i>
+                    <p>Error al cargar solicitudes</p>
+                </div>
+            `;
+        }
+    } catch (error) {
+        console.error('Error al cargar solicitudes:', error);
+        container.innerHTML = `
+            <div style="padding: 2rem; text-align: center; color: #ef4444;">
+                <i class="bi bi-exclamation-triangle" style="font-size: 3rem; margin-bottom: 1rem;"></i>
+                <p>Error al cargar solicitudes</p>
+            </div>
+        `;
+    }
+}
+
+async function responderSolicitudNotif(requestId, accept) {
+    try {
+        const response = await fetch('/api/equipos/solicitudes/responder', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                request_id: requestId,
+                accept: accept
+            })
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            alert(data.message);
+            loadSolicitudes();
+        } else {
+            alert('Error: ' + data.message);
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        alert('Error al procesar la solicitud');
+    }
+}
+
+function updateSolicitudesBadge(count) {
+    const badge = document.getElementById('solicitudes-badge');
+    if (badge) {
+        badge.textContent = count;
+        badge.style.display = count > 0 ? 'inline' : 'none';
+    }
+}
+
+// Update original loadNotifications to also update badges
 const originalLoadNotifications = loadNotifications;
 loadNotifications = async function() {
     await originalLoadNotifications();
@@ -446,6 +618,21 @@ loadNotifications = async function() {
         const data = await response.json();
         if (data.success) {
             updateInvitacionesBadge(data.invitaciones.length);
+        }
+    } catch (e) {
+        // Silent fail for badge update
+    }
+    // Load solicitudes count for badge
+    try {
+        const teamResponse = await fetch('/api/equipos/mi-equipo/info');
+        const teamData = await teamResponse.json();
+        if (teamData.success && teamData.tiene_equipo) {
+            const teamId = teamData.team.id;
+            const solicResponse = await fetch(`/api/equipos/${teamId}/solicitudes`);
+            const solicData = await solicResponse.json();
+            if (solicData.success) {
+                updateSolicitudesBadge(solicData.solicitudes.length);
+            }
         }
     } catch (e) {
         // Silent fail for badge update
@@ -474,6 +661,24 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         })
         .catch(error => console.error('Error al cargar invitaciones inicial:', error));
+
+    // Cargar conteo de solicitudes
+    fetch('/api/equipos/mi-equipo/info')
+        .then(response => response.json())
+        .then(data => {
+            if (data.success && data.tiene_equipo) {
+                const teamId = data.team.id;
+                fetch(`/api/equipos/${teamId}/solicitudes`)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            updateSolicitudesBadge(data.solicitudes.length);
+                        }
+                    })
+                    .catch(error => console.error('Error al cargar solicitudes inicial:', error));
+            }
+        })
+        .catch(error => console.error('Error al cargar equipo inicial:', error));
 
     // Event listener para botón de toggle
     const toggleBtn = document.getElementById('toggleReadNotifications');

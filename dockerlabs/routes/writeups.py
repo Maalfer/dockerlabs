@@ -67,42 +67,53 @@ def register_writeup_routes(api_router, get_flask_session, verify_csrf_token, al
         flask_session: dict = Depends(get_flask_session),
         csrf_ok: bool = Depends(verify_csrf_token),
     ):
+        import logging
+        logger = logging.getLogger(__name__)
+
         user_id = flask_session.get("user_id")
         autor = flask_session.get("username", "").strip()
+        logger.info(f"Submit writeup attempt - user_id: {user_id}, autor: {autor}, maquina: {data.maquina}")
+
         if not user_id or not autor:
+            logger.warning(f"Submit writeup failed - no user_id or autor: user_id={user_id}, autor={autor}")
             return JSONResponse(status_code=403, content={"error": "Debes iniciar sesión"})
 
         maquina = data.maquina.strip()
         url = data.url.strip()
         tipo = data.tipo.strip().lower()
 
+        logger.info(f"Validating writeup data - maquina: {maquina}, url: {url}, tipo: {tipo}")
+
         from dockerlabs import validators
 
         valid, err = validators.validate_machine_name(maquina)
         if not valid:
+            logger.warning(f"Machine name validation failed: {err}")
             return JSONResponse(status_code=400, content={"error": f"Campo 'maquina' inválido: {err}"})
         valid, err = validators.validate_url(url)
         if not valid:
+            logger.warning(f"URL validation failed: {err}")
             return JSONResponse(status_code=400, content={"error": f"URL inválida: {err}"})
         valid, err = validators.validate_writeup_type(tipo)
         if not valid:
+            logger.warning(f"Writeup type validation failed: {err}")
             return JSONResponse(status_code=400, content={"error": f"Tipo inválido: {err}"})
 
         tipo = "video" if tipo == "video" else "texto"
 
-        if not Machine.query.filter_by(nombre=maquina).first():
+        machine = Machine.query.filter_by(nombre=maquina).first()
+        if not machine:
+            logger.warning(f"Machine not found: {maquina}")
             return JSONResponse(status_code=400, content={"error": "La máquina especificada no existe"})
-        if PendingWriteup.query.filter_by(autor=autor, maquina=maquina).first():
-            return JSONResponse(status_code=400, content={"error": "Writeup ya está en pendiente de revisión."})
-        if Writeup.query.filter_by(autor=autor, maquina=maquina).first():
-            return JSONResponse(status_code=400, content={"error": "Writeup ya publicado."})
         try:
             new_pending = PendingWriteup(maquina=maquina, autor=autor, url=url, tipo=tipo)
             alchemy_db.session.add(new_pending)
             alchemy_db.session.commit()
+            logger.info(f"Writeup submitted successfully - autor={autor}, maquina={maquina}")
             return {"message": "Writeup enviado correctamente"}
         except Exception as e:
             alchemy_db.session.rollback()
+            logger.error(f"Error saving writeup: {str(e)}", exc_info=True)
             return JSONResponse(status_code=500, content={"error": f"Error al guardar: {str(e)}"})
 
     @api_router.post("/writeups/recibidos/{writeup_id}/aprobar")

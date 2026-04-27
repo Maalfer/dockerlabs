@@ -6,6 +6,7 @@ import shutil
 import sqlite3
 import tempfile
 import zipfile
+from datetime import datetime
 
 import secrets
 from fastapi import Depends, File, Request, UploadFile
@@ -27,54 +28,61 @@ def register_pages_admin_routes(
 ):
     @pages_router.get("/instrucciones-uso", response_class=HTMLResponse)
     def instrucciones_uso_page(request: Request, flask_session: dict = Depends(get_flask_session)):
+        current_user_role = flask_session.get("role", "")
         return templates.TemplateResponse(
             request,
             "dockerlabs/info/instrucciones_uso.html",
-            {"url_for": url_for, "session": flask_session, "g": {"csp_nonce": secrets.token_urlsafe(32)}},
+            {"url_for": url_for, "session": flask_session, "current_user_role": current_user_role, "g": {"csp_nonce": secrets.token_urlsafe(32)}},
         )
 
     @pages_router.get("/soporte", response_class=HTMLResponse)
     def soporte_page(request: Request, flask_session: dict = Depends(get_flask_session)):
+        current_user_role = flask_session.get("role", "")
         return templates.TemplateResponse(
-            request, "dockerlabs/info/soporte.html", {"url_for": url_for, "session": flask_session, "g": {"csp_nonce": secrets.token_urlsafe(32)}}
+            request, "dockerlabs/info/soporte.html", {"url_for": url_for, "session": flask_session, "current_user_role": current_user_role, "g": {"csp_nonce": secrets.token_urlsafe(32)}}
         )
 
     @pages_router.get("/equipo", response_class=HTMLResponse)
     def equipo_page(request: Request, flask_session: dict = Depends(get_flask_session)):
+        current_user_role = flask_session.get("role", "")
         return templates.TemplateResponse(
-            request, "dockerlabs/equipo.html", {"url_for": url_for, "session": flask_session, "g": {"csp_nonce": secrets.token_urlsafe(32)}}
+            request, "dockerlabs/equipo.html", {"url_for": url_for, "session": flask_session, "current_user_role": current_user_role, "g": {"csp_nonce": secrets.token_urlsafe(32)}}
         )
 
     @pages_router.get("/enviar-maquina", response_class=HTMLResponse)
     def enviar_maquina_page(request: Request, flask_session: dict = Depends(get_flask_session)):
+        current_user_role = flask_session.get("role", "")
         return templates.TemplateResponse(
             request,
             "dockerlabs/info/enviar_maquina.html",
-            {"url_for": url_for, "session": flask_session, "g": {"csp_nonce": secrets.token_urlsafe(32)}},
+            {"url_for": url_for, "session": flask_session, "current_user_role": current_user_role, "g": {"csp_nonce": secrets.token_urlsafe(32)}},
         )
 
     @pages_router.get("/como-se-crea-una-maquina", response_class=HTMLResponse)
     def como_se_crea_page(request: Request, flask_session: dict = Depends(get_flask_session)):
+        current_user_role = flask_session.get("role", "")
         return templates.TemplateResponse(
             request,
             "dockerlabs/info/como_se_crea_una_maquina.html",
-            {"url_for": url_for, "session": flask_session, "g": {"csp_nonce": secrets.token_urlsafe(32)}},
+            {"url_for": url_for, "session": flask_session, "current_user_role": current_user_role, "g": {"csp_nonce": secrets.token_urlsafe(32)}},
         )
 
     @pages_router.get("/agradecimientos", response_class=HTMLResponse)
     def agradecimientos_page(request: Request, flask_session: dict = Depends(get_flask_session)):
+        current_user_role = flask_session.get("role", "")
         return templates.TemplateResponse(
             request,
             "dockerlabs/info/agradecimientos.html",
-            {"url_for": url_for, "session": flask_session, "g": {"csp_nonce": secrets.token_urlsafe(32)}},
+            {"url_for": url_for, "session": flask_session, "current_user_role": current_user_role, "g": {"csp_nonce": secrets.token_urlsafe(32)}},
         )
 
     @pages_router.get("/terminos-condiciones", response_class=HTMLResponse)
     def terminos_condiciones_page(request: Request, flask_session: dict = Depends(get_flask_session)):
+        current_user_role = flask_session.get("role", "")
         return templates.TemplateResponse(
             request,
             "dockerlabs/info/terminos-condiciones.html",
-            {"url_for": url_for, "session": flask_session, "g": {"csp_nonce": secrets.token_urlsafe(32)}},
+            {"url_for": url_for, "session": flask_session, "current_user_role": current_user_role, "g": {"csp_nonce": secrets.token_urlsafe(32)}},
         )
 
     @pages_router.get("/bug-bounty")
@@ -261,6 +269,10 @@ def register_pages_admin_routes(
             raise RuntimeError("DATABASE path is not configured")
         return {"db": db_path, "wal": f"{db_path}-wal", "shm": f"{db_path}-shm", "journal": f"{db_path}-journal"}
 
+    def _get_db_engine():
+        from dockerlabs.database import engine
+        return engine
+
     def _acquire_db_lock():
         db_paths = _get_db_paths()
         lock_path = f"{db_paths['db']}.lock"
@@ -307,7 +319,7 @@ def register_pages_admin_routes(
         lock_fh = _acquire_db_lock()
         try:
             alchemy_db.session.remove()
-            alchemy_db.engine.dispose()
+            _get_db_engine().dispose()
             with tempfile.TemporaryDirectory(prefix="dockerlabs_backup_") as tmp_dir:
                 snapshot_db_path = _create_sqlite_snapshot_db(tmp_dir)
                 db_paths = _get_db_paths()
@@ -407,7 +419,7 @@ def register_pages_admin_routes(
                         candidate_journal = os.path.join(extract_dir, fn)
 
                 alchemy_db.session.remove()
-                alchemy_db.engine.dispose()
+                _get_db_engine().dispose()
                 db_dir = os.path.dirname(db_paths["db"])
                 os.makedirs(db_dir, exist_ok=True)
                 for p in (db_paths["wal"], db_paths["shm"], db_paths["journal"]):
@@ -588,11 +600,11 @@ def register_pages_admin_routes(
         name_claims = NameClaim.query.order_by(NameClaim.id.desc()).all()
         peticiones_nombres = []
         for p in name_claims:
-            user = User.query.get(p.user_id)
+            user = User.query.filter_by(username=p.username).first()
             peticiones_nombres.append({
                 "id": p.id,
-                "username": user.username if user else None,
-                "email": user.email if user else None,
+                "username": p.username,
+                "email": p.email,
                 "nombre_solicitado": p.nombre_solicitado,
                 "nombre_actual": p.nombre_actual,
                 "motivo": p.motivo,
@@ -645,6 +657,15 @@ def register_pages_admin_routes(
     def estadisticas_page(request: Request, flask_session: dict = Depends(get_flask_session)):
         from dockerlabs.models import Machine, Writeup
 
+        def parse_date_flexible(date_str):
+            """Parse date string trying multiple formats."""
+            for fmt in ("%Y-%m-%d", "%d/%m/%Y"):
+                try:
+                    return datetime.strptime(date_str, fmt)
+                except ValueError:
+                    continue
+            raise ValueError(f"Unable to parse date: {date_str}")
+
         def get_distribution_by_year(items, date_extractor):
             """Calculate distribution by year."""
             years = {}
@@ -662,6 +683,15 @@ def register_pages_admin_routes(
                 months[month_key] = months.get(month_key, 0) + 1
             return months
 
+        def get_distribution_by_field(items, field_name):
+            """Calculate distribution by a specific field."""
+            distribution = {}
+            for item in items:
+                value = getattr(item, field_name, None)
+                if value:
+                    distribution[value] = distribution.get(value, 0) + 1
+            return distribution
+
         machines = Machine.query.all()
         writeups = Writeup.query.all()
         users = User.query.all()
@@ -670,8 +700,8 @@ def register_pages_admin_routes(
             "total": len(machines),
             "by_dificultad": get_distribution_by_field(machines, "dificultad"),
             "by_origen": get_distribution_by_field(machines, "origen"),
-            "by_year": get_distribution_by_year(machines, lambda m: datetime.strptime(m.fecha, "%Y-%m-%d")),
-            "by_month": get_distribution_by_month(machines, lambda m: datetime.strptime(m.fecha, "%Y-%m-%d")),
+            "by_year": get_distribution_by_year(machines, lambda m: parse_date_flexible(m.fecha)),
+            "by_month": get_distribution_by_month(machines, lambda m: parse_date_flexible(m.fecha)),
         }
 
         writeup_stats = {

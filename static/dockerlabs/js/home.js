@@ -161,8 +161,6 @@ function filterByCompleted(event) {
         event.stopPropagation();
     }
     
-    console.log('Filtrando máquinas completadas');
-    
     currentFilter.completed = true;
     currentFilter.difficulty = 'todos';
     currentPage = 1;
@@ -183,8 +181,6 @@ function filterByUncompleted(event) {
         event.preventDefault();
         event.stopPropagation();
     }
-    
-    console.log('Filtrando máquinas sin completar');
     
     currentFilter.completed = false;
     currentFilter.difficulty = 'todos';
@@ -307,8 +303,6 @@ function filterByCategory(category, event) {
         event.preventDefault();
         event.stopPropagation();
     }
-    
-    console.log('Filtrando por categoría:', category);
     
     currentFilter.category = category;
     currentFilter.difficulty = 'todos';

@@ -80,14 +80,14 @@
                     {% if m.estado == "pendiente" %}
                     <div class="mt-auto d-flex justify-content-between gap-2">
 
-                        <form method="POST" action="{{ url_for('main.approve_machine', id=m.id) }}">
+                        <form method="POST" action="{{ url_for('main.approve_machine', machine_id=m.id) }}">
                             <input type="hidden" name="csrf_token" value="{{ csrf_token_value }}">
                             <button class="btn btn-success btn-sm">
                                 ✔ Aprobar
                             </button>
                         </form>
 
-                        <form method="POST" action="{{ url_for('main.reject_machine', id=m.id) }}">
+                        <form method="POST" action="{{ url_for('main.reject_machine', machine_id=m.id) }}">
                             <input type="hidden" name="csrf_token" value="{{ csrf_token_value }}">
                             <button class="btn btn-danger btn-sm">
                                 ✖ Rechazar

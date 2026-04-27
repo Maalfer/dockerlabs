@@ -91,7 +91,6 @@ class Writeup(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
     __table_args__ = (
-        db.UniqueConstraint('maquina', 'autor', 'url'),
         db.Index('idx_writeups_maquina', 'maquina'),
         db.Index('idx_writeups_autor', 'autor'),
         db.Index('idx_writeups_tipo', 'tipo'),
@@ -308,18 +307,22 @@ class Notification(db.Model):
     __tablename__ = 'notificaciones'
     id = db.Column(db.Integer, primary_key=True)
     sender_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='CASCADE'), nullable=False)
+    receiver_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='CASCADE'), nullable=True)
     title = db.Column(db.String(200), nullable=False)
     content = db.Column(db.Text, nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     read = db.Column(db.Boolean, default=False)
+    notification_type = db.Column(db.String(50), nullable=True)
 
-    sender = db.relationship('User', backref=db.backref('sent_notifications', lazy='dynamic'))
+    sender = db.relationship('User', foreign_keys=[sender_id], backref=db.backref('sent_notifications', lazy='dynamic'))
+    receiver = db.relationship('User', foreign_keys=[receiver_id], backref=db.backref('received_notifications', lazy='dynamic'))
 
     __table_args__ = (
         db.Index('idx_notificaciones_sender_id', 'sender_id'),
+        db.Index('idx_notificaciones_receiver_id', 'receiver_id'),
         db.Index('idx_notificaciones_created_at', 'created_at'),
         db.Index('idx_notificaciones_read', 'read'),
-        db.Index('idx_notificaciones_sender_read', 'sender_id', 'read'),
+        db.Index('idx_notifications_type', 'notification_type'),
     )
 
     def __repr__(self):

@@ -4,14 +4,6 @@ let currentTeam = null;
 let teamInvitations = [];
 let teamJoinRequests = [];
 
-// Utility function to escape HTML
-function escapeHtml(text) {
-    if (!text) return '';
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
-}
-
 // Inject equipos styles
 function injectEquiposStyles() {
     // First inject ranking styles if not present (for base modal styles)
@@ -879,7 +871,7 @@ function renderMyTeam(container, team, popup) {
     }
 
     const membersHtml = team.members.map(member => `
-        <div class="member-item">
+        <div class="member-item" style="cursor: pointer;" onclick="openAuthorProfileModal('${escapeHtml(member.username)}')">
             <img src="${member.profile_image_url}" class="team-member-avatar" alt="${escapeHtml(member.username)}">
             <div class="member-info">
                 <div class="member-name">
@@ -889,7 +881,7 @@ function renderMyTeam(container, team, popup) {
                 <div class="member-puntos">${member.puntos} pts</div>
             </div>
             ${!member.is_me ? `
-                <button class="member-remove-btn" onclick="eliminarMiembro(${team.id}, ${member.user_id})" title="Eliminar miembro">
+                <button class="member-remove-btn" onclick="event.stopPropagation(); eliminarMiembro(${team.id}, ${member.user_id})" title="Eliminar miembro">
                     <i class="bi bi-x-lg"></i>
                 </button>
             ` : ''}
@@ -913,10 +905,10 @@ function renderMyTeam(container, team, popup) {
         </div>
 
         <div class="tabs-container">
-            <button class="tab-btn active" onclick="switchTab(this, 'miembros')">Miembros</button>
-            <button class="tab-btn" onclick="switchTab(this, 'solicitudes')">Solicitudes</button>
+            <button class="tab-btn active" onclick="switchTab(this, 'miembros', ${team.id})">Miembros</button>
+            <button class="tab-btn" onclick="switchTab(this, 'solicitudes', ${team.id})">Solicitudes</button>
             ${team.member_count < team.max_members ? `
-                <button class="tab-btn" onclick="switchTab(this, 'invitar')">Invitar</button>
+                <button class="tab-btn" onclick="switchTab(this, 'invitar', ${team.id})">Invitar</button>
             ` : ''}
         </div>
 
@@ -950,7 +942,7 @@ function renderMyTeam(container, team, popup) {
     loadSolicitudesPendientes(team.id);
 }
 
-function switchTab(btn, tabId) {
+function switchTab(btn, tabId, teamId) {
     // Update active tab
     document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
@@ -959,6 +951,11 @@ function switchTab(btn, tabId) {
     document.querySelectorAll('.tab-content').forEach(c => c.style.display = 'none');
     const content = document.getElementById('tab-' + tabId);
     if (content) content.style.display = 'block';
+
+    // Load solicitudes when switching to solicitudes tab
+    if (tabId === 'solicitudes' && teamId) {
+        loadSolicitudesPendientes(teamId);
+    }
 }
 
 function loadSolicitudesPendientes(teamId) {
@@ -1570,21 +1567,15 @@ function openTeamDetailModal(teamId) {
             }
 
             const team = data.team;
-
-            const overlayDiv = document.createElement('div');
-            overlayDiv.className = 'overlay';
-
-            const popupDiv = document.createElement('div');
-            popupDiv.className = 'popup';
-            popupDiv.style.width = 'min(450px, 95vw)';
+            const { overlayDiv, popupDiv } = createModalElements('min(450px, 95vw)');
 
             const closeButton = document.createElement('button');
             closeButton.className = 'modal-close-button';
             closeButton.innerHTML = '&times;';
-            closeButton.onclick = closePopup;
+            closeButton.onclick = () => hideModal(overlayDiv, popupDiv);
 
             const membersHtml = team.members.map(member => `
-                <div class="member-item">
+                <div class="member-item" style="cursor: pointer;" onclick="openAuthorProfileModal('${escapeHtml(member.username)}')">
                     <img src="${member.profile_image_url}" class="team-member-avatar" alt="${escapeHtml(member.username)}">
                     <div class="member-info">
                         <div class="member-name">${escapeHtml(member.username)}</div>
@@ -1593,51 +1584,59 @@ function openTeamDetailModal(teamId) {
                 </div>
             `).join('');
 
+            let joinButtonHtml = '';
+            if (!team.is_member && team.member_count < team.max_members) {
+                joinButtonHtml = `<button class="team-btn team-btn-primary" onclick="solicitarUnirse(${team.id})" style="width: 100%; margin-top: 1rem;"><i class="bi bi-box-arrow-in-right"></i> Solicitar unirse</button>`;
+            } else if (team.is_member) {
+                joinButtonHtml = `<div style="text-align: center; color: #64748b; font-size: 0.85rem; margin-top: 1rem;"><i class="bi bi-check-circle-fill" style="color: #22c55e;"></i> Ya eres miembro</div>`;
+            } else {
+                joinButtonHtml = `<div style="text-align: center; color: #64748b; font-size: 0.85rem; margin-top: 1rem;"><i class="bi bi-x-circle-fill" style="color: #ef4444;"></i> Equipo completo</div>`;
+            }
+
             popupDiv.innerHTML = `
                 <div class="modal-header">
-                    ${team.imagen_url ? `
-                        <img src="${team.imagen_url}" class="team-avatar" style="margin-bottom: 1rem;">
-                    ` : `
-                        <div class="team-avatar" style="background: linear-gradient(135deg, #3b82f6, #8b5cf6); margin-bottom: 1rem;
-                                    display: flex; align-items: center; justify-content: center;">
-                            <i class="bi bi-people-fill" style="font-size: 2rem; color: white;"></i>
-                        </div>
-                    `}
+                    ${team.imagen_url ? `<img src="${team.imagen_url}" class="team-avatar" style="margin-bottom: 1rem;">` : `<div class="team-avatar" style="background: linear-gradient(135deg, #3b82f6, #8b5cf6); margin-bottom: 1rem; display: flex; align-items: center; justify-content: center;"><i class="bi bi-people-fill" style="font-size: 2rem; color: white;"></i></div>`}
                     <h1 class="modal-title">${escapeHtml(team.nombre)}</h1>
-                    <div class="modal-subtitle">
-                        ${team.member_count}/${team.max_members} miembros · ${team.puntos} pts totales
-                    </div>
+                    <div class="modal-subtitle">${team.member_count}/${team.max_members} miembros · ${team.puntos} pts</div>
                 </div>
-                <div class="section-title">Miembros del equipo</div>
+                <div class="section-title">Miembros</div>
                 ${membersHtml}
+                ${joinButtonHtml}
             `;
 
             popupDiv.appendChild(closeButton);
 
-            // Append after existing modals
             document.body.appendChild(overlayDiv);
             document.body.appendChild(popupDiv);
 
-            setTimeout(() => {
-                popupDiv.classList.add('visible');
-                overlayDiv.classList.add('visible');
-            }, 10);
+            overlayDiv.onclick = (e) => { if (e.target === overlayDiv) hideModal(overlayDiv, popupDiv); };
 
-            overlayDiv.onclick = (e) => { if (e.target === overlayDiv) closePopup(); };
-
-            function closePopup() {
-                popupDiv.classList.remove('visible');
-                overlayDiv.classList.remove('visible');
-                setTimeout(() => {
-                    if (popupDiv.parentNode) document.body.removeChild(popupDiv);
-                    if (overlayDiv.parentNode) document.body.removeChild(overlayDiv);
-                }, 300);
-            }
+            showModal(overlayDiv, popupDiv);
         })
         .catch(err => {
             console.error('Error:', err);
             alert('Error al cargar detalles del equipo');
         });
+}
+
+function solicitarUnirse(teamId) {
+    fetch(`/api/equipos/${teamId}/solicitar-unirse`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' }
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) {
+            alert(data.message);
+            location.reload();
+        } else {
+            alert('Error: ' + data.message);
+        }
+    })
+    .catch(err => {
+        console.error(err);
+        alert('Error al enviar solicitud');
+    });
 }
 
 // ==================== PLUS MENU FUNCTIONS ====================

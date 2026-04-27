@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Request, Depends, HTTPException
+from fastapi import APIRouter, Request, Depends, HTTPException, Form
 from fastapi.responses import JSONResponse, StreamingResponse, FileResponse, HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel
@@ -19,7 +19,7 @@ from slowapi.util import get_remote_address
 
 # Importaciones Flask (necesarias durante la migración)
 # No importamos flask_app
-from dockerlabs.models import User, Machine, Writeup, PendingMachineSubmission, Category, CreatorRanking, WriteupRanking, PendingWriteup, NameClaim, UsernameChangeRequest, PendingWriteup, WriteupEditRequest, CompletedMachine, Rating
+from dockerlabs.models import User, Machine, Writeup, PendingMachineSubmission, Category, CreatorRanking, WriteupRanking, PendingWriteup, NameClaim, UsernameChangeRequest, WriteupEditRequest, CompletedMachine, Rating
 from dockerlabs.extensions import db as alchemy_db
 from dockerlabs.decorators import generate_csrf_token
 from werkzeug.security import check_password_hash, generate_password_hash
@@ -58,8 +58,8 @@ def url_for(endpoint, **kwargs):
         'main.restore_backup': '/backups/restore',
         'main.pending_machines': '/pending-machines',
         'main.user_pending_machines': '/user-pending',
-        'main.approve_machine': '/api/admin/pending-machines/{id}/approve',
-        'main.reject_machine': '/api/admin/pending-machines/{id}/reject',
+        'main.approve_machine': '/api/admin/pending-machines/{machine_id}/approve',
+        'main.reject_machine': '/api/admin/pending-machines/{machine_id}/reject',
         'main.bug_bounty': '/bug-bounty',
         # Auth
         'auth.login': '/login',
@@ -78,8 +78,8 @@ def url_for(endpoint, **kwargs):
         'maquinas.maquinas_hechas': '/maquinas-hechas',
         'maquinas.gestion_maquinas': '/gestion-maquinas',
         'maquinas.add_maquina_page': '/add-maquina',
-        'maquinas.actualizar_maquina': '/gestion-maquinas/actualizar',
-        'maquinas.eliminar_maquina': '/gestion-maquinas/eliminar',
+        'maquinas.actualizar_maquina': '/api/gestion-maquinas/actualizar',
+        'maquinas.eliminar_maquina': '/api/gestion-maquinas/eliminar',
         'maquinas.serve_machine_logo': '/img/maquina/{machine_id}',
         # Writeups
         'writeups.writeups_publicados': '/writeups-publicados',
@@ -1097,7 +1097,7 @@ class ToggleCompletedRequest(BaseModel):
 @api_router.post("/gestion-maquinas/toggle-guest-access")
 def api_toggle_guest_access(
     request: Request,
-    machine_id: int,
+    id: int = Form(...),
     flask_session: dict = Depends(get_flask_session),
     csrf_ok: bool = Depends(verify_csrf_token)
 ):
@@ -1107,7 +1107,7 @@ def api_toggle_guest_access(
 
     from dockerlabs.models import Machine
 
-    maquina = Machine.query.get(machine_id)
+    maquina = Machine.query.get(id)
     if not maquina:
         return JSONResponse(status_code=404, content={"error": "Máquina no encontrada"})
     maquina.guest_access = not maquina.guest_access
@@ -1119,8 +1119,8 @@ def api_toggle_guest_access(
 async def api_upload_machine_logo(
     request: Request,
     logo: UploadFile = File(...),
-    machine_id: int = 0,
-    origen: str = "docker",
+    machine_id: int = Form(...),
+    origen: str = Form(...),
     flask_session: dict = Depends(get_flask_session),
     csrf_ok: bool = Depends(verify_csrf_token)
 ):

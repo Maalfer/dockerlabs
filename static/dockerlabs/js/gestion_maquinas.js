@@ -253,7 +253,3 @@ function toggleGuestAccess(machineId, btn) {
             alert('Ocurrió un error al intentar cambiar el estado.');
         });
 }
-
-function getCsrfToken() {
-    return document.querySelector('input[name="csrf_token"]')?.value || '';
-}

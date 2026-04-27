@@ -443,7 +443,13 @@
 
 /* Estilos específicos para el modal de notificaciones */
 #notificationsModal {
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.95);
     display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 10000;
 }
 
 #notificationsModal.visible {
