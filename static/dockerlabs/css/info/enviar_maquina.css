@@ -107,3 +107,16 @@
     }
 
 }
+
+.required-star {
+    color: #ef4444;
+    margin-left: 4px;
+    font-weight: bold;
+}
+
+label {
+    font-size: 0.9rem;
+    margin-bottom: 6px;
+    display: inline-block;
+    color: #cbd5e1;
+}
