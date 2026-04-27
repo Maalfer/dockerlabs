@@ -124,35 +124,79 @@
 
             <div class="machine-grid">
 
-                <input name="nombre" placeholder="Nombre máquina" required>
-
-                <input name="link_maquina" placeholder="URL máquina" required>
-
-                <input name="discord_user" placeholder="Usuario Discord" required>
-
-                <select name="dificultad">
-                    <option>Easy</option>
-                    <option>Medium</option>
-                    <option>Hard</option>
-                </select>
-
-                <input name="categoria" placeholder="Categoría">
-
-                <input name="tags" placeholder="Tags (web, linux, sudo...)">
-
-                <textarea name="descripcion" class="full" placeholder="Descripción"></textarea>
-
-                <textarea name="notas" class="full" placeholder="Notas adicionales"></textarea>
-
-                <input name="writeup_url" class="full" placeholder="Writeup URL">
-
+                <div class="full">
+                    <label>Nombre máquina</label>
+                    <span class="required-star">*</span>
+                    <input name="nombre" placeholder="Nombre máquina" required>
+                </div>
+            
+                <div class="full">
+                    <label>URL máquina</label>
+                    <span class="required-star">*</span>
+                    <input name="link_maquina" placeholder="URL máquina" required>
+                </div>
+            
+                <div class="full">
+                    <label>Usuario Discord</label>
+                    <span class="required-star">*</span>
+                    <input name="discord_user" placeholder="Usuario Discord" required>
+                </div>
+            
+                <div>
+                    <label>Dificultad</label>
+                    <span class="required-star">*</span>
+                    <select name="dificultad" required>
+                        <option value="">Selecciona dificultad</option>
+                        <option>Muy Fácil</option>
+                        <option>Fácil</option>
+                        <option>Medio</option>
+                        <option>Difícil</option>
+                    </select>
+                </div>
+            
+                <div>
+                    <label>Categoría</label>
+                    <span class="required-star">*</span>
+                    <select name="categoria" required>
+                        <option value="">Selecciona categoría</option>
+                        <option>Services</option>
+                        <option>Web</option>
+                        <option>binary Explotation</option>
+                        <option>PrivEsc</option>
+                        <option>Crypto</option>
+                        <option>Misc</option>
+                    </select>
+                </div>
+            
+                <div class="full">
+                    <label>Tags</label>
+                    <input name="tags" placeholder="web, linux, sudo... (Separado por comas)">
+                </div>
+            
+                <div class="full">
+                    <label>Descripción</label>
+                    <span class="required-star">*</span>
+                    <textarea name="descripcion" placeholder="Descripción" required></textarea>
+                </div>
+            
+                <div class="full">
+                    <label>Notas adicionales</label>
+                    <textarea name="notas" placeholder="Notas adicionales"></textarea>
+                </div>
+            
+                <div class="full">
+                    <label>Writeup URL</label>
+                    <input name="writeup_url" placeholder="Writeup URL">
+                </div>
+            
                 <input type="hidden" name="csrf_token" value="TU_TOKEN">
-
+            
                 <button class="submit-btn" type="submit">
                     Enviar máquina
                 </button>
-
+            
             </div>
+
 
         </form>
 
