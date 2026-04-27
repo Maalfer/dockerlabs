@@ -88,8 +88,16 @@ def register_pages_core_routes(
             categorias_map[m["id"]] = m["categoria"] if m["categoria"] else ""
 
         session_data = {}
+        current_user_role = ""
         if user_id:
-            session_data = {"user_id": user_id, "username": flask_session.get("username"), "role": flask_session.get("role")}
+            current_user_role = flask_session.get("role", "")
+            session_data = {"user_id": user_id, "username": flask_session.get("username"), "role": current_user_role}
+
+        # CSRF token handling - get from session or generate and store
+        csrf_token = flask_session.get("csrf_token")
+        if not csrf_token:
+            csrf_token = secrets.token_urlsafe(32)
+            flask_session["csrf_token"] = csrf_token
 
         context = {
             "request": request,
@@ -100,15 +108,16 @@ def register_pages_core_routes(
             "categorias_map": categorias_map,
             "current_user": {"is_authenticated": bool(user_id), "id": user_id},
             "session": session_data,
-            "csrf_token_value": secrets.token_urlsafe(32),
+            "csrf_token_value": csrf_token,
             "url_for": url_for,
+            "current_user_role": current_user_role,
             "g": {"csp_nonce": secrets.token_urlsafe(32)},
         }
         return templates.TemplateResponse(request, "dockerlabs/home.html", context)
 
     @pages_router.get("/dashboard", response_class=HTMLResponse)
     def dashboard_page(request: Request, flask_session: dict = Depends(get_flask_session)):
-        from dockerlabs.models import Machine
+        from dockerlabs.models import Machine, User
 
         user_id = flask_session.get("user_id")
         if not user_id:
@@ -125,18 +134,27 @@ def register_pages_core_routes(
         current_username = flask_session.get("username")
         profile_image_url = get_fastapi_profile_image_url(username=current_username, user_id=user_id)
 
+        # Fetch full user object for profile data
+        user = User.query.get(user_id) if user_id else None
+
         session_data = {}
         if user_id:
             session_data = {"user_id": user_id, "username": current_username, "role": role}
+
+        # CSRF token handling - get from session or generate and store
+        csrf_token = flask_session.get("csrf_token")
+        if not csrf_token:
+            csrf_token = secrets.token_urlsafe(32)
+            flask_session["csrf_token"] = csrf_token
 
         context = {
             "request": request,
             "maquinas": maquinas,
             "profile_image_url": profile_image_url,
-            "user": {"id": user_id, "username": current_username, "role": role},
+            "user": user,
             "current_user_role": role,
             "session": session_data,
-            "csrf_token_value": secrets.token_urlsafe(32),
+            "csrf_token_value": csrf_token,
             "get_profile_image_url": get_fastapi_profile_image_url,
             "url_for": url_for,
             "g": {"csp_nonce": secrets.token_urlsafe(32)},

@@ -1,11 +1,97 @@
 /* Estilos para página principal de DockerLabs */
-.search-with-filter {
+
+/* Buscador con botones de filtro */
+.busqueda-con-filtro {
     position: relative;
     display: inline-block;
+    width: 100%;
 }
 
 .busqueda-con-filtro .form-control {
-    padding-right: 75px;
+    padding-right: 90px;
+    background: rgba(15, 23, 42, 0.6);
+    border: 1px solid #334155;
+    color: #f1f5f9;
+    z-index: 1;
+}
+
+.busqueda-con-filtro .form-control::placeholder {
+    color: #94a3b8;
+}
+
+.busqueda-con-filtro .form-control:focus {
+    background: rgba(15, 23, 42, 0.8);
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+}
+
+/* Grupo de botones de filtro - posicionados a la derecha del input */
+.search-buttons-group {
+    position: absolute;
+    right: 4px;
+    top: 50%;
+    transform: translateY(-50%);
+    display: flex;
+    gap: 2px;
+    z-index: 2;
+}
+
+/* Botones individuales de categoría y filtro */
+.search-buttons-group .btn-category,
+.search-buttons-group .btn-filter {
+    background: rgba(30, 41, 59, 0.8);
+    border: 1px solid rgba(148, 163, 184, 0.2);
+    color: #94a3b8;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 0.85rem;
+    transition: all 0.2s ease;
+    backdrop-filter: blur(4px);
+}
+
+.search-buttons-group .btn-category:hover,
+.search-buttons-group .btn-filter:hover {
+    background: rgba(59, 130, 246, 0.2);
+    border-color: #3b82f6;
+    color: #f1f5f9;
+}
+
+.search-buttons-group .btn-category:focus,
+.search-buttons-group .btn-filter:focus {
+    box-shadow: none;
+}
+
+/* Dropdown menus de los botones de filtro */
+.search-buttons-group .dropdown-menu {
+    font-size: 0.875rem;
+    z-index: 9999 !important;
+    background: rgba(15, 23, 42, 0.98);
+    border: 1px solid #334155;
+    border-radius: 8px;
+    padding: 0.5rem 0;
+    margin-top: 8px !important;
+}
+
+.search-buttons-group .dropdown-item {
+    color: #cbd5e1;
+    padding: 0.5rem 1rem;
+    font-size: 0.85rem;
+}
+
+.search-buttons-group .dropdown-item:hover {
+    background: rgba(59, 130, 246, 0.2);
+    color: #f1f5f9;
+}
+
+.search-buttons-group .dropdown-divider {
+    border-color: #334155;
+    margin: 0.5rem 0;
+}
+
+/* Estilos legacy - mantener para compatibilidad */
+.search-with-filter {
+    position: relative;
+    display: inline-block;
 }
 
 .search-with-filter .btn {

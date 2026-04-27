@@ -7,5 +7,7 @@ uvicorn
 asgiref
 gunicorn
 fastapi
+jinja2
 slowapi
 bleach
+python-multipart

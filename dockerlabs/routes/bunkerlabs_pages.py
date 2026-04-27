@@ -17,6 +17,7 @@ def register_bunkerlabs_pages_routes(
     set_flask_session_cookie,
     templates,
     alchemy_db,
+    url_for,
 ):
     @pages_router.get("/bunkerlabs/login", response_class=HTMLResponse)
     @pages_router.post("/bunkerlabs/login", response_class=HTMLResponse)
@@ -152,6 +153,7 @@ def register_bunkerlabs_pages_routes(
 
         maquinas = Machine.query.filter_by(origen="bunker").order_by(Machine.id.asc()).all()
 
+        current_user_role = flask_session.get("role", "")
         return templates.TemplateResponse(
             request,
             "bunkerlabs/home.html",
@@ -161,6 +163,8 @@ def register_bunkerlabs_pages_routes(
                 "is_anonymous": flask_session.get("bunkerlabs_anonymous", False),
                 "is_unauthenticated_guest": flask_session.get("bunkerlabs_unauthenticated", False),
                 "session": flask_session,
+                "url_for": url_for,
+                "current_user_role": current_user_role,
                 "g": {"csp_nonce": secrets.token_urlsafe(32)},
             },
         )

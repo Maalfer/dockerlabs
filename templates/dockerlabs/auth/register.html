@@ -7,6 +7,17 @@
 {% endblock %}
 
 {% block content %}
+<!-- Loading Overlay -->
+<div id="loading-overlay" class="loading-overlay">
+    <div class="loading-spinner">
+        <div class="spinner-circle"></div>
+        <div class="spinner-circle"></div>
+        <div class="spinner-circle"></div>
+        <div class="spinner-circle"></div>
+    </div>
+    <p class="loading-text">Creando cuenta...</p>
+</div>
+
 <div class="register-container">
     <div class="register-box">
         <div class="register-header">
@@ -112,8 +123,13 @@
                             alt="DockerLabs Logo" class="auth-logo">
                     </div>
 
-                    <button type="submit" class="btn-register">
-                        <i class="fas fa-user-plus"></i> Crear cuenta
+                    <button type="submit" class="btn-register" id="register-btn">
+                        <span class="btn-text"><i class="fas fa-user-plus"></i> Crear cuenta</span>
+                        <span class="btn-loader" style="display: none;">
+                            <span class="loader-dot"></span>
+                            <span class="loader-dot"></span>
+                            <span class="loader-dot"></span>
+                        </span>
                     </button>
                 </div>
             </div>
@@ -131,6 +147,121 @@
     </div>
 </div>
 
+<style>
+    .btn-loader {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+    }
+    .loader-dot {
+        width: 6px;
+        height: 6px;
+        background: currentColor;
+        border-radius: 50%;
+        animation: loader-bounce 1.4s infinite ease-in-out both;
+    }
+    .loader-dot:nth-child(1) { animation-delay: -0.32s; }
+    .loader-dot:nth-child(2) { animation-delay: -0.16s; }
+    @keyframes loader-bounce {
+        0%, 80%, 100% { transform: scale(0); }
+        40% { transform: scale(1); }
+    }
+    .btn-register.loading .btn-text { display: none; }
+    .btn-register.loading .btn-loader { display: inline-flex !important; }
+    .btn-register:disabled { opacity: 0.8; cursor: not-allowed; }
+
+    /* Loading Overlay Styles */
+    .loading-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(15, 23, 42, 0.3);
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
+        display: none;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        z-index: 9999;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+
+    .loading-overlay.active {
+        display: flex;
+        opacity: 1;
+    }
+
+    .loading-spinner {
+        position: relative;
+        width: 80px;
+        height: 80px;
+        margin-bottom: 2rem;
+    }
+
+    .spinner-circle {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        border: 4px solid transparent;
+        border-top-color: #3b82f6;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+    }
+
+    .spinner-circle:nth-child(1) {
+        animation-delay: 0s;
+        border-top-color: #3b82f6;
+    }
+
+    .spinner-circle:nth-child(2) {
+        animation-delay: 0.15s;
+        border-top-color: #8b5cf6;
+        width: 80%;
+        height: 80%;
+        top: 10%;
+        left: 10%;
+    }
+
+    .spinner-circle:nth-child(3) {
+        animation-delay: 0.3s;
+        border-top-color: #ec4899;
+        width: 60%;
+        height: 60%;
+        top: 20%;
+        left: 20%;
+    }
+
+    .spinner-circle:nth-child(4) {
+        animation-delay: 0.45s;
+        border-top-color: #10b981;
+        width: 40%;
+        height: 40%;
+        top: 30%;
+        left: 30%;
+    }
+
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+
+    .loading-text {
+        color: #e2e8f0;
+        font-size: 1.2rem;
+        font-weight: 600;
+        letter-spacing: 0.5px;
+        animation: pulse 1.5s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+        0%, 100% { opacity: 0.6; }
+        50% { opacity: 1; }
+    }
+</style>
+
 <script nonce="{{ g.csp_nonce }}">
 document.addEventListener("DOMContentLoaded", function() {
     const form = document.getElementById("register-form");
@@ -140,15 +271,22 @@ document.addEventListener("DOMContentLoaded", function() {
     const pendingText = document.getElementById("register-pending-text");
     const successBox = document.getElementById("register-success");
     const pinDisplay = document.getElementById("register-pin");
-    
+    const registerBtn = document.getElementById("register-btn");
+    const loadingOverlay = document.getElementById("loading-overlay");
+
     form.addEventListener("submit", async function(e) {
         e.preventDefault();
-        
+
         // Esconder alertas
         errorBox.style.display = "none";
         pendingBox.style.display = "none";
         successBox.style.display = "none";
-        
+
+        // Mostrar animación de carga en toda la página
+        loadingOverlay.classList.add("active");
+        registerBtn.classList.add("loading");
+        registerBtn.disabled = true;
+
         const data = {
             username: form.username.value,
             email: form.email.value,
@@ -157,7 +295,7 @@ document.addEventListener("DOMContentLoaded", function() {
             terms: form.terms.checked
         };
         const csrfToken = form.csrf_token.value;
-        
+
         try {
             const response = await fetch("/api/auth/register", {
                 method: "POST",
@@ -167,9 +305,14 @@ document.addEventListener("DOMContentLoaded", function() {
                 },
                 body: JSON.stringify(data)
             });
-            
+
             const result = await response.json();
-            
+
+            // Ocultar overlay y restaurar botón
+            loadingOverlay.classList.remove("active");
+            registerBtn.classList.remove("loading");
+            registerBtn.disabled = false;
+
             if (response.ok && result.success) {
                 form.style.display = "none";
                 if (result.pending_message) {
@@ -184,6 +327,11 @@ document.addEventListener("DOMContentLoaded", function() {
                 errorText.textContent = result.message || "Error al registrar la cuenta";
             }
         } catch (error) {
+            // Ocultar overlay y restaurar botón en caso de error
+            loadingOverlay.classList.remove("active");
+            registerBtn.classList.remove("loading");
+            registerBtn.disabled = false;
+
             errorBox.style.display = "block";
             errorText.textContent = "Error de conexión con el servidor.";
         }

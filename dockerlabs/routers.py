@@ -1176,11 +1176,10 @@ async def api_upload_machine_logo(
     almacenamiento_dir = _os.path.join(BASE_DIR, 'database', 'almacenamiento', 'logos')
     _os.makedirs(almacenamiento_dir, exist_ok=True)
     
+    ts = int(_time.time())
     if origen == 'bunker':
-        nombre_seguro = secure_filename(maq.nombre)
-        final_filename = f"bunker_{nombre_seguro}{ext}"
+        final_filename = f"bunker_{machine_id}_{ts}{ext}"
     else:
-        ts = int(_time.time())
         final_filename = f"docker_{machine_id}_{ts}{ext}"
     
     file_path = _os.path.join(almacenamiento_dir, final_filename)
@@ -1484,6 +1483,7 @@ register_bunkerlabs_pages_routes(
     set_flask_session_cookie=set_flask_session_cookie,
     templates=templates,
     alchemy_db=alchemy_db,
+    url_for=url_for,
 )
 
 register_machine_routes(
@@ -1495,6 +1495,7 @@ register_machine_routes(
     set_flask_session_cookie=set_flask_session_cookie,
     templates=templates,
     alchemy_db=alchemy_db,
+    url_for=url_for,
 )
 
 register_pages_admin_routes(

@@ -1,37 +1,222 @@
 # Dockerlabs - Agent Rules & Architecture Decisions
 
-- **Almacenamiento de Imágenes Multimedia:** La web guarda las imágenes de perfil de los usuarios, los logotipos de las máquinas y demás recursos multimedia (información que se puede ir modificando con el tiempo) directamente dentro de la base de datos (SQLite) utilizando almacenamiento binario (BLOB). Sabemos que esto no es una buena práctica habitual en la industria, pero se ha decidido implementar de esta manera por pura comodidad. Además, gracias a la sencillez y ligereza del sitio, la web puede seguir funcionando a su máxima velocidad incluso con esta implementación.
+## 1. Almacenamiento de Imágenes Multimedia
 
-- **Stack Tecnológico (EN MIGRACIÓN A FASTAPI):**
- - **Backend:** Python + FastAPI (migrando desde Flask). Arquitectura híbrida durante la transición:
-   - **FastAPI:** Gestiona endpoints nuevos (`/api/*`) y páginas HTML (`pages_router`)
-   - **Flask:** Mantiene compatibilidad para endpoints legacy montados como fallback (`/legacy/*`)
-   - **Routers:** `api_router` para endpoints API, `pages_router` para páginas HTML
- - **Base de Datos:** SQLite gestionado a través de SQLAlchemy (`models.py`). Toda la lógica de datos (usuarios, máquinas, reportes, reclamos, mensajes) vive aquí.
- - **Frontend:** Vanilla HTML, CSS y JavaScript (Jinja2 para templates). No se usan frameworks reactivos pesados (como React o Vue). La interactividad se logra con llamadas AJAX (`fetch`) y manipulación del DOM nativa.
+Las imágenes de perfil y logotipos de máquinas se almacenan en el sistema de archivos bajo `database/almacenamiento/` con la siguiente estructura:
 
-- **Autenticación y Seguridad (ADAPTADO A FASTAPI):**
- - **Sesiones:** Combinación entre sesiones Flask (compatibilidad) y tokens FastAPI
- - **Dependencias:** Uso de `Depends()` de FastAPI para inyección de dependencias (sesión, validación CSRF)
- - **CSRF Tokens:** Implementación híbrida:
-   - Generados en páginas FastAPI y almacenados en sesión Flask
-   - Validados mediante dependencia `verify_csrf_token` en endpoints API
-   - Headers requeridos: `X-CSRFToken` o `X-CSRF-Token`
- - **Rate Limiting:** Migrado a `slowapi` para FastAPI (compatible con Flask sessions)
- - **Decoradores:** Mantenidos por compatibilidad, migrando progresivamente a dependencias FastAPI
+```
+database/almacenamiento/
+├── perfiles/          # Fotos de perfil de usuarios
+└── logos/             # Logotipos de máquinas
+```
 
-- **Gestión de Templates (FASTAPI):**
- - **Jinja2Templates:** Configurado para FastAPI con directorio `templates/`
- - **Contexto:** Requiere clave `"request"` en el contexto para compatibilidad
- - **Compatibilidad:** Variables Flask (`g`, `session`, `url_for`) adaptadas para FastAPI
+### Convenciones de Nombres (Estandarizadas)
 
-- **Gestión de Caché en Frontend:**
- - Debido a la carga estática de JavaScript, se utiliza el patrón de **Cache Busting** (ej. `script.js?v=3`) en los templates HTML para forzar a los navegadores de los usuarios a descargar las últimas versiones de los scripts tras un despliegue o cambio crítico.
+| Tipo | Patrón | Ejemplo |
+|------|--------|---------|
+| Perfiles | `user_{user_id}_{timestamp}.{ext}` | `user_123_1699123456.jpg` |
+| Logos DockerLabs | `docker_{machine_id}_{timestamp}.{ext}` | `docker_456_1699123456.png` |
+| Logos BunkerLabs | `bunker_{machine_id}_{timestamp}.{ext}` | `bunker_789_1699123456.webp` |
 
-- **Estructura Multi-Dominio:**
- - El proyecto da soporte a dos ecosistemas bajo el mismo código: **Dockerlabs** (laboratorios principales) y **Bunkerlabs** (entorno alternativo o privado). Cada uno tiene sus propios templates y lógicas de frontend (ej. `presentacionmaquina.js` vs `presentacionmaquina_bunkerlabs.js`), pero comparten gran parte de la base de datos y backend subyacente.
+- El `timestamp` permite múltiples versiones sin sobrescribir archivos anteriores
+- Las extensiones permitidas: `.jpg`, `.jpeg`, `.png`, `.gif`, `.webp`, `.svg` (solo logos)
+- **Compatibilidad legacy:** Se mantiene soporte para imágenes almacenadas como BLOB en la base de datos (`profile_image_data`, `logo_data`)
 
-- **Estado de la Migración:**
- - **Completado:** Endpoints API principales (`/api/auth/*`, `/api/machines/*`, etc.)
- - **En progreso:** Páginas HTML y endpoints Flask legacy
- - **Estrategia:** Mantener compatibilidad durante transición, eliminar Flask cuando todo esté migrado
+### Referencias en Base de Datos
+
+- `User.profile_image_path` → `database/almacenamiento/perfiles/{filename}`
+- `Machine.logo_path` → `database/almacenamiento/logos/{filename}`
+
+## 2. Stack Tecnológico
+
+### Backend (Arquitectura Híbrida FastAPI + Flask)
+
+- **FastAPI:** Framework principal para endpoints API (`/api/*`) y páginas HTML
+- **Flask:** Mantenido para compatibilidad con endpoints legacy (transición progresiva)
+- **SQLAlchemy:** ORM para base de datos SQLite
+- **Jinja2:** Motor de templates para renderizado HTML
+- **SlowAPI:** Rate limiting compatible con FastAPI y sesiones Flask
+
+### Estructura de Routers
+
+```python
+api_router = APIRouter(prefix="/api")      # Endpoints API REST
+pages_router = APIRouter()                  # Páginas HTML (sin prefijo)
+```
+
+### Frontend
+
+- **Vanilla JS:** Sin frameworks reactivos (React/Vue/Angular)
+- **Bootstrap 5.3:** Framework CSS
+- **Jinja2 Templates:** Renderizado server-side
+- **Fetch API:** Para llamadas AJAX a endpoints
+
+## 3. Autenticación y Seguridad
+
+### Sesiones
+
+- Sesiones Flask compatibles via `SecureCookieSessionInterface`
+- `flask_session` inyectado en endpoints via `Depends(get_flask_session)`
+- Cookie `session` con `httponly=True, samesite=lax`
+
+### CSRF Tokens (Crítico)
+
+**Generación y almacenamiento:**
+```python
+csrf_token = flask_session.get("csrf_token")
+if not csrf_token:
+    csrf_token = secrets.token_urlsafe(32)
+    flask_session["csrf_token"] = csrf_token
+```
+
+**En templates:**
+- Meta tag: `<meta name="csrf-token" content="{{ csrf_token_value }}">`
+- Todas las páginas deben pasar `csrf_token_value` al contexto
+
+**Validación en endpoints:**
+- Header requerido: `X-CSRFToken` (o `X-CSRF-Token`)
+- Validación via: `Depends(verify_csrf_token)`
+- Para POST de formularios tradicionales, también se acepta campo `csrf_token`
+
+### Contexto Requerido en Templates
+
+Todas las páginas deben incluir en el contexto:
+- `url_for`: Función para generar URLs
+- `current_user_role`: Rol del usuario actual (string)
+- `csrf_token_value`: Token CSRF para peticiones POST
+- `session`: Datos básicos de sesión
+- `g`: Objeto con `csp_nonce` para scripts inline
+
+## 4. Gestión de Templates
+
+### Variables Globales Requeridas
+
+```python
+{
+    "request": request,                    # Requerido por Jinja2
+    "url_for": url_for,                    # Generación de URLs
+    "current_user_role": role,             # Rol para mostrar/ocultar botones
+    "csrf_token_value": csrf_token,        # Token para POSTs
+    "session": session_data,               # Datos de sesión
+    "g": {"csp_nonce": csp_nonce}        # Nonce para CSP
+}
+```
+
+### Jerarquía de Templates
+
+- `base.html`: Layout principal con navegación
+- `dockerlabs/`: Templates de DockerLabs principal
+- `bunkerlabs/`: Templates de BunkerLabs (zona protegida)
+- `dockerlabs/auth/`: Login, registro, recuperación
+- `dockerlabs/admin/`: Gestión de usuarios, máquinas, backups
+- `dockerlabs/user/`: Perfil, estadísticas, writeups
+
+## 5. Multi-Dominio: DockerLabs vs BunkerLabs
+
+| Característica | DockerLabs | BunkerLabs |
+|----------------|------------|------------|
+| **Origen** | `origen="docker"` | `origen="bunker"` |
+| **URL** | `/` | `/bunkerlabs` |
+| **Dificultad** | Muy Fácil, Fácil, Medio, Difícil | Muy Fácil, Fácil, Medio, Difícil, Real |
+| **PIN** | Opcional | Requerido (excepto Entorno Real) |
+| **Entorno Real** | No disponible | Checkbox disponible |
+| **Acceso** | Público | Requiere PIN o invitación |
+
+### Campos Específicos de BunkerLabs
+
+- `pin`: Flag/PIN de la máquina
+- `entorno_real`: Checkbox para máquinas de entorno de producción real (omite PIN y dificultad fija a "Real")
+
+## 6. Endpoints API Clave
+
+### Autenticación
+- `POST /api/auth/login` - Inicio de sesión
+- `POST /api/auth/register` - Registro de usuario
+- `POST /api/auth/recover` - Recuperación de contraseña con PIN
+
+### Writeups
+- `POST /api/submit_writeup` - Enviar writeup (requiere CSRF en header)
+- `POST /api/writeups/recibidos/{id}/aprobar` - Aprobar writeup pendiente
+
+### Máquinas (Admin)
+- `GET /add-maquina` - Página de formulario
+- `POST /api/add-maquina` - Crear máquina (requiere rol admin)
+- `POST /api/gestion-maquinas/upload-logo` - Subir logo de máquina
+
+### Perfil
+- `POST /api/upload-profile-photo` - Subir foto de perfil
+- `POST /api/update_social_links` - Actualizar LinkedIn, GitHub, YouTube
+- `POST /api/change_password` - Cambiar contraseña
+
+### Backups (Admin)
+- `GET /backups` - Página de gestión
+- `POST /backups/download` - Descargar backup ZIP
+- `POST /backups/restore` - Restaurar backup
+
+## 7. Patrones de Código
+
+### Estructura de Rutas
+
+Las rutas se registran en `routers.py` o en módulos separados bajo `dockerlabs/routes/`:
+
+```python
+def register_XXX_routes(api_router, pages_router, ...):
+    @api_router.post("/endpoint")
+    async def api_endpoint(..., csrf_ok: bool = Depends(verify_csrf_token)):
+        # Lógica API
+        pass
+
+    @pages_router.get("/page", response_class=HTMLResponse)
+    def page_endpoint(...):
+        # Renderizar template
+        pass
+```
+
+### Validación de Roles
+
+```python
+role = flask_session.get("role", "")
+if role not in ("admin", "moderador"):
+    return JSONResponse(status_code=403, content={"error": "Acceso denegado"})
+```
+
+### Manejo de Errores
+
+```python
+try:
+    # Operación DB
+    alchemy_db.session.commit()
+except Exception as e:
+    alchemy_db.session.rollback()
+    return JSONResponse(status_code=500, content={"error": str(e)})
+```
+
+## 8. Consideraciones de Seguridad
+
+1. **Siempre validar CSRF** en endpoints que modifiquen estado (POST, PUT, DELETE)
+2. **Nunca confiar en datos del cliente** sin validación (validators.py)
+3. **Sanitizar filenames** con `secure_filename()` de Werkzeug
+4. **Validar tipos MIME** de archivos subidos (imágenes solo)
+5. **Límites de tamaño:** 5MB para perfiles, 2MB para logos
+6. **CSP Nonce:** Scripts inline requieren `nonce="{{ g.csp_nonce }}"`
+7. **Rate limiting:** Endpoints sensibles deben usar `@limiter.limit()`
+
+## 9. Dependencias Clave
+
+```
+fastapi
+flask
+flask-sqlalchemy
+flask-login
+slowapi
+jinja2
+pillow  # Procesamiento de imágenes
+werkzeug
+bleach  # Sanitización HTML
+```
+
+## 10. Estado de la Migración
+
+- **Completado:** Sistema de autenticación, writeups, perfiles, backups
+- **En progreso:** Eliminación progresiva de endpoints Flask legacy
+- **Estable:** La arquitectura híbrida es funcional y mantenible a largo plazo

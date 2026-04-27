@@ -72,6 +72,7 @@ def register_machine_routes(
     set_flask_session_cookie,
     templates,
     alchemy_db,
+    url_for,
 ):
     @api_router.post("/gestion-maquinas/actualizar")
     async def api_actualizar_maquina(
@@ -205,10 +206,11 @@ def register_machine_routes(
         ok, redir = require_auth_and_role(flask_session, ["admin"])
         if not ok:
             return redir
+        current_user_role = flask_session.get("role", "")
         return templates.TemplateResponse(
             request,
             "dockerlabs/info/add-maquina.html",
-            {"error": None, "session": flask_session, "g": {"csp_nonce": secrets.token_urlsafe(32)}},
+            {"error": None, "session": flask_session, "url_for": url_for, "current_user_role": current_user_role, "g": {"csp_nonce": secrets.token_urlsafe(32)}},
         )
 
     @api_router.post("/add-maquina")
@@ -498,15 +500,18 @@ def register_machine_routes(
         completed_count = len(completed_machines)
         completion_percentage = round((completed_count / total_machines * 100), 1) if total_machines > 0 else 0
 
+        current_user_role = flask_session.get("role", "")
         return templates.TemplateResponse(
             request,
-            "dockerlabs/maquinas_hechas.html",
+            "dockerlabs/user/maquinas_hechas.html",
             {
                 "completed_machines": completed_machines,
                 "total_machines": total_machines,
                 "completed_count": completed_count,
                 "completion_percentage": completion_percentage,
                 "session": flask_session,
+                "url_for": url_for,
+                "current_user_role": current_user_role,
                 "g": {"csp_nonce": secrets.token_urlsafe(32)},
             },
         )

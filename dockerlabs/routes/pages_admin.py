@@ -1,5 +1,6 @@
 import fcntl
 import io
+import math
 import os
 import shutil
 import sqlite3
@@ -76,11 +77,9 @@ def register_pages_admin_routes(
             {"url_for": url_for, "session": flask_session, "g": {"csp_nonce": secrets.token_urlsafe(32)}},
         )
 
-    @pages_router.get("/bug-bounty", response_class=HTMLResponse)
+    @pages_router.get("/bug-bounty")
     def bug_bounty_page(request: Request, flask_session: dict = Depends(get_flask_session)):
-        return templates.TemplateResponse(
-            request, "dockerlabs/bug_bounty.html", {"url_for": url_for, "session": flask_session, "g": {"csp_nonce": secrets.token_urlsafe(32)}}
-        )
+        return RedirectResponse(url="/", status_code=302)
 
     @pages_router.get("/politica-privacidad", response_class=HTMLResponse)
     def politica_privacidad_page(request: Request, flask_session: dict = Depends(get_flask_session)):
@@ -140,6 +139,7 @@ def register_pages_admin_routes(
                 "has_prev": has_prev,
                 "has_next": has_next,
                 "search": search,
+                "url_for": url_for,
                 "current_user_role": flask_session.get("role", ""),
             },
         )
@@ -178,10 +178,21 @@ def register_pages_admin_routes(
         bunker_query = build_query("bunker")
         docker_total = docker_query.count()
         bunker_total = bunker_query.count()
-        docker_pagination = docker_query.paginate(page=page, per_page=per_page, error_out=False)
-        bunker_pagination = bunker_query.paginate(page=page, per_page=per_page, error_out=False)
-        maquinas_docker = docker_pagination.items
-        maquinas_bunker = bunker_pagination.items
+
+        # Manual pagination using SQLAlchemy limit/offset
+        docker_items = docker_query.limit(per_page).offset((page - 1) * per_page).all()
+        bunker_items = bunker_query.limit(per_page).offset((page - 1) * per_page).all()
+
+        maquinas_docker = docker_items
+        maquinas_bunker = bunker_items
+
+        # Calculate pagination properties
+        docker_pages = math.ceil(docker_total / per_page) if per_page > 0 else 1
+        bunker_pages = math.ceil(bunker_total / per_page) if per_page > 0 else 1
+        docker_has_prev = page > 1
+        docker_has_next = page < docker_pages
+        bunker_has_prev = page > 1
+        bunker_has_next = page < bunker_pages
 
         categorias_map = {}
         if maquinas_docker:
@@ -199,6 +210,7 @@ def register_pages_admin_routes(
                 for m in maquinas_bunker:
                     categorias_map[("bunker", m.id)] = bunker_lookup.get(m.id, "")
 
+        current_user_role = flask_session.get("role", "")
         return templates.TemplateResponse(
             request,
             "dockerlabs/admin/gestion_maquinas.html",
@@ -212,12 +224,14 @@ def register_pages_admin_routes(
                 "search": search,
                 "docker_total": docker_total,
                 "bunker_total": bunker_total,
-                "docker_pages": docker_pagination.pages,
-                "bunker_pages": bunker_pagination.pages,
-                "docker_has_prev": docker_pagination.has_prev,
-                "docker_has_next": docker_pagination.has_next,
-                "bunker_has_prev": bunker_pagination.has_prev,
-                "bunker_has_next": bunker_pagination.has_next,
+                "docker_pages": docker_pages,
+                "bunker_pages": bunker_pages,
+                "docker_has_prev": docker_has_prev,
+                "docker_has_next": docker_has_next,
+                "bunker_has_prev": bunker_has_prev,
+                "bunker_has_next": bunker_has_next,
+                "url_for": url_for,
+                "current_user_role": current_user_role,
             },
         )
 
@@ -229,10 +243,11 @@ def register_pages_admin_routes(
             return RedirectResponse(url="/login", status_code=302)
         if role != 'admin':
             return RedirectResponse(url="/", status_code=302)
+        csrf_token = generate_csrf_token()
         return templates.TemplateResponse(
             request,
             "dockerlabs/admin/backups.html",
-            {"session": flask_session, "g": {"csp_nonce": secrets.token_urlsafe(32)}},
+            {"session": flask_session, "url_for": url_for, "current_user_role": role, "csrf_token_value": csrf_token, "g": {"csp_nonce": secrets.token_urlsafe(32)}},
         )
 
     def _get_db_paths():
@@ -462,10 +477,11 @@ def register_pages_admin_routes(
         if not ok:
             return redirect
         machines = PendingMachineSubmission.query.order_by(PendingMachineSubmission.submitted_at.desc()).all()
+        current_user_role = flask_session.get("role", "")
         return templates.TemplateResponse(
             request,
-            "dockerlabs/admin/pending_machines.html",
-            {"machines": machines, "session": flask_session, "g": {"csp_nonce": secrets.token_urlsafe(32)}},
+            "dockerlabs/admin/pending.html",
+            {"machines": machines, "session": flask_session, "url_for": url_for, "current_user_role": current_user_role, "g": {"csp_nonce": secrets.token_urlsafe(32)}},
         )
 
     @pages_router.get("/user-pending", response_class=HTMLResponse)
@@ -473,10 +489,11 @@ def register_pages_admin_routes(
         user_id = flask_session.get("user_id")
         if not user_id:
             return RedirectResponse(url="/login", status_code=302)
+        current_user_role = flask_session.get("role", "")
         return templates.TemplateResponse(
             request,
-            "dockerlabs/user/user_pending.html",
-            {"username": flask_session.get("username"), "session": flask_session, "g": {"csp_nonce": secrets.token_urlsafe(32)}},
+            "dockerlabs/auth/user-pending.html",
+            {"username": flask_session.get("username"), "session": flask_session, "url_for": url_for, "current_user_role": current_user_role, "g": {"csp_nonce": secrets.token_urlsafe(32)}},
         )
 
     @pages_router.get("/writeups-recibidos", response_class=HTMLResponse)
@@ -486,10 +503,11 @@ def register_pages_admin_routes(
             return redirect
         user = User.query.get(flask_session.get("user_id")) if flask_session.get("user_id") else None
         csrf_token = flask_session.get("csrf_token") or secrets.token_urlsafe(32)
+        current_user_role = flask_session.get("role", "")
         return templates.TemplateResponse(
             request,
             "dockerlabs/user/writeups_recibidos.html",
-            {"session": flask_session, "user": user, "csrf_token_value": csrf_token, "g": {"csp_nonce": secrets.token_urlsafe(32)}},
+            {"session": flask_session, "user": user, "csrf_token_value": csrf_token, "url_for": url_for, "current_user_role": current_user_role, "g": {"csp_nonce": secrets.token_urlsafe(32)}},
         )
 
     @pages_router.get("/writeups-publicados", response_class=HTMLResponse)
@@ -499,10 +517,11 @@ def register_pages_admin_routes(
             return redirect
         user = User.query.get(flask_session.get("user_id")) if flask_session.get("user_id") else None
         csrf_token = flask_session.get("csrf_token") or secrets.token_urlsafe(32)
+        current_user_role = flask_session.get("role", "")
         return templates.TemplateResponse(
             request,
             "dockerlabs/user/writeups_publicados.html",
-            {"user": user, "session": flask_session, "csrf_token_value": csrf_token, "g": {"csp_nonce": secrets.token_urlsafe(32)}},
+            {"user": user, "session": flask_session, "csrf_token_value": csrf_token, "url_for": url_for, "current_user_role": current_user_role, "g": {"csp_nonce": secrets.token_urlsafe(32)}},
         )
 
     @pages_router.get("/peticiones-writeups", response_class=HTMLResponse)
@@ -513,10 +532,11 @@ def register_pages_admin_routes(
         if not ok:
             return redirect
         requests = WriteupEditRequest.query.order_by(WriteupEditRequest.id.desc()).all()
+        current_user_role = flask_session.get("role", "")
         return templates.TemplateResponse(
             request,
-            "dockerlabs/admin/peticiones_writeups.html",
-            {"peticiones": requests, "session": flask_session, "g": {"csp_nonce": secrets.token_urlsafe(32)}},
+            "dockerlabs/admin/peticiones.html",
+            {"peticiones": requests, "session": flask_session, "url_for": url_for, "current_user_role": current_user_role, "g": {"csp_nonce": secrets.token_urlsafe(32)}},
         )
 
     @pages_router.get("/estadisticas", response_class=HTMLResponse)
@@ -566,8 +586,9 @@ def register_pages_admin_routes(
             "by_month": get_distribution_by_month(users, lambda u: u.created_at),
         }
 
+        current_user_role = flask_session.get("role", "")
         return templates.TemplateResponse(
             request,
             "dockerlabs/user/estadisticas.html",
-            {"machine_stats": machine_stats, "writeup_stats": writeup_stats, "user_stats": user_stats, "session": flask_session, "g": {"csp_nonce": secrets.token_urlsafe(32)}},
+            {"machine_stats": machine_stats, "writeup_stats": writeup_stats, "user_stats": user_stats, "session": flask_session, "url_for": url_for, "current_user_role": current_user_role, "g": {"csp_nonce": secrets.token_urlsafe(32)}},
         )
