@@ -18,26 +18,26 @@
                             <i class="bi bi-tags"></i>
                         </button>
                         <ul class="dropdown-menu dropdown-menu-end">
-                            <li><a class="dropdown-item" href="#" onclick="filterByCategory(''); return false;">Todas las
+                            <li><a class="dropdown-item" href="#" onclick="filterByCategory('', event); return false;">Todas las
                                     categorías</a></li>
                             <li>
                                 <hr class="dropdown-divider">
                             </li>
                             <li><a class="dropdown-item" href="#"
-                                    onclick="filterByCategory('Hacking Web'); return false;">Hacking
+                                    onclick="filterByCategory('Hacking Web', event); return false;">Hacking
                                     Web</a></li>
                             <li><a class="dropdown-item" href="#"
-                                    onclick="filterByCategory('Bug Bounty'); return false;">Bug
+                                    onclick="filterByCategory('Bug Bounty', event); return false;">Bug
                                     Bounty</a></li>
                             <li><a class="dropdown-item" href="#"
-                                    onclick="filterByCategory('Hacking CMS'); return false;">Hacking
+                                    onclick="filterByCategory('Hacking CMS', event); return false;">Hacking
                                     CMS</a></li>
                             <li><a class="dropdown-item" href="#"
-                                    onclick="filterByCategory('Hacking Infraestructura'); return false;">Hacking
+                                    onclick="filterByCategory('Hacking Infraestructura', event); return false;">Hacking
                                     Infraestructura</a>
                             </li>
                             <li><a class="dropdown-item" href="#"
-                                    onclick="filterByCategory('Pivoting'); return false;">Pivoting</a>
+                                    onclick="filterByCategory('Pivoting', event); return false;">Pivoting</a>
                             </li>
                         </ul>
 
@@ -50,9 +50,9 @@
                                     Reciente</a></li>
                             <li><a class="dropdown-item" href="#" onclick="sortByDate('oldest'); return false;">Fecha
                                     Antiguos</a></li>
-                            <li><a class="dropdown-item" href="#" onclick="filterByCompleted(); return false;">Máquinas
+                            <li><a class="dropdown-item" href="#" onclick="filterByCompleted(event); return false;">Máquinas
                                     Resueltas</a></li>
-                            <li><a class="dropdown-item" href="#" onclick="filterByUncompleted(); return false;">Máquinas
+                            <li><a class="dropdown-item" href="#" onclick="filterByUncompleted(event); return false;">Máquinas
                                     Sin Resolver</a></li>
                             <li>
                                 <hr class="dropdown-divider">
@@ -67,6 +67,7 @@
 
                 <button id="ranking" class="btn btn-sm" onclick="ranking()">Writeups👑</button>
                 <button id="autores" class="btn btn-sm" onclick="rankingautores()">Autores👑</button>
+                <button id="equipos" class="btn btn-sm" onclick="rankingEquipos()">Equipos👑</button>
                 <span class="filters-divider" aria-hidden="true"></span>
                 <span class="filters-divider" aria-hidden="true"></span>
                 <div class="d-flex flex-wrap gap-2 ms-auto align-items-center">
@@ -231,6 +232,7 @@
 <script src="{{ url_for('static', filename='dockerlabs/js/descripciones.js') }}"></script>
 <script src="{{ url_for('static', filename='dockerlabs/js/writeups.js') }}"></script>
 <script src="{{ url_for('static', filename='dockerlabs/js/ranking.js') }}"></script>
+<script src="{{ url_for('static', filename='dockerlabs/js/equipos.js') }}"></script>
 <script src="{{ url_for('static', filename='dockerlabs/js/subirwriteup.js') }}"></script>
 
 {% endblock %}

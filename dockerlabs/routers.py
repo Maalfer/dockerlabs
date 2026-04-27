@@ -87,7 +87,7 @@ def url_for(endpoint, **kwargs):
         # Misc
         'dashboard': '/dashboard',
         'index': '/',
-        'peticiones': '/peticiones-writeups',
+        'peticiones': '/peticiones',
     }
 
     # Si está en el mapeo, usar la ruta de FastAPI
@@ -1425,6 +1425,7 @@ from dockerlabs.routes.images import register_image_routes
 from dockerlabs.routes.pending_admin import register_pending_admin_routes
 from dockerlabs.routes.pages_admin import register_pages_admin_routes
 from dockerlabs.routes.pages_core import register_pages_core_routes
+from dockerlabs.routes.equipos import register_equipos_routes
 
 register_notification_routes(
     api_router=api_router,
@@ -1517,6 +1518,13 @@ register_pages_core_routes(
     get_fastapi_profile_image_url=get_fastapi_profile_image_url,
     url_for=url_for,
     templates=templates,
+    alchemy_db=alchemy_db,
+)
+
+register_equipos_routes(
+    api_router=api_router,
+    get_flask_session=get_flask_session,
+    verify_csrf_token=verify_csrf_token,
     alchemy_db=alchemy_db,
 )
 

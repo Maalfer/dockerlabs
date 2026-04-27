@@ -325,3 +325,107 @@ class Notification(db.Model):
     def __repr__(self):
         return f'<Notification {self.id}: {self.title}>'
 
+class Team(db.Model):
+    __tablename__ = 'equipos'
+
+    id = db.Column(db.Integer, primary_key=True)
+    nombre = db.Column(db.String(50), unique=True, nullable=False)
+    imagen_path = db.Column(db.String(255), nullable=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_by = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+
+    creator = db.relationship('User', backref='created_teams')
+
+    __table_args__ = (
+        db.Index('idx_equipos_nombre', 'nombre'),
+        db.Index('idx_equipos_created_at', 'created_at'),
+    )
+
+    def __repr__(self):
+        return f'<Team {self.nombre}>'
+
+    @property
+    def member_count(self):
+        return TeamMember.query.filter_by(team_id=self.id).count()
+
+    @property
+    def total_puntos(self):
+        from sqlalchemy import func
+        result = db.session.query(
+            func.coalesce(func.sum(WriteupRanking.puntos), 0)
+        ).join(
+            TeamMember, TeamMember.user_id == User.id
+        ).join(
+            User, func.lower(User.username) == func.lower(WriteupRanking.nombre)
+        ).filter(
+            TeamMember.team_id == self.id
+        ).first()
+        return result[0] if result else 0
+
+class TeamMember(db.Model):
+    __tablename__ = 'equipo_miembros'
+
+    id = db.Column(db.Integer, primary_key=True)
+    team_id = db.Column(db.Integer, db.ForeignKey('equipos.id', ondelete='CASCADE'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='CASCADE'), nullable=False)
+    joined_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    team = db.relationship('Team', backref=db.backref('members', cascade='all, delete-orphan'))
+    user = db.relationship('User', backref='team_memberships')
+
+    __table_args__ = (
+        db.UniqueConstraint('team_id', 'user_id', name='idx_equipo_miembros_uniq'),
+        db.Index('idx_equipo_miembros_team_id', 'team_id'),
+        db.Index('idx_equipo_miembros_user_id', 'user_id'),
+    )
+
+    def __repr__(self):
+        return f'<TeamMember team={self.team_id} user={self.user_id}>'
+
+class TeamInvitation(db.Model):
+    __tablename__ = 'equipo_invitaciones'
+
+    id = db.Column(db.Integer, primary_key=True)
+    team_id = db.Column(db.Integer, db.ForeignKey('equipos.id', ondelete='CASCADE'), nullable=False)
+    invited_by = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    invited_user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    status = db.Column(db.String(20), default='pending')
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    responded_at = db.Column(db.DateTime, nullable=True)
+
+    team = db.relationship('Team', backref=db.backref('invitations', cascade='all, delete-orphan'))
+    invited_by_user = db.relationship('User', foreign_keys=[invited_by], backref='sent_invitations')
+    invited_user = db.relationship('User', foreign_keys=[invited_user_id], backref='received_invitations')
+
+    __table_args__ = (
+        db.Index('idx_equipo_invitaciones_team_id', 'team_id'),
+        db.Index('idx_equipo_invitaciones_invited_user', 'invited_user_id'),
+        db.Index('idx_equipo_invitaciones_status', 'status'),
+    )
+
+    def __repr__(self):
+        return f'<TeamInvitation team={self.team_id} to_user={self.invited_user_id}>'
+
+class TeamJoinRequest(db.Model):
+    __tablename__ = 'equipo_solicitudes'
+
+    id = db.Column(db.Integer, primary_key=True)
+    team_id = db.Column(db.Integer, db.ForeignKey('equipos.id', ondelete='CASCADE'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='CASCADE'), nullable=False)
+    status = db.Column(db.String(20), default='pending')
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    responded_at = db.Column(db.DateTime, nullable=True)
+
+    team = db.relationship('Team', backref=db.backref('join_requests', cascade='all, delete-orphan'))
+    user = db.relationship('User', backref='team_join_requests')
+
+    __table_args__ = (
+        db.UniqueConstraint('team_id', 'user_id', name='idx_equipo_solicitudes_uniq'),
+        db.Index('idx_equipo_solicitudes_team_id', 'team_id'),
+        db.Index('idx_equipo_solicitudes_user_id', 'user_id'),
+        db.Index('idx_equipo_solicitudes_status', 'status'),
+    )
+
+    def __repr__(self):
+        return f'<TeamJoinRequest team={self.team_id} user={self.user_id}>'
+

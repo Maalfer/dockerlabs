@@ -233,6 +233,8 @@ def register_pages_admin_routes(
                 "bunker_has_next": bunker_has_next,
                 "url_for": url_for,
                 "current_user_role": current_user_role,
+                "session": flask_session,
+                "g": {"csp_nonce": secrets.token_urlsafe(32)},
             },
         )
 
@@ -526,20 +528,117 @@ def register_pages_admin_routes(
             {"user": user, "session": flask_session, "csrf_token_value": csrf_token, "url_for": url_for, "current_user_role": current_user_role, "g": {"csp_nonce": secrets.token_urlsafe(32)}},
         )
 
-    @pages_router.get("/peticiones-writeups", response_class=HTMLResponse)
-    def peticiones_writeups_page(request: Request, flask_session: dict = Depends(get_flask_session)):
-        from dockerlabs.models import WriteupEditRequest
+    @pages_router.get("/peticiones", response_class=HTMLResponse)
+    def peticiones_page(request: Request, flask_session: dict = Depends(get_flask_session)):
+        from dockerlabs.models import (
+            WriteupEditRequest, MachineClaim, UsernameChangeRequest,
+            MachineEditRequest, NameClaim, User
+        )
+        from sqlalchemy import func
 
         ok, redirect = require_auth_and_role(flask_session, ["admin", "moderador"])
         if not ok:
             return redirect
-        requests = WriteupEditRequest.query.order_by(WriteupEditRequest.id.desc()).all()
+
+        # 1. Reclamaciones de autoría de máquinas
+        claims = MachineClaim.query.order_by(MachineClaim.id.desc()).all()
+
+        # 2. Peticiones de cambio de username (con info adicional del usuario)
+        username_requests = UsernameChangeRequest.query.order_by(UsernameChangeRequest.id.desc()).all()
+        username_change_requests = []
+        for r in username_requests:
+            user = User.query.get(r.user_id)
+            username_change_requests.append({
+                "id": r.id,
+                "user_id": r.user_id,
+                "old_username": r.old_username,
+                "requested_username": r.requested_username,
+                "reason": r.reason,
+                "contacto_opcional": r.contacto_opcional,
+                "estado": r.estado,
+                "created_at": r.created_at,
+                "processed_by": r.processed_by,
+                "processed_at": r.processed_at,
+                "decision_reason": r.decision_reason,
+                "user_email": user.email if user else None,
+                "conflict_count": getattr(r, 'conflict_count', None),
+                "conflict_examples": getattr(r, 'conflict_examples', None),
+            })
+
+        # 3. Peticiones de edición de máquinas
+        machine_edits = MachineEditRequest.query.order_by(MachineEditRequest.id.desc()).all()
+        machine_edit_requests = []
+        for r in machine_edits:
+            import json
+            try:
+                nuevos = json.loads(r.nuevos_datos) if r.nuevos_datos else {}
+            except:
+                nuevos = {}
+            machine_edit_requests.append({
+                "id": r.id,
+                "machine_id": r.machine_id,
+                "origen": r.origen,
+                "autor": r.autor,
+                "nuevos": nuevos,
+                "estado": r.estado,
+                "fecha": r.fecha,
+            })
+
+        # 4. Peticiones de registro de nombres duplicados
+        name_claims = NameClaim.query.order_by(NameClaim.id.desc()).all()
+        peticiones_nombres = []
+        for p in name_claims:
+            user = User.query.get(p.user_id)
+            peticiones_nombres.append({
+                "id": p.id,
+                "username": user.username if user else None,
+                "email": user.email if user else None,
+                "nombre_solicitado": p.nombre_solicitado,
+                "nombre_actual": p.nombre_actual,
+                "motivo": p.motivo,
+                "estado": p.estado,
+                "created_at": p.created_at,
+            })
+
+        # 5. Peticiones de edición de writeups
+        writeup_edits = WriteupEditRequest.query.order_by(WriteupEditRequest.id.desc()).all()
+        edit_requests = []
+        for r in writeup_edits:
+            edit_requests.append({
+                "id": r.id,
+                "writeup_id": r.writeup_id,
+                "user_id": r.user_id,
+                "username": r.username,
+                "maquina_actual": r.maquina_original,
+                "autor_actual": r.autor_original,
+                "url_actual": r.url_original,
+                "tipo_actual": r.tipo_original,
+                "maquina_nueva": r.maquina_nueva,
+                "autor_nuevo": r.autor_nuevo,
+                "url_nueva": r.url_nueva,
+                "tipo_nuevo": r.tipo_nuevo,
+                "estado": r.estado,
+                "created_at": r.created_at,
+            })
+
         current_user_role = flask_session.get("role", "")
         csrf_token = flask_session.get("csrf_token") or secrets.token_urlsafe(32)
+
         return templates.TemplateResponse(
             request,
             "dockerlabs/admin/peticiones.html",
-            {"peticiones": requests, "session": flask_session, "url_for": url_for, "current_user_role": current_user_role, "csrf_token_value": csrf_token, "g": {"csp_nonce": secrets.token_urlsafe(32)}},
+            {
+                "claims": claims,
+                "username_change_requests": username_change_requests,
+                "machine_edit_requests": machine_edit_requests,
+                "peticiones_nombres": peticiones_nombres,
+                "edit_requests": edit_requests,
+                "session": flask_session,
+                "url_for": url_for,
+                "current_user_role": current_user_role,
+                "csrf_token_value": csrf_token,
+                "g": {"csp_nonce": secrets.token_urlsafe(32)},
+            },
         )
 
     @pages_router.get("/estadisticas", response_class=HTMLResponse)

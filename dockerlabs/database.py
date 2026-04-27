@@ -2,13 +2,19 @@ import os
 from sqlalchemy import create_engine, event
 from sqlalchemy.orm import sessionmaker, scoped_session, declarative_base
 from sqlalchemy.engine import Engine
+from sqlalchemy.pool import StaticPool
 
 BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 DATABASE_PATH = os.path.join(BASE_DIR, 'database', 'dockerlabs.db')
 
+# StaticPool para SQLite: cada hilo tiene su propia conexión persistente
+# Elimina problemas de QueuePool agotado con muchas peticiones concurrentes (imágenes)
 engine = create_engine(
     f"sqlite:///{DATABASE_PATH}",
-    connect_args={"check_same_thread": False}
+    connect_args={"check_same_thread": False},
+    poolclass=StaticPool,
+    pool_pre_ping=True,
+    echo=False
 )
 
 @event.listens_for(Engine, "connect")

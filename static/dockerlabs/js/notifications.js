@@ -275,6 +275,183 @@ setInterval(() => {
     }
 }, 30000);
 
+// ==================== INVITACIONES TAB ====================
+
+let currentNotificationsTab = 'notificaciones';
+
+function switchNotificationsTab(tab) {
+    currentNotificationsTab = tab;
+
+    // Update button styles
+    const btnNotif = document.getElementById('tab-btn-notificaciones');
+    const btnInvit = document.getElementById('tab-btn-invitaciones');
+
+    if (tab === 'notificaciones') {
+        btnNotif.style.background = 'rgba(59, 130, 246, 0.15)';
+        btnNotif.style.color = '#3b82f6';
+        btnInvit.style.background = 'transparent';
+        btnInvit.style.color = '#64748b';
+        document.getElementById('tab-notificaciones').style.display = 'block';
+        document.getElementById('tab-invitaciones').style.display = 'none';
+        loadNotifications();
+    } else {
+        btnInvit.style.background = 'rgba(139, 92, 246, 0.15)';
+        btnInvit.style.color = '#8b5cf6';
+        btnNotif.style.background = 'transparent';
+        btnNotif.style.color = '#64748b';
+        document.getElementById('tab-notificaciones').style.display = 'none';
+        document.getElementById('tab-invitaciones').style.display = 'block';
+        loadInvitaciones();
+    }
+}
+
+async function loadInvitaciones() {
+    const container = document.getElementById('invitacionesList');
+    if (!container) return;
+
+    container.innerHTML = `
+        <div style="padding: 3rem 2rem; text-align: center; color: #64748b;">
+            <div style="background: rgba(139, 92, 246, 0.1); padding: 2rem; border-radius: 20px; display: inline-block; margin-bottom: 1.5rem;">
+                <i class="bi bi-arrow-repeat" style="font-size: 4rem; color: #8b5cf6; animation: spin 1s linear infinite;"></i>
+            </div>
+            <p style="font-size: 1.2rem; margin-bottom: 0.5rem; color: #94a3b8;">Cargando invitaciones...</p>
+        </div>
+    `;
+
+    try {
+        const response = await fetch('/api/equipos/invitaciones/mis-invitaciones');
+        const data = await response.json();
+
+        if (data.success) {
+            updateInvitacionesBadge(data.invitaciones.length);
+
+            if (data.invitaciones.length === 0) {
+                container.innerHTML = `
+                    <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 300px; padding: 3rem 2rem; text-align: center; color: #64748b;">
+                        <div style="background: linear-gradient(135deg, rgba(139, 92, 246, 0.15), rgba(59, 130, 246, 0.15)); padding: 3rem; border-radius: 50%; margin-bottom: 2rem; backdrop-filter: blur(10px); box-shadow: 0 8px 32px rgba(139, 92, 246, 0.2);">
+                            <i class="bi bi-envelope-slash" style="font-size: 5rem; color: #8b5cf6; opacity: 0.7;"></i>
+                        </div>
+                        <p style="font-size: 1.5rem; margin-bottom: 0.75rem; color: #f8fafc; font-weight: 700;">No tienes invitaciones</p>
+                        <p style="font-size: 1rem; opacity: 0.7; max-width: 450px; line-height: 1.6; color: #94a3b8;">Las invitaciones a equipos aparecerán aquí cuando alguien te invite.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = data.invitaciones.map(inv => `
+                <div class="notification-item" data-invitation-id="${inv.id}" style="border-left: 3px solid #8b5cf6;">
+                    <div class="notification-header">
+                        <div class="notification-title" style="color: #8b5cf6;">
+                            <i class="bi bi-people-fill"></i>
+                            Invitación a equipo
+                        </div>
+                        <div class="notification-meta">
+                            <span class="notification-date">
+                                <i class="bi bi-clock"></i> ${formatDate(inv.created_at)}
+                            </span>
+                        </div>
+                    </div>
+                    <div class="notification-content">
+                        <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem;">
+                            ${inv.team.imagen_url ? `
+                                <img src="${inv.team.imagen_url}" style="width: 48px; height: 48px; border-radius: 12px; object-fit: cover; border: 2px solid #8b5cf6;">
+                            ` : `
+                                <div style="width: 48px; height: 48px; border-radius: 12px; background: linear-gradient(135deg, #3b82f6, #8b5cf6); display: flex; align-items: center; justify-content: center;">
+                                    <i class="bi bi-people-fill" style="font-size: 1.5rem; color: white;"></i>
+                                </div>
+                            `}
+                            <div>
+                                <div style="font-weight: 600; color: #f1f5f9; font-size: 1.1rem;">${escapeHtml(inv.team.nombre)}</div>
+                                <div style="font-size: 0.85rem; color: #64748b;">
+                                    ${inv.team.member_count}/${inv.team.max_members} miembros
+                                </div>
+                            </div>
+                        </div>
+                        <p style="color: #94a3b8; margin: 0;">
+                            <i class="bi bi-person"></i> Invitado por <strong style="color: #f1f5f9;">${escapeHtml(inv.invited_by)}</strong>
+                        </p>
+                    </div>
+                    <div class="notification-actions" style="display: flex; gap: 0.5rem; margin-top: 0.75rem;">
+                        <button class="notification-mark-read-btn" onclick="responderInvitacionNotif(${inv.id}, true)" style="background: #8b5cf6; color: white;">
+                            <i class="bi bi-check-lg"></i> Aceptar
+                        </button>
+                        <button class="notification-delete-btn" onclick="responderInvitacionNotif(${inv.id}, false)" style="background: transparent; color: #64748b; border: 1px solid #334155;">
+                            <i class="bi bi-x-lg"></i> Rechazar
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        } else {
+            container.innerHTML = `
+                <div style="padding: 2rem; text-align: center; color: #ef4444;">
+                    <i class="bi bi-exclamation-triangle" style="font-size: 3rem; margin-bottom: 1rem;"></i>
+                    <p>Error al cargar invitaciones</p>
+                </div>
+            `;
+        }
+    } catch (error) {
+        console.error('Error al cargar invitaciones:', error);
+        container.innerHTML = `
+            <div style="padding: 2rem; text-align: center; color: #ef4444;">
+                <i class="bi bi-exclamation-triangle" style="font-size: 3rem; margin-bottom: 1rem;"></i>
+                <p>Error al cargar invitaciones</p>
+            </div>
+        `;
+    }
+}
+
+async function responderInvitacionNotif(invitationId, accept) {
+    try {
+        const response = await fetch('/api/equipos/invitaciones/responder', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                invitation_id: invitationId,
+                accept: accept
+            })
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            alert(data.message);
+            // Reload invitaciones
+            loadInvitaciones();
+        } else {
+            alert('Error: ' + data.message);
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        alert('Error al procesar la invitación');
+    }
+}
+
+function updateInvitacionesBadge(count) {
+    const badge = document.getElementById('invitaciones-badge');
+    if (badge) {
+        badge.textContent = count;
+        badge.style.display = count > 0 ? 'inline' : 'none';
+    }
+}
+
+// Update original loadNotifications to also update invitaciones badge
+const originalLoadNotifications = loadNotifications;
+loadNotifications = async function() {
+    await originalLoadNotifications();
+    // Also load invitaciones count for badge
+    try {
+        const response = await fetch('/api/equipos/invitaciones/mis-invitaciones');
+        const data = await response.json();
+        if (data.success) {
+            updateInvitacionesBadge(data.invitaciones.length);
+        }
+    } catch (e) {
+        // Silent fail for badge update
+    }
+};
+
 // Inicializar al cargar la página
 document.addEventListener('DOMContentLoaded', function() {
     // Cargar badge inicial
@@ -287,6 +464,16 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         })
         .catch(error => console.error('Error al cargar badge inicial:', error));
+
+    // Cargar conteo de invitaciones
+    fetch('/api/equipos/invitaciones/mis-invitaciones')
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                updateInvitacionesBadge(data.invitaciones.length);
+            }
+        })
+        .catch(error => console.error('Error al cargar invitaciones inicial:', error));
 
     // Event listener para botón de toggle
     const toggleBtn = document.getElementById('toggleReadNotifications');

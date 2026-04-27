@@ -360,24 +360,51 @@
 
     <!-- Notifications Modal -->
     <div id="notificationsModal" class="claim-modal">
-        <div class="claim-modal-dialog notifications-modal-dialog">
+        <div class="claim-modal-dialog notifications-modal-dialog" style="max-width: 600px;">
             <button type="button" class="modal-close-button" onclick="closeNotificationsModal()">&times;</button>
             <h2>Notificaciones</h2>
             <p class="modal-description">
                 Mantente al día con las últimas novedades de DockerLabs
             </p>
-            <div id="notificationsList" class="notifications-list">
-                <div style="padding: 3rem 2rem; text-align: center; color: #64748b;">
-                    <div style="background: rgba(59, 130, 246, 0.1); padding: 2rem; border-radius: 20px; display: inline-block; margin-bottom: 1.5rem;">
-                        <i class="bi bi-bell" style="font-size: 4rem; color: #3b82f6;"></i>
+
+            <!-- Tabs -->
+            <div class="notifications-tabs" style="display: flex; gap: 0.5rem; margin-bottom: 1.5rem; border-bottom: 1px solid #334155; padding-bottom: 0.75rem;">
+                <button type="button" id="tab-btn-notificaciones" class="tab-btn active" onclick="switchNotificationsTab('notificaciones')" style="padding: 0.5rem 1rem; background: rgba(59, 130, 246, 0.15); border: none; color: #3b82f6; font-family: 'Fira Code', monospace; font-size: 0.85rem; font-weight: 600; cursor: pointer; border-radius: 6px; transition: all 0.2s;">
+                    <i class="bi bi-bell"></i> Notificaciones
+                </button>
+                <button type="button" id="tab-btn-invitaciones" class="tab-btn" onclick="switchNotificationsTab('invitaciones')" style="padding: 0.5rem 1rem; background: transparent; border: none; color: #64748b; font-family: 'Fira Code', monospace; font-size: 0.85rem; font-weight: 600; cursor: pointer; border-radius: 6px; transition: all 0.2s;">
+                    <i class="bi bi-envelope"></i> Invitaciones
+                    <span id="invitaciones-badge" class="badge" style="background: #ef4444; color: white; font-size: 0.7rem; padding: 0.1rem 0.4rem; border-radius: 10px; margin-left: 0.3rem; display: none;">0</span>
+                </button>
+            </div>
+
+            <!-- Notificaciones Tab Content -->
+            <div id="tab-notificaciones" class="tab-content">
+                <div id="notificationsList" class="notifications-list">
+                    <div style="padding: 3rem 2rem; text-align: center; color: #64748b;">
+                        <div style="background: rgba(59, 130, 246, 0.1); padding: 2rem; border-radius: 20px; display: inline-block; margin-bottom: 1.5rem;">
+                            <i class="bi bi-bell" style="font-size: 4rem; color: #3b82f6;"></i>
+                        </div>
+                        <p style="font-size: 1.2rem; margin-bottom: 0.5rem; color: #94a3b8;">Cargando notificaciones...</p>
                     </div>
-                    <p style="font-size: 1.2rem; margin-bottom: 0.5rem; color: #94a3b8;">Cargando notificaciones...</p>
+                </div>
+                <button id="toggleReadNotifications" class="toggle-read-btn" style="display: none;">
+                    <i class="bi bi-chevron-down"></i>
+                    <span>Ver notificaciones leídas</span>
+                </button>
+            </div>
+
+            <!-- Invitaciones Tab Content -->
+            <div id="tab-invitaciones" class="tab-content" style="display: none;">
+                <div id="invitacionesList" class="notifications-list">
+                    <div style="padding: 3rem 2rem; text-align: center; color: #64748b;">
+                        <div style="background: rgba(139, 92, 246, 0.1); padding: 2rem; border-radius: 20px; display: inline-block; margin-bottom: 1.5rem;">
+                            <i class="bi bi-envelope" style="font-size: 4rem; color: #8b5cf6;"></i>
+                        </div>
+                        <p style="font-size: 1.2rem; margin-bottom: 0.5rem; color: #94a3b8;">Cargando invitaciones...</p>
+                    </div>
                 </div>
             </div>
-            <button id="toggleReadNotifications" class="toggle-read-btn" style="display: none;">
-                <i class="bi bi-chevron-down"></i>
-                <span>Ver notificaciones leídas</span>
-            </button>
         </div>
     </div>
 

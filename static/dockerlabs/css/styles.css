@@ -133,7 +133,8 @@ header h1 a:hover {
 .btn-logout,
 #academia,
 #ranking,
-#autores {
+#autores,
+#equipos {
     font-family: "Fira Code", monospace;
     padding: 0.5rem 1.2rem;
     font-size: 0.85rem;
@@ -164,7 +165,8 @@ header h1 a:hover {
 .btn-logout:hover,
 #academia:hover,
 #ranking:hover,
-#autores:hover {
+#autores:hover,
+#equipos:hover {
     background: rgba(230, 180, 0, 0.1);
     border-color: var(--accent-yellow);
     /* Replaced #ffd700 */
@@ -178,7 +180,8 @@ header h1 a:hover {
 .btn-logout:active,
 #academia:active,
 #ranking:active,
-#autores:active {
+#autores:active,
+#equipos:active {
     transform: translateY(0);
     background: rgba(230, 180, 0, 0.15);
 }

@@ -293,6 +293,27 @@ def register_writeup_routes(api_router, get_flask_session, verify_csrf_token, al
         recalcular_ranking_writeups()
         return {"message": "Writeup eliminado correctamente"}
 
+    @api_router.delete("/writeups_subidos/{writeup_id}")
+    async def api_delete_writeup_subido_delete(
+        request: Request,
+        writeup_id: int,
+        flask_session: dict = Depends(get_flask_session),
+        csrf_ok: bool = Depends(verify_csrf_token),
+    ):
+        caller_role = flask_session.get("role", "")
+        if caller_role not in ("admin", "moderador"):
+            return JSONResponse(status_code=403, content={"error": "Acceso denegado"})
+
+        writeup = Writeup.query.get(writeup_id)
+        if not writeup:
+            return JSONResponse(status_code=404, content={"error": "Writeup no encontrado"})
+        alchemy_db.session.delete(writeup)
+        alchemy_db.session.commit()
+        from dockerlabs.writeups import recalcular_ranking_writeups
+
+        recalcular_ranking_writeups()
+        return {"message": "Writeup eliminado correctamente"}
+
     @api_router.post("/writeups/recibidos/{writeup_id}/update")
     async def api_update_writeup_recibido(
         request: Request,
@@ -329,6 +350,24 @@ def register_writeup_routes(api_router, get_flask_session, verify_csrf_token, al
 
     @api_router.post("/writeups/recibidos/{writeup_id}/delete")
     async def api_delete_writeup_recibido(
+        request: Request,
+        writeup_id: int,
+        flask_session: dict = Depends(get_flask_session),
+        csrf_ok: bool = Depends(verify_csrf_token),
+    ):
+        caller_role = flask_session.get("role", "")
+        if caller_role not in ("admin", "moderador"):
+            return JSONResponse(status_code=403, content={"error": "Acceso denegado"})
+
+        pending = PendingWriteup.query.get(writeup_id)
+        if not pending:
+            return JSONResponse(status_code=404, content={"error": "Writeup no encontrado"})
+        alchemy_db.session.delete(pending)
+        alchemy_db.session.commit()
+        return {"message": "Writeup eliminado correctamente"}
+
+    @api_router.delete("/writeups/recibidos/{writeup_id}")
+    async def api_delete_writeup_recibido_delete(
         request: Request,
         writeup_id: int,
         flask_session: dict = Depends(get_flask_session),
