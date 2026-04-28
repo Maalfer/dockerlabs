@@ -1,0 +1,64 @@
+{% extends "dockerlabs/base.html" %}
+
+{% block content %}
+
+<div class="container mt-5">
+
+    <h1 class="text-center mb-4">
+        Mis máquinas enviadas
+    </h1>
+
+    {% if not machines %}
+    <div class="alert alert-info">
+        No has enviado máquinas todavía.
+    </div>
+    {% endif %}
+
+    <div class="row g-4">
+
+        {% for m in machines %}
+
+        <div class="col-md-6">
+
+            <div class="card shadow p-4">
+
+                <h4>{{ m.nombre }}</h4>
+
+                <p>{{ m.descripcion }}</p>
+
+                <p>
+                    <strong>Estado:</strong>
+
+                    {% if m.estado=="pendiente" %}
+                    <span class="badge bg-warning">
+                        Pendiente revisión
+                    </span>
+
+                    {% elif m.estado=="aprobado" %}
+                    <span class="badge bg-success">
+                        Aprobada ✔
+                    </span>
+
+                    {% elif m.estado=="rechazado" %}
+                    <span class="badge bg-danger">
+                        Rechazada ✖
+                    </span>
+
+                    {% endif %}
+                </p>
+
+                <p>
+                    <strong>Enviada:</strong>
+                    {{ m.submitted_at }}
+                </p>
+
+            </div>
+
+        </div>
+
+        {% endfor %}
+
+    </div>
+</div>
+
+{% endblock %}

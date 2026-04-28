@@ -1,8 +1,6 @@
 function createPopup(contenidoPopup) {
     const style = document.createElement('style');
     style.textContent = `
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-
         .overlay {
             position: fixed;
             top: 0;
@@ -36,7 +34,7 @@ function createPopup(contenidoPopup) {
             max-height: 85vh;
             overflow-y: auto;
             opacity: 0;
-            font-family: 'Inter', sans-serif;
+            font-family: 'Fira Code', monospace;
             transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
         }
 

@@ -1,8 +1,9 @@
 from .extensions import db
 from datetime import datetime
-from flask_login import UserMixin
+from sqlalchemy.orm import deferred
+from sqlalchemy import func
 
-class User(db.Model, UserMixin):
+class User(db.Model):
     __tablename__ = 'users'
 
     id = db.Column(db.Integer, primary_key=True)
@@ -20,6 +21,18 @@ class User(db.Model, UserMixin):
     github_url = db.Column(db.String(255))
     youtube_url = db.Column(db.String(255))
 
+    # Imagen de perfil almacenada en archivo (nuevo sistema)
+    profile_image_path = db.Column(db.String(255), nullable=True)
+    # Mantener compatibilidad con datos antiguos en BD
+    profile_image_data = deferred(db.Column(db.LargeBinary, nullable=True))
+    profile_image_mime = deferred(db.Column(db.String(50), nullable=True))
+
+    __table_args__ = (
+        db.Index('idx_users_username', 'username'),
+        db.Index('idx_users_email', 'email'),
+        db.Index('idx_users_role', 'role'),
+    )
+
     __repr__ = lambda self: f'<User {self.username}>'
 
 class Machine(db.Model):
@@ -36,10 +49,15 @@ class Machine(db.Model):
     imagen = db.Column(db.String, nullable=False)
     descripcion = db.Column(db.Text, nullable=False)
     link_descarga = db.Column(db.String, nullable=False)
-    posicion = db.Column(db.String, nullable=False, default='izquierda')
     pin = db.Column(db.String, nullable=True)
     guest_access = db.Column(db.Boolean, default=False)
     origen = db.Column(db.String, nullable=False, default='docker')
+
+    # Logo almacenado en archivo (nuevo sistema)
+    logo_path = db.Column(db.String(255), nullable=True)
+    # Mantener compatibilidad con datos antiguos en BD
+    logo_data = deferred(db.Column(db.LargeBinary, nullable=True))
+    logo_mime = deferred(db.Column(db.String(50), nullable=True))
 
     __table_args__ = (
         db.Index('idx_maquinas_autor', 'autor'),
@@ -72,7 +90,12 @@ class Writeup(db.Model):
     tipo = db.Column(db.String, nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
-    __table_args__ = (db.UniqueConstraint('maquina', 'autor', 'url'),)
+    __table_args__ = (
+        db.Index('idx_writeups_maquina', 'maquina'),
+        db.Index('idx_writeups_autor', 'autor'),
+        db.Index('idx_writeups_tipo', 'tipo'),
+        db.Index('idx_writeups_created_at', 'created_at'),
+    )
 
     def __repr__(self):
         return f'<Writeup {self.maquina} by {self.autor}>'
@@ -96,6 +119,8 @@ class WriteupRanking(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     nombre = db.Column(db.String, unique=True, nullable=False)
     puntos = db.Column(db.Integer, nullable=False)
+
+    user = db.relationship('User', foreign_keys=[nombre], primaryjoin=lambda: func.lower(User.username) == func.lower(WriteupRanking.nombre))
 
     def __repr__(self):
         return f'<WriteupRanking {self.nombre}: {self.puntos}>'
@@ -144,6 +169,8 @@ class CreatorRanking(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     nombre = db.Column(db.String, unique=True, nullable=False)
     maquinas = db.Column(db.Integer, nullable=False)
+
+    user = db.relationship('User', foreign_keys=[nombre], primaryjoin=lambda: func.lower(User.username) == func.lower(CreatorRanking.nombre))
 
 class MachineClaim(db.Model):
     __tablename__ = 'maquina_claims'
@@ -222,6 +249,33 @@ class CompletedMachine(db.Model):
                            
     user = db.relationship('User', backref=db.backref('completed_machines_rel', cascade='all, delete-orphan'))
 
+class PendingMachineSubmission(db.Model):
+    __tablename__ = 'pending_machine_submissions'
+
+    id = db.Column(db.Integer, primary_key=True)
+    nombre = db.Column(db.String, nullable=False)
+    link_maquina = db.Column(db.String, nullable=False)
+    dificultad = db.Column(db.String, nullable=False)
+    categoria = db.Column(db.String)
+    tags = db.Column(db.String)
+    descripcion = db.Column(db.Text)
+    notas = db.Column(db.Text)
+    writeup_url = db.Column(db.String)
+    discord_user = db.Column(db.String, nullable=False)
+    autor_solicitante = db.Column(db.String)
+    estado = db.Column(
+        db.String,
+        default="pendiente"
+    )
+
+    submitted_at = db.Column(
+        db.DateTime,
+        default=datetime.utcnow
+    )
+
+    reviewed_by = db.Column(db.Integer)
+    reviewed_at = db.Column(db.DateTime)
+
 
 class Mensajeria(db.Model):
     __tablename__ = 'mensajeria'
@@ -237,6 +291,167 @@ class Mensajeria(db.Model):
     sender = db.relationship('User', foreign_keys=[sender_id], backref=db.backref('sent_messages', lazy='dynamic'))
     receiver = db.relationship('User', foreign_keys=[receiver_id], backref=db.backref('received_messages', lazy='dynamic'))
 
+    __table_args__ = (
+        db.Index('idx_mensajeria_sender_id', 'sender_id'),
+        db.Index('idx_mensajeria_receiver_id', 'receiver_id'),
+        db.Index('idx_mensajeria_timestamp', 'timestamp'),
+        db.Index('idx_mensajeria_read', 'read'),
+        db.Index('idx_mensajeria_sender_read', 'sender_id', 'read'),
+        db.Index('idx_mensajeria_receiver_read', 'receiver_id', 'read'),
+    )
+
     def __repr__(self):
         return f'<Message {self.id} from {self.sender_id} to {self.receiver_id}>'
+
+class Notification(db.Model):
+    __tablename__ = 'notificaciones'
+    id = db.Column(db.Integer, primary_key=True)
+    sender_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='CASCADE'), nullable=False)
+    receiver_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='CASCADE'), nullable=True)
+    title = db.Column(db.String(200), nullable=False)
+    content = db.Column(db.Text, nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    read = db.Column(db.Boolean, default=False)
+    notification_type = db.Column(db.String(50), nullable=True)
+
+    sender = db.relationship('User', foreign_keys=[sender_id], backref=db.backref('sent_notifications', lazy='dynamic'))
+    receiver = db.relationship('User', foreign_keys=[receiver_id], backref=db.backref('received_notifications', lazy='dynamic'))
+
+    __table_args__ = (
+        db.Index('idx_notificaciones_sender_id', 'sender_id'),
+        db.Index('idx_notificaciones_receiver_id', 'receiver_id'),
+        db.Index('idx_notificaciones_created_at', 'created_at'),
+        db.Index('idx_notificaciones_read', 'read'),
+        db.Index('idx_notifications_type', 'notification_type'),
+    )
+
+    def __repr__(self):
+        return f'<Notification {self.id}: {self.title}>'
+
+class Team(db.Model):
+    __tablename__ = 'equipos'
+
+    id = db.Column(db.Integer, primary_key=True)
+    nombre = db.Column(db.String(50), unique=True, nullable=False)
+    imagen_path = db.Column(db.String(255), nullable=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_by = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+
+    creator = db.relationship('User', backref='created_teams')
+
+    __table_args__ = (
+        db.Index('idx_equipos_nombre', 'nombre'),
+        db.Index('idx_equipos_created_at', 'created_at'),
+    )
+
+    def __repr__(self):
+        return f'<Team {self.nombre}>'
+
+    @property
+    def member_count(self):
+        return TeamMember.query.filter_by(team_id=self.id).count()
+
+    @property
+    def total_puntos(self):
+        from sqlalchemy import func
+        result = db.session.query(
+            func.coalesce(func.sum(WriteupRanking.puntos), 0)
+        ).join(
+            TeamMember, TeamMember.user_id == User.id
+        ).join(
+            User, func.lower(User.username) == func.lower(WriteupRanking.nombre)
+        ).filter(
+            TeamMember.team_id == self.id
+        ).first()
+        return result[0] if result else 0
+
+class TeamMember(db.Model):
+    __tablename__ = 'equipo_miembros'
+
+    id = db.Column(db.Integer, primary_key=True)
+    team_id = db.Column(db.Integer, db.ForeignKey('equipos.id', ondelete='CASCADE'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='CASCADE'), nullable=False)
+    joined_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    team = db.relationship('Team', backref=db.backref('members', cascade='all, delete-orphan'))
+    user = db.relationship('User', backref='team_memberships')
+
+    __table_args__ = (
+        db.UniqueConstraint('team_id', 'user_id', name='idx_equipo_miembros_uniq'),
+        db.Index('idx_equipo_miembros_team_id', 'team_id'),
+        db.Index('idx_equipo_miembros_user_id', 'user_id'),
+    )
+
+    def __repr__(self):
+        return f'<TeamMember team={self.team_id} user={self.user_id}>'
+
+class TeamInvitation(db.Model):
+    __tablename__ = 'equipo_invitaciones'
+
+    id = db.Column(db.Integer, primary_key=True)
+    team_id = db.Column(db.Integer, db.ForeignKey('equipos.id', ondelete='CASCADE'), nullable=False)
+    invited_by = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    invited_user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    status = db.Column(db.String(20), default='pending')
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    responded_at = db.Column(db.DateTime, nullable=True)
+
+    team = db.relationship('Team', backref=db.backref('invitations', cascade='all, delete-orphan'))
+    invited_by_user = db.relationship('User', foreign_keys=[invited_by], backref='sent_invitations')
+    invited_user = db.relationship('User', foreign_keys=[invited_user_id], backref='received_invitations')
+
+    __table_args__ = (
+        db.Index('idx_equipo_invitaciones_team_id', 'team_id'),
+        db.Index('idx_equipo_invitaciones_invited_user', 'invited_user_id'),
+        db.Index('idx_equipo_invitaciones_status', 'status'),
+    )
+
+    def __repr__(self):
+        return f'<TeamInvitation team={self.team_id} to_user={self.invited_user_id}>'
+
+class TeamJoinRequest(db.Model):
+    __tablename__ = 'equipo_solicitudes'
+
+    id = db.Column(db.Integer, primary_key=True)
+    team_id = db.Column(db.Integer, db.ForeignKey('equipos.id', ondelete='CASCADE'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='CASCADE'), nullable=False)
+    status = db.Column(db.String(20), default='pending')
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    responded_at = db.Column(db.DateTime, nullable=True)
+
+    team = db.relationship('Team', backref=db.backref('join_requests', cascade='all, delete-orphan'))
+    user = db.relationship('User', backref='team_join_requests')
+
+    __table_args__ = (
+        db.UniqueConstraint('team_id', 'user_id', name='idx_equipo_solicitudes_uniq'),
+        db.Index('idx_equipo_solicitudes_team_id', 'team_id'),
+        db.Index('idx_equipo_solicitudes_user_id', 'user_id'),
+        db.Index('idx_equipo_solicitudes_status', 'status'),
+    )
+
+    def __repr__(self):
+        return f'<TeamJoinRequest team={self.team_id} user={self.user_id}>'
+
+
+class SessionConfig(db.Model):
+    """Almacena la clave secreta de sesión persistente en la base de datos."""
+    __tablename__ = 'session_config'
+
+    id = db.Column(db.Integer, primary_key=True)
+    secret_key = db.Column(db.String(64), nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    @staticmethod
+    def get_or_create_secret_key():
+        """Obtiene la clave existente o genera una nueva si no existe."""
+        config = SessionConfig.query.first()
+        if not config:
+            import secrets
+            config = SessionConfig(secret_key=secrets.token_hex(32))
+            db.session.add(config)
+            db.session.commit()
+        return config.secret_key
+
+    def __repr__(self):
+        return f'<SessionConfig id={self.id}>'
 

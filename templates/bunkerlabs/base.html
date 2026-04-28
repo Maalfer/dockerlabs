@@ -20,7 +20,7 @@
         gtag('js', new Date());
         gtag('config', 'G-XXXXXXXXXX');
     </script>
-    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <meta name="csrf-token" content="{{ csrf_token_value }}">
 </head>
 
 <body>
@@ -29,9 +29,8 @@
             <div class="logo-container">
                 <img src="{{ url_for('static', filename='dockerlabs/images/logos/logo.png') }}" alt="Logo">
             </div>
-            <a href="{{ url_for('index') }}" id="bunkerlabs-link" class="logo-text"
-                onmouseover="this.innerText='DockerLabs'" onmouseout="this.innerText='BunkerLabs'">
-                BunkerLabs
+            <a href="{{ url_for('index') }}" id="bunkerlabs-link" class="brand-title">
+                <span class="brand-text" data-original="BunkerLabs" data-hover="DockerLabs">BunkerLabs</span>
             </a>
         </a>
 
@@ -124,10 +123,23 @@
                 });
             }
 
-            // Mobile responsive link for BunkerLabs title
-            const bunkerlabsLink = document.getElementById('bunkerlabs-link');
-            if (bunkerlabsLink) {
-                bunkerlabsLink.addEventListener('click', function (event) {
+            // Brand title animation - Minimalist for BunkerLabs
+            const bunkerlabsBrand = document.querySelector('.brand-title');
+            const bunkerlabsText = document.querySelector('.brand-text');
+            
+            if (bunkerlabsBrand && bunkerlabsText) {
+                bunkerlabsBrand.addEventListener('mouseenter', function() {
+                    const hoverText = bunkerlabsText.getAttribute('data-hover');
+                    bunkerlabsText.textContent = hoverText;
+                });
+                
+                bunkerlabsBrand.addEventListener('mouseleave', function() {
+                    const originalText = bunkerlabsText.getAttribute('data-original');
+                    bunkerlabsText.textContent = originalText;
+                });
+
+                // Mobile responsive behavior
+                bunkerlabsBrand.addEventListener('click', function (event) {
                     const isMobile = window.innerWidth <= 768;
 
                     if (isMobile) {
@@ -137,23 +149,6 @@
                     }
                     // In desktop, let the default href work (DockerLabs)
                 });
-
-                // Remove hover effect in mobile
-                function updateHoverEffect() {
-                    const isMobile = window.innerWidth <= 768;
-
-                    if (isMobile) {
-                        bunkerlabsLink.onmouseover = null;
-                        bunkerlabsLink.onmouseout = null;
-                        bunkerlabsLink.innerText = 'BunkerLabs';
-                    } else {
-                        bunkerlabsLink.onmouseover = function () { this.innerText = 'DockerLabs'; };
-                        bunkerlabsLink.onmouseout = function () { this.innerText = 'BunkerLabs'; };
-                    }
-                }
-
-                updateHoverEffect();
-                window.addEventListener('resize', updateHoverEffect);
             }
         });
     </script>

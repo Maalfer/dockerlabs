@@ -161,6 +161,34 @@ body {
     text-shadow: 0 0 15px rgba(255, 255, 255, 0.3);
 }
 
+/* --- Brand Title Animation - Minimalist (BunkerLabs) --- */
+.brand-title {
+    text-decoration: none;
+    color: #ffffff !important;
+    font-size: 1.5rem;
+    font-weight: 500;
+    letter-spacing: 0.05em;
+    transition: all 0.3s ease;
+    display: inline-block;
+    font-family: 'Fira Code', monospace;
+}
+
+.brand-text {
+    display: inline-block;
+    transition: all 0.3s ease;
+    text-shadow: 0 0 10px rgba(255, 255, 255, 0.2);
+}
+
+/* Hover Animation - Minimalist */
+.brand-title:hover {
+    transform: translateY(-2px);
+}
+
+.brand-title:hover .brand-text {
+    color: #8b5cf6 !important;
+    text-shadow: 0 0 15px rgba(139, 92, 246, 0.4);
+}
+
 /* NAV LINKS (CENTER) */
 .nav-links {
     display: flex;

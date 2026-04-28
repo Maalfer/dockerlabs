@@ -6,8 +6,6 @@ function injectRankingStyles() {
         const style = document.createElement('style');
         style.id = styleId;
         style.textContent = `
-            @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-
             .overlay {
                 position: fixed;
                 top: 0;
@@ -44,7 +42,7 @@ function injectRankingStyles() {
                 overflow-y: auto;
                 opacity: 0;
                 pointer-events: none; /* Block interactions when hidden */
-                font-family: 'Inter', sans-serif;
+                font-family: 'Fira Code', monospace;
                 transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
             }
 

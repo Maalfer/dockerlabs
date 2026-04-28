@@ -1,0 +1,81 @@
+{% extends "dockerlabs/base.html" %}
+
+{% block title %}Writeups Recibidos - DockerLabs{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='dockerlabs/css/writeups_recibidos.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="writeups-container">
+
+    <header class="page-header">
+        <h1 class="page-title">
+            {% if user.role in ['admin', 'moderador'] %}
+            Gestión de Writeups
+            {% else %}
+            Mis Writeups Pendientes
+            {% endif %}
+        </h1>
+        <p class="page-subtitle">
+            {% if user.role in ['admin', 'moderador'] %}
+            Gestión de writeups enviados por la comunidad. Revisa, aprueba o elimina las contribuciones pendientes.
+            {% else %}
+            Estos son tus writeups enviados que están pendientes de revisión por los administradores.
+            {% endif %}
+        </p>
+    </header>
+
+    <div class="table-card mb-5">
+        <div class="table-responsive">
+            <table class="custom-table" id="tabla-writeups-recibidos">
+                <thead>
+                    <tr>
+                        <th style="width: 60px;">Logo</th>
+                        <th>Máquina</th>
+                        <th>Autor</th>
+                        <th style="width: 30%;">URL</th>
+                        <th style="width: 120px;">Tipo</th>
+                        <th>Fecha recepción</th>
+                        <th style="width: 200px;">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Content loaded via JS -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    {% if user.role in ['admin', 'moderador'] %}
+    <div class="table-card">
+        <div class="table-responsive">
+            <table class="custom-table" id="tabla-reportes">
+                <thead>
+                    <tr>
+                        <th>Máquina</th>
+                        <th>Autor Writeup</th>
+                        <th>Reportado Por</th>
+                        <th>Motivo</th>
+                        <th>Fecha Reporte</th>
+                        <th style="width: 200px;">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Content loaded via JS -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script>
+    const currentUserRole = "{{ user.role if user.role else '' }}";
+    const currentUsername = "{{ user.username if user.username else '' }}";
+</script>
+<script src="{{ url_for('static', filename='dockerlabs/js/writeups_recibidos.js') }}"></script>
+{% endblock %}

@@ -52,17 +52,20 @@ function presentacion(nombre, dificultad, tamaño, clase, color, autor_nombre, a
     bodyDiv.className = 'bunker-modal-body';
 
     // Imagen
-    function sanitizeImagePath(path) {
-        if (!path) return 'dockerlabs/images/logos/logo.png';
-        path = path.replace(/\.\./g, '');
-        path = path.replace(/^\/+/, '');
-        path = path.replace(/[^a-zA-Z0-9\-_./]/g, '');
-        return path;
-    }
-    var sanitizedImagePath = sanitizeImagePath(escapedImagen);
     var imagenUrl;
-
-    imagenUrl = "/static/" + sanitizedImagePath;
+    if (!escapedImagen) {
+        imagenUrl = "/static/dockerlabs/images/logos/logo.png";
+    } else if (escapedImagen.includes('/img/')) {
+        imagenUrl = escapedImagen;
+    } else {
+        function sanitizeImagePath(path) {
+            path = path.replace(/\.\./g, '');
+            path = path.replace(/^\/+/, '');
+            path = path.replace(/[^a-zA-Z0-9\-_./]/g, '');
+            return path;
+        }
+        imagenUrl = "/static/" + sanitizeImagePath(escapedImagen);
+    }
 
     var imagenElem = document.createElement('img');
     imagenElem.className = 'bunker-modal-image';

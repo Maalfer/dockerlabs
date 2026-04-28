@@ -155,20 +155,46 @@ function botontodos() {
     updateButtonCount('boton-todos', 'todos');
 }
 
-function filterByCompleted() {
+function filterByCompleted(event) {
+    if (event) {
+        event.preventDefault();
+        event.stopPropagation();
+    }
+    
     currentFilter.completed = true;
     currentFilter.difficulty = 'todos';
     currentPage = 1;
     document.querySelectorAll('.dificultad-item').forEach(e => e.classList.remove('active'));
     applyPagination();
+    updateAllButtonCounts();
+    
+    // Cerrar dropdown
+    const dropdown = document.querySelector('.btn-filter');
+    if (dropdown) {
+        const bsDropdown = bootstrap.Dropdown.getInstance(dropdown);
+        if (bsDropdown) bsDropdown.hide();
+    }
 }
 
-function filterByUncompleted() {
+function filterByUncompleted(event) {
+    if (event) {
+        event.preventDefault();
+        event.stopPropagation();
+    }
+    
     currentFilter.completed = false;
     currentFilter.difficulty = 'todos';
     currentPage = 1;
     document.querySelectorAll('.dificultad-item').forEach(e => e.classList.remove('active'));
     applyPagination();
+    updateAllButtonCounts();
+    
+    // Cerrar dropdown
+    const dropdown = document.querySelector('.btn-filter');
+    if (dropdown) {
+        const bsDropdown = bootstrap.Dropdown.getInstance(dropdown);
+        if (bsDropdown) bsDropdown.hide();
+    }
 }
 
 function updateAllButtonCounts() {
@@ -219,45 +245,41 @@ function sortByDate(order) {
     }
 
     const list = document.querySelector('.lista');
-    const leftColumn = document.querySelector('.columna-izquierda');
-    const rightColumn = document.querySelector('.columna-derecha');
-
-    if (!leftColumn || !rightColumn) {
-        const items = Array.from(document.querySelectorAll('.maquina-item'));
-        items.sort((a, b) => {
-            const getDate = (element) => {
-                const onclick = element.getAttribute('onclick');
-                const match = onclick.match(/["'](\d{2}\/\d{2}\/\d{4})["']/) || onclick.match(/(\d{2}\/\d{2}\/\d{4})/);
-                if (match) {
-                    const [day, month, year] = match[1].split('/');
-                    return new Date(`${year}-${month}-${day}`);
-                }
-                return new Date(0);
-            };
-
-            const dateA = getDate(a);
-            const dateB = getDate(b);
-
-            if (order === 'recent') {
-                return dateB - dateA;
-            } else if (order === 'oldest') {
-                return dateA - dateB;
-            } else {
-                return 0;
-            }
-        });
-
-        if (order === 'reset') {
-            location.reload();
-            return;
-        }
-
-        items.forEach(item => list.appendChild(item));
-        currentPage = 1;
-        applyPagination();
-        updateAllButtonCounts();
+    if (!list) {
+        console.error('No se encontró el contenedor .lista');
         return;
     }
+
+    const items = Array.from(document.querySelectorAll('.maquina-item'));
+    
+    items.sort((a, b) => {
+        const getDate = (element) => {
+            const onclick = element.getAttribute('onclick') || '';
+            const match = onclick.match(/["'](\d{2}\/\d{2}\/\d{4})["']/) || onclick.match(/(\d{2}\/\d{2}\/\d{4})/);
+            if (match) {
+                const [day, month, year] = match[1].split('/');
+                return new Date(`${year}-${month}-${day}`);
+            }
+            return new Date(0);
+        };
+
+        const dateA = getDate(a);
+        const dateB = getDate(b);
+
+        if (order === 'recent') {
+            return dateB - dateA;
+        } else if (order === 'oldest') {
+            return dateA - dateB;
+        } else {
+            return 0;
+        }
+    });
+
+    // Re-append items in sorted order
+    items.forEach(item => list.appendChild(item));
+    
+    currentPage = 1;
+    applyPagination();
     updateAllButtonCounts();
 }
 
@@ -275,13 +297,30 @@ if (buscador) {
     });
 }
 
-function filterByCategory(category) {
+function filterByCategory(category, event) {
+    // Prevenir comportamiento por defecto si se pasó el evento
+    if (event) {
+        event.preventDefault();
+        event.stopPropagation();
+    }
+    
     currentFilter.category = category;
     currentFilter.difficulty = 'todos';
     currentFilter.completed = null;
     currentPage = 1;
+    
+    // Resetear botones de dificultad
     document.querySelectorAll('.dificultad-item').forEach(btn => btn.classList.remove('active'));
     const todosBtn = document.getElementById('boton-todos');
     if (todosBtn) todosBtn.classList.add('active');
+    
     applyPagination();
+    updateAllButtonCounts();
+    
+    // Cerrar dropdown de Bootstrap manualmente
+    const dropdown = document.querySelector('.btn-category');
+    if (dropdown) {
+        const bsDropdown = bootstrap.Dropdown.getInstance(dropdown);
+        if (bsDropdown) bsDropdown.hide();
+    }
 }

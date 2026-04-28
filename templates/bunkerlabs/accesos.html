@@ -9,7 +9,7 @@
 <div class="container my-5">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h1 class="custom-h1">Accesos BunkerLabs</h1>
-        <a href="{{ url_for('bunkerlabs.bunkerlabs_home') }}" class="btn-hack">
+        <a href="/bunkerlabs" class="btn-hack">
             <i class="bi bi-arrow-left"></i> Volver al Bunker
         </a>
     </div>
@@ -44,7 +44,7 @@
                     <h5>Nuevo acceso</h5>
                 </div>
                 <form method="post">
-                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token_value }}">
 
                     <div class="mb-3">
                         <label for="nombre" class="form-label small uppercase fw-bold">Nombre del usuario</label>
@@ -129,9 +129,9 @@
                                 </td>
                                 <td class="text-end">
                                     <form method="post"
-                                        action="{{ url_for('bunkerlabs.delete_bunker_token', token_id=t.id) }}"
+                                        action="/bunkerlabs/accesos/{{ t.id }}/delete"
                                         class="d-inline">
-                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token_value }}">
                                         <button type="submit" class="btn btn-sm border-danger text-danger"
                                             style="padding: 2px 8px; font-size: 0.7rem; background: rgba(239, 68, 68, 0.1);"
                                             onclick="return confirm('¿Eliminar este acceso?')">
@@ -163,7 +163,7 @@
                 </div>
 
                 <form method="post" action="/bunkerlabs/admin/writeups/add" id="addWriteupForm">
-                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token_value }}">
 
                     <div class="mb-3">
                         <label for="writeup_maquina" class="form-label">Máquina</label>
@@ -261,7 +261,7 @@
                                     </button>
                                     <form method="post" action="/bunkerlabs/admin/writeups/delete/{{ w.id }}"
                                         class="d-inline" onsubmit="return confirm('¿Eliminar este writeup?');">
-                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token_value }}">
                                         <button type="submit" class="btn btn-sm btn-outline-danger border-0">
                                             <i class="bi bi-trash"></i>
                                         </button>
@@ -416,7 +416,7 @@
             logsContainer.classList.add('d-none');
             btnClearHistory.disabled = true;
 
-            fetch('/bunkerlabs/api/logs/' + tokenId)
+            fetch('/api/bunker/logs/' + tokenId)
                 .then(response => response.json())
                 .then(data => {
                     logsLoading.classList.add('d-none');
@@ -455,8 +455,8 @@
             if (confirm('¿Estás seguro de que quieres eliminar TODO el historial de accesos para este usuario? Esta acción no se puede deshacer.')) {
                 var csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
 
-                fetch('/bunkerlabs/api/logs/' + currentTokenId + '/delete', {
-                    method: 'POST',
+                fetch('/api/bunker/logs/' + currentTokenId + '/delete', {
+                    method: 'DELETE',
                     headers: {
                         'X-CSRFToken': csrfToken
                     }
@@ -486,7 +486,7 @@
         // Disable button strictly during request
         btn.disabled = true;
 
-        fetch(`/bunkerlabs/admin/writeups/toggle_lock/${id}`, {
+        fetch(`/api/bunker/admin/writeups/toggle-lock/${id}`, {
             method: 'POST',
             headers: {
                 'X-CSRFToken': csrfToken
@@ -562,7 +562,7 @@
 
         const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
 
-        fetch(`/bunkerlabs/admin/machines/update_flag/${machineId}`, {
+        fetch(`/api/bunker/admin/machines/update-flag/${machineId}`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',

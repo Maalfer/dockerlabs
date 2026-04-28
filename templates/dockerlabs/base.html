@@ -4,17 +4,49 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}DockerLabs{% endblock %}</title>
+    <title>{% block title %}DockerLabs - Plataforma de Ciberseguridad y Hacking Ético{% endblock %}</title>
 
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;700&display=swap">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <!-- SEO Meta Tags -->
+    <meta name="description" content="DockerLabs es una plataforma de ciberseguridad y hacking ético del Pinguino de Mario. Aprende hacking con CTF, laboratorios vulnerables y desafíos prácticos. Mejora tus habilidades en seguridad informática.">
+    <meta name="keywords" content="ciberseguridad, hacking ético, CTF, laboratorios vulnerables, seguridad informática, pentesting, DockerLabs, Pinguino de Mario, aprender hacking, desafíos de seguridad">
+    <meta name="author" content="El Pinguino de Mario">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://dockerlabs.es{% block canonical_path %}{% endblock %}">
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://dockerlabs.es{% block og_path %}{% endblock %}">
+    <meta property="og:title" content="{% block og_title %}DockerLabs - Plataforma de Ciberseguridad y Hacking Ético{% endblock %}">
+    <meta property="og:description" content="DockerLabs es una plataforma de ciberseguridad y hacking ético del Pinguino de Mario. Aprende hacking con CTF, laboratorios vulnerables y desafíos prácticos.">
+    <meta property="og:image" content="https://dockerlabs.es/static/dockerlabs/images/logos/logo.png">
+    <meta property="og:site_name" content="DockerLabs">
+    <meta property="og:locale" content="es_ES">
+
+    <!-- Preconnect hints for performance -->
+    <link rel="preconnect" href="https://cdn.jsdelivr.net">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" media="print" onload="this.media='all'">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600;700&display=swap" media="print" onload="this.media='all'">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" media="print" onload="this.media='all'">
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js" defer></script>
+    <meta name="csrf-token" content="{{ csrf_token_value }}">
+
+    <!-- Critical CSS inline to prevent FOUC -->
+    <style>
+        body {
+            background: radial-gradient(circle at top, #27354a 0%, #020617 60%, #020617 100%);
+            color: #f9fafb;
+        }
+    </style>
 
     {% if not no_default_styles %}
     <link rel="stylesheet" href="{{ url_for('static', filename='dockerlabs/css/styles.css') }}">
     {% endif %}
     <link rel="stylesheet" href="{{ url_for('static', filename='dockerlabs/css/base.css') }}">
+
+    {% block extra_css %}{% endblock %}
 
     <link rel="icon" href="{{ url_for('static', filename='dockerlabs/images/logos/logo.png') }}" type="image/png">
 
@@ -32,6 +64,40 @@
         }
     </script>
 
+    <!-- Structured Data JSON-LD -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "EducationalOrganization",
+        "name": "DockerLabs",
+        "alternateName": "DockerLabs - Pinguino de Mario",
+        "url": "https://dockerlabs.es",
+        "logo": "https://dockerlabs.es/static/dockerlabs/images/logos/logo.png",
+        "description": "DockerLabs es una plataforma de ciberseguridad y hacking ético del Pinguino de Mario. Aprende hacking con CTF, laboratorios vulnerables y desafíos prácticos.",
+        "founder": {
+            "@type": "Person",
+            "name": "El Pinguino de Mario"
+        },
+        "sameAs": [
+            "https://www.youtube.com/@pinguinodemario"
+        ],
+        "knowsAbout": [
+            "Ciberseguridad",
+            "Hacking Ético",
+            "CTF",
+            "Pentesting",
+            "Seguridad Informática",
+            "Laboratorios Vulnerables"
+        ],
+        "educationalLevel": "Todos los niveles",
+        "teaches": [
+            "Ciberseguridad",
+            "Hacking Ético",
+            "Pentesting",
+            "Análisis de Vulnerabilidades"
+        ]
+    }
+    </script>
 
     {% block extra_head %}{% endblock %}
 </head>
@@ -53,15 +119,14 @@
                 <a href="https://raiolanetworks.com/landing/hosting-...io/?utm_medium=affiliate&utm_source=5855&utm_campaign=Afiliados"
                     target="_blank">
                     <img src="{{ url_for('static', filename='dockerlabs/images/raiola.png') }}" alt="Raiola Networks"
-                        width="290" height="50">
+                        width="290" height="50" fetchpriority="high">
                 </a>
             </div>
         </div>
 
         <h1 style="margin:0;text-align:center;">
-            <a href="{{ url_for('bunkerlabs.bunkerlabs_home') }}" id="dockerlabs-link"
-                onmouseover="this.innerText='BunkerLabs'" onmouseout="this.innerText='DockerLabs'">
-                DockerLabs
+            <a href="{{ url_for('bunkerlabs.bunkerlabs_login') }}" id="dockerlabs-link" class="brand-title">
+                <span class="brand-text" data-original="DockerLabs" data-hover="BunkerLabs">DockerLabs</span>
             </a>
         </h1>
 
@@ -75,6 +140,11 @@
             <button type="button" onclick="openMessagingModal()" class="btn-auth msg-btn">
                 <i class="bi bi-envelope"></i>
                 <span id="msg-badge" class="msg-badge">0</span>
+            </button>
+
+            <button type="button" onclick="openNotificationsModal()" class="btn-auth notification-btn">
+                <i class="bi bi-bell"></i>
+                <span id="notification-badge" class="notification-badge">0</span>
             </button>
 
             <button type="button" onclick="openGestionWriteupsModal()" class="btn-auth">
@@ -118,14 +188,12 @@
                     </div>
                     <i class="bi bi-chevron-right" style="color: #64748b;"></i>
                 </a>
-                {% if current_user_role in ['admin', 'moderador'] %}
                 <a href="{{ url_for('writeups.writeups_recibidos') }}" class="ranking-item">
                     <div class="user-info">
-                        <span class="user-name">Writeups recibidos</span>
+                        <span class="user-name">Mis writeups pendientes</span>
                     </div>
                     <i class="bi bi-chevron-right" style="color: #64748b;"></i>
                 </a>
-                {% endif %}
             </div>
         </div>
     </div>
@@ -137,12 +205,12 @@
                 <h2 class="modal-title">Menú</h2>
             </div>
             <div class="ranking-list two-columns">
-                <a href="https://app.secur0.com/vulnerability-disclosure/Dockerlabs" target="_blank"
+                <a href="https://app.secur0.com/programs/vdp/Dockerlabs" target="_blank"
                     class="ranking-item">
                     <div class="user-info"><span class="user-name">Programa VDP</span></div>
                     <i class="bi bi-box-arrow-up-right" style="color: #64748b; font-size: 0.9rem;"></i>
                 </a>
-                <a href="{{ url_for('main.instrucciones_uso') }}" target="_blank" class="ranking-item">
+                <a href="{{ url_for('main.instrucciones_uso') }}" class="ranking-item">
                     <div class="user-info"><span class="user-name">Instrucciones de Uso</span></div>
                     <i class="bi bi-file-earmark-pdf" style="color: #64748b;"></i>
                 </a>
@@ -158,15 +226,12 @@
                     <div class="user-info"><span class="user-name">Estadísticas</span></div>
                     <i class="bi bi-bar-chart-line" style="color: #64748b;"></i>
                 </a>
-                <a href="/docs/" target="_blank" class="ranking-item">
-                    <div class="user-info"><span class="user-name">Swagger UI</span></div>
-                    <i class="bi bi-file-code" style="color: #64748b;"></i>
-                </a>
+                <!-- Swagger UI eliminado - migración a FastAPI planificada -->
                 <a href="{{ url_for('main.agradecimientos') }}" class="ranking-item">
                     <div class="user-info"><span class="user-name">Agradecimientos</span></div>
                     <i class="bi bi-heart" style="color: #64748b;"></i>
                 </a>
-                <a href="{{ url_for('main.soporte') }}" target="_blank" class="ranking-item">
+                <a href="{{ url_for('main.soporte') }}" class="ranking-item">
                     <div class="user-info"><span class="user-name">Soporte</span></div>
                     <i class="bi bi-tools" style="color: #64748b;"></i>
                 </a>
@@ -190,6 +255,15 @@
                     <div class="user-info"><span class="user-name">Máquinas Completadas</span></div>
                     <i class="bi bi-check-circle" style="color: #64748b;"></i>
                 </a>
+		<a href="{{ url_for('main.user_pending_machines') }}" class="ranking-item">
+    			<div class="user-info">
+        			<span class="user-name">
+            				Mis máquinas enviadas
+        			</span>
+    			</div>
+    		    <i class="bi bi-hdd-stack" style="color:#64748b;"></i>
+		</a>
+
                 {% if current_user_role in ['admin', 'moderador'] %}
                 <a href="{{ url_for('peticiones') }}" class="ranking-item">
                     <div class="user-info"><span class="user-name">Peticiones</span></div>
@@ -199,6 +273,16 @@
                     <div class="user-info"><span class="user-name">Gestión Usuarios</span></div>
                     <i class="bi bi-people" style="color: #64748b;"></i>
                 </a>
+                <a href="{{ url_for('main.pending_machines') }}" class="ranking-item">
+   			 <div class="user-info">
+        			<span class="user-name">
+            				Aprobar Máquinas
+        			</span>
+    			</div>
+
+    		   <i class="bi bi-hdd-stack" style="color:#64748b;"></i>
+		</a>
+
                 {% endif %}
                 <a href="{{ url_for('maquinas.gestion_maquinas') }}" class="ranking-item">
                     <div class="user-info"><span class="user-name">Gestión Máquinas</span></div>
@@ -208,6 +292,10 @@
                 <a href="{{ url_for('maquinas.add_maquina_page') }}" class="ranking-item">
                     <div class="user-info"><span class="user-name">Añadir Máquina</span></div>
                     <i class="bi bi-plus-lg" style="color: #64748b;"></i>
+                </a>
+                <a href="{{ url_for('main.backups_page') }}" class="ranking-item">
+                    <div class="user-info"><span class="user-name">Backups</span></div>
+                    <i class="bi bi-database-down" style="color: #64748b;"></i>
                 </a>
                 <a href="{{ url_for('bunkerlabs.accesos_bunkerlabs') }}" class="ranking-item">
                     <div class="user-info"><span class="user-name">Accesos Bunkerlabs</span></div>
@@ -220,7 +308,7 @@
 
     <!-- Messaging Modal -->
     <div id="messagingModal" class="overlay">
-        <div class="popup" style="width: min(800px, 95%); padding: 0; overflow: hidden; border-radius: 15px;">
+        <div class="popup" style="width: min(1000px, 95%); padding: 0; overflow: hidden; border-radius: 15px;">
             <div class="modal-header" style="padding: 1rem; border-bottom: 1px solid #334155; background: #0f172a;">
                 <h2 class="modal-title" style="font-size: 1.25rem;">Mensajes</h2>
             </div>
@@ -229,12 +317,6 @@
                     <button class="msg-new-btn" onclick="showNewMessageInput()">
                         <i class="bi bi-pencil-square"></i> Nuevo Mensaje
                     </button>
-                    {% if current_user_role == 'admin' %}
-                    <button class="msg-new-btn" style="background: #eab308; margin-top: 0.5rem;"
-                        onclick="showBroadcastInput()">
-                        <i class="bi bi-megaphone"></i> Difusión
-                    </button>
-                    {% endif %}
                     <div id="msgNew" style="display:none; padding:1rem;">
                         <input type="text" id="newMsgUser" class="msg-input" placeholder="Buscar usuario..."
                             autocomplete="off">
@@ -242,18 +324,6 @@
                         <button class="btn-auth"
                             style="padding: 0.5rem; margin-top:0.5rem; width:100%; background:#ef4444; color: #ffffff; font-weight: bold;"
                             onclick="cancelNewMessage()">Cancelar</button>
-                    </div>
-                    <div id="msgBroadcast" style="display:none; padding:1rem;">
-                        <p style="color:#eab308; font-size:0.9rem; margin-bottom:0.5rem;">⚠️ Mensaje a TODOS los
-                            usuarios</p>
-                        <textarea id="broadcastContent" class="msg-input" rows="3"
-                            placeholder="Escribe tu anuncio..."></textarea>
-                        <button class="btn-auth"
-                            style="padding: 0.5rem; margin-top:0.5rem; width:100%; background:#eab308; color: #000000; font-weight: bold;"
-                            onclick="sendBroadcast()">Enviar Difusión</button>
-                        <button class="btn-auth"
-                            style="padding: 0.5rem; margin-top:0.5rem; width:100%; background:#ef4444; color: #ffffff; font-weight: bold;"
-                            onclick="cancelBroadcast()">Cancelar</button>
                     </div>
                     <div class="msg-list" id="msgList">
                         <!-- Conversations go here -->
@@ -288,6 +358,41 @@
         </div>
     </div>
 
+    <!-- Notifications Modal -->
+    <div id="notificationsModal" class="claim-modal">
+        <div class="claim-modal-dialog notifications-modal-dialog" style="max-width: 600px;">
+            <button type="button" class="modal-close-button" onclick="closeNotificationsModal()">&times;</button>
+            <h2>Notificaciones</h2>
+            <p class="modal-description">
+                Mantente al día con las últimas novedades de DockerLabs
+            </p>
+
+            <!-- Tabs -->
+            <div class="notifications-tabs" style="display: flex; gap: 0.5rem; margin-bottom: 1.5rem; border-bottom: 1px solid #334155; padding-bottom: 0.75rem;">
+                <button type="button" id="tab-btn-notificaciones" class="tab-btn active" onclick="switchNotificationsTab('notificaciones')" style="padding: 0.5rem 1rem; background: rgba(59, 130, 246, 0.15); border: none; color: #3b82f6; font-family: 'Fira Code', monospace; font-size: 0.85rem; font-weight: 600; cursor: pointer; border-radius: 6px; transition: all 0.2s;">
+                    <i class="bi bi-bell"></i> Notificaciones
+                </button>
+            </div>
+
+            <!-- Notificaciones Tab Content -->
+            <div id="tab-notificaciones" class="tab-content">
+                <div id="notificationsList" class="notifications-list">
+                    <div style="padding: 3rem 2rem; text-align: center; color: #64748b;">
+                        <div style="background: rgba(59, 130, 246, 0.1); padding: 2rem; border-radius: 20px; display: inline-block; margin-bottom: 1.5rem;">
+                            <i class="bi bi-bell" style="font-size: 4rem; color: #3b82f6;"></i>
+                        </div>
+                        <p style="font-size: 1.2rem; margin-bottom: 0.5rem; color: #94a3b8;">Cargando notificaciones...</p>
+                    </div>
+                </div>
+                <button id="toggleReadNotifications" class="toggle-read-btn" style="display: none;">
+                    <i class="bi bi-chevron-down"></i>
+                    <span>Ver notificaciones leídas</span>
+                </button>
+            </div>
+
+        </div>
+    </div>
+
     {% block content %}{% endblock %}
 
     <footer class="{% if no_default_styles %}custom-footer{% endif %}">
@@ -301,14 +406,14 @@
             </p>
 
             <div class="footer-icons">
-                <a href="https://discord.gg/dD3yVejBUR" class="footer-icon" target="_blank"><i
-                        class="bi bi-discord"></i></a>
+                <a href="https://github.com/Maalfer/dockerlabs" class="footer-icon support-tooltip" target="_blank"
+                    data-tooltip="¿Nos das una ⭐?"><i class="bi bi-github github-pulse"></i></a>
                 <a href="https://es.linkedin.com/in/maalfer1" class="footer-icon" target="_blank"><i
                         class="bi bi-linkedin"></i></a>
                 <a href="https://t.me/elpinguinohack" class="footer-icon" target="_blank"><i
                         class="bi bi-telegram"></i></a>
-                <a href="https://github.com/Maalfer/dockerlabs" class="footer-icon support-tooltip" target="_blank"
-                    data-tooltip="¿Nos das una ⭐?"><i class="bi bi-github github-pulse"></i></a>
+                <a href="https://discord.gg/dD3yVejBUR" class="footer-icon" target="_blank"><i
+                        class="bi bi-discord"></i></a>
             </div>
         </div>
 
@@ -325,6 +430,8 @@
         function closeDashboardModal() { document.getElementById('dashboardModal').classList.remove('visible'); }
         function openMenuModal() { document.getElementById('menuModal').classList.add('visible'); }
         function closeMenuModal() { document.getElementById('menuModal').classList.remove('visible'); }
+        function openNotificationsModal() { document.getElementById('notificationsModal').classList.add('visible'); }
+        function closeNotificationsModal() { document.getElementById('notificationsModal').classList.remove('visible'); }
 
         document.addEventListener('DOMContentLoaded', function () {
 
@@ -349,6 +456,13 @@
                 });
             }
 
+            const notificationsModal = document.getElementById('notificationsModal');
+            if (notificationsModal) {
+                notificationsModal.addEventListener('click', function (e) {
+                    if (e.target === notificationsModal) closeNotificationsModal();
+                });
+            }
+
             // Mobile responsive link for DockerLabs title
             const dockerlabsLink = document.getElementById('dockerlabs-link');
             if (dockerlabsLink) {
@@ -356,37 +470,37 @@
                     const isMobile = window.innerWidth <= 768;
 
                     if (isMobile) {
-                        // In mobile, prevent default and go to dockerlabs.es
+                        // In mobile, go to dockerlabs.es
                         event.preventDefault();
                         window.location.href = 'https://dockerlabs.es';
-                    }
-                    // In desktop, let the default href work (BunkerLabs)
-                });
-
-                // Remove hover effect in mobile
-                function updateHoverEffect() {
-                    const isMobile = window.innerWidth <= 768;
-
-                    if (isMobile) {
-                        dockerlabsLink.onmouseover = null;
-                        dockerlabsLink.onmouseout = null;
-                        dockerlabsLink.innerText = 'DockerLabs';
                     } else {
-                        dockerlabsLink.onmouseover = function () { this.innerText = 'BunkerLabs'; };
-                        dockerlabsLink.onmouseout = function () { this.innerText = 'DockerLabs'; };
+                        // In desktop, go to BunkerLabs login
+                        window.location.href = '/bunkerlabs/login';
                     }
-                }
-
-                updateHoverEffect();
-                window.addEventListener('resize', updateHoverEffect);
+                });
             }
 
+            const brandTitle = document.querySelector('.brand-title');
+            const brandText = document.querySelector('.brand-text');
+            
+            if (brandTitle && brandText) {
+                brandTitle.addEventListener('mouseenter', function() {
+                    const hoverText = brandText.getAttribute('data-hover');
+                    brandText.textContent = hoverText;
+                });
+                
+                brandTitle.addEventListener('mouseleave', function() {
+                    const originalText = brandText.getAttribute('data-original');
+                    brandText.textContent = originalText;
+                });
+            }
         });
     </script>
 
     <script src="{{ url_for('static', filename='dockerlabs/js/utils.js') }}"></script>
     {% if session.get('user_id') %}
     <script src="{{ url_for('static', filename='dockerlabs/js/messaging.js') }}"></script>
+    <script src="{{ url_for('static', filename='dockerlabs/js/notifications.js') }}"></script>
     {% endif %}
     {% block scripts %}{% endblock %}
 </body>

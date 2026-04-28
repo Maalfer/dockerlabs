@@ -75,13 +75,7 @@ Un stack robusto y moderno para garantizar rendimiento y escalabilidad.
     pip install -r requirements.txt
     ```
 
-3.  **Configura las variables de entorno:**
-    ```bash
-    cp .env.example .env
-    # Edita .env con tu SECRET_KEY
-    ```
-
-4.  **Ejecuta la aplicación:**
+3.  **Ejecuta la aplicación:**
     ```bash
     python3 app.py
     ```
@@ -106,19 +100,16 @@ sudo find /var/www/dockerlabs -type f -exec chmod 644 {} \;
 sudo chmod 775 /var/www/dockerlabs
 sudo chmod 775 /var/www/dockerlabs/database
 sudo chmod 664 /var/www/dockerlabs/database/dockerlabs.db
+sudo chown -R www-data:www-data /var/www/dockerlabs/database/almacenamiento
+sudo find /var/www/dockerlabs/database/almacenamiento -type d -exec chmod 775 {} \;
+sudo find /var/www/dockerlabs/database/almacenamiento -type f -exec chmod 664 {} \;
 sudo chmod +x /var/www/dockerlabs/venv/bin/uvicorn
 sudo systemctl restart dockerlabs.service
 ```
 
-### Rate Limiting (Memcached)
+### Rate Limiting (Cloudflare)
 
-Para el funcionamiento correcto del sistema de limitación de peticiones (Rate Limit), es necesario tener **memcached** activado:
-
-```bash
-sudo apt install memcached
-sudo systemctl enable memcached
-sudo systemctl start memcached
-```
+El sistema de limitación de peticiones (Rate Limit) está configurado para funcionar con **Cloudflare**, proporcionando protección a nivel de red sin necesidad de servicios adicionales como memcached.
 
 ### Auditoría Local (Admin)
 
