@@ -23,8 +23,15 @@ database/*.db-wal
 database/*.db.lock
 database/*.lock
 
-# Image storage
-database/almacenamiento/
+# Image storage - ignorar imágenes pero mantener estructura de carpetas
+database/almacenamiento/**/*.jpg
+database/almacenamiento/**/*.jpeg
+database/almacenamiento/**/*.png
+database/almacenamiento/**/*.gif
+database/almacenamiento/**/*.webp
+database/almacenamiento/**/*.svg
+database/almacenamiento/**/*.bmp
+database/almacenamiento/**/*.ico
 
 # IDE
 .vscode/

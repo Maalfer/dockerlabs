@@ -862,9 +862,15 @@ function renderMyTeam(container, team, popup) {
 
             const inviteItem = document.createElement('div');
             inviteItem.className = 'plus-dropdown-item';
-            inviteItem.innerHTML = '<i class="bi bi-envelope"></i><span>Mis invitaciones</span>';
-            inviteItem.addEventListener('click', () => { closePlusMenu(); showMisInvitaciones(); });
+            inviteItem.innerHTML = '<i class="bi bi-person-plus"></i><span>Invitar a equipo</span>';
+            inviteItem.addEventListener('click', () => { closePlusMenu(); switchTab(null, 'invitar', team.id); });
             dropdown.appendChild(inviteItem);
+
+            const myInvitationsItem = document.createElement('div');
+            myInvitationsItem.className = 'plus-dropdown-item';
+            myInvitationsItem.innerHTML = '<i class="bi bi-envelope"></i><span>Mis invitaciones</span>';
+            myInvitationsItem.addEventListener('click', () => { closePlusMenu(); showMisInvitaciones(); });
+            dropdown.appendChild(myInvitationsItem);
 
             popup.appendChild(dropdown);
         }

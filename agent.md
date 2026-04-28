@@ -10,6 +10,25 @@ database/almacenamiento/
 └── logos/             # Logotipos de máquinas
 ```
 
+### Control de Versiones (Git)
+
+**IMPORTANTE:** La carpeta `database/almacenamiento/` y sus subcarpetas deben incluirse en el repositorio Git, **pero sin las imágenes**. Esto garantiza que la estructura de directorios exista al clonar el proyecto.
+
+**Configuración en `.gitignore`:**
+```gitignore
+# Ignorar solo los archivos de imagen, no las carpetas
+database/almacenamiento/**/*.jpg
+database/almacenamiento/**/*.jpeg
+database/almacenamiento/**/*.png
+database/almacenamiento/**/*.gif
+database/almacenamiento/**/*.webp
+database/almacenamiento/**/*.svg
+database/almacenamiento/**/*.bmp
+database/almacenamiento/**/*.ico
+```
+
+**Archivos `.gitkeep`:** Usar archivos `.gitkeep` vacíos en cada subcarpeta para asegurar que Git trackee la estructura de directorios.
+
 ### Convenciones de Nombres (Estandarizadas)
 
 | Tipo | Patrón | Ejemplo |

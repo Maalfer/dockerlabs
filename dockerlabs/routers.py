@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Request, Depends, HTTPException, Form
 from fastapi.responses import JSONResponse, StreamingResponse, FileResponse, HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
+from fastapi.concurrency import run_in_threadpool
 from pydantic import BaseModel
 from typing import List, Optional
 from sqlalchemy import func
@@ -14,6 +15,7 @@ import sqlite3
 import tempfile
 import zipfile
 import fcntl
+import logging
 from slowapi import Limiter
 from slowapi.util import get_remote_address
 
@@ -22,7 +24,7 @@ from slowapi.util import get_remote_address
 from dockerlabs.models import User, Machine, Writeup, PendingMachineSubmission, Category, CreatorRanking, WriteupRanking, PendingWriteup, NameClaim, UsernameChangeRequest, WriteupEditRequest, CompletedMachine, Rating
 from dockerlabs.extensions import db as alchemy_db
 from dockerlabs.decorators import generate_csrf_token
-from werkzeug.security import check_password_hash, generate_password_hash
+from werkzeug.security import check_password_hash as _werkzeug_check_password_hash, generate_password_hash
 from flask.sessions import SecureCookieSessionInterface
 
 def url_for(endpoint, **kwargs):
@@ -227,26 +229,36 @@ api_router = APIRouter(prefix="/api", tags=["API Pública"])
 pages_router = APIRouter(tags=["Páginas HTML"])
 
 from itsdangerous import URLSafeTimedSerializer
-import secrets
 
-# Clave secreta para la sesión. Se reinicia al iniciar el servidor igual que antes en app.py
-SESSION_SECRET_KEY = secrets.token_hex(32)
+# Variable global para la clave de sesión (se inicializa lazy)
+_session_secret_key = None
+
+def get_session_secret_key():
+    """Obtiene la clave de sesión desde la base de datos (lazy initialization)."""
+    global _session_secret_key
+    if _session_secret_key is None:
+        from dockerlabs.models import SessionConfig
+        _session_secret_key = SessionConfig.get_or_create_secret_key()
+    return _session_secret_key
 
 def get_session_serializer():
     from itsdangerous.url_safe import URLSafeTimedSerializer
-    return URLSafeTimedSerializer(SESSION_SECRET_KEY, salt='cookie-session')
+    return URLSafeTimedSerializer(get_session_secret_key(), salt='cookie-session')
 
 def get_flask_session(request: Request) -> dict:
     """Extraer sesión desde cookies usando itsdangerous directamente sin Flask."""
     cookie = request.cookies.get("session")
     if not cookie:
         return {}
-    
+
     serializer = get_session_serializer()
     try:
         data = serializer.loads(cookie)
         return dict(data) if isinstance(data, dict) else {}
-    except:
+    except Exception as e:
+        # Log para diagnosticar problemas de sesión (pero no exponer detalles al cliente)
+        logger = logging.getLogger(__name__)
+        logger.debug(f"Error al deserializar sesión: {type(e).__name__}")
         return {}
 
 async def verify_csrf_token(request: Request, flask_session: dict = Depends(get_flask_session)):
@@ -528,17 +540,104 @@ def create_flask_session_cookie(user_id: int, username: str, role: str = 'jugado
     
     return set_flask_session_cookie(session_data)
 
+def check_password_hash_safe(password_hash: str, password: str) -> bool:
+    """Verifica password hash compatible con todas las plataformas.
+    
+    Maneja el caso de scrypt en macOS usando el paquete scrypt de PyPI como fallback.
+    """
+    # Si no es scrypt, usar werkzeug directamente
+    if not password_hash.startswith('scrypt'):
+        return _werkzeug_check_password_hash(password_hash, password)
+    
+    # Para scrypt, extraer parámetros y verificar manualmente
+    try:
+        # Formato werkzeug: scrypt:32768:8:1$<salt>$<hash_hex>
+        # ej: scrypt:32768:8:1$TvqUilznpmYjn49g$43c27e71...
+        parts = password_hash.split('$')
+        if len(parts) != 3:
+            return False
+        
+        method_part = parts[0]  # scrypt:32768:8:1
+        salt_str = parts[1]     # salt (string plano, no base64)
+        expected_hash_hex = parts[2]  # hash en hexadecimal (64 bytes = 128 hex chars)
+        
+        # Parsear parámetros (N:r:p)
+        if ':' in method_part:
+            # Formato: scrypt:N:r:p
+            _, n_str, r_str, p_str = method_part.split(':')
+            n, r, p = int(n_str), int(r_str), int(p_str)
+        else:
+            # Valores por defecto werkzeug: scrypt$... (sin parámetros)
+            n, r, p = 32768, 8, 1  # 2^15 = 32768
+        
+        # Calcular maxmem como hace werkzeug (132 * n * r * p)
+        maxmem = 132 * n * r * p
+        
+        password_bytes = password.encode('utf-8')
+        salt_bytes = salt_str.encode('utf-8')  # El salt se codifica directamente
+        
+        # Calcular hash scrypt
+        try:
+            # Intentar usar hashlib primero (Linux/Windows)
+            import hashlib
+            derived = hashlib.scrypt(
+                password_bytes,
+                salt=salt_bytes,
+                n=n, r=r, p=p,
+                maxmem=maxmem,
+                dklen=64  # werkzeug usa 64 bytes
+            )
+        except AttributeError:
+            # Fallback para macOS usando el paquete scrypt
+            import scrypt
+            derived = scrypt.hash(
+                password_bytes,
+                salt_bytes,
+                N=n, r=r, p=p,
+                buflen=64  # 64 bytes como werkzeug
+            )
+        
+        # Convertir a hexadecimal y comparar
+        import hmac
+        derived_hex = derived.hex()
+        return hmac.compare_digest(derived_hex, expected_hash_hex)
+        
+    except Exception as e:
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.error(f"Error verificando hash scrypt: {e}")
+        return False
+
+def _get_user_and_verify_password(username: str, password: str):
+    """Función síncrona para consultar usuario y verificar contraseña."""
+    user = User.query.filter_by(username=username.strip()).first()
+    if user is None:
+        return None
+    if not check_password_hash_safe(user.password_hash, password):
+        return None
+    # Extraer todos los datos necesarios antes de retornar
+    return {
+        'id': user.id,
+        'username': user.username,
+        'role': user.role
+    }
+
 @api_router.post("/auth/login", response_model=LoginResponse)
 async def api_auth_login(request: Request, data: LoginRequest, flask_session: dict = Depends(get_flask_session)):
+    # Ejecutar consulta de DB en threadpool para evitar problemas de sesión
+    user_data = await run_in_threadpool(_get_user_and_verify_password, data.username, data.password)
     
-    user = User.query.filter_by(username=data.username.strip()).first()
-    if user is None or not check_password_hash(user.password_hash, data.password):
+    if user_data is None:
         return JSONResponse(status_code=401, content={"success": False, "message": "Usuario o contraseña incorrectos."})
             
-    cookie_val = create_flask_session_cookie(user.id, user.username, user.role, existing_session=flask_session)
+    cookie_val = create_flask_session_cookie(
+        user_data['id'], 
+        user_data['username'], 
+        user_data['role'], 
+        existing_session=flask_session
+    )
         
     response = JSONResponse(content={"success": True, "redirect_url": "/dashboard"})
-    # Configurar la cookie de sesión de manera compatible con Flask
     response.set_cookie(
         key="session", 
         value=cookie_val, 
@@ -604,7 +703,7 @@ async def api_auth_register(request: Request, data: RegisterRequest):
         return JSONResponse(status_code=400, content={"success": False, "message": "El nombre de usuario solo puede contener letras, números, guiones y guiones bajos."})
 
 
-    pwd_hash = generate_password_hash(password)
+    pwd_hash = generate_password_hash(password, method='pbkdf2:sha256')
     existing = User.query.filter((User.username == username) | (User.email == email)).first()
     if existing:
         return JSONResponse(status_code=400, content={"success": False, "message": "El usuario o el correo ya están registrados."})
@@ -638,7 +737,7 @@ async def api_auth_register(request: Request, data: RegisterRequest):
             import string
             alphabet = string.ascii_letters + string.digits + "!@#$%^&*"
             pin = ''.join(secrets.choice(alphabet) for i in range(15))
-            pin_hash = generate_password_hash(pin)
+            pin_hash = generate_password_hash(pin, method='pbkdf2:sha256')
                 
             new_user.recovery_pin_hash = pin_hash
             # SECURITY WARNING: recovery_pin_plain se almacena en texto plano por compatibilidad.
@@ -682,11 +781,11 @@ async def api_auth_recover(request: Request, data: RecoverRequest, csrf_ok: bool
         return JSONResponse(status_code=400, content={"success": False, "message": "Usuario no encontrado."})
     if not user_obj.recovery_pin_hash:
         return JSONResponse(status_code=400, content={"success": False, "message": "No hay un PIN de recuperación registrado para este usuario. Regístrate nuevamente o contacta al soporte."})
-    if not check_password_hash(user_obj.recovery_pin_hash, pin):
+    if not check_password_hash_safe(user_obj.recovery_pin_hash, pin):
         return JSONResponse(status_code=400, content={"success": False, "message": "PIN incorrecto."})
         
     if user_obj.recovery_pin_created_at:
-         new_pwd_hash = generate_password_hash(password)
+         new_pwd_hash = generate_password_hash(password, method='pbkdf2:sha256')
          user_obj.password_hash = new_pwd_hash
          user_obj.recovery_pin_hash = None
          user_obj.recovery_pin_created_at = None
@@ -731,10 +830,10 @@ async def api_change_password(request: Request, data: ChangePasswordRequest, fla
     if not user_obj:
         return JSONResponse(status_code=404, content={"error": "Usuario no encontrado."})
             
-    if not check_password_hash(user_obj.password_hash, data.current_password):
+    if not check_password_hash_safe(user_obj.password_hash, data.current_password):
         return JSONResponse(status_code=400, content={"error": "La contraseña actual es incorrecta."})
             
-    user_obj.password_hash = generate_password_hash(data.new_password)
+    user_obj.password_hash = generate_password_hash(data.new_password, method='pbkdf2:sha256')
     alchemy_db.session.commit()
     return {"message": "Contraseña actualizada correctamente.", "success": True}
 

@@ -200,8 +200,18 @@ def register_equipos_routes(api_router, get_flask_session, verify_csrf_token, al
                 return FileResponse(default_path)
             return JSONResponse(status_code=404, content={"success": False, "message": "Imagen no encontrada"})
 
+        # Intentar múltiples estrategias para encontrar la imagen:
+        # 1. Primero intentar como ruta absoluta (datos antiguos)
         if os.path.exists(team.imagen_path):
             return FileResponse(team.imagen_path)
+        
+        # 2. Reconstruir la ruta desde el directorio de equipos (nuevo formato)
+        # Extraer solo el nombre del archivo si es una ruta antigua, o usar directo si es nuevo
+        filename = os.path.basename(team.imagen_path)
+        image_full_path = os.path.join(TEAM_IMAGES_DIR, filename)
+        
+        if os.path.exists(image_full_path):
+            return FileResponse(image_full_path)
 
         return JSONResponse(status_code=404, content={"success": False, "message": "Imagen no encontrada"})
 
@@ -259,13 +269,16 @@ def register_equipos_routes(api_router, get_flask_session, verify_csrf_token, al
 
             ensure_team_images_dir()
             unique_filename = f"team_{team.id}_{uuid.uuid4().hex}{file_ext}"
+            # Guardar solo el nombre del archivo (ruta relativa), no la ruta absoluta
+            imagen_filename = unique_filename
             imagen_path = os.path.join(TEAM_IMAGES_DIR, unique_filename)
 
             try:
                 content = await imagen.read()
                 with open(imagen_path, 'wb') as f:
                     f.write(content)
-                team.imagen_path = imagen_path
+                # Almacenar solo el nombre del archivo para compatibilidad entre sistemas
+                team.imagen_path = imagen_filename
             except Exception as e:
                 alchemy_db.session.rollback()
                 return JSONResponse(
@@ -764,11 +777,19 @@ def register_equipos_routes(api_router, get_flask_session, verify_csrf_token, al
         if member_count <= 1:
             if team:
                 # Delete team image if exists
-                if team.imagen_path and os.path.exists(team.imagen_path):
-                    try:
-                        os.remove(team.imagen_path)
-                    except:
-                        pass
+                if team.imagen_path:
+                    # Intentar múltiples ubicaciones
+                    paths_to_try = [
+                        team.imagen_path,  # Ruta absoluta antigua
+                        os.path.join(TEAM_IMAGES_DIR, os.path.basename(team.imagen_path))  # Nueva ruta
+                    ]
+                    for image_path in paths_to_try:
+                        if os.path.exists(image_path):
+                            try:
+                                os.remove(image_path)
+                                break  # Solo eliminar una vez
+                            except:
+                                pass
                 alchemy_db.session.delete(team)
             message = "Has salido del equipo. El equipo ha sido eliminado."
         else:

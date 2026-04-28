@@ -11,3 +11,4 @@ jinja2
 slowapi
 bleach
 python-multipart
+scrypt

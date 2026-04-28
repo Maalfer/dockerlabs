@@ -432,3 +432,26 @@ class TeamJoinRequest(db.Model):
     def __repr__(self):
         return f'<TeamJoinRequest team={self.team_id} user={self.user_id}>'
 
+
+class SessionConfig(db.Model):
+    """Almacena la clave secreta de sesión persistente en la base de datos."""
+    __tablename__ = 'session_config'
+
+    id = db.Column(db.Integer, primary_key=True)
+    secret_key = db.Column(db.String(64), nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    @staticmethod
+    def get_or_create_secret_key():
+        """Obtiene la clave existente o genera una nueva si no existe."""
+        config = SessionConfig.query.first()
+        if not config:
+            import secrets
+            config = SessionConfig(secret_key=secrets.token_hex(32))
+            db.session.add(config)
+            db.session.commit()
+        return config.secret_key
+
+    def __repr__(self):
+        return f'<SessionConfig id={self.id}>'
+
