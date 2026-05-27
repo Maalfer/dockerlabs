@@ -1,0 +1,98 @@
+{% extends "dockerlabs/base.html" %}
+
+{% block title %}Recuperar contraseña - DockerLabs{% endblock %}
+
+{% block content %}
+<div class="container" style="padding-top: 80px; max-width: 520px;">
+    <div style="text-align: center; margin-bottom: 32px;">
+        <h2 style="margin: 0 0 8px;">Recuperar contraseña</h2>
+        <p class="text-muted" style="margin: 0;">Introduce tu correo y te enviaremos un enlace para restablecer tu contraseña.</p>
+    </div>
+
+    <div class="alert alert-danger" id="recover-error" style="display: none;">
+        <i class="fas fa-exclamation-circle"></i>
+        <span id="recover-error-text"></span>
+    </div>
+
+    <div class="alert alert-success" id="recover-success" style="display: none;">
+        <i class="fas fa-envelope-open-text"></i>
+        <div>
+            <strong>Correo enviado</strong>
+            <p id="recover-success-text" style="margin: 6px 0 0; font-size: 0.93em;"></p>
+        </div>
+    </div>
+
+    <form id="recover-form">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token_value }}">
+
+        <div class="mb-3">
+            <label for="email" class="form-label">Correo electrónico</label>
+            <input type="email" name="email" id="email" class="form-control"
+                   placeholder="tu@correo.com" required autocomplete="email" autofocus>
+        </div>
+
+        <button type="submit" class="btn btn-primary w-100" id="recover-btn">
+            <span class="btn-text"><i class="fas fa-paper-plane"></i> Enviar enlace de recuperación</span>
+            <span class="btn-loader" style="display: none;">Enviando…</span>
+        </button>
+    </form>
+
+    <div style="text-align: center; margin-top: 24px;">
+        <a href="{{ url_for('auth.login') }}" class="text-muted" style="font-size: 0.9em;">
+            <i class="fas fa-arrow-left"></i> Volver al inicio de sesión
+        </a>
+    </div>
+</div>
+
+<script nonce="{{ g.csp_nonce }}">
+document.addEventListener("DOMContentLoaded", function () {
+    const form = document.getElementById("recover-form");
+    const errorBox = document.getElementById("recover-error");
+    const errorText = document.getElementById("recover-error-text");
+    const successBox = document.getElementById("recover-success");
+    const successText = document.getElementById("recover-success-text");
+    const btn = document.getElementById("recover-btn");
+
+    form.addEventListener("submit", async function (e) {
+        e.preventDefault();
+        errorBox.style.display = "none";
+        successBox.style.display = "none";
+
+        btn.disabled = true;
+        btn.querySelector(".btn-text").style.display = "none";
+        btn.querySelector(".btn-loader").style.display = "inline";
+
+        const csrfToken = form.csrf_token.value;
+        try {
+            const response = await fetch("/api/auth/forgot-password", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRFToken": csrfToken
+                },
+                body: JSON.stringify({ email: form.email.value })
+            });
+            const result = await response.json();
+
+            if (response.ok && result.success) {
+                form.style.display = "none";
+                successBox.style.display = "flex";
+                successText.textContent = result.message || "Si el correo existe, recibirás el enlace en breve.";
+            } else {
+                errorBox.style.display = "flex";
+                errorText.textContent = result.message || "Error al procesar la solicitud.";
+                btn.disabled = false;
+                btn.querySelector(".btn-text").style.display = "inline";
+                btn.querySelector(".btn-loader").style.display = "none";
+            }
+        } catch (err) {
+            errorBox.style.display = "flex";
+            errorText.textContent = "Error de conexión con el servidor.";
+            btn.disabled = false;
+            btn.querySelector(".btn-text").style.display = "inline";
+            btn.querySelector(".btn-loader").style.display = "none";
+        }
+    });
+});
+</script>
+{% endblock %}

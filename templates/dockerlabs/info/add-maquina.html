@@ -1,0 +1,589 @@
+{% extends "dockerlabs/base.html" %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='dockerlabs/css/info/add-maquina.css') }}"
+      media="print" onload="this.media='all'">
+<noscript><link rel="stylesheet" href="{{ url_for('static', filename='dockerlabs/css/info/add-maquina.css') }}"></noscript>
+{% endblock %}
+
+{% block title %}Añadir máquina - DockerLabs{% endblock %}
+
+{% block content %}
+
+<style>
+:root {
+    --form-bg: #0f1117;
+    --card-bg: #1a1d27;
+    --border: rgba(255,255,255,0.08);
+    --accent: #22d3ee;
+    --accent-dim: rgba(34,211,238,0.12);
+    --text-muted: rgba(255,255,255,0.45);
+    --input-bg: rgba(255,255,255,0.04);
+    --input-border: rgba(255,255,255,0.1);
+    --input-focus: rgba(34,211,238,0.35);
+    --radius: 12px;
+    --success: #4ade80;
+}
+
+.add-page {
+    min-height: 100vh;
+    padding: 90px 1rem 3rem;
+    background: var(--form-bg);
+}
+
+.add-card {
+    max-width: 780px;
+    margin: 0 auto;
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    overflow: hidden;
+    box-shadow: 0 24px 64px rgba(0,0,0,0.5);
+}
+
+.add-card-header {
+    padding: 2rem 2.5rem 1.5rem;
+    border-bottom: 1px solid var(--border);
+    background: linear-gradient(135deg, rgba(34,211,238,0.06) 0%, transparent 60%);
+}
+
+.add-card-header h1 {
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: #fff;
+    margin: 0 0 0.25rem;
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+}
+
+.add-card-header p {
+    color: var(--text-muted);
+    font-size: 0.875rem;
+    margin: 0;
+}
+
+.add-card-body {
+    padding: 2rem 2.5rem;
+}
+
+/* ── Destination toggle ── */
+.dest-tabs {
+    display: flex;
+    gap: 0.75rem;
+    margin-bottom: 2rem;
+}
+
+.dest-tab {
+    flex: 1;
+    padding: 0.9rem 1rem;
+    border-radius: var(--radius);
+    border: 1.5px solid var(--border);
+    background: var(--input-bg);
+    color: var(--text-muted);
+    font-size: 0.875rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+.dest-tab .dest-icon { font-size: 1.4rem; }
+.dest-tab .dest-label { font-size: 0.78rem; letter-spacing: 0.04em; }
+
+.dest-tab:hover { border-color: rgba(255,255,255,0.2); color: rgba(255,255,255,0.7); }
+
+.dest-tab.active {
+    border-color: var(--accent);
+    background: var(--accent-dim);
+    color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(34,211,238,0.08);
+}
+
+/* ── Section dividers ── */
+.form-section {
+    margin-bottom: 1.75rem;
+}
+
+.form-section-title {
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.form-section-title::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+}
+
+/* ── Inputs ── */
+.field {
+    margin-bottom: 1.25rem;
+}
+
+.field label {
+    display: block;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: rgba(255,255,255,0.7);
+    margin-bottom: 0.4rem;
+    letter-spacing: 0.02em;
+}
+
+.field label .required {
+    color: #f87171;
+    margin-left: 2px;
+}
+
+.field input,
+.field select,
+.field textarea {
+    width: 100%;
+    padding: 0.7rem 0.9rem;
+    background: var(--input-bg);
+    border: 1px solid var(--input-border);
+    border-radius: 8px;
+    color: #fff;
+    font-size: 0.875rem;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    outline: none;
+    box-sizing: border-box;
+}
+
+.field input:focus,
+.field select:focus,
+.field textarea:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--input-focus);
+}
+
+.field input::placeholder,
+.field textarea::placeholder { color: var(--text-muted); }
+
+.field select option { background: #1a1d27; }
+
+.field textarea { resize: vertical; min-height: 90px; }
+
+.field-hint {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    margin-top: 0.3rem;
+}
+
+/* ── Grid ── */
+.field-row {
+    display: grid;
+    gap: 1rem;
+}
+.field-row.col2 { grid-template-columns: 1fr 1fr; }
+
+/* ── Difficulty pills ── */
+.diff-group {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.diff-pill {
+    padding: 0.4rem 1rem;
+    border-radius: 20px;
+    border: 1.5px solid var(--border);
+    background: var(--input-bg);
+    color: var(--text-muted);
+    font-size: 0.78rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.diff-pill:hover { border-color: rgba(255,255,255,0.25); color: rgba(255,255,255,0.75); }
+
+.diff-pill.active-muy-facil  { border-color: #43959b; background: rgba(67,149,155,0.15); color: #43959b; }
+.diff-pill.active-facil      { border-color: #8bc34a; background: rgba(139,195,74,0.15); color: #8bc34a; }
+.diff-pill.active-medio      { border-color: #e0a553; background: rgba(224,165,83,0.15); color: #e0a553; }
+.diff-pill.active-dificil    { border-color: #d83c31; background: rgba(216,60,49,0.15);  color: #d83c31; }
+
+/* ── Custom user select ── */
+.custom-select-wrapper { position: relative; }
+.custom-select-dropdown {
+    display: none;
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0; right: 0;
+    background: #1e2130;
+    border: 1px solid var(--input-border);
+    border-radius: 8px;
+    max-height: 200px;
+    overflow-y: auto;
+    z-index: 100;
+    box-shadow: 0 12px 32px rgba(0,0,0,0.5);
+}
+.custom-select-dropdown.show { display: block; }
+.custom-select-option {
+    padding: 0.6rem 0.9rem;
+    font-size: 0.85rem;
+    color: rgba(255,255,255,0.8);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: background 0.15s;
+}
+.custom-select-option:hover,
+.custom-select-option.active { background: rgba(34,211,238,0.08); }
+.custom-select-option.selected { color: var(--accent); }
+.custom-select-loading,
+.custom-select-no-results {
+    padding: 0.75rem 0.9rem;
+    font-size: 0.82rem;
+    color: var(--text-muted);
+}
+
+/* ── Submit ── */
+.add-card-footer {
+    padding: 1.5rem 2.5rem 2rem;
+    border-top: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+}
+
+.btn-submit {
+    padding: 0.75rem 2rem;
+    background: var(--accent);
+    color: #000;
+    border: none;
+    border-radius: 10px;
+    font-size: 0.9rem;
+    font-weight: 700;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: opacity 0.2s, transform 0.15s;
+}
+.btn-submit:hover { opacity: 0.9; transform: translateY(-1px); }
+.btn-submit:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+.btn-cancel {
+    color: var(--text-muted);
+    font-size: 0.85rem;
+    text-decoration: none;
+    transition: color 0.2s;
+}
+.btn-cancel:hover { color: rgba(255,255,255,0.8); }
+
+/* ── Alert ── */
+.add-alert {
+    padding: 0.9rem 1.1rem;
+    border-radius: 10px;
+    font-size: 0.875rem;
+    margin-bottom: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+}
+.add-alert.error { background: rgba(248,113,113,0.1); border: 1px solid rgba(248,113,113,0.3); color: #fca5a5; }
+
+/* ── Image preview ── */
+.img-upload-zone {
+    border: 1.5px dashed var(--input-border);
+    border-radius: 8px;
+    padding: 1.2rem;
+    text-align: center;
+    cursor: pointer;
+    transition: border-color 0.2s, background 0.2s;
+    position: relative;
+    overflow: hidden;
+}
+.img-upload-zone:hover { border-color: var(--accent); background: var(--accent-dim); }
+.img-upload-zone input[type="file"] {
+    position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%;
+}
+.img-upload-text { font-size: 0.8rem; color: var(--text-muted); }
+.img-preview { display: none; width: 64px; height: 64px; object-fit: cover; border-radius: 8px; margin: 0 auto 0.5rem; }
+
+@media (max-width: 600px) {
+    .add-card-body, .add-card-footer, .add-card-header { padding-left: 1.25rem; padding-right: 1.25rem; }
+    .field-row.col2 { grid-template-columns: 1fr; }
+    .dest-tabs { flex-direction: column; }
+}
+</style>
+
+<div class="add-page">
+    <div class="add-card">
+
+        <div class="add-card-header">
+            <h1>
+                <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="color:var(--accent)"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
+                Añadir nueva máquina
+            </h1>
+            <p>Completa los datos para publicar una máquina en DockerLabs o BunkerLabs.</p>
+        </div>
+
+        <div class="add-card-body">
+
+            {% if error %}
+            <div class="add-alert error">
+                <i class="bi bi-exclamation-circle-fill"></i> {{ error }}
+            </div>
+            {% endif %}
+
+            <form id="add-form" enctype="multipart/form-data">
+                <input type="hidden" name="csrf_token" value="{{ session['csrf_token'] }}">
+
+                <!-- Destination -->
+                <div class="form-section">
+                    <div class="form-section-title">Destino</div>
+                    <div class="dest-tabs">
+                        <button type="button" class="dest-tab active" data-value="docker" onclick="setDestino('docker')">
+                            <span class="dest-icon">🐳</span>
+                            <span class="dest-label">DockerLabs</span>
+                        </button>
+                        <button type="button" class="dest-tab" data-value="bunker" onclick="setDestino('bunker')">
+                            <span class="dest-icon">🔒</span>
+                            <span class="dest-label">BunkerLabs</span>
+                        </button>
+                    </div>
+                    <input type="hidden" name="destino" id="destino" value="docker">
+                </div>
+
+                <!-- Identity -->
+                <div class="form-section">
+                    <div class="form-section-title">Identidad</div>
+                    <div class="field-row col2">
+                        <div class="field">
+                            <label>Nombre de la máquina <span class="required">*</span></label>
+                            <input type="text" name="nombre" id="nombre" placeholder="ej. Alpine" required>
+                        </div>
+                        <div class="field">
+                            <label>Fecha de publicación <span class="required">*</span></label>
+                            <input type="date" name="fecha" id="fecha" required>
+                        </div>
+                    </div>
+                    <div class="field">
+                        <label>Autor <span class="required">*</span></label>
+                        <div class="custom-select-wrapper">
+                            <input type="text" id="autor-search" placeholder="Buscar usuario registrado…" autocomplete="off">
+                            <input type="hidden" name="autor" id="autor" required>
+                            <div class="custom-select-dropdown" id="autor-dropdown">
+                                <div class="custom-select-loading">Cargando usuarios…</div>
+                            </div>
+                        </div>
+                        <div class="field-hint">Debe ser un usuario registrado en DockerLabs.</div>
+                    </div>
+                </div>
+
+                <!-- Difficulty -->
+                <div class="form-section" id="dificultad-section">
+                    <div class="form-section-title">Dificultad</div>
+                    <input type="hidden" name="dificultad" id="dificultad" required>
+                    <div class="diff-group">
+                        <button type="button" class="diff-pill" data-value="Muy Fácil" onclick="setDificultad('Muy Fácil', this)">Muy Fácil</button>
+                        <button type="button" class="diff-pill" data-value="Fácil" onclick="setDificultad('Fácil', this)">Fácil</button>
+                        <button type="button" class="diff-pill" data-value="Medio" onclick="setDificultad('Medio', this)">Medio</button>
+                        <button type="button" class="diff-pill" data-value="Difícil" onclick="setDificultad('Difícil', this)">Difícil</button>
+                    </div>
+                </div>
+
+                <!-- Content -->
+                <div class="form-section">
+                    <div class="form-section-title">Contenido</div>
+                    <div class="field">
+                        <label>Descripción <span class="required">*</span></label>
+                        <textarea name="descripcion" id="descripcion" placeholder="¿Qué aprende el usuario con esta máquina?" required></textarea>
+                    </div>
+                    <div class="field">
+                        <label>Link de descarga <span class="required">*</span></label>
+                        <input type="url" name="link_descarga" id="link_descarga" placeholder="https://…" required>
+                    </div>
+                    <div class="field">
+                        <label>Logo / Imagen</label>
+                        <div class="img-upload-zone" id="upload-zone">
+                            <input type="file" name="imagen" id="imagen" accept="image/*" onchange="previewImage(this)">
+                            <img id="img-preview" class="img-preview" src="" alt="preview">
+                            <div class="img-upload-text" id="upload-text">
+                                <i class="bi bi-cloud-upload" style="font-size:1.4rem; display:block; margin-bottom:0.3rem;"></i>
+                                Arrastra una imagen o haz clic para seleccionar
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </form>
+        </div>
+
+        <div class="add-card-footer">
+            <a href="/" class="btn-cancel">← Cancelar</a>
+            <button type="button" class="btn-submit" id="submit-btn" onclick="submitForm()">
+                <i class="bi bi-plus-circle-fill"></i>
+                <span class="btn-text">Guardar máquina</span>
+                <span class="btn-loader" style="display:none;"><i class="bi bi-arrow-repeat"></i> Guardando…</span>
+            </button>
+        </div>
+
+    </div>
+</div>
+
+<script>
+let allUsers = [];
+let selectedUserIndex = -1;
+
+document.addEventListener('DOMContentLoaded', function () {
+    // Load users
+    fetch('/api/get_users')
+        .then(r => r.json())
+        .then(data => { allUsers = data.users; renderUsers(allUsers); })
+        .catch(() => {
+            document.getElementById('autor-dropdown').innerHTML = '<div class="custom-select-no-results">Error al cargar usuarios</div>';
+        });
+
+    const searchInput = document.getElementById('autor-search');
+    const dropdown = document.getElementById('autor-dropdown');
+
+    searchInput.addEventListener('focus', () => { if (allUsers.length) dropdown.classList.add('show'); });
+    searchInput.addEventListener('input', function () {
+        const term = this.value.toLowerCase();
+        renderUsers(allUsers.filter(u => u.username.toLowerCase().includes(term)));
+        dropdown.classList.add('show');
+        selectedUserIndex = -1;
+    });
+    searchInput.addEventListener('keydown', function (e) {
+        const opts = dropdown.querySelectorAll('.custom-select-option');
+        if (e.key === 'ArrowDown') { e.preventDefault(); selectedUserIndex = Math.min(selectedUserIndex + 1, opts.length - 1); updateActiveOption(opts); }
+        else if (e.key === 'ArrowUp') { e.preventDefault(); selectedUserIndex = Math.max(selectedUserIndex - 1, 0); updateActiveOption(opts); }
+        else if (e.key === 'Enter' && selectedUserIndex >= 0) { e.preventDefault(); opts[selectedUserIndex].click(); }
+        else if (e.key === 'Escape') { dropdown.classList.remove('show'); }
+    });
+    document.addEventListener('click', e => {
+        if (!searchInput.contains(e.target) && !dropdown.contains(e.target)) dropdown.classList.remove('show');
+    });
+
+    // Default date to today
+    document.getElementById('fecha').valueAsDate = new Date();
+});
+
+function renderUsers(users) {
+    const dropdown = document.getElementById('autor-dropdown');
+    if (!users.length) { dropdown.innerHTML = '<div class="custom-select-no-results">Sin resultados</div>'; return; }
+    dropdown.innerHTML = users.map(u =>
+        `<div class="custom-select-option" data-username="${u.username}"><i class="bi bi-person-circle"></i> ${u.username}</div>`
+    ).join('');
+    dropdown.querySelectorAll('.custom-select-option').forEach(opt => opt.addEventListener('click', () => selectUser(opt.dataset.username)));
+}
+
+function selectUser(username) {
+    document.getElementById('autor-search').value = username;
+    document.getElementById('autor').value = username;
+    document.getElementById('autor-dropdown').classList.remove('show');
+    selectedUserIndex = -1;
+}
+
+function updateActiveOption(opts) {
+    opts.forEach((o, i) => { o.classList.toggle('active', i === selectedUserIndex); if (i === selectedUserIndex) o.scrollIntoView({block:'nearest'}); });
+}
+
+function setDestino(val) {
+    document.getElementById('destino').value = val;
+    document.querySelectorAll('.dest-tab').forEach(t => t.classList.toggle('active', t.dataset.value === val));
+}
+
+const diffMap = { 'Muy Fácil': 'muy-facil', 'Fácil': 'facil', 'Medio': 'medio', 'Difícil': 'dificil' };
+
+function setDificultad(val, btn) {
+    document.getElementById('dificultad').value = val;
+    document.querySelectorAll('.diff-pill').forEach(p => {
+        p.className = 'diff-pill';
+        if (p === btn) p.classList.add('active-' + diffMap[val]);
+    });
+}
+
+function previewImage(input) {
+    const preview = document.getElementById('img-preview');
+    const text = document.getElementById('upload-text');
+    if (input.files && input.files[0]) {
+        const reader = new FileReader();
+        reader.onload = e => {
+            preview.src = e.target.result;
+            preview.style.display = 'block';
+            text.style.display = 'none';
+        };
+        reader.readAsDataURL(input.files[0]);
+    }
+}
+
+async function submitForm() {
+    const form = document.getElementById('add-form');
+    const btn = document.getElementById('submit-btn');
+    const btnText = btn.querySelector('.btn-text');
+    const btnLoader = btn.querySelector('.btn-loader');
+
+    const nombre = document.getElementById('nombre').value.trim();
+    const dificultad = document.getElementById('dificultad').value;
+    const autor = document.getElementById('autor').value.trim();
+    const fecha = document.getElementById('fecha').value;
+    const descripcion = document.getElementById('descripcion').value.trim();
+    const link_descarga = document.getElementById('link_descarga').value.trim();
+    const destino = document.getElementById('destino').value;
+
+    if (!nombre) { alert('El nombre de la máquina es obligatorio.'); return; }
+    if (!dificultad) { alert('Selecciona una dificultad.'); return; }
+    if (!autor) { alert('Selecciona un autor.'); return; }
+    if (!fecha) { alert('La fecha es obligatoria.'); return; }
+    if (!descripcion) { alert('La descripción es obligatoria.'); return; }
+    if (!link_descarga) { alert('El link de descarga es obligatorio.'); return; }
+
+    btn.disabled = true;
+    btnText.style.display = 'none';
+    btnLoader.style.display = 'inline-flex';
+
+    const csrfToken = form.querySelector('input[name="csrf_token"]').value;
+    const imageFile = document.getElementById('imagen').files[0];
+
+    const payload = {
+        nombre, dificultad, autor, fecha, descripcion,
+        link_descarga,
+        imagen: imageFile ? imageFile.name : 'dockerlabs/images/logos/logo_120.png',
+        destino,
+        entorno_real: false
+    };
+
+    try {
+        const resp = await fetch('/api/add-maquina', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrfToken },
+            body: JSON.stringify(payload)
+        });
+        const result = await resp.json();
+        if (resp.ok && result.success) {
+            alert(result.message || 'Máquina añadida correctamente');
+            window.location.href = result.redirect_url || '/';
+        } else {
+            alert(result.error || result.message || 'Error al añadir la máquina');
+            btn.disabled = false;
+            btnText.style.display = 'inline';
+            btnLoader.style.display = 'none';
+        }
+    } catch (err) {
+        alert('Error de conexión con el servidor');
+        btn.disabled = false;
+        btnText.style.display = 'inline';
+        btnLoader.style.display = 'none';
+    }
+}
+</script>
+
+{% endblock %}

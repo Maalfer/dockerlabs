@@ -1,0 +1,39 @@
+{% extends "dockerlabs/base.html" %}
+
+{% block title %}Verificar correo - DockerLabs{% endblock %}
+
+{% block content %}
+<div style="min-height: 60vh; display: flex; align-items: center; justify-content: center; padding: 40px 20px;">
+  <div style="background: #1e293b; border-radius: 12px; padding: 48px 40px; max-width: 480px; width: 100%; text-align: center; box-shadow: 0 25px 50px rgba(0,0,0,0.5);">
+
+    {% if success %}
+    <div style="width: 80px; height: 80px; background: linear-gradient(135deg, #059669, #10b981); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 24px;">
+      <i class="fas fa-check" style="color: #ffffff; font-size: 36px;"></i>
+    </div>
+    <h2 style="color: #f1f5f9; margin: 0 0 12px;">¡Cuenta verificada!</h2>
+    <p style="color: #94a3b8; margin: 0 0 32px; line-height: 1.6;">
+      Tu cuenta <strong style="color: #f1f5f9;">{{ username }}</strong> ha sido activada correctamente.
+      Ya puedes iniciar sesión.
+    </p>
+    <a href="{{ url_for('auth.login') }}"
+       style="display: inline-block; background: linear-gradient(135deg, #2563eb, #7c3aed); color: #ffffff;
+              text-decoration: none; padding: 14px 36px; border-radius: 8px; font-size: 15px; font-weight: 600;">
+      <i class="fas fa-sign-in-alt"></i> Iniciar sesión
+    </a>
+
+    {% else %}
+    <div style="width: 80px; height: 80px; background: linear-gradient(135deg, #dc2626, #ef4444); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 24px;">
+      <i class="fas fa-times" style="color: #ffffff; font-size: 36px;"></i>
+    </div>
+    <h2 style="color: #f1f5f9; margin: 0 0 12px;">Enlace no válido</h2>
+    <p style="color: #94a3b8; margin: 0 0 32px; line-height: 1.6;">{{ error }}</p>
+    <a href="{{ url_for('auth.register') }}"
+       style="display: inline-block; background: linear-gradient(135deg, #2563eb, #7c3aed); color: #ffffff;
+              text-decoration: none; padding: 14px 36px; border-radius: 8px; font-size: 15px; font-weight: 600;">
+      <i class="fas fa-user-plus"></i> Volver al registro
+    </a>
+    {% endif %}
+
+  </div>
+</div>
+{% endblock %}

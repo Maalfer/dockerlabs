@@ -1,0 +1,117 @@
+{% extends "bunkerlabs/base.html" %}
+
+{% block title %}BunkerLabs{% endblock %}
+
+{% block content %}
+
+<link rel="stylesheet" href="{{ url_for('static', filename='bunkerlabs/css/home.css') }}">
+
+<div class="container">
+
+    <div class="header d-flex flex-wrap gap-3" style="justify-content: space-between; align-items: center;">
+
+        <!-- Left Section: Search & Actions -->
+        <div class="header-left d-flex align-items-center gap-2">
+            <input type="text" id="search" class="form-control-sm" placeholder="Buscar en BunkerLabs...">
+
+            {% if not is_guest %}
+            <a href="/bunkerlabs/recursos" class="btn btn-sm btn-action" style="text-decoration:none;">Recursos 📁</a>
+            {% endif %}
+        </div>
+
+        <!-- Right Section: Filters -->
+        <div class="header-right d-flex align-items-center gap-1 flex-wrap justify-content-end">
+            <button class="btn-filter active" data-difficulty="all">Todos</button>
+            <button class="btn-filter" data-difficulty="muy-facil">Muy Fácil</button>
+            <button class="btn-filter" data-difficulty="facil">Fácil</button>
+            <button class="btn-filter" data-difficulty="medio">Medio</button>
+            <button class="btn-filter" data-difficulty="dificil">Difícil</button>
+        </div>
+
+
+    </div>
+
+    {% if is_anonymous %}
+    <div class="alert alert-info text-center" style="border-left: 4px solid #0dcaf0;">
+        <i class="bi bi-info-circle-fill me-2"></i>
+        <strong>Accediendo como usuario anónimo.</strong>
+        Se recomienda <a href="{{ url_for('auth.login') }}" class="fw-bold text-decoration-underline">iniciar sesión en
+            DockerLabs</a> para una mejor experiencia y guardar tu progreso.
+    </div>
+    {% endif %}
+
+    {% if is_unauthenticated_guest %}
+    <div class="alert text-center"
+        style="border-left: 4px solid #f59e0b; background: rgba(245,158,11,0.1); color: #fcd34d;">
+        <i class="bi bi-exclamation-triangle-fill me-2" style="color: #f59e0b;"></i>
+        <strong>Estás accediendo como invitado sin cuenta.</strong>
+        Para guardar tu progreso y desbloquear todas las máquinas,
+        <a href="{{ url_for('auth.login') }}" class="fw-bold" style="color: #f59e0b;">inicia sesión</a> o
+        <a href="{{ url_for('auth.register') }}" class="fw-bold" style="color: #f59e0b;">regístrate gratis</a> en
+        DockerLabs.
+    </div>
+    {% endif %}
+
+    {% if is_guest %}
+    <div class="alert alert-warning text-center">
+        Estas máquinas son de acceso exclusivo para los miembros del <a href="https://thebigschool.com/master-ciberseguridad-hacking-etico/"
+            target="_blank" class="fw-bold">Máster Hacking Ético</a>,
+        <a href="https://elrincondelhacker.es" target="_blank" class="fw-bold">la Academia</a> o
+        <a href="https://skool.com/bunkerpinguino" target="_blank" class="fw-bold">El Búnker del Pinguino</a>
+    </div>
+    {% endif %}
+
+    <div class="machines-grid" data-is-guest="{{ is_guest | lower }}">
+
+        {% for maquina in maquinas %}
+        {% set is_locked_for_guest = is_guest and not maquina.guest_access %}
+        <div class="item {{ maquina.clase }} item-selectable {% if is_locked_for_guest %}locked-guest-item{% endif %}"
+            data-nombre="{{ maquina.nombre }}" data-tamanio="{{ maquina.tamaño }}" data-clase="{{ maquina.clase }}"
+            data-color="{{ maquina.color }}" data-autor="{{ maquina.autor }}"
+            data-enlace-autor="{{ maquina.enlace_autor }}" data-fecha="{{ maquina.fecha }}"
+            data-imagen="{{ url_for('maquinas.serve_machine_logo', machine_id=maquina.id) }}" data-descripcion="{{ maquina.descripcion }}" {% if is_locked_for_guest
+            %}onclick="window.open('https://thebigschool.com/master-ciberseguridad-hacking-etico/', '_blank')" style="cursor: pointer;" {% endif %}>
+
+            {% if is_locked_for_guest %}
+            <div class="guest-lock-overlay">
+                <i class="bi bi-lock-fill"></i>
+            </div>
+            {% endif %}
+
+            <span><strong>{{ maquina.nombre }}</strong></span>
+            <!-- Difficulty badge removed -->
+
+            <div class="actions icon-container">
+                <button class="download btn-download" {% if not is_locked_for_guest
+                    %}data-link="{{ maquina.link_descarga }}" {% endif %}>
+                    <i class="bi bi-cloud-arrow-down-fill"></i>
+                </button>
+            </div>
+
+        </div>
+        {% endfor %}
+
+    </div>
+    <!-- END OF MACHINES GRID -->
+
+</div>
+
+<!-- Modal de Writeups -->
+<div id="writeupModal" class="modal-writeup" style="display: none;">
+    <div class="modal-writeup-content">
+        <span class="close-writeup" onclick="closeWriteupModal()">&times;</span>
+        <h3 id="writeup-machine-title">Writeups</h3>
+        <div id="writeup-content">
+            <p class="loading-text">Cargando writeups...</p>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script nonce="{{ csp_nonce }}" src="{{ url_for('static', filename='bunkerlabs/js/script_bunkerlabs.js') }}"></script>
+<script nonce="{{ csp_nonce }}"
+    src="{{ url_for('static', filename='bunkerlabs/js/presentacionmaquina_bunkerlabs.js') }}"></script>
+{% endblock %}

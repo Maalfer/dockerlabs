@@ -1,0 +1,39 @@
+{% extends "dockerlabs/base.html" %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='dockerlabs/css/errors/403.css') }}"
+      media="print" onload="this.media='all'">
+<noscript><link rel="stylesheet" href="{{ url_for('static', filename='dockerlabs/css/errors/403.css') }}"></noscript>
+{% endblock %}
+
+{% block title %}Acceso Prohibido - DockerLabs{% endblock %}
+
+{% block extra_head %}
+{% endblock %}
+
+{% block content %}
+<div class="error-page-container">
+    <div class="error-card">
+        <div class="error-content-flex">
+            <div class="error-image-wrapper">
+                <img src="{{ url_for('static', filename='dockerlabs/images/errores/balu_enfadado.jpg') }}" alt="Acceso Prohibido"
+                    class="error-image" />
+            </div>
+
+            <div class="error-text-wrapper">
+                <h1 class="error-title">403</h1>
+                <h2 class="error-subtitle">Acceso Prohibido</h2>
+
+                <p class="error-text">
+                    Lo siento, pero no tienes permiso para acceder a esta página.<br>
+                    Balu está un poco molesto por tu intento.
+                </p>
+
+                <a href="/" class="btn-home">
+                    <i class="bi bi-house-door"></i> Volver al inicio
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

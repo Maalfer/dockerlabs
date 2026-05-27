@@ -1,0 +1,348 @@
+{% extends "dockerlabs/base.html" %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='dockerlabs/css/registro.css') }}">
+{% endblock %}
+
+{% block title %}Registro - DockerLabs{% endblock %}
+
+{% block extra_head %}
+{% endblock %}
+
+{% block content %}
+<!-- Loading Overlay -->
+<div id="loading-overlay" class="loading-overlay">
+    <div class="loading-spinner">
+        <div class="spinner-circle"></div>
+        <div class="spinner-circle"></div>
+        <div class="spinner-circle"></div>
+        <div class="spinner-circle"></div>
+    </div>
+    <p class="loading-text">Creando cuenta...</p>
+</div>
+
+<div class="register-container">
+    <div class="register-box">
+        <div class="register-header">
+            <h2>Crear Cuenta</h2>
+            <p>Únete a la comunidad de DockerLabs</p>
+        </div>
+
+        <div class="alert alert-danger" id="register-error" style="display: none;">
+            <i class="fas fa-exclamation-circle"></i>
+            <span id="register-error-text"></span>
+        </div>
+
+        <div class="alert alert-info" id="register-pending" style="display: none;">
+            <i class="fas fa-info-circle"></i>
+            <span id="register-pending-text"></span>
+        </div>
+
+        <div class="alert alert-success" id="register-success" style="display: none;">
+            <i class="fas fa-envelope-open-text"></i>
+            <div>
+                <strong>¡Revisa tu correo electrónico!</strong>
+                <p style="margin: 8px 0 0; font-size: 0.95em;">
+                    Hemos enviado un enlace de verificación a tu dirección de correo.
+                    Haz clic en el enlace para activar tu cuenta.<br>
+                    <span style="opacity: 0.8; font-size: 0.9em;">Si no lo ves, revisa la carpeta de spam.</span>
+                </p>
+            </div>
+        </div>
+
+        {% if remaining %}
+        <div class="alert alert-warning" id="rl-warning">
+            <i class="fas fa-clock"></i>
+            <span>
+                Debes esperar <span id="rl-seconds">{{ remaining }}</span> segundos antes de volver a intentarlo.
+            </span>
+        </div>
+
+        <script nonce="{{ g.csp_nonce }}">
+            (function () {
+                var secondsEl = document.getElementById("rl-seconds");
+                var sec = parseInt(secondsEl.textContent, 10) || 0;
+                function tick() {
+                    if (sec <= 0) {
+                        var warn = document.getElementById("rl-warning");
+                        if (warn) { warn.style.display = "none"; }
+                        return;
+                    }
+                    sec -= 1;
+                    secondsEl.textContent = sec;
+                    setTimeout(tick, 1000);
+                }
+                setTimeout(tick, 1000);
+            })();
+        </script>
+        {% endif %}
+
+        <form id="register-form" class="register-form">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token_value }}">
+
+            <div class="auth-grid">
+                <!-- Left Column: Inputs -->
+                <div class="auth-column-left">
+                    <div class="form-group">
+                        <label for="username"><i class="fas fa-user"></i> Nombre de usuario</label>
+                        <input type="text" name="username" id="username" placeholder="Elige tu nombre de usuario"
+                            required autocomplete="username" autofocus minlength="3" maxlength="20">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="email"><i class="fas fa-envelope"></i> Correo electrónico</label>
+                        <input type="email" name="email" id="email" placeholder="tu@correo.com" required
+                            autocomplete="email" maxlength="35">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="password"><i class="fas fa-lock"></i> Contraseña</label>
+                        <input type="password" name="password" id="password" placeholder="Crea una contraseña segura"
+                            required autocomplete="new-password">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="password2"><i class="fas fa-lock"></i> Confirmar contraseña</label>
+                        <input type="password" name="password2" id="password2" placeholder="Repite tu contraseña"
+                            required autocomplete="new-password">
+                    </div>
+
+
+                    <div class="terms-checkbox">
+                        <label>
+                            <input type="checkbox" id="terms" name="terms" required>
+                            <span>
+                                Al registrarme acepto los
+                                <a href="{{ url_for('main.condiciones_uso') }}" target="_blank">Términos y
+                                    Condiciones</a>
+                            </span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="auth-column-right">
+                    <div class="logo-display">
+                        <img src="{{ url_for('static', filename='dockerlabs/images/logos/logo_120.png') }}"
+                            alt="DockerLabs Logo" class="auth-logo">
+                    </div>
+
+                    <button type="submit" class="btn-register" id="register-btn">
+                        <span class="btn-text"><i class="fas fa-user-plus"></i> Crear cuenta</span>
+                        <span class="btn-loader" style="display: none;">
+                            <span class="loader-dot"></span>
+                            <span class="loader-dot"></span>
+                            <span class="loader-dot"></span>
+                        </span>
+                    </button>
+                </div>
+            </div>
+        </form>
+
+        <div class="auth-footer-actions">
+            <span class="text-muted">¿Ya tienes cuenta?</span>
+
+            <span class="auth-separator">/</span>
+
+            <a href="{{ url_for('auth.login') }}" class="footer-link">
+                <i class="fas fa-sign-in-alt"></i> Iniciar sesión
+            </a>
+        </div>
+    </div>
+</div>
+
+<style>
+    .btn-loader {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+    }
+    .loader-dot {
+        width: 6px;
+        height: 6px;
+        background: currentColor;
+        border-radius: 50%;
+        animation: loader-bounce 1.4s infinite ease-in-out both;
+    }
+    .loader-dot:nth-child(1) { animation-delay: -0.32s; }
+    .loader-dot:nth-child(2) { animation-delay: -0.16s; }
+    @keyframes loader-bounce {
+        0%, 80%, 100% { transform: scale(0); }
+        40% { transform: scale(1); }
+    }
+    .btn-register.loading .btn-text { display: none; }
+    .btn-register.loading .btn-loader { display: inline-flex !important; }
+    .btn-register:disabled { opacity: 0.8; cursor: not-allowed; }
+
+    /* Loading Overlay Styles */
+    .loading-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(15, 23, 42, 0.3);
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
+        display: none;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        z-index: 9999;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+
+    .loading-overlay.active {
+        display: flex;
+        opacity: 1;
+    }
+
+    .loading-spinner {
+        position: relative;
+        width: 80px;
+        height: 80px;
+        margin-bottom: 2rem;
+    }
+
+    .spinner-circle {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        border: 4px solid transparent;
+        border-top-color: #3b82f6;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+    }
+
+    .spinner-circle:nth-child(1) {
+        animation-delay: 0s;
+        border-top-color: #3b82f6;
+    }
+
+    .spinner-circle:nth-child(2) {
+        animation-delay: 0.15s;
+        border-top-color: #8b5cf6;
+        width: 80%;
+        height: 80%;
+        top: 10%;
+        left: 10%;
+    }
+
+    .spinner-circle:nth-child(3) {
+        animation-delay: 0.3s;
+        border-top-color: #ec4899;
+        width: 60%;
+        height: 60%;
+        top: 20%;
+        left: 20%;
+    }
+
+    .spinner-circle:nth-child(4) {
+        animation-delay: 0.45s;
+        border-top-color: #10b981;
+        width: 40%;
+        height: 40%;
+        top: 30%;
+        left: 30%;
+    }
+
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+
+    .loading-text {
+        color: #e2e8f0;
+        font-size: 1.2rem;
+        font-weight: 600;
+        letter-spacing: 0.5px;
+        animation: pulse 1.5s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+        0%, 100% { opacity: 0.6; }
+        50% { opacity: 1; }
+    }
+</style>
+
+<script nonce="{{ g.csp_nonce }}">
+document.addEventListener("DOMContentLoaded", function() {
+    const form = document.getElementById("register-form");
+    const errorBox = document.getElementById("register-error");
+    const errorText = document.getElementById("register-error-text");
+    const pendingBox = document.getElementById("register-pending");
+    const pendingText = document.getElementById("register-pending-text");
+    const successBox = document.getElementById("register-success");
+    const pinDisplay = document.getElementById("register-pin");
+    const registerBtn = document.getElementById("register-btn");
+    const loadingOverlay = document.getElementById("loading-overlay");
+
+    form.addEventListener("submit", async function(e) {
+        e.preventDefault();
+
+        // Esconder alertas
+        errorBox.style.display = "none";
+        pendingBox.style.display = "none";
+        successBox.style.display = "none";
+
+        // Mostrar animación de carga en toda la página
+        loadingOverlay.classList.add("active");
+        registerBtn.classList.add("loading");
+        registerBtn.disabled = true;
+
+        const data = {
+            username: form.username.value,
+            email: form.email.value,
+            password: form.password.value,
+            password2: form.password2.value,
+            terms: form.terms.checked
+        };
+        const csrfToken = form.csrf_token.value;
+
+        try {
+            const response = await fetch("/api/auth/register", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRFToken": csrfToken
+                },
+                body: JSON.stringify(data)
+            });
+
+            const result = await response.json();
+
+            // Ocultar overlay y restaurar botón
+            loadingOverlay.classList.remove("active");
+            registerBtn.classList.remove("loading");
+            registerBtn.disabled = false;
+
+            if (response.ok && result.success) {
+                form.style.display = "none";
+                if (result.pending_message) {
+                    pendingBox.style.display = "block";
+                    pendingText.textContent = result.pending_message;
+                } else if (result.verify_email) {
+                    successBox.style.display = "block";
+                } else if (result.message) {
+                    // SMTP not configured fallback: redirect to login
+                    successBox.style.display = "block";
+                    successBox.querySelector("strong").textContent = "¡Cuenta creada!";
+                    successBox.querySelector("p").textContent = result.message;
+                }
+            } else {
+                errorBox.style.display = "block";
+                errorText.textContent = result.message || "Error al registrar la cuenta";
+            }
+        } catch (error) {
+            // Ocultar overlay y restaurar botón en caso de error
+            loadingOverlay.classList.remove("active");
+            registerBtn.classList.remove("loading");
+            registerBtn.disabled = false;
+
+            errorBox.style.display = "block";
+            errorText.textContent = "Error de conexión con el servidor.";
+        }
+    });
+});
+</script>
+{% endblock %}

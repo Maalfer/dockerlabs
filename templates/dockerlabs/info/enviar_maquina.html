@@ -1,0 +1,216 @@
+{% extends "dockerlabs/base.html" %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='dockerlabs/css/info/enviar_maquina.css') }}"
+      media="print" onload="this.media='all'">
+<noscript><link rel="stylesheet" href="{{ url_for('static', filename='dockerlabs/css/info/enviar_maquina.css') }}"></noscript>
+{% endblock %}
+
+{% block content %}
+
+
+
+<div class="container mt-5">
+
+    <h1 class="title">Enviar Máquina</h1>
+
+    <p class="mt-4">
+        En DockerLabs, las máquinas enviadas por la comunidad son una parte fundamental del proyecto.
+        Actualmente, las máquinas se suben de forma manual una por una por
+        <strong>El Pingüino de Mario</strong>,
+        por lo que el proceso puede tardar dependiendo de disponibilidad.
+    </p>
+
+
+    <div class="enviar_maquina-card p-4 mt-4">
+
+        <h2 class="subtitle text-center">
+            ¿Cómo avisar correctamente de que tienes una máquina lista?
+        </h2>
+
+        <p class="mt-3">
+            La forma más recomendada es avisar a través del servidor oficial de Discord
+            en <strong>#dockerlabs</strong>, mencionando moderadores.
+        </p>
+
+        <p class="mt-3">
+            También puedes contactar por LinkedIn, aunque puede tardar más.
+        </p>
+
+        <div class="mt-4 text-center">
+            <a href="https://discord.com/invite/dD3yVejBUR" target="_blank" class="btn btn-primary">
+
+                <i class="bi bi-discord"></i>
+                Unirse al servidor de Discord
+
+            </a>
+        </div>
+
+    </div>
+
+
+
+    <div class="enviar_maquina-card p-4 mt-4">
+
+        <h2 class="subtitle text-center">
+            Requisitos
+        </h2>
+
+        <ul class="mt-3">
+            <li>La máquina debe ser original.</li>
+            <li>Debe incluir PDF/documentación de resolución.</li>
+            <li>Debe tener intrusión y escalada.</li>
+            <li>Enviar ZIP con auto_deploy.sh y .tar o TAR.</li>
+            <li>No se requieren flags.</li>
+        </ul>
+
+        <div class="alert-warning">
+            <i class="bi bi-exclamation-octagon-fill"></i>
+            Si se envía sin writeup puede ser rechazada.
+        </div>
+
+    </div>
+
+
+
+    <div class="enviar_maquina-card p-4 mt-4">
+
+        <h2 class="subtitle text-center">
+            Proceso de Envío
+        </h2>
+
+        <p class="mt-3">
+            Sube la máquina a Drive, Mega u otro alojamiento y comparte el enlace.
+            Tras revisión podrá publicarse en la plataforma.
+        </p>
+
+        <div class="alert-hint">
+            <i class="bi bi-exclamation-circle-fill"></i>
+            Puede ver un ejemplo en
+            <a target="_blank" href="https://mega.nz/file/7cNzjJBL#74J4tjoHRF_URnduGxixoaB8MOrMnAE5eZQnLlwDoxY">
+                la plantilla DockerLabs
+            </a>
+        </div>
+
+    </div>
+
+
+
+    <!-- NUEVO BOTÓN DE ENVÍO -->
+
+    <div class="submit-wrapper mb-5">
+
+        <button id="openSubmitMachine" class="btn btn-primary">
+            🚀 Proponer una Máquina
+        </button>
+
+    </div>
+
+</div>
+
+
+
+
+<!-- MODAL SUBMIT -->
+
+<div id="machineModal" class="modal">
+
+    <div class="modal-content">
+
+        <span class="close" id="closeModal">
+            &times;
+        </span>
+
+        <h2>
+            🚀 Proponer nueva máquina
+        </h2>
+
+        <form id="machineForm">
+
+            <div class="machine-grid">
+
+                <div class="full">
+                    <label>Nombre máquina</label>
+                    <span class="required-star">*</span>
+                    <input name="nombre" placeholder="Nombre máquina" required>
+                </div>
+            
+                <div class="full">
+                    <label>URL máquina</label>
+                    <span class="required-star">*</span>
+                    <input name="link_maquina" placeholder="URL máquina" required>
+                </div>
+            
+                <div class="full">
+                    <label>Usuario Discord</label>
+                    <span class="required-star">*</span>
+                    <input name="discord_user" placeholder="Usuario Discord" required>
+                </div>
+            
+                <div>
+                    <label>Dificultad</label>
+                    <span class="required-star">*</span>
+                    <select name="dificultad" required>
+                        <option value="">Selecciona dificultad</option>
+                        <option>Muy Fácil</option>
+                        <option>Fácil</option>
+                        <option>Medio</option>
+                        <option>Difícil</option>
+                    </select>
+                </div>
+            
+                <div>
+                    <label>Categoría</label>
+                    <span class="required-star">*</span>
+                    <select name="categoria" required>
+                        <option value="">Selecciona categoría</option>
+                        <option>Services</option>
+                        <option>Web</option>
+                        <option>binary Explotation</option>
+                        <option>PrivEsc</option>
+                        <option>Crypto</option>
+                        <option>Misc</option>
+                    </select>
+                </div>
+            
+                <div class="full">
+                    <label>Tags</label>
+                    <input name="tags" placeholder="web, linux, sudo... (Separado por comas)">
+                </div>
+            
+                <div class="full">
+                    <label>Descripción</label>
+                    <span class="required-star">*</span>
+                    <textarea name="descripcion" placeholder="Descripción" required></textarea>
+                </div>
+            
+                <div class="full">
+                    <label>Notas adicionales</label>
+                    <textarea name="notas" placeholder="Notas adicionales"></textarea>
+                </div>
+            
+                <div class="full">
+                    <label>Writeup URL</label>
+                    <span class="required-star">*</span>
+                    <input name="writeup_url" placeholder="Writeup URL" required>
+                </div>
+            
+                <input type="hidden" name="csrf_token" value="{{ csrf_token_value }}">
+            
+                <button class="submit-btn" type="submit">
+                    Enviar máquina
+                </button>
+            
+            </div>
+
+
+        </form>
+
+    </div>
+</div>
+
+
+<script src="{{ url_for('static',
+filename='dockerlabs/js/machine_submission.js') }}"></script>
+
+{% endblock %}

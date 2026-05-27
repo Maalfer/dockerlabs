@@ -1,0 +1,143 @@
+{% extends "dockerlabs/base.html" %}
+
+{% block title %}Máquinas Pendientes — DockerLabs{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='dockerlabs/css/pending_machines.css') }}"
+      media="print" onload="this.media='all'">
+<noscript><link rel="stylesheet" href="{{ url_for('static', filename='dockerlabs/css/pending_machines.css') }}"></noscript>
+{% endblock %}
+
+{% block content %}
+<div class="pending-wrap">
+
+    <div class="pending-header">
+        <span class="terminal-prompt">$</span>
+        <h1>pending-machines</h1>
+        <span class="pending-count">
+            <i class="bi bi-hdd-stack"></i>
+            {{ machines | length }} máquina{{ 's' if machines | length != 1 else '' }}
+        </span>
+    </div>
+
+    {% if machines | length == 0 %}
+    <div class="pending-empty">
+        <i class="bi bi-check2-circle"></i>
+        <p>No hay máquinas pendientes de revisión</p>
+        <span>// todo está al día</span>
+    </div>
+    {% else %}
+
+    <div class="pending-grid">
+        {% for m in machines %}
+
+        {% set diff_key = m.dificultad | lower | replace('á','a') | replace('é','e') | replace('í','i') | replace('ó','o') | replace('ú','u') | replace(' ','-') %}
+        <div class="pm-card" data-diff="{{ m.dificultad | lower }}">
+
+            <div class="pm-card-accent"></div>
+
+            <div class="pm-card-body">
+
+                <!-- Name + badges -->
+                <div class="pm-top">
+                    <h3 class="pm-name">
+                        <i class="bi bi-terminal"></i>
+                        {{ m.nombre }}
+                    </h3>
+
+                    <div class="pm-badges">
+                        {% if m.estado == "pendiente" %}
+                            <span class="badge-pill badge-pending"><i class="bi bi-clock"></i> pendiente</span>
+                        {% elif m.estado == "aprobado" %}
+                            <span class="badge-pill badge-approved"><i class="bi bi-check-lg"></i> aprobado</span>
+                        {% elif m.estado == "rechazado" %}
+                            <span class="badge-pill badge-rejected"><i class="bi bi-x-lg"></i> rechazado</span>
+                        {% endif %}
+
+                        <span class="badge-pill badge-diff-{{ diff_key }}">{{ m.dificultad }}</span>
+                    </div>
+                </div>
+
+                <!-- Description -->
+                {% if m.descripcion %}
+                <p class="pm-desc">{{ m.descripcion }}</p>
+                {% endif %}
+
+                <!-- Notes -->
+                {% if m.notas %}
+                <p class="pm-notes"><i class="bi bi-sticky"></i> {{ m.notas }}</p>
+                {% endif %}
+
+                <!-- Meta -->
+                <div class="pm-meta">
+                    <div class="pm-meta-row">
+                        <i class="bi bi-discord"></i>
+                        <span>{{ m.discord_user }}</span>
+                    </div>
+
+                    {% if m.autor_solicitante %}
+                    <div class="pm-meta-row">
+                        <i class="bi bi-person-fill"></i>
+                        <span>{{ m.autor_solicitante }}</span>
+                    </div>
+                    {% endif %}
+
+                    {% if m.categoria %}
+                    <div class="pm-meta-row">
+                        <i class="bi bi-folder2-open"></i>
+                        <span>{{ m.categoria }}</span>
+                    </div>
+                    {% endif %}
+
+                    {% if m.tags %}
+                    <div class="pm-meta-row">
+                        <i class="bi bi-tags-fill"></i>
+                        <span>{{ m.tags }}</span>
+                    </div>
+                    {% endif %}
+
+                    {% if m.submitted_at %}
+                    <div class="pm-meta-row">
+                        <i class="bi bi-calendar3"></i>
+                        <span>{{ m.submitted_at.strftime('%d %b %Y · %H:%M') }}</span>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <!-- Actions -->
+                <div class="pm-actions">
+                    {% if m.link_maquina %}
+                    <a href="{% if m.link_maquina.startswith('http') %}{{ m.link_maquina }}{% else %}https://{{ m.link_maquina }}{% endif %}"
+                       target="_blank" rel="noopener noreferrer" class="pm-btn pm-btn-link">
+                        <i class="bi bi-box-arrow-up-right"></i> Ver máquina
+                    </a>
+                    {% endif %}
+
+                    {% if m.writeup_url %}
+                    <a href="{% if m.writeup_url.startswith('http') %}{{ m.writeup_url }}{% else %}https://{{ m.writeup_url }}{% endif %}"
+                       target="_blank" rel="noopener noreferrer" class="pm-btn pm-btn-writeup">
+                        <i class="bi bi-file-earmark-text"></i> Writeup
+                    </a>
+                    {% endif %}
+
+                    {% if m.estado == "pendiente" %}
+                    <form method="POST" action="{{ url_for('main.reject_machine', machine_id=m.id) }}" class="pm-reject-form">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token_value }}">
+                        <button type="submit" class="pm-btn pm-btn-reject"
+                                onclick="return confirm('¿Eliminar la máquina \\'{{ m.nombre }}\\'? Esta acción no se puede deshacer.')">
+                            <i class="bi bi-trash3"></i> Eliminar
+                        </button>
+                    </form>
+                    {% endif %}
+                </div>
+
+            </div>
+        </div>
+
+        {% endfor %}
+    </div>
+
+    {% endif %}
+
+</div>
+{% endblock %}

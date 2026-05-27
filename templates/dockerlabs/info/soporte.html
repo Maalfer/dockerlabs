@@ -1,0 +1,72 @@
+{% extends 'dockerlabs/base.html' %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='dockerlabs/css/info/soporte.css') }}"
+      media="print" onload="this.media='all'">
+<noscript><link rel="stylesheet" href="{{ url_for('static', filename='dockerlabs/css/info/soporte.css') }}"></noscript>
+{% endblock %}
+
+{% block title %}Soporte - DockerLabs{% endblock %}
+
+{% block extra_head %}
+{% endblock %}
+
+{% block content %}
+<div class="soporte-container">
+
+    <div class="soporte-header">
+        <h1>Soporte <span class="emoji">🛠️</span></h1>
+        <p>¿Tienes algún problema en la plataforma?</p>
+    </div>
+
+    <div class="soporte-card">
+
+        <div class="contact-box">
+
+            <div class="section-title">
+                📩 Soporte por Email
+            </div>
+
+            <a href="mailto:soportedockerlabs@gmail.com" class="email-link">
+                soportedockerlabs@gmail.com
+            </a>
+
+        </div>
+
+        <div class="contact-box">
+
+            <div class="section-title">
+                <i class="bi bi-discord"></i>
+                Soporte en Discord
+            </div>
+
+            <p style="color: var(--text-secondary); margin-bottom: 0.8rem;">
+                Únete al servidor de <strong>DockerLabs</strong> y crea un ticket en:
+            </p>
+
+            <div class="discord-channel">
+                <i class="bi bi-ticket-detailed"></i>
+                #ticket-support
+            </div>
+
+            <br>
+
+            <a href="https://discord.gg/dD3yVejBUR" target="_blank" class="discord-btn">
+                <i class="bi bi-box-arrow-up-right"></i> Unirme a Discord
+            </a>
+
+        </div>
+
+        <p class="soporte-info">
+            Intentamos responder en menos de 48 horas.<br>
+            Incluye capturas o detalles técnicos si el problema es relacionado con laboratorios.
+        </p>
+
+        <p class="soporte-info">
+            Si no recibe respuesta en el periodo de 48 horas comuníquelo por el servidor de Discord, puede ocurrir que su correo se haya movido automáticamente a la bandeja de spam ocasionando que el equipo de DockerLabs no lo vea.
+        </p>
+
+    </div>
+
+</div>
+{% endblock %}

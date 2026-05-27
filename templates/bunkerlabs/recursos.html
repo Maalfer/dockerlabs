@@ -1,0 +1,347 @@
+{% extends "bunkerlabs/base.html" %}
+
+{% block title %}Centro de Recursos — BunkerLabs{% endblock %}
+
+{% block content %}
+<link rel="stylesheet" href="{{ url_for('static', filename='bunkerlabs/css/bunkerlabs-accesos.css') }}">
+
+<style>
+.recursos-hero {
+    text-align: center;
+    padding: 48px 0 28px;
+}
+.recursos-hero h1 {
+    font-size: 2rem;
+    font-weight: 800;
+    color: #fff;
+    margin-bottom: 8px;
+}
+.recursos-hero p {
+    color: rgba(255,255,255,0.45);
+    font-size: 0.95rem;
+    margin: 0;
+}
+
+/* ── Toolbar: buscador + filtros ── */
+.recursos-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    flex-wrap: wrap;
+    margin-bottom: 26px;
+}
+.recursos-search {
+    position: relative;
+    flex: 1 1 280px;
+    min-width: 220px;
+}
+.recursos-search i {
+    position: absolute;
+    left: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: rgba(255,255,255,0.35);
+    font-size: 1rem;
+    pointer-events: none;
+}
+.recursos-search input {
+    width: 100%;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.09);
+    border-radius: 12px;
+    padding: 12px 16px 12px 42px;
+    color: #fff;
+    font-size: 0.92rem;
+    outline: none;
+    transition: border-color 0.2s, background 0.2s;
+}
+.recursos-search input::placeholder { color: rgba(255,255,255,0.32); }
+.recursos-search input:focus {
+    border-color: rgba(34,211,238,0.45);
+    background: rgba(34,211,238,0.05);
+}
+
+.recursos-filters {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+.filter-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 9px 15px;
+    border-radius: 10px;
+    border: 1px solid rgba(255,255,255,0.09);
+    background: rgba(255,255,255,0.03);
+    color: rgba(255,255,255,0.6);
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.18s;
+    white-space: nowrap;
+}
+.filter-chip:hover { border-color: rgba(34,211,238,0.3); color: #fff; }
+.filter-chip.active {
+    background: rgba(34,211,238,0.12);
+    border-color: rgba(34,211,238,0.45);
+    color: var(--accent-cyan, #22d3ee);
+}
+.filter-chip .chip-count {
+    font-size: 0.7rem;
+    opacity: 0.65;
+    font-weight: 700;
+}
+
+/* ── Rejilla multi-columna ── */
+.recursos-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(270px, 1fr));
+    gap: 16px;
+    margin-bottom: 36px;
+}
+
+.recurso-card {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.07);
+    border-radius: 14px;
+    padding: 18px 18px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    transition: all 0.2s;
+    text-decoration: none;
+    color: inherit;
+    height: 100%;
+}
+.recurso-card:hover {
+    border-color: rgba(34,211,238,0.3);
+    background: rgba(34,211,238,0.04);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+}
+.recurso-icon {
+    width: 46px;
+    height: 46px;
+    border-radius: 12px;
+    background: rgba(34,211,238,0.1);
+    color: var(--accent-cyan, #22d3ee);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.3rem;
+    flex-shrink: 0;
+}
+.recurso-icon.video { background: rgba(239,68,68,0.12); color: #f87171; }
+.recurso-icon.obsidian { background: rgba(168,85,247,0.12); color: #c084fc; }
+.recurso-body { flex: 1; min-width: 0; }
+.recurso-title {
+    font-weight: 700;
+    color: #fff;
+    font-size: 0.92rem;
+    margin-bottom: 7px;
+    line-height: 1.3;
+    /* limitar a 2 líneas para uniformidad */
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+.tipo-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    padding: 2px 8px;
+    border-radius: 20px;
+    text-transform: uppercase;
+}
+.tipo-badge.pdf { background: rgba(59,130,246,0.15); color: #60a5fa; }
+.tipo-badge.video { background: rgba(239,68,68,0.15); color: #f87171; }
+.tipo-badge.other { background: rgba(168,85,247,0.15); color: #c084fc; }
+.recurso-arrow {
+    color: rgba(255,255,255,0.2);
+    font-size: 1rem;
+    transition: color 0.2s, transform 0.2s;
+    flex-shrink: 0;
+}
+.recurso-card:hover .recurso-arrow { color: var(--accent-cyan, #22d3ee); transform: translateX(3px); }
+
+.recursos-empty {
+    text-align: center;
+    padding: 60px 0;
+    color: rgba(255,255,255,0.3);
+}
+
+.share-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 7px 16px;
+    border-radius: 8px;
+    border: 1px solid rgba(34,211,238,0.25);
+    background: rgba(34,211,238,0.07);
+    color: var(--accent-cyan, #22d3ee);
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-decoration: none;
+}
+.share-btn:hover { background: rgba(34,211,238,0.14); border-color: rgba(34,211,238,0.4); color: var(--accent-cyan, #22d3ee); }
+</style>
+
+<div class="container" style="max-width: 1140px;">
+
+    <div class="recursos-hero">
+        <div class="d-flex align-items-center justify-content-center gap-2 mb-3">
+            <i class="bi bi-folder2-open" style="font-size:2rem;color:var(--accent-cyan,#22d3ee);"></i>
+        </div>
+        <h1>Centro de Recursos</h1>
+        <p>Documentos, guías y materiales compartidos por el equipo de BunkerLabs</p>
+    </div>
+
+    <!-- Actions bar -->
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+        <a href="/bunkerlabs" class="btn-hack">
+            <i class="bi bi-arrow-left me-1"></i> Volver al Bunker
+        </a>
+        <button class="share-btn" onclick="copyShareUrl(this)">
+            <i class="bi bi-share"></i> Compartir enlace
+        </button>
+    </div>
+
+    {% if recursos|length == 0 %}
+    <div class="recursos-empty">
+        <i class="bi bi-folder2-open d-block mb-3" style="font-size:3rem;opacity:0.3;"></i>
+        <p class="mb-0">Todavía no hay recursos disponibles.</p>
+    </div>
+    {% else %}
+
+    <!-- Toolbar: buscador + filtros por tipo -->
+    <div class="recursos-toolbar">
+        <div class="recursos-search">
+            <i class="bi bi-search"></i>
+            <input type="text" id="recursoSearch" placeholder="Buscar recursos por nombre o tipo..." autocomplete="off">
+        </div>
+        <div class="recursos-filters" id="recursoFilters">
+            <button class="filter-chip active" data-filter="all">Todos <span class="chip-count">{{ recursos|length }}</span></button>
+            <button class="filter-chip" data-filter="pdf"><i class="bi bi-file-earmark-pdf-fill"></i> PDF</button>
+            <button class="filter-chip" data-filter="video"><i class="bi bi-play-fill"></i> Vídeo</button>
+            <button class="filter-chip" data-filter="obsidian"><i class="bi bi-diamond-fill"></i> Obsidian</button>
+        </div>
+    </div>
+
+    <div class="recursos-grid" id="recursosGrid">
+        {% for r in recursos %}
+        {% set tipo = 'video' if (r.descripcion and 'ídeo' in r.descripcion) else ('obsidian' if (r.descripcion and 'bsidian' in r.descripcion) else 'pdf') %}
+        <a href="{{ r.url }}" target="_blank" rel="noopener noreferrer" class="recurso-card"
+           data-type="{{ tipo }}" data-search="{{ (r.titulo ~ ' ' ~ (r.descripcion or '')) | lower }}">
+            <div class="recurso-icon {{ tipo if tipo != 'pdf' else '' }}">
+                {% if tipo == 'video' %}
+                <i class="bi bi-play-circle-fill"></i>
+                {% elif tipo == 'obsidian' %}
+                <i class="bi bi-journal-richtext"></i>
+                {% else %}
+                <i class="bi bi-file-earmark-pdf"></i>
+                {% endif %}
+            </div>
+            <div class="recurso-body">
+                <div class="recurso-title">{{ r.titulo }}</div>
+                <div>
+                    {% if tipo == 'video' %}
+                    <span class="tipo-badge video"><i class="bi bi-play-fill"></i> Vídeo</span>
+                    {% elif tipo == 'obsidian' %}
+                    <span class="tipo-badge other"><i class="bi bi-diamond-fill"></i> Obsidian</span>
+                    {% else %}
+                    <span class="tipo-badge pdf"><i class="bi bi-file-earmark-pdf-fill"></i> PDF</span>
+                    {% endif %}
+                </div>
+            </div>
+            <i class="bi bi-arrow-right recurso-arrow"></i>
+        </a>
+        {% endfor %}
+    </div>
+
+    <!-- Estado: sin resultados de búsqueda -->
+    <div class="recursos-empty" id="recursosNoResults" style="display:none;">
+        <i class="bi bi-search d-block mb-3" style="font-size:3rem;opacity:0.3;"></i>
+        <p class="mb-0">No se han encontrado recursos que coincidan con tu búsqueda.</p>
+    </div>
+    {% endif %}
+
+    <div class="text-center text-secondary" style="font-size:0.75rem;padding-bottom:40px;" id="recursosCount">
+        {{ recursos|length }} recurso{{ 's' if recursos|length != 1 else '' }} disponible{{ 's' if recursos|length != 1 else '' }}
+    </div>
+</div>
+
+<!-- Toast -->
+<div id="share-toast" style="display:none;position:fixed;bottom:24px;right:24px;background:#10b981;color:#fff;padding:11px 22px;border-radius:10px;font-weight:600;font-size:0.85rem;z-index:10010;box-shadow:0 4px 16px rgba(0,0,0,0.3);">
+    <i class="bi bi-check-circle me-2"></i>Enlace copiado
+</div>
+
+<script>
+function copyShareUrl(btn) {
+    const url = window.location.origin + '/bunkerlabs/recursos';
+    if (navigator.clipboard && window.isSecureContext) {
+        navigator.clipboard.writeText(url);
+    } else {
+        const ta = document.createElement('textarea');
+        ta.value = url; ta.style.position = 'fixed'; ta.style.left = '-9999px';
+        document.body.appendChild(ta); ta.focus(); ta.select();
+        try { document.execCommand('copy'); } catch(e) {}
+        document.body.removeChild(ta);
+    }
+    const toast = document.getElementById('share-toast');
+    toast.style.display = 'block';
+    setTimeout(() => { toast.style.display = 'none'; }, 3000);
+}
+
+(function () {
+    const grid = document.getElementById('recursosGrid');
+    if (!grid) return;
+    const cards = Array.from(grid.querySelectorAll('.recurso-card'));
+    const searchInput = document.getElementById('recursoSearch');
+    const filterBar = document.getElementById('recursoFilters');
+    const noResults = document.getElementById('recursosNoResults');
+    const countEl = document.getElementById('recursosCount');
+    const total = cards.length;
+    let activeType = 'all';
+
+    function normalize(s) {
+        return (s || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    }
+
+    function apply() {
+        const q = normalize(searchInput.value.trim());
+        let visible = 0;
+        cards.forEach(card => {
+            const matchesType = activeType === 'all' || card.dataset.type === activeType;
+            const matchesText = !q || normalize(card.dataset.search).includes(q);
+            const show = matchesType && matchesText;
+            card.style.display = show ? '' : 'none';
+            if (show) visible++;
+        });
+        noResults.style.display = visible === 0 ? 'block' : 'none';
+        grid.style.display = visible === 0 ? 'none' : 'grid';
+        if (q || activeType !== 'all') {
+            countEl.textContent = visible + ' de ' + total + ' recurso' + (total !== 1 ? 's' : '');
+        } else {
+            countEl.textContent = total + ' recurso' + (total !== 1 ? 's' : '') + ' disponible' + (total !== 1 ? 's' : '');
+        }
+    }
+
+    searchInput.addEventListener('input', apply);
+    filterBar.addEventListener('click', function (e) {
+        const chip = e.target.closest('.filter-chip');
+        if (!chip) return;
+        filterBar.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+        chip.classList.add('active');
+        activeType = chip.dataset.filter;
+        apply();
+    });
+})();
+</script>
+{% endblock %}

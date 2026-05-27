@@ -1,0 +1,564 @@
+{% extends "dockerlabs/base.html" %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='dockerlabs/css/dashboard.css') }}"
+      media="print" onload="this.media='all'">
+<noscript><link rel="stylesheet" href="{{ url_for('static', filename='dockerlabs/css/dashboard.css') }}"></noscript>
+{% endblock %}
+
+{% block title %}Dashboard - DockerLabs{% endblock %}
+
+{% block extra_head %}
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+    <div class="dashboard-header">
+        <div class="welcome-section">
+            <h1>Dashboard</h1>
+            <p class="welcome-text">Bienvenido de nuevo, <span class="username">{{ session.get('username') }}</span></p>
+        </div>
+
+        <div class="dashboard-actions">
+            {% if current_user_role not in ['admin', 'moderador'] %}
+            <button type="button" class="btn-claim-machine" onclick="openClaimMachineModal()">
+                <i class="bi bi-flag"></i>
+                Reclamar Autoría Máquina
+            </button>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="dashboard-content">
+
+        <div class="profile-section">
+            <div class="section-header">
+                <h2><i class="bi bi-person-circle"></i> Perfil de Usuario</h2>
+            </div>
+
+            <div class="profile-content">
+                <div class="profile-picture-section">
+                    <div class="profile-picture-container">
+                        <img src="{{ profile_image_url }}" alt="Foto de perfil" class="profile-picture"
+                            id="profilePicture">
+                        <div class="profile-picture-overlay">
+                            <button class="change-photo-btn" onclick="document.getElementById('photoInput').click()">
+                                <i class="bi bi-camera"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <input type="file" id="photoInput" accept="image/*" style="display: none;"
+                        onchange="handlePhotoUpload(event)">
+                    <p class="photo-help-text">Haz clic en la cámara para cambiar tu foto de perfil</p>
+
+                    <div class="social-links-section mt-4">
+                        <h5 style="font-size: 0.9rem; margin-bottom: 12px; color: var(--text-primary);">
+                            <i class="bi bi-link-45deg"></i> Redes Sociales
+                        </h5>
+                        <div class="form-group mb-2">
+                            <label for="linkedin_url" style="font-size: 0.85rem;">
+                                <i class="bi bi-linkedin" style="color: #0077B5;"></i> LinkedIn
+                            </label>
+                            <input type="url" id="linkedin_url" class="form-control form-control-sm"
+                                placeholder="https://linkedin.com/in/tu-perfil"
+                                value="{{ (user.linkedin_url or '') | e }}">
+                        </div>
+                        <div class="form-group mb-2">
+                            <label for="github_url" style="font-size: 0.85rem;">
+                                <i class="bi bi-github" style="color: #333;"></i> GitHub
+                            </label>
+                            <input type="url" id="github_url" class="form-control form-control-sm"
+                                placeholder="https://github.com/tu-usuario" value="{{ (user.github_url or '') | e }}">
+                        </div>
+                        <div class="form-group mb-2">
+                            <label for="youtube_url" style="font-size: 0.85rem;">
+                                <i class="bi bi-youtube" style="color: #FF0000;"></i> YouTube
+                            </label>
+                            <input type="url" id="youtube_url" class="form-control form-control-sm"
+                                placeholder="https://youtube.com/@tu-canal" value="{{ (user.youtube_url or '') | e }}">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="profile-info-section">
+                    <form class="profile-form">
+                        <div class="form-group">
+                            <label for="username"><i class="bi bi-person"></i> Nombre de usuario</label>
+                            <div class="profile-display-field">{{ session.get('username') }}</div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="email"><i class="bi bi-envelope"></i> Correo electrónico</label>
+                            <div class="profile-display-field">{{ user.email or 'No especificado' }}</div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="bio"><i class="bi bi-card-text"></i> Biografía</label>
+                            <textarea id="bio" class="form-control" rows="3"
+                                placeholder="Cuéntanos algo sobre ti...">{{ user.biography or '' }}</textarea>
+                        </div>
+
+                        <div class="form-actions">
+                            <button type="button" class="btn-save" onclick="saveProfile()">
+                                <i class="bi bi-check-circle"></i> Guardar cambios
+                            </button>
+                            <button type="button" class="btn-cancel" onclick="cancelEdit()">
+                                <i class="bi bi-x-circle"></i> Cancelar
+                            </button>
+                        </div>
+
+                        <div class="form-group mt-4">
+                            <label for="requested_username"><i class="bi bi-person"></i> Solicitar cambio de nombre de
+                                usuario</label>
+                            <div class="d-flex gap-2 align-items-center">
+                                <input type="text" id="requested_username" class="form-control"
+                                    placeholder="Nuevo nombre deseado" minlength="3" maxlength="20">
+                                <button type="button" class="btn btn-warning" onclick="openUsernameChangeModal()">
+                                    <i class="bi bi-send"></i> Solicitar
+                                </button>
+                            </div>
+                            <small class="text-muted">La solicitud será revisada por un admin o moderador.</small>
+                        </div>
+
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="security-section">
+            <div class="section-header">
+                <h2><i class="bi bi-shield-lock"></i> Seguridad</h2>
+            </div>
+
+            <div class="security-content">
+                <form class="security-form">
+                    <div class="form-group">
+                        <label for="currentPassword"><i class="bi bi-key"></i> Contraseña Actual</label>
+                        <input type="password" id="currentPassword" class="form-control"
+                            placeholder="Ingresa tu contraseña actual">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="newPassword"><i class="bi bi-key-fill"></i> Nueva Contraseña</label>
+                        <input type="password" id="newPassword" class="form-control"
+                            placeholder="Ingirma tu nueva contraseña">
+                        <div class="password-strength">
+                            <span class="strength-label">Fortaleza:</span>
+                            <div class="strength-bar">
+                                <div class="strength-indicator" id="passwordStrength"></div>
+                            </div>
+                            <span class="strength-text" id="strengthText">Débil</span>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="confirmPassword"><i class="bi bi-key-fill"></i> Confirmar Contraseña</label>
+                        <input type="password" id="confirmPassword" class="form-control"
+                            placeholder="Confirma tu nueva contraseña">
+                    </div>
+
+                    <div class="password-requirements">
+                        <h4>Requisitos de la contraseña:</h4>
+                        <ul>
+                            <li class="requirement"><i class="bi bi-dash-circle"></i> Mínimo 8 caracteres</li>
+                            <li class="requirement"><i class="bi bi-dash-circle"></i> Al menos una mayúscula</li>
+                            <li class="requirement"><i class="bi bi-dash-circle"></i> Al menos un número</li>
+                            <li class="requirement"><i class="bi bi-dash-circle"></i> Al menos un carácter especial</li>
+                        </ul>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="button" id="btnChangePassword" class="btn-save">
+                            <i class="bi bi-shield-check"></i> Actualizar contraseña
+                        </button>
+                        <button type="reset" class="btn-cancel">
+                            <i class="bi bi-x-circle"></i> Cancelar
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        {% if current_user_role in ['admin', 'moderador'] %}
+        <div class="security-section" style="margin-top: 2rem;">
+            <div class="section-header">
+                <h2><i class="bi bi-tools"></i> Herramientas de administración</h2>
+            </div>
+            <div class="security-content">
+                <p style="color: var(--text-secondary); margin-bottom: 1.5rem; font-size: 0.95rem;">
+                    Envía una notificación global a todos los usuarios registrados. Aparecerá en el icono de la campana del header.
+                </p>
+                <button type="button" onclick="openSendNotificationModal()" style="
+                    display: inline-flex;
+                    align-items: center;
+                    gap: 0.6rem;
+                    padding: 0.75rem 1.5rem;
+                    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+                    color: white;
+                    border: none;
+                    border-radius: 10px;
+                    font-size: 0.95rem;
+                    font-weight: 600;
+                    cursor: pointer;
+                    transition: all 0.2s ease;
+                    box-shadow: 0 4px 15px rgba(99, 102, 241, 0.35);
+                " onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 6px 20px rgba(99,102,241,0.45)'"
+                   onmouseout="this.style.transform='translateY(0)';this.style.boxShadow='0 4px 15px rgba(99,102,241,0.35)'">
+                    <i class="bi bi-megaphone-fill" style="font-size: 1.1rem;"></i>
+                    Enviar notificación a todos los usuarios
+                </button>
+            </div>
+        </div>
+        {% endif %}
+
+        {% if current_user_role in ['admin', 'moderador'] and claims %}
+        <div class="claims-section">
+            <div class="section-header">
+                <h2><i class="bi bi-flag"></i> Reclamaciones de autoría de máquinas</h2>
+            </div>
+            <div class="claims-list">
+                {% for c in claims %}
+                <div class="claim-card">
+                    <div class="claim-header d-flex justify-content-between align-items-center">
+                        <span class="claim-machine"><i class="bi bi-cpu"></i> {{ c.maquina_nombre }}</span>
+                        <span class="claim-status badge bg-warning text-dark text-uppercase">{{ c.estado }}</span>
+                    </div>
+                    <div class="claim-body">
+                        <p><strong>Usuario:</strong> {{ c.username }}</p>
+                        <p><strong>Contacto:</strong> {{ c.contacto | e }}</p>
+                        <p><strong>Prueba aportada:</strong></p>
+                        <p class="claim-proof">{{ c.prueba | e }}</p>
+                        <p class="claim-date"><small>Recibida: {{ c.created_at }}</small></p>
+
+                        {% if current_user_role == 'admin' and c.estado == 'pendiente' %}
+                        <div class="claim-actions d-flex gap-2 mt-2">
+                            <button type="button" class="btn btn-sm btn-success" onclick="approveClaim({{ c.id }}, this)">
+                                <i class="bi bi-check-circle"></i> Aprobar
+                            </button>
+                            <button type="button" class="btn btn-sm btn-danger" onclick="rejectClaim({{ c.id }}, this)">
+                                <i class="bi bi-x-circle"></i> Rechazar
+                            </button>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+    </div>
+</div>
+
+<div id="usernameChangeModal" class="claim-modal" style="display:none;">
+    <div class="claim-modal-dialog">
+        <button type="button" class="modal-close-button" onclick="closeUsernameChangeModal()">&times;</button>
+        <h3>Solicitar cambio de nombre de usuario</h3>
+        <div id="usernameChangeMsg" style="display:none;" class="mb-3"></div>
+        <form id="usernameChangeForm">
+            <div class="form-group">
+                <label for="requested_username_input">Nuevo nombre</label>
+                <input id="requested_username_input" name="requested_username" class="form-control" required
+                    minlength="3" maxlength="20">
+            </div>
+
+            <div class="form-group mt-3">
+                <label for="reason">Motivo (opcional)</label>
+                <textarea id="reason" name="reason" class="form-control" rows="3"></textarea>
+            </div>
+
+            <div class="form-group mt-3">
+                <label for="contacto_opcional">Correo o usuario de Telegram/Discord (opcional)</label>
+                <input id="contacto_opcional" name="contacto_opcional" class="form-control"
+                    placeholder="Ejemplo: usuario@correo.com / @usuario">
+            </div>
+
+            <div class="form-actions d-flex justify-content-end gap-2 mt-4">
+                <button type="button" class="btn btn-secondary" onclick="closeUsernameChangeModal()">Cancelar</button>
+                <button type="submit" class="btn btn-primary">Enviar solicitud</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div id="claimMachineModal" class="claim-modal">
+    <div class="claim-modal-dialog">
+        <button type="button" class="modal-close-button" onclick="closeClaimMachineModal()">&times;</button>
+        <h2>Reclamar Autoría de Máquina</h2>
+        <p class="modal-description">
+            Selecciona la máquina que quieres reclamar y proporciona tus datos de contacto y una prueba de que esa
+            máquina es tuya.
+        </p>
+        <div id="claimMachineMsg" style="display:none;" class="mb-3"></div>
+        <form id="claimMachineForm" class="claim-form">
+            <div class="form-group mb-3">
+                <label for="maquina_nombre"><i class="bi bi-cpu"></i> Máquina</label>
+                <select id="maquina_nombre" name="maquina_nombre" class="form-control" required>
+                    <option value="" disabled selected>Selecciona una máquina</option>
+                    {% for m in maquinas %}
+                    <option value="{{ m.nombre }}">{{ m.nombre }} (autor actual: {{ m.autor }})</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-group mb-3">
+                <label for="contacto"><i class="bi bi-envelope"></i> Datos de contacto</label>
+                <input type="text" id="contacto" name="contacto" class="form-control"
+                    placeholder="Correo, usuario de Telegram, etc." required>
+            </div>
+            <div class="form-group mb-3">
+                <label for="prueba"><i class="bi bi-clipboard-check"></i> Prueba de autoría</label>
+                <textarea id="prueba" name="prueba" class="form-control" rows="4"
+                    placeholder="Incluye enlaces, capturas, referencias, etc." required></textarea>
+            </div>
+            <div class="form-actions d-flex justify-content-end gap-2">
+                <button type="button" class="btn btn-secondary" onclick="closeClaimMachineModal()">Cancelar</button>
+                <button type="submit" class="btn btn-primary">Enviar reclamación</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div id="sendNotificationModal" class="claim-modal">
+    <div class="claim-modal-dialog" style="max-width: 900px;">
+        <button type="button" class="modal-close-button" onclick="closeSendNotificationModal()">&times;</button>
+        <h2>Enviar Notificación</h2>
+        <p class="modal-description">
+            Envía una notificación a todos los usuarios. Puedes usar formato Markdown para el contenido.
+        </p>
+        <form id="sendNotificationForm" class="claim-form">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token_value }}">
+            <div class="form-group mb-3">
+                <label for="notification_title"><i class="bi bi-type-h1"></i> Título</label>
+                <input type="text" id="notification_title" name="title" class="form-control"
+                    placeholder="Título de la notificación" required maxlength="200">
+            </div>
+            <div class="form-group mb-3">
+                <label for="notification_content"><i class="bi bi-file-text"></i> Contenido (Markdown)</label>
+                <div class="markdown-editor-container" style="display: flex; gap: 1rem; margin-top: 0.5rem;">
+                    <div class="markdown-input" style="flex: 1;">
+                        <textarea id="notification_content" name="content" class="form-control" rows="10"
+                            placeholder="Escribe tu notificación en Markdown..." required
+                            style="font-family: 'Fira Code', monospace; font-size: 0.9rem; resize: vertical;"></textarea>
+                        <small class="text-muted" style="display: block; margin-top: 0.5rem;">
+                            Puedes usar **negrita**, *cursiva*, `código`, [enlaces](url), etc.
+                        </small>
+                    </div>
+                    <div class="markdown-preview" style="flex: 1; background: #0f172a; border: 1px solid #334155; border-radius: 8px; padding: 1rem; overflow-y: auto; max-height: 300px;">
+                        <div style="color: #94a3b8; font-size: 0.9rem; margin-bottom: 0.5rem; font-weight: 600;">
+                            <i class="bi bi-eye"></i> Vista previa
+                        </div>
+                        <div id="markdownPreview" class="markdown-content" style="color: #e2e8f0; line-height: 1.6;">
+                            <p style="color: #64748b; font-style: italic;">Escribe para ver la vista previa...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="form-actions d-flex justify-content-end gap-2">
+                <button type="button" class="btn btn-secondary" onclick="closeSendNotificationModal()">Cancelar</button>
+                <button type="submit" class="btn btn-primary">Enviar Notificación</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='dockerlabs/js/dashboard.js') }}"></script>
+<script>
+    function openUsernameChangeModal() {
+        const val = document.getElementById('requested_username').value;
+        document.getElementById('requested_username_input').value = val || "";
+        const msg = document.getElementById('usernameChangeMsg');
+        msg.style.display = 'none';
+        msg.textContent = '';
+        document.getElementById('usernameChangeModal').style.display = 'block';
+    }
+    function closeUsernameChangeModal() {
+        document.getElementById('usernameChangeModal').style.display = 'none';
+    }
+    function openSendNotificationModal() {
+        document.getElementById('sendNotificationModal').classList.add('visible');
+    }
+    function closeSendNotificationModal() {
+        document.getElementById('sendNotificationModal').classList.remove('visible');
+    }
+
+    async function approveClaim(claimId, btn) {
+        btn.disabled = true;
+        try {
+            const resp = await fetch(`/api/claims/${claimId}/approve`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCsrfToken() },
+                body: JSON.stringify({})
+            });
+            const data = await resp.json();
+            if (data.success) {
+                btn.closest('.claim-card').remove();
+                showAlert('Reclamación aprobada correctamente.', 'success');
+            } else {
+                showAlert(data.error || 'Error al aprobar.', 'danger');
+                btn.disabled = false;
+            }
+        } catch {
+            showAlert('Error de conexión.', 'danger');
+            btn.disabled = false;
+        }
+    }
+
+    async function rejectClaim(claimId, btn) {
+        btn.disabled = true;
+        try {
+            const resp = await fetch(`/api/claims/${claimId}/reject`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCsrfToken() },
+                body: JSON.stringify({})
+            });
+            const data = await resp.json();
+            if (data.success) {
+                btn.closest('.claim-card').remove();
+                showAlert('Reclamación rechazada.', 'success');
+            } else {
+                showAlert(data.error || 'Error al rechazar.', 'danger');
+                btn.disabled = false;
+            }
+        } catch {
+            showAlert('Error de conexión.', 'danger');
+            btn.disabled = false;
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        // Username change form
+        const usernameChangeForm = document.getElementById('usernameChangeForm');
+        if (usernameChangeForm) {
+            usernameChangeForm.addEventListener('submit', async function(e) {
+                e.preventDefault();
+                const submitBtn = usernameChangeForm.querySelector('[type="submit"]');
+                const msgEl = document.getElementById('usernameChangeMsg');
+                submitBtn.disabled = true;
+                msgEl.style.display = 'none';
+
+                try {
+                    const resp = await fetch('/api/auth/request_username_change', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCsrfToken() },
+                        body: JSON.stringify({
+                            requested_username: document.getElementById('requested_username_input').value,
+                            reason: document.getElementById('reason').value,
+                            contacto_opcional: document.getElementById('contacto_opcional').value
+                        })
+                    });
+                    const data = await resp.json();
+                    msgEl.className = data.success ? 'mb-3 alert alert-success' : 'mb-3 alert alert-danger';
+                    msgEl.textContent = data.message || data.error || 'Error desconocido.';
+                    msgEl.style.display = 'block';
+                    if (data.success) usernameChangeForm.reset();
+                } catch {
+                    msgEl.className = 'mb-3 alert alert-danger';
+                    msgEl.textContent = 'Error de conexión.';
+                    msgEl.style.display = 'block';
+                } finally {
+                    submitBtn.disabled = false;
+                }
+            });
+        }
+
+        // Claim machine form
+        const claimMachineForm = document.getElementById('claimMachineForm');
+        if (claimMachineForm) {
+            claimMachineForm.addEventListener('submit', async function(e) {
+                e.preventDefault();
+                const submitBtn = claimMachineForm.querySelector('[type="submit"]');
+                const msgEl = document.getElementById('claimMachineMsg');
+                submitBtn.disabled = true;
+                msgEl.style.display = 'none';
+
+                try {
+                    const resp = await fetch('/api/reclamar-maquina', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCsrfToken() },
+                        body: JSON.stringify({
+                            maquina_nombre: document.getElementById('maquina_nombre').value,
+                            contacto: document.getElementById('contacto').value,
+                            prueba: document.getElementById('prueba').value
+                        })
+                    });
+                    const data = await resp.json();
+                    msgEl.className = data.success ? 'mb-3 alert alert-success' : 'mb-3 alert alert-danger';
+                    msgEl.textContent = data.message || data.error || 'Error desconocido.';
+                    msgEl.style.display = 'block';
+                    if (data.success) claimMachineForm.reset();
+                } catch {
+                    msgEl.className = 'mb-3 alert alert-danger';
+                    msgEl.textContent = 'Error de conexión.';
+                    msgEl.style.display = 'block';
+                } finally {
+                    submitBtn.disabled = false;
+                }
+            });
+        }
+
+        // Send notification form
+        const sendNotificationForm = document.getElementById('sendNotificationForm');
+        if (sendNotificationForm) {
+            sendNotificationForm.addEventListener('submit', async function(e) {
+                e.preventDefault();
+                const title = document.getElementById('notification_title').value;
+                const content = document.getElementById('notification_content').value;
+                const submitBtn = sendNotificationForm.querySelector('[type="submit"]');
+                submitBtn.disabled = true;
+                submitBtn.textContent = 'Enviando...';
+
+                try {
+                    const resp = await fetch('/api/notifications/send', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCsrfToken() },
+                        body: JSON.stringify({ title, content })
+                    });
+                    const data = await resp.json();
+                    if (data.success) {
+                        closeSendNotificationModal();
+                        sendNotificationForm.reset();
+                        updateMarkdownPreview();
+                        showAlert('Notificación enviada exitosamente a todos los usuarios.', 'success');
+                    } else {
+                        showAlert('Error: ' + (data.message || data.error), 'danger');
+                    }
+                } catch {
+                    showAlert('Error al enviar la notificación.', 'danger');
+                } finally {
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = 'Enviar Notificación';
+                }
+            });
+        }
+
+        // Close send-notification modal on outside click
+        const sendNotificationModal = document.getElementById('sendNotificationModal');
+        if (sendNotificationModal) {
+            sendNotificationModal.addEventListener('click', function(e) {
+                if (e.target === sendNotificationModal) closeSendNotificationModal();
+            });
+        }
+
+        // Vista previa en tiempo real de markdown
+        const notificationContent = document.getElementById('notification_content');
+        if (notificationContent) notificationContent.addEventListener('input', updateMarkdownPreview);
+    });
+
+    function updateMarkdownPreview() {
+        const content = document.getElementById('notification_content').value;
+        const preview = document.getElementById('markdownPreview');
+        if (!content.trim()) {
+            preview.innerHTML = '<p style="color: #64748b; font-style: italic;">Escribe para ver la vista previa...</p>';
+            return;
+        }
+        if (typeof marked !== 'undefined') {
+            marked.setOptions({ breaks: true, gfm: true });
+            preview.innerHTML = marked.parse(content);
+        } else {
+            preview.textContent = content;
+        }
+    }
+</script>
+{% endblock %}

@@ -1,0 +1,100 @@
+/* Estilos específicos para la página de equipo */
+
+.equipo-page .link-dark {
+    color: #0d6efd !important;
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.equipo-page .link-dark:hover {
+    text-decoration: underline;
+}
+
+.equipo-page .title {
+    text-align: center;
+    font-weight: bold;
+}
+
+/* ── Responsive ── */
+
+/* Tablet grande: 3 columnas */
+@media (max-width: 1200px) {
+    .colaboradores-grid,
+    .admins-grid {
+        grid-template-columns: repeat(3, 1fr) !important;
+        gap: 1.75rem;
+    }
+}
+
+/* Tablet: 2 columnas + tarjetas menos altas */
+@media (max-width: 900px) {
+    .colaboradores-grid,
+    .admins-grid {
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 1.25rem;
+    }
+
+    .colaborador {
+        padding: 2rem 1.5rem;
+        min-height: 220px;
+        gap: 1rem;
+    }
+
+    .colaborador img {
+        width: 80px;
+        height: 80px;
+    }
+}
+
+/* Móvil: 2 columnas compactas */
+@media (max-width: 600px) {
+    .equipo-page.container {
+        padding-left: 1rem;
+        padding-right: 1rem;
+    }
+
+    .colaboradores-grid,
+    .admins-grid {
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 0.85rem;
+        margin-top: 1.5rem;
+    }
+
+    .colaborador {
+        padding: 1.5rem 1rem;
+        min-height: 180px;
+        gap: 0.75rem;
+        border-radius: 16px;
+    }
+
+    .colaborador img {
+        width: 64px;
+        height: 64px;
+    }
+
+    .colaborador-name {
+        font-size: 0.82rem;
+    }
+
+    .role-badge {
+        font-size: 0.58rem;
+        padding: 0.2rem 0.6rem;
+    }
+
+    .section-label span {
+        font-size: 0.65rem;
+        letter-spacing: 0.12em;
+    }
+
+    .colaboradores-card {
+        padding: 1rem !important;
+    }
+}
+
+/* Móvil muy pequeño: 1 columna */
+@media (max-width: 380px) {
+    .colaboradores-grid,
+    .admins-grid {
+        grid-template-columns: 1fr !important;
+    }
+}

@@ -1,0 +1,312 @@
+/* =====================================================
+   PENDING MACHINES — admin review page
+   ===================================================== */
+
+.pending-wrap {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 6.5rem 2rem 5rem;
+}
+
+/* ── Page header ── */
+.pending-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 2.5rem;
+}
+
+.pending-header .terminal-prompt {
+    color: #22c55e;
+    font-family: 'Fira Code', monospace;
+    font-size: 1.4rem;
+    font-weight: 600;
+    opacity: 0.85;
+    user-select: none;
+}
+
+.pending-header h1 {
+    font-family: 'Fira Code', monospace;
+    font-size: 1.6rem;
+    font-weight: 600;
+    color: #f1f5f9;
+    margin: 0;
+}
+
+.pending-count {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    background: rgba(59, 130, 246, 0.12);
+    border: 1px solid rgba(59, 130, 246, 0.3);
+    color: #60a5fa;
+    font-family: 'Fira Code', monospace;
+    font-size: 0.78rem;
+    padding: 0.2rem 0.7rem;
+    border-radius: 999px;
+}
+
+/* ── Empty state ── */
+.pending-empty {
+    text-align: center;
+    padding: 6rem 2rem;
+}
+
+.pending-empty i {
+    font-size: 3.5rem;
+    color: #22c55e;
+    display: block;
+    margin-bottom: 1.25rem;
+    opacity: 0.8;
+}
+
+.pending-empty p {
+    font-size: 1.1rem;
+    color: #94a3b8;
+    margin-bottom: 0.4rem;
+}
+
+.pending-empty span {
+    font-size: 0.85rem;
+    color: #475569;
+    font-family: 'Fira Code', monospace;
+}
+
+/* ── Cards grid ── */
+.pending-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.5rem;
+}
+
+@media (max-width: 1100px) {
+    .pending-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (max-width: 640px) {
+    .pending-grid { grid-template-columns: 1fr; }
+    .pending-wrap { padding-top: 5.5rem; }
+}
+
+/* ── Single card ── */
+.pm-card {
+    background: rgba(15, 23, 42, 0.85);
+    border: 1px solid rgba(51, 65, 85, 0.55);
+    border-radius: 16px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    backdrop-filter: blur(12px);
+    transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.pm-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.45);
+    border-color: rgba(59, 130, 246, 0.35);
+}
+
+/* coloured top accent based on difficulty */
+.pm-card-accent {
+    height: 3px;
+    background: linear-gradient(90deg, #3b82f6, #8b5cf6);
+}
+
+.pm-card[data-diff="muy fácil"] .pm-card-accent,
+.pm-card[data-diff="muy-facil"]  .pm-card-accent { background: linear-gradient(90deg, #22c55e, #16a34a); }
+
+.pm-card[data-diff="fácil"] .pm-card-accent,
+.pm-card[data-diff="facil"]  .pm-card-accent { background: linear-gradient(90deg, #06b6d4, #0284c7); }
+
+.pm-card[data-diff="medio"] .pm-card-accent { background: linear-gradient(90deg, #f59e0b, #d97706); }
+
+.pm-card[data-diff="difícil"] .pm-card-accent,
+.pm-card[data-diff="dificil"]  .pm-card-accent { background: linear-gradient(90deg, #ef4444, #b91c1c); }
+
+/* ── Card body ── */
+.pm-card-body {
+    padding: 1.4rem 1.5rem;
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    gap: 1rem;
+}
+
+/* name + badges */
+.pm-top {
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+}
+
+.pm-name {
+    font-family: 'Fira Code', monospace;
+    font-size: 1.05rem;
+    font-weight: 600;
+    color: #f1f5f9;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.pm-name i {
+    color: #64748b;
+    font-size: 0.9rem;
+}
+
+.pm-badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.45rem;
+}
+
+/* ── Badges ── */
+.badge-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    font-family: 'Fira Code', monospace;
+    font-size: 0.7rem;
+    font-weight: 500;
+    padding: 0.2rem 0.6rem;
+    border-radius: 999px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    border: 1px solid transparent;
+}
+
+.badge-pending  { background: rgba(234,179,8,.13);  border-color: rgba(234,179,8,.35);  color: #fbbf24; }
+.badge-approved { background: rgba(34,197,94,.13);  border-color: rgba(34,197,94,.35);  color: #4ade80; }
+.badge-rejected { background: rgba(239,68,68,.13);  border-color: rgba(239,68,68,.35);  color: #f87171; }
+
+.badge-diff-muy-facil  { background: rgba(34,197,94,.1);   border-color: rgba(34,197,94,.3);   color: #4ade80; }
+.badge-diff-facil      { background: rgba(6,182,212,.1);   border-color: rgba(6,182,212,.3);   color: #22d3ee; }
+.badge-diff-medio      { background: rgba(245,158,11,.1);  border-color: rgba(245,158,11,.3);  color: #fbbf24; }
+.badge-diff-dificil    { background: rgba(239,68,68,.1);   border-color: rgba(239,68,68,.3);   color: #f87171; }
+
+/* ── Description ── */
+.pm-desc {
+    font-size: 0.85rem;
+    color: #94a3b8;
+    line-height: 1.65;
+    margin: 0;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid rgba(51, 65, 85, 0.45);
+}
+
+/* ── Notas ── */
+.pm-notes {
+    font-size: 0.82rem;
+    color: #94a3b8;
+    background: rgba(51, 65, 85, 0.2);
+    border-left: 3px solid rgba(139, 92, 246, 0.5);
+    border-radius: 0 6px 6px 0;
+    padding: 0.6rem 0.85rem;
+    line-height: 1.55;
+    font-style: italic;
+}
+
+/* ── Meta rows ── */
+.pm-meta {
+    display: flex;
+    flex-direction: column;
+    gap: 0.45rem;
+    flex: 1;
+}
+
+.pm-meta-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.6rem;
+    font-size: 0.83rem;
+}
+
+.pm-meta-row i {
+    color: #3b82f6;
+    font-size: 0.85rem;
+    width: 16px;
+    flex-shrink: 0;
+    margin-top: 1px;
+}
+
+.pm-meta-row span {
+    color: #cbd5e1;
+    font-family: 'Fira Code', monospace;
+    word-break: break-word;
+    line-height: 1.5;
+}
+
+.pm-meta-row .label {
+    color: #64748b;
+    min-width: 60px;
+    flex-shrink: 0;
+}
+
+/* ── Action buttons ── */
+.pm-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    padding-top: 1rem;
+    border-top: 1px solid rgba(51, 65, 85, 0.4);
+    margin-top: auto;
+    align-items: center;
+}
+
+.pm-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.42rem 0.85rem;
+    border-radius: 8px;
+    font-size: 0.8rem;
+    font-family: 'Fira Code', monospace;
+    font-weight: 500;
+    text-decoration: none;
+    border: 1px solid transparent;
+    cursor: pointer;
+    transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease, transform 0.15s ease;
+    background: transparent;
+    white-space: nowrap;
+}
+
+.pm-btn:hover { transform: translateY(-1px); }
+
+.pm-btn-link {
+    background: rgba(59, 130, 246, 0.1);
+    border-color: rgba(59, 130, 246, 0.3);
+    color: #60a5fa;
+}
+.pm-btn-link:hover {
+    background: rgba(59, 130, 246, 0.18);
+    border-color: #3b82f6;
+    color: #93c5fd;
+}
+
+.pm-btn-writeup {
+    background: rgba(139, 92, 246, 0.1);
+    border-color: rgba(139, 92, 246, 0.3);
+    color: #a78bfa;
+}
+.pm-btn-writeup:hover {
+    background: rgba(139, 92, 246, 0.18);
+    border-color: #8b5cf6;
+    color: #c4b5fd;
+}
+
+.pm-btn-reject {
+    background: rgba(239, 68, 68, 0.1);
+    border-color: rgba(239, 68, 68, 0.3);
+    color: #f87171;
+    margin-left: auto;
+}
+.pm-btn-reject:hover {
+    background: rgba(239, 68, 68, 0.18);
+    border-color: #ef4444;
+    color: #fca5a5;
+}
+
+.pm-reject-form {
+    display: contents;
+}

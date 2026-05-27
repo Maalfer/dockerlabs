@@ -1,0 +1,751 @@
+{% extends "dockerlabs/base.html" %}
+
+{% block title %}Análisis de Writeups - DockerLabs{% endblock %}
+
+{% block extra_css %}
+<style>
+    .analisis-container {
+        max-width: 1100px;
+        margin: 2rem auto;
+        padding: 0 1rem;
+    }
+
+    .analisis-header {
+        text-align: center;
+        margin-bottom: 2rem;
+    }
+
+    .analisis-header h2 {
+        font-size: 1.6rem;
+        color: #f9fafb;
+        margin-bottom: 0.5rem;
+    }
+
+    .analisis-header p {
+        color: #64748b;
+        font-size: 0.9rem;
+    }
+
+    .analisis-actions {
+        display: flex;
+        gap: 1rem;
+        justify-content: center;
+        flex-wrap: wrap;
+        margin-bottom: 2rem;
+    }
+
+    .btn-analizar {
+        font-family: 'Fira Code', monospace;
+        background: transparent;
+        border: 1px solid #f59e0b;
+        color: #f59e0b;
+        padding: 0.6rem 1.5rem;
+        border-radius: 4px;
+        font-size: 0.9rem;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        transition: all 0.2s ease;
+    }
+
+    .btn-analizar:hover:not(:disabled) {
+        background: rgba(245, 158, 11, 0.1);
+        transform: translateY(-1px);
+    }
+
+    .btn-analizar:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+
+    .btn-delete-all {
+        font-family: 'Fira Code', monospace;
+        background: transparent;
+        border: 1px solid #ef4444;
+        color: #ef4444;
+        padding: 0.6rem 1.5rem;
+        border-radius: 4px;
+        font-size: 0.9rem;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        transition: all 0.2s ease;
+    }
+
+    .btn-delete-all:hover:not(:disabled) {
+        background: rgba(239, 68, 68, 0.1);
+        transform: translateY(-1px);
+    }
+
+    .btn-delete-all:disabled {
+        opacity: 0.4;
+        cursor: not-allowed;
+    }
+
+    .btn-cancel {
+        font-family: 'Fira Code', monospace;
+        background: transparent;
+        border: 1px solid #64748b;
+        color: #94a3b8;
+        padding: 0.6rem 1.5rem;
+        border-radius: 4px;
+        font-size: 0.9rem;
+        cursor: pointer;
+        display: none;
+        align-items: center;
+        gap: 0.5rem;
+        transition: all 0.2s ease;
+    }
+
+    .btn-cancel:hover {
+        background: rgba(100, 116, 139, 0.15);
+        border-color: #94a3b8;
+        color: #e2e8f0;
+    }
+
+    .analisis-progress {
+        padding: 1.5rem 2rem 2rem;
+        color: #64748b;
+        display: none;
+    }
+
+    .progress-bar-container {
+        background: rgba(51, 65, 85, 0.5);
+        border-radius: 6px;
+        height: 10px;
+        overflow: hidden;
+        margin-bottom: 0.6rem;
+    }
+
+    .progress-bar-fill {
+        height: 100%;
+        background: linear-gradient(90deg, #f59e0b, #d97706);
+        border-radius: 6px;
+        transition: width 0.25s ease;
+        width: 0%;
+    }
+
+    .progress-label {
+        display: flex;
+        justify-content: space-between;
+        font-size: 0.82rem;
+        color: #64748b;
+    }
+
+    .analisis-stats {
+        display: flex;
+        gap: 1.5rem;
+        justify-content: center;
+        flex-wrap: wrap;
+        margin-bottom: 1.5rem;
+    }
+
+    .stat-chip {
+        background: rgba(15, 23, 42, 0.8);
+        border: 1px solid rgba(51, 65, 85, 0.6);
+        border-radius: 8px;
+        padding: 0.75rem 1.25rem;
+        text-align: center;
+        min-width: 140px;
+    }
+
+    .stat-chip .stat-value {
+        font-size: 1.8rem;
+        font-weight: 700;
+        line-height: 1;
+    }
+
+    .stat-chip .stat-label {
+        font-size: 0.75rem;
+        color: #64748b;
+        margin-top: 0.25rem;
+    }
+
+    .stat-chip.ok .stat-value    { color: #10b981; }
+    .stat-chip.broken .stat-value { color: #ef4444; }
+    .stat-chip.total .stat-value  { color: #94a3b8; }
+    .stat-chip.dismissed .stat-value { color: #64748b; }
+
+    .results-list {
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+
+    .empty-ok {
+        text-align: center;
+        padding: 3rem 1rem;
+        color: #10b981;
+        font-size: 1rem;
+    }
+
+    .empty-ok i { font-size: 2.5rem; display: block; margin-bottom: 0.5rem; }
+
+    .empty-no-analysis {
+        text-align: center;
+        padding: 3rem 1rem;
+        color: #64748b;
+        font-size: 1rem;
+    }
+
+    .empty-no-analysis i { font-size: 2.5rem; display: block; margin-bottom: 0.5rem; }
+
+    .writeup-card {
+        background: rgba(15, 23, 42, 0.8);
+        border: 1px solid rgba(51, 65, 85, 0.5);
+        border-radius: 8px;
+        padding: 1rem 1.25rem;
+        display: grid;
+        grid-template-columns: 1fr auto;
+        gap: 0.75rem;
+        align-items: center;
+        transition: border-color 0.2s, opacity 0.3s, transform 0.3s;
+    }
+
+    .writeup-card:hover {
+        border-color: rgba(239, 68, 68, 0.4);
+    }
+
+    .writeup-card.removing {
+        opacity: 0;
+        transform: translateX(20px);
+    }
+
+    .writeup-info {
+        display: flex;
+        flex-direction: column;
+        gap: 0.3rem;
+        min-width: 0;
+    }
+
+    .writeup-meta {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        flex-wrap: wrap;
+    }
+
+    .badge-status {
+        font-size: 0.72rem;
+        padding: 0.15rem 0.5rem;
+        border-radius: 4px;
+        font-weight: 600;
+        white-space: nowrap;
+    }
+
+    .badge-status.s-4xx { background: rgba(239, 68, 68, 0.2); color: #fca5a5; border: 1px solid rgba(239,68,68,0.4); }
+    .badge-status.s-5xx { background: rgba(245, 158, 11, 0.2); color: #fcd34d; border: 1px solid rgba(245,158,11,0.4); }
+    .badge-status.s-err { background: rgba(100, 116, 139, 0.2); color: #94a3b8; border: 1px solid rgba(100,116,139,0.4); }
+
+    .writeup-machine {
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: #f59e0b;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .writeup-author {
+        font-size: 0.8rem;
+        color: #64748b;
+    }
+
+    .writeup-url {
+        font-size: 0.78rem;
+        color: #94a3b8;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 100%;
+    }
+
+    .writeup-url a {
+        color: inherit;
+        text-decoration: none;
+    }
+
+    .writeup-url a:hover { color: #60a5fa; text-decoration: underline; }
+
+    .card-actions {
+        display: flex;
+        gap: 0.5rem;
+        flex-shrink: 0;
+    }
+
+    .btn-verify {
+        font-family: 'Fira Code', monospace;
+        background: transparent;
+        border: 1px solid #3b82f6;
+        color: #3b82f6;
+        padding: 0.35rem 0.75rem;
+        border-radius: 4px;
+        font-size: 0.78rem;
+        cursor: pointer;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        white-space: nowrap;
+        transition: all 0.2s;
+    }
+
+    .btn-verify:hover { background: rgba(59, 130, 246, 0.1); color: #60a5fa; }
+
+    .btn-dismiss {
+        font-family: 'Fira Code', monospace;
+        background: transparent;
+        border: 1px solid #475569;
+        color: #94a3b8;
+        padding: 0.35rem 0.75rem;
+        border-radius: 4px;
+        font-size: 0.78rem;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        white-space: nowrap;
+        transition: all 0.2s;
+    }
+
+    .btn-dismiss:hover { background: rgba(71, 85, 105, 0.2); border-color: #64748b; color: #cbd5e1; }
+
+    .btn-delete-one {
+        font-family: 'Fira Code', monospace;
+        background: transparent;
+        border: 1px solid #7f1d1d;
+        color: #fca5a5;
+        padding: 0.35rem 0.75rem;
+        border-radius: 4px;
+        font-size: 0.78rem;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        white-space: nowrap;
+        transition: all 0.2s;
+    }
+
+    .btn-delete-one:hover { background: rgba(239, 68, 68, 0.1); border-color: #ef4444; }
+
+    .last-analysis-bar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        background: rgba(15, 23, 42, 0.6);
+        border: 1px solid rgba(51, 65, 85, 0.5);
+        border-radius: 6px;
+        padding: 0.6rem 1rem;
+        margin-bottom: 1.25rem;
+        font-size: 0.82rem;
+        color: #64748b;
+        flex-wrap: wrap;
+    }
+
+    .last-analysis-bar .lbl-time { color: #94a3b8; }
+    .last-analysis-bar .lbl-time strong { color: #f59e0b; }
+    .last-analysis-bar .lbl-dismissed { color: #64748b; font-style: italic; }
+
+    .alert-analisis {
+        padding: 0.75rem 1rem;
+        border-radius: 6px;
+        margin-bottom: 1rem;
+        font-size: 0.88rem;
+    }
+
+    .alert-analisis.success { background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16,185,129,0.3); color: #6ee7b7; }
+    .alert-analisis.danger  { background: rgba(239, 68, 68, 0.1);  border: 1px solid rgba(239,68,68,0.3);  color: #fca5a5; }
+
+    .loading-saved {
+        text-align: center;
+        padding: 2rem;
+        color: #64748b;
+        font-size: 0.9rem;
+    }
+
+    @media (max-width: 600px) {
+        .writeup-card { grid-template-columns: 1fr; }
+        .card-actions { justify-content: flex-start; flex-wrap: wrap; }
+        .analisis-actions { flex-direction: column; align-items: center; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="analisis-container">
+    <div class="analisis-header">
+        <h2><i class="bi bi-activity"></i> Análisis de Writeups</h2>
+        <p>Detecta automáticamente los writeups publicados con enlaces caídos o con errores HTTP.</p>
+    </div>
+
+    <div id="alert-box"></div>
+
+    <div class="analisis-actions">
+        <button id="btn-start" class="btn-analizar" onclick="iniciarAnalisis()">
+            <i class="bi bi-play-circle"></i> <span id="btn-start-label">Iniciar análisis</span>
+        </button>
+        <button id="btn-cancel" class="btn-cancel" onclick="cancelarAnalisis()">
+            <i class="bi bi-stop-circle"></i> Cancelar
+        </button>
+        <button id="btn-delete-all" class="btn-delete-all" onclick="eliminarTodos()" disabled>
+            <i class="bi bi-trash3"></i> Eliminar todos los rotos
+        </button>
+    </div>
+
+    <div id="progress" class="analisis-progress">
+        <div class="progress-bar-container">
+            <div class="progress-bar-fill" id="progress-bar-fill"></div>
+        </div>
+        <div class="progress-label">
+            <span id="progress-text">Iniciando análisis…</span>
+            <span id="progress-percent">0%</span>
+        </div>
+    </div>
+
+    <div id="last-analysis-bar" style="display:none;" class="last-analysis-bar">
+        <span class="lbl-time">Último análisis: <strong id="lbl-analyzed-at">—</strong></span>
+        <span id="lbl-dismissed" class="lbl-dismissed"></span>
+    </div>
+
+    <div id="stats" style="display:none;">
+        <div class="analisis-stats">
+            <div class="stat-chip total">
+                <div class="stat-value" id="stat-total">0</div>
+                <div class="stat-label">Analizados</div>
+            </div>
+            <div class="stat-chip ok">
+                <div class="stat-value" id="stat-ok">0</div>
+                <div class="stat-label">Accesibles</div>
+            </div>
+            <div class="stat-chip broken">
+                <div class="stat-value" id="stat-broken">0</div>
+                <div class="stat-label">Con problemas</div>
+            </div>
+            <div class="stat-chip dismissed">
+                <div class="stat-value" id="stat-dismissed">0</div>
+                <div class="stat-label">Falsos positivos</div>
+            </div>
+        </div>
+    </div>
+
+    <div id="results-container">
+        <div class="loading-saved"><i class="bi bi-hourglass-split"></i> Cargando resultados guardados…</div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script nonce="{{ g.csp_nonce }}">
+    const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
+    let brokenIds = [];
+    let abortController = null;
+
+    // ── Utilidades ──────────────────────────────────────────────────────────────
+
+    function showAlert(msg, type) {
+        const box = document.getElementById('alert-box');
+        box.innerHTML = `<div class="alert-analisis ${type}">${msg}</div>`;
+        setTimeout(() => { if (box.firstChild) box.innerHTML = ''; }, 5000);
+    }
+
+    function statusBadge(status, error) {
+        if (error === 'timeout') return '<span class="badge-status s-err">Timeout</span>';
+        if (error) return `<span class="badge-status s-err">${escapeHtml(error)}</span>`;
+        if (status >= 500) return `<span class="badge-status s-5xx">HTTP ${status}</span>`;
+        return `<span class="badge-status s-4xx">HTTP ${status}</span>`;
+    }
+
+    function fmtDate(iso) {
+        if (!iso) return '—';
+        const d = new Date(iso + (iso.endsWith('Z') ? '' : 'Z'));
+        return d.toLocaleString('es-ES', { dateStyle: 'medium', timeStyle: 'short' });
+    }
+
+    function renderCard(w) {
+        const card = document.createElement('div');
+        card.className = 'writeup-card';
+        card.id = `card-${w.id}`;
+        card.innerHTML = `
+            <div class="writeup-info">
+                <div class="writeup-meta">
+                    ${statusBadge(w.status, w.error)}
+                    <span class="writeup-machine"><i class="bi bi-hdd-stack"></i> ${escapeHtml(w.maquina)}</span>
+                    <span class="writeup-author"><i class="bi bi-person"></i> ${escapeHtml(w.autor)}</span>
+                </div>
+                <div class="writeup-url">
+                    <a href="${escapeHtml(w.url)}" target="_blank" rel="noopener noreferrer">
+                        <i class="bi bi-link-45deg"></i> ${escapeHtml(w.url)}
+                    </a>
+                </div>
+            </div>
+            <div class="card-actions">
+                <a href="${escapeHtml(w.url)}" target="_blank" rel="noopener noreferrer" class="btn-verify">
+                    <i class="bi bi-box-arrow-up-right"></i> Verificar
+                </a>
+                <button class="btn-dismiss" onclick="descartarUno(${w.id}, this)">
+                    <i class="bi bi-eye-slash"></i> Falso positivo
+                </button>
+                <button class="btn-delete-one" onclick="eliminarUno(${w.id})">
+                    <i class="bi bi-trash3"></i> Eliminar
+                </button>
+            </div>
+        `;
+        return card;
+    }
+
+    // ── Actualizar contadores ────────────────────────────────────────────────────
+
+    function updateCounters(total, brokenCount, dismissedCount) {
+        document.getElementById('stat-total').textContent = total;
+        document.getElementById('stat-broken').textContent = brokenCount;
+        document.getElementById('stat-ok').textContent = Math.max(0, total - brokenCount - dismissedCount);
+        document.getElementById('stat-dismissed').textContent = dismissedCount;
+    }
+
+    // ── Cargar resultados guardados al iniciar ───────────────────────────────────
+
+    async function cargarResultadosGuardados() {
+        try {
+            const resp = await fetch('/api/writeups-analisis/results', {
+                headers: { 'X-CSRFToken': csrfToken }
+            });
+            if (!resp.ok) {
+                document.getElementById('results-container').innerHTML =
+                    `<div class="empty-no-analysis"><i class="bi bi-inbox"></i>No hay análisis guardado. Pulsa "Iniciar análisis" para comenzar.</div>`;
+                return;
+            }
+            const data = await resp.json();
+
+            if (!data.has_results) {
+                document.getElementById('results-container').innerHTML =
+                    `<div class="empty-no-analysis"><i class="bi bi-inbox"></i>No hay análisis guardado. Pulsa "Iniciar análisis" para comenzar.</div>`;
+                return;
+            }
+
+            mostrarResultados(data.rotos, data.total_analizados, data.analyzed_at, data.total_dismissed);
+            document.getElementById('btn-start-label').textContent = 'Re-analizar';
+        } catch (e) {
+            document.getElementById('results-container').innerHTML =
+                `<div class="empty-no-analysis"><i class="bi bi-inbox"></i>No hay análisis guardado. Pulsa "Iniciar análisis" para comenzar.</div>`;
+        }
+    }
+
+    // ── Mostrar resultados (análisis en vivo o desde BD) ─────────────────────────
+
+    function mostrarResultados(rotos, totalAnalizados, analyzedAt, dismissedCount) {
+        dismissedCount = dismissedCount || 0;
+
+        // Barra de metadatos
+        if (analyzedAt) {
+            document.getElementById('lbl-analyzed-at').textContent = fmtDate(analyzedAt);
+            document.getElementById('last-analysis-bar').style.display = 'flex';
+            if (dismissedCount > 0) {
+                document.getElementById('lbl-dismissed').textContent =
+                    `${dismissedCount} descartado${dismissedCount !== 1 ? 's' : ''} como falso positivo`;
+            } else {
+                document.getElementById('lbl-dismissed').textContent = '';
+            }
+        }
+
+        // Stats
+        document.getElementById('stats').style.display = 'block';
+        brokenIds = rotos.map(w => w.id);
+        updateCounters(totalAnalizados, rotos.length, dismissedCount);
+        document.getElementById('btn-delete-all').disabled = rotos.length === 0;
+
+        // Lista
+        const container = document.getElementById('results-container');
+        container.innerHTML = '';
+        if (rotos.length === 0) {
+            container.innerHTML = `<div class="empty-ok"><i class="bi bi-check-circle-fill"></i>¡Todos los writeups están accesibles!</div>`;
+        } else {
+            const list = document.createElement('div');
+            list.className = 'results-list';
+            rotos.forEach(w => list.appendChild(renderCard(w)));
+            container.appendChild(list);
+        }
+    }
+
+    // ── Control del análisis ─────────────────────────────────────────────────────
+
+    function setAnalysisRunning(running) {
+        document.getElementById('btn-start').disabled = running;
+        const btnCancel = document.getElementById('btn-cancel');
+        btnCancel.style.display = running ? 'inline-flex' : 'none';
+        document.getElementById('progress').style.display = running ? 'block' : 'none';
+        if (running) {
+            document.getElementById('progress-bar-fill').style.width = '0%';
+            document.getElementById('progress-percent').textContent = '0%';
+            document.getElementById('progress-text').textContent = 'Iniciando análisis…';
+        }
+    }
+
+    function updateProgress(data) {
+        document.getElementById('progress-bar-fill').style.width = data.percent + '%';
+        document.getElementById('progress-percent').textContent = data.percent + '%';
+        document.getElementById('progress-text').textContent =
+            `Verificando… ${data.checked} / ${data.total}  ·  ${data.broken_count} con problemas`;
+    }
+
+    async function iniciarAnalisis() {
+        if (abortController) abortController.abort();
+        abortController = new AbortController();
+
+        setAnalysisRunning(true);
+        document.getElementById('stats').style.display = 'none';
+        document.getElementById('last-analysis-bar').style.display = 'none';
+        document.getElementById('results-container').innerHTML = '';
+        document.getElementById('btn-delete-all').disabled = true;
+        brokenIds = [];
+
+        try {
+            const resp = await fetch('/api/writeups-analisis', {
+                signal: abortController.signal,
+                headers: { 'Accept': 'text/event-stream', 'X-CSRFToken': csrfToken }
+            });
+
+            if (!resp.ok) {
+                const err = await resp.json().catch(() => ({}));
+                showAlert(err.error || 'Error al iniciar el análisis.', 'danger');
+                return;
+            }
+
+            const reader = resp.body.getReader();
+            const decoder = new TextDecoder();
+            let buffer = '';
+
+            while (true) {
+                const { done, value } = await reader.read();
+                if (done) break;
+                buffer += decoder.decode(value, { stream: true });
+                const parts = buffer.split('\n\n');
+                buffer = parts.pop();
+                for (const part of parts) {
+                    const line = part.trim();
+                    if (!line.startsWith('data: ')) continue;
+                    try {
+                        const data = JSON.parse(line.slice(6));
+                        if (data.type === 'progress') updateProgress(data);
+                        else if (data.type === 'complete') {
+                            // El backend guarda en BD; mostramos con fecha actual
+                            mostrarResultados(data.rotos, data.total_analizados, new Date().toISOString(), 0);
+                            document.getElementById('btn-start-label').textContent = 'Re-analizar';
+                        }
+                    } catch {}
+                }
+            }
+        } catch (e) {
+            if (e.name === 'AbortError') {
+                showAlert('Análisis cancelado.', 'danger');
+            } else {
+                showAlert('Error de conexión: ' + e.message, 'danger');
+            }
+        } finally {
+            setAnalysisRunning(false);
+            abortController = null;
+        }
+    }
+
+    function cancelarAnalisis() {
+        if (abortController) abortController.abort();
+    }
+
+    // ── Acciones sobre tarjetas ──────────────────────────────────────────────────
+
+    function removeCard(id) {
+        const card = document.getElementById(`card-${id}`);
+        if (card) {
+            card.classList.add('removing');
+            setTimeout(() => card.remove(), 320);
+        }
+        brokenIds = brokenIds.filter(i => i !== id);
+        document.getElementById('btn-delete-all').disabled = brokenIds.length === 0;
+    }
+
+    async function descartarUno(id, btn) {
+        btn.disabled = true;
+        try {
+            const resp = await fetch(`/api/writeups-analisis/dismiss/${id}`, {
+                method: 'POST',
+                headers: { 'X-CSRFToken': csrfToken }
+            });
+            if (!resp.ok) {
+                const data = await resp.json().catch(() => ({}));
+                showAlert(data.error || 'Error al descartar', 'danger');
+                btn.disabled = false;
+                return;
+            }
+            removeCard(id);
+            const dismissed = parseInt(document.getElementById('stat-dismissed').textContent || '0') + 1;
+            document.getElementById('stat-dismissed').textContent = dismissed;
+            document.getElementById('stat-ok').textContent =
+                Math.max(0, parseInt(document.getElementById('stat-ok').textContent || '0') - 1);
+            const lbl = document.getElementById('lbl-dismissed');
+            lbl.textContent = `${dismissed} descartado${dismissed !== 1 ? 's' : ''} como falso positivo`;
+            document.getElementById('stat-broken').textContent = brokenIds.length;
+        } catch (e) {
+            showAlert('Error de conexión: ' + e.message, 'danger');
+            btn.disabled = false;
+        }
+    }
+
+    async function eliminarUno(id) {
+        if (!confirm('¿Eliminar este writeup?')) return;
+        try {
+            const resp = await fetch(`/api/writeups/subidos/${id}/delete`, {
+                method: 'POST',
+                headers: { 'X-CSRFToken': csrfToken }
+            });
+            const data = await resp.json();
+            if (!resp.ok) { showAlert(data.error || 'Error al eliminar', 'danger'); return; }
+            removeCard(id);
+            document.getElementById('stat-broken').textContent = brokenIds.length;
+            document.getElementById('stat-ok').textContent =
+                parseInt(document.getElementById('stat-total').textContent) - brokenIds.length
+                - parseInt(document.getElementById('stat-dismissed').textContent || '0');
+            showAlert('Writeup eliminado correctamente', 'success');
+        } catch (e) {
+            showAlert('Error de conexión: ' + e.message, 'danger');
+        }
+    }
+
+    async function eliminarTodos() {
+        if (brokenIds.length === 0) return;
+        if (!confirm(`¿Eliminar los ${brokenIds.length} writeup(s) marcados como rotos?`)) return;
+
+        document.getElementById('btn-delete-all').disabled = true;
+        document.getElementById('btn-start').disabled = true;
+
+        try {
+            const resp = await fetch('/api/writeups-analisis/delete-batch', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrfToken },
+                body: JSON.stringify({ ids: brokenIds })
+            });
+            const data = await resp.json();
+            if (!resp.ok) { showAlert(data.error || 'Error al eliminar', 'danger'); return; }
+
+            document.getElementById('results-container').innerHTML = `
+                <div class="empty-ok">
+                    <i class="bi bi-check-circle-fill"></i>
+                    ${data.deleted} writeup(s) eliminados correctamente
+                </div>`;
+            document.getElementById('stat-broken').textContent = '0';
+            document.getElementById('stat-ok').textContent = document.getElementById('stat-total').textContent;
+            brokenIds = [];
+            showAlert(data.message, 'success');
+        } catch (e) {
+            showAlert('Error de conexión: ' + e.message, 'danger');
+        } finally {
+            document.getElementById('btn-start').disabled = false;
+        }
+    }
+
+    // ── Inicialización ───────────────────────────────────────────────────────────
+    cargarResultadosGuardados();
+</script>
+{% endblock %}
