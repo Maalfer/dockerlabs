@@ -1,7 +1,27 @@
+# Entornos y dependencias
 venv/
 __pycache__/
 *.pyc
 *.pyo
 *.pyd
+
+# Secretos / configuración local
 .env
+.env.*
+*.env
+
+# Datos de runtime (subidas de usuarios, imágenes generadas)
+uploads/
+database/almacenamiento/
+
+# Backups y volcados
 *.bak*
+*.db
+*.sqlite
+*.sqlite3
+*.sql
+*.log
+
+# Sistema / editor
+.DS_Store
+Thumbs.db

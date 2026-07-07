@@ -4,7 +4,7 @@
 
 {% block content %}
 
-<link rel="stylesheet" href="{{ url_for('static', filename='bunkerlabs/css/home.css') }}">
+<link rel="stylesheet" href="{{ static_v('bunkerlabs/css/home.css') }}">
 
 <div class="container">
 
@@ -17,6 +17,7 @@
             {% if not is_guest %}
             <a href="/bunkerlabs/recursos" class="btn btn-sm btn-action" style="text-decoration:none;">Recursos 📁</a>
             {% endif %}
+            <a href="/bunkerlabs/empezar" class="btn btn-sm btn-action" style="text-decoration:none;">Empezar de 0 🐣</a>
         </div>
 
         <!-- Right Section: Filters -->
@@ -96,22 +97,12 @@
 
 </div>
 
-<!-- Modal de Writeups -->
-<div id="writeupModal" class="modal-writeup" style="display: none;">
-    <div class="modal-writeup-content">
-        <span class="close-writeup" onclick="closeWriteupModal()">&times;</span>
-        <h3 id="writeup-machine-title">Writeups</h3>
-        <div id="writeup-content">
-            <p class="loading-text">Cargando writeups...</p>
-        </div>
-    </div>
-</div>
 
 {% endblock %}
 
 {% block scripts %}
 {{ super() }}
-<script nonce="{{ csp_nonce }}" src="{{ url_for('static', filename='bunkerlabs/js/script_bunkerlabs.js') }}"></script>
+<script nonce="{{ csp_nonce }}" src="{{ static_v('bunkerlabs/js/script_bunkerlabs.js') }}"></script>
 <script nonce="{{ csp_nonce }}"
-    src="{{ url_for('static', filename='bunkerlabs/js/presentacionmaquina_bunkerlabs.js') }}"></script>
+    src="{{ static_v('bunkerlabs/js/presentacionmaquina_bunkerlabs.js') }}"></script>
 {% endblock %}

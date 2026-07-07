@@ -3,9 +3,9 @@
 {% block title %}DockerLabs{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{{ url_for('static', filename='dockerlabs/css/home.css') }}"
+<link rel="stylesheet" href="{{ static_v('dockerlabs/css/home.css') }}"
       media="print" onload="this.media='all'">
-<noscript><link rel="stylesheet" href="{{ url_for('static', filename='dockerlabs/css/home.css') }}"></noscript>
+<noscript><link rel="stylesheet" href="{{ static_v('dockerlabs/css/home.css') }}"></noscript>
 {% endblock %}
 
 {% block content %}
@@ -70,9 +70,8 @@
                 </div>
 
 
-                <button id="ranking" class="btn btn-sm" onclick="ranking()">Writeups👑</button>
-                <button id="autores" class="btn btn-sm" onclick="rankingautores()">Autores👑</button>
-                <button id="equipos" class="btn btn-sm" onclick="rankingEquipos()">Equipos👑</button>
+                <button id="ranking" class="btn btn-sm" onclick="ranking()">Writeups</button>
+                <button id="autores" class="btn btn-sm" onclick="rankingautores()">Autores</button>
                 <span class="filters-divider" aria-hidden="true"></span>
                 <span class="filters-divider" aria-hidden="true"></span>
                 <div class="d-flex flex-wrap gap-2 ms-auto align-items-center">
@@ -139,6 +138,20 @@
         </div>
     </div>
 
+    <!-- Sprite de iconos de acción (minimalistas, inline, sin CDN) -->
+    <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+        <symbol id="ic-download" viewBox="0 0 24 24">
+            <path d="M12 4v10"/><path d="m8 11 4 4 4-4"/><path d="M5 19h14"/>
+        </symbol>
+        <symbol id="ic-upload" viewBox="0 0 24 24">
+            <path d="M12 20V10"/><path d="m8 13 4-4 4 4"/><path d="M5 5h14"/>
+        </symbol>
+        <symbol id="ic-writeup" viewBox="0 0 24 24">
+            <path d="M13 3H7a1 1 0 0 0-1 1v16a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1V8z"/>
+            <path d="M13 3v5h5"/><path d="M9.5 13h5"/><path d="M9.5 16.5h5"/>
+        </symbol>
+    </svg>
+
     {% if single_machine %}
     <div class="lista-unica-centrada">
         {% for maquina in maquinas %}
@@ -159,15 +172,15 @@
             <div class="actions icon-container">
                 <button class="download" style="font-size: 1.2em;"
                     onclick="window.open('{{ maquina.link_descarga }}', '_blank'); event.stopPropagation();">
-                    <i class="bi bi-cloud-arrow-down-fill"></i>
+                    <svg class="ic-accion ic-down" aria-hidden="true"><use href="#ic-download"/></svg>
                 </button>
                 <button class="upload" style="font-size: 1.2em;"
                     onclick="subirwriteup({{ maquina.nombre | tojson | forceescape }}); event.stopPropagation();">
-                    <i class="bi bi-cloud-arrow-up-fill"></i>
+                    <svg class="ic-accion ic-up" aria-hidden="true"><use href="#ic-upload"/></svg>
                 </button>
                 <button style="font-size: 1.2em;"
                     onclick="showEnlaces({{ maquina.nombre | tojson | forceescape }}); event.stopPropagation();">
-                    <i class="bi bi-book"></i>
+                    <svg class="ic-accion ic-doc" aria-hidden="true"><use href="#ic-writeup"/></svg>
                 </button>
             </div>
         </div>
@@ -195,17 +208,17 @@
                 <button class="subir" style="font-size: 1.2em;"
                     onclick="window.open('{{ maquina.link_descarga }}', '_blank'); event.stopPropagation();"
                     title="Descargar máquina">
-                    <i class="bi bi-cloud-arrow-down-fill"></i>
+                    <svg class="ic-accion ic-down" aria-hidden="true"><use href="#ic-download"/></svg>
                 </button>
                 <button class="subir" style="font-size: 1.2em;"
                     onclick="subirwriteup({{ maquina.nombre | tojson | forceescape }}); event.stopPropagation();"
                     title="Subir writeup">
-                    <i class="bi bi-cloud-arrow-up-fill"></i>
+                    <svg class="ic-accion ic-up" aria-hidden="true"><use href="#ic-upload"/></svg>
                 </button>
                 <button style="font-size: 1.2em;"
                     onclick="showEnlaces({{ maquina.nombre | tojson | forceescape }}); event.stopPropagation();"
                     title="Ver writeups">
-                    <i class="bi bi-book"></i>
+                    <svg class="ic-accion ic-doc" aria-hidden="true"><use href="#ic-writeup"/></svg>
                 </button>
             </div>
         </div>
@@ -226,18 +239,17 @@
 {% block scripts %}
 {{ super() }}
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" defer></script>
+<script src="{{ static_v('dockerlabs/vendor/bootstrap.bundle.min.js') }}" defer></script>
 
 <script nonce="{{ csp_nonce }}">
     var currentUser = "{{ session['username'] if 'username' in session else '' }}";
 </script>
 
-<script src="{{ url_for('static', filename='dockerlabs/js/home.js') }}" defer></script>
-<script src="{{ url_for('static', filename='dockerlabs/js/presentacionmaquina.js') }}" defer></script>
-<script src="{{ url_for('static', filename='dockerlabs/js/descripciones.js') }}" defer></script>
-<script src="{{ url_for('static', filename='dockerlabs/js/writeups.js') }}" defer></script>
-<script src="{{ url_for('static', filename='dockerlabs/js/ranking.js') }}" defer></script>
-<script src="{{ url_for('static', filename='dockerlabs/js/equipos.js') }}" defer></script>
-<script src="{{ url_for('static', filename='dockerlabs/js/subirwriteup.js') }}" defer></script>
+<script src="{{ static_v('dockerlabs/js/home.js') }}" defer></script>
+<script src="{{ static_v('dockerlabs/js/presentacionmaquina.js') }}" defer></script>
+<script src="{{ static_v('dockerlabs/js/descripciones.js') }}" defer></script>
+<script src="{{ static_v('dockerlabs/js/writeups.js') }}" defer></script>
+<script src="{{ static_v('dockerlabs/js/ranking.js') }}" defer></script>
+<script src="{{ static_v('dockerlabs/js/subirwriteup.js') }}" defer></script>
 
 {% endblock %}

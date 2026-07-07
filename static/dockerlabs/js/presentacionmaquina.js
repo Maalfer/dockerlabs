@@ -12,6 +12,7 @@ function presentacion(nombre, dificultad, color, autor_nombre, autor_enlace, fec
                 width: 100%;
                 height: 100%;
                 background: rgba(15, 23, 42, 0.85);
+                -webkit-backdrop-filter: blur(8px);
                 backdrop-filter: blur(8px);
                 z-index: 10000;
                 opacity: 0;
@@ -22,7 +23,7 @@ function presentacion(nombre, dificultad, color, autor_nombre, autor_enlace, fec
                 opacity: 1;
             }
 
-            .popup {
+            .popup.machine-popup {
                 background: #1e293b; /* Dark Slate Blue Background */
                 color: #f1f5f9;
                 border-radius: 24px;
@@ -39,14 +40,15 @@ function presentacion(nombre, dificultad, color, autor_nombre, autor_enlace, fec
                 overflow: hidden;
                 opacity: 0;
                 transform: translate(-50%, -50%) scale(0.95);
-                transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+                transition: opacity 0.3s cubic-bezier(0.16, 1, 0.3, 1), transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+                will-change: opacity, transform;
                 font-family: 'Fira Code', monospace;
                 margin: 0;
             }
 
 
             @media (max-width: 768px) {
-                .popup {
+                .popup.machine-popup {
                     grid-template-columns: 1fr;
                     grid-template-rows: auto 1fr;
                     width: 95vw;
@@ -60,7 +62,7 @@ function presentacion(nombre, dificultad, color, autor_nombre, autor_enlace, fec
                     transform: translate(-50%, -50%) scale(0.95);
                 }
                 
-                .popup.visible {
+                .popup.machine-popup.visible {
                     transform: translate(-50%, -50%) scale(1);
                 }
                 
@@ -159,7 +161,7 @@ function presentacion(nombre, dificultad, color, autor_nombre, autor_enlace, fec
             }
 
             @media (max-width: 480px) {
-                .popup {
+                .popup.machine-popup {
                     width: 100vw;
                     max-width: 100vw;
                     max-height: 100dvh;
@@ -234,7 +236,7 @@ function presentacion(nombre, dificultad, color, autor_nombre, autor_enlace, fec
                 }
             }
 
-            .popup.visible {
+            .popup.machine-popup.visible {
                 opacity: 1;
                 transform: translate(-50%, -50%) scale(1);
             }
@@ -291,7 +293,7 @@ function presentacion(nombre, dificultad, color, autor_nombre, autor_enlace, fec
                 align-items: center;
                 justify-content: center;
                 cursor: pointer;
-                transition: all 0.2s;
+                transition: background 0.2s ease, color 0.2s ease;
                 z-index: 10;
             }
 
@@ -421,7 +423,7 @@ function presentacion(nombre, dificultad, color, autor_nombre, autor_enlace, fec
                 font-weight: 600;
                 font-size: 1rem;
                 cursor: pointer;
-                transition: all 0.2s;
+                transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
                 display: flex;
                 justify-content: center;
                 align-items: center;
@@ -492,6 +494,88 @@ function presentacion(nombre, dificultad, color, autor_nombre, autor_enlace, fec
             }
             .primary-btn { flex:1; background: #3b82f6; color: white; border:none; padding: 0.75rem; border-radius: 8px; cursor:pointer;}
             .secondary-btn { flex:1; background: transparent; border: 1px solid #475569; color: #94a3b8; padding: 0.75rem; border-radius: 8px; cursor:pointer;}
+
+            /* Diploma Button */
+            .btn-diploma-wrapper {
+                position: relative;
+                margin-top: 0.75rem;
+                width: 100%;
+            }
+            .btn-diploma {
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                gap: 0.5rem;
+                width: 100%;
+                background: transparent;
+                border: 1px solid rgba(20, 184, 166, 0.4);
+                color: #2dd4bf;
+                padding: 0.75rem 1rem;
+                border-radius: 12px;
+                font-weight: 600;
+                font-size: 0.95rem;
+                cursor: pointer;
+                transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+                text-align: center;
+                text-decoration: none;
+                font-family: 'Fira Code', monospace;
+                box-sizing: border-box;
+            }
+            .btn-diploma:hover {
+                background: rgba(20, 184, 166, 0.08);
+                border-color: rgba(20, 184, 166, 0.7);
+                color: #5eead4;
+                text-decoration: none;
+            }
+            .btn-diploma.diploma-locked {
+                border-color: rgba(100, 116, 139, 0.3);
+                color: #475569;
+                cursor: not-allowed;
+                pointer-events: none;
+            }
+            .btn-diploma-wrapper .diploma-tooltip {
+                display: none;
+                position: absolute;
+                bottom: calc(100% + 8px);
+                left: 50%;
+                transform: translateX(-50%);
+                background: #0f172a;
+                border: 1px solid #334155;
+                color: #94a3b8;
+                font-size: 0.78rem;
+                padding: 0.5rem 0.75rem;
+                border-radius: 8px;
+                white-space: nowrap;
+                z-index: 20;
+                pointer-events: none;
+                font-family: 'Fira Code', monospace;
+            }
+            .btn-diploma-wrapper .diploma-tooltip::after {
+                content: '';
+                position: absolute;
+                top: 100%;
+                left: 50%;
+                transform: translateX(-50%);
+                border: 5px solid transparent;
+                border-top-color: #334155;
+            }
+            .btn-diploma-wrapper:hover .diploma-tooltip {
+                display: block;
+            }
+            /* Diploma loading state */
+            .diploma-spinner {
+                width: 14px;
+                height: 14px;
+                border: 2px solid rgba(45, 212, 191, 0.25);
+                border-top-color: #2dd4bf;
+                border-radius: 50%;
+                animation: diploma-spin 0.7s linear infinite;
+                flex-shrink: 0;
+            }
+            @keyframes diploma-spin {
+                to { transform: rotate(360deg); }
+            }
+
         `;
         document.head.appendChild(style);
     }
@@ -502,7 +586,7 @@ function presentacion(nombre, dificultad, color, autor_nombre, autor_enlace, fec
     overlayDiv.className = 'overlay';
 
     var popupDiv = document.createElement('div');
-    popupDiv.className = 'popup';
+    popupDiv.className = 'popup machine-popup';
 
     // Escaped Data
     const escNombre = escapeHtml(nombre);
@@ -619,6 +703,61 @@ function presentacion(nombre, dificultad, color, autor_nombre, autor_enlace, fec
     markDoneBtn.innerHTML = '<i class="bi bi-circle"></i> Marcar como hecha'; // Default state
 
     actionArea.appendChild(markDoneBtn);
+
+    // Diploma button — siempre visible, locked hasta confirmar writeup
+    const diplomaWrapper = document.createElement('div');
+    diplomaWrapper.className = 'btn-diploma-wrapper';
+
+    const diplomaTooltip = document.createElement('span');
+    diplomaTooltip.className = 'diploma-tooltip';
+    diplomaTooltip.textContent = 'Necesitas un writeup publicado en esta máquina para obtener el diploma.';
+
+    const diplomaBtn = document.createElement('a');
+    diplomaBtn.className = 'btn-diploma diploma-locked';
+    diplomaBtn.innerHTML = '<i class="bi bi-patch-check-fill"></i> Descargar Diploma';
+    diplomaBtn.href = `/api/certificado/${encodeURIComponent(nombre)}`;
+    diplomaBtn.addEventListener('click', function(e) {
+        if (diplomaBtn.classList.contains('diploma-locked')) return;
+        e.preventDefault();
+
+        const originalHTML = diplomaBtn.innerHTML;
+        diplomaBtn.innerHTML = '<span class="diploma-spinner"></span> Generando diploma...';
+        diplomaBtn.style.pointerEvents = 'none';
+        diplomaBtn.style.opacity = '0.75';
+
+        fetch(diplomaBtn.href)
+            .then(function(res) {
+                if (!res.ok) throw new Error('server');
+                return res.blob();
+            })
+            .then(function(blob) {
+                const url = URL.createObjectURL(blob);
+                const tmp = document.createElement('a');
+                tmp.href = url;
+                tmp.download = 'diploma_' + nombre + '.png';
+                tmp.click();
+                URL.revokeObjectURL(url);
+                diplomaBtn.innerHTML = originalHTML;
+                diplomaBtn.style.pointerEvents = '';
+                diplomaBtn.style.opacity = '';
+            })
+            .catch(function() {
+                diplomaBtn.innerHTML = '<i class="bi bi-exclamation-circle"></i> Error al generar';
+                diplomaBtn.style.color = '#f87171';
+                diplomaBtn.style.borderColor = 'rgba(248, 113, 113, 0.4)';
+                setTimeout(function() {
+                    diplomaBtn.innerHTML = originalHTML;
+                    diplomaBtn.style.pointerEvents = '';
+                    diplomaBtn.style.opacity = '';
+                    diplomaBtn.style.color = '';
+                    diplomaBtn.style.borderColor = '';
+                }, 3000);
+            });
+    });
+
+    diplomaWrapper.appendChild(diplomaTooltip);
+    diplomaWrapper.appendChild(diplomaBtn);
+    actionArea.appendChild(diplomaWrapper);
 
     // Footer (User Rating)
     const footer = document.createElement('div');
@@ -834,6 +973,17 @@ function presentacion(nombre, dificultad, color, autor_nombre, autor_enlace, fec
 
     if (typeof currentUser !== "undefined" && currentUser !== "") {
         checkCompletion();
+        // Desbloquear diploma si el usuario tiene writeup publicado
+        fetch(`/api/certificado/${encodeURIComponent(nombre)}/disponible`)
+            .then(res => res.json())
+            .then(data => {
+                if (data.disponible) {
+                    diplomaBtn.classList.remove('diploma-locked');
+                    diplomaTooltip.style.display = 'none';
+                    diplomaWrapper.style.pointerEvents = 'auto';
+                }
+            })
+            .catch(() => {});
     } else {
         markDoneBtn.style.display = 'none'; // Hide if not logged in
     }

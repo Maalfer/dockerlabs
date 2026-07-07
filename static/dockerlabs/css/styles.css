@@ -43,6 +43,7 @@ body {
 
 header {
     background: rgba(15, 23, 42, 0.96);
+    -webkit-backdrop-filter: blur(12px);
     backdrop-filter: blur(12px);
     border-bottom: 1px solid rgba(51, 65, 85, 0.9);
     padding: 8px 16px;
@@ -105,7 +106,7 @@ header h1 {
 header h1 a {
     color: #f8fafc;
     text-decoration: none;
-    transition: all 0.3s ease;
+    transition: opacity 0.3s ease, text-shadow 0.3s ease;
     opacity: 0.9;
 }
 
@@ -146,24 +147,9 @@ header h1 a:hover {
     /* Replaced #e6b400 */
     box-shadow: none;
     text-shadow: none;
-    transition: all 0.2s ease;
+    transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
     position: relative;
     font-weight: 500;
-}
-
-.btn-hack:hover,
-.btn-auth:hover,
-.btn-logout:hover,
-#academia:hover,
-#ranking:hover,
-#autores:hover,
-#equipos:hover {
-    background: rgba(230, 180, 0, 0.1);
-    border-color: var(--accent-yellow);
-    /* Replaced #ffd700 */
-    color: var(--accent-yellow);
-    /* Replaced #ffd700 */
-    transform: translateY(-1px);
 }
 
 .btn-hack:active,
@@ -245,6 +231,7 @@ header h1 a:hover {
     padding: 1.1rem 1.3rem;
     border-radius: 16px;
     border: 1px solid var(--border-strong);
+    -webkit-backdrop-filter: blur(18px);
     backdrop-filter: blur(18px);
     box-shadow: 0 18px 40px rgba(15, 23, 42, 0.9);
 }
@@ -296,7 +283,7 @@ header h1 a:hover {
     color: var(--text-primary);
     font-family: 'Fira Code', monospace;
     font-size: 0.85rem;
-    transition: all 0.2s ease;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
     min-width: 180px;
 }
 
@@ -345,13 +332,13 @@ header h1 a:hover {
     background: transparent;
     border: none !important;
     border-radius: 12px !important;
-    transition: all 0.2s ease;
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
     width: auto !important;
     min-width: 28px;
     height: 28px;
+    transition: color 0.2s ease, background 0.2s ease;
 }
 
 .search-buttons-group .btn:hover {
@@ -435,7 +422,7 @@ header h1 a:hover {
     font-weight: 600;
     font-size: 0.75rem;
     text-transform: uppercase;
-    transition: all 0.2s ease;
+    transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease, color 0.2s ease;
     min-width: 85px;
 }
 
@@ -611,11 +598,11 @@ header h1 a:hover {
     color: var(--text-secondary);
     border-radius: 6px;
     cursor: pointer;
-    transition: all 0.2s ease;
     font-family: inherit;
     display: inline-flex;
     align-items: center;
     justify-content: center;
+    transition: background 0.2s ease, color 0.2s ease;
 }
 
 .pagination-btn:hover:not(:disabled) {
@@ -666,7 +653,7 @@ header h1 a:hover {
     display: flex;
     align-items: center;
     justify-content: flex-start;
-    transition: all 0.25s ease;
+    transition: transform 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease, background 0.25s ease;
     cursor: pointer;
     box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.5), 0 0 16px rgba(34, 211, 238, 0.25);
     position: relative;
@@ -676,6 +663,7 @@ header h1 a:hover {
     gap: 0.8rem;
     /* Aislar reflows dentro del item para mejorar rendimiento */
     contain: layout style;
+    will-change: transform;
 }
 
 .maquina-item:hover {
@@ -752,7 +740,7 @@ header h1 a:hover {
     padding: 0.18rem 0.4rem;
     cursor: pointer;
     font-size: 0.9rem;
-    transition: all 0.2s ease;
+    transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -807,7 +795,7 @@ header h1 a:hover {
     background: rgba(15, 23, 42, 0.8);
     border-radius: 50%;
     filter: blur(8px);
-    transition: all 0.25s ease;
+    transition: bottom 0.25s ease, width 0.25s ease, background 0.25s ease, filter 0.25s ease;
     z-index: -1;
 }
 
@@ -850,6 +838,7 @@ header h1 a:hover {
     text-transform: uppercase;
     letter-spacing: 0.05em;
     box-shadow: 0 2px 8px rgba(255, 140, 0, 0.5);
+    will-change: transform, box-shadow;
     animation: pulse-orange 2s ease-in-out infinite;
 }
 
@@ -1091,10 +1080,10 @@ footer {
     padding: 8px 12px;
     display: block;
     border-radius: 10px;
-    transition: all 0.2s ease;
     background: rgba(30, 64, 175, 0.35);
     border: 1px solid rgba(59, 130, 246, 0.85);
     font-size: 0.85rem;
+    transition: background 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .gestion-writeups-popup a:hover {
@@ -1118,7 +1107,7 @@ footer {
     line-height: 0;
     cursor: pointer;
     border-radius: 999px;
-    transition: all 0.2s ease;
+    transition: background-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .boton-cerrar-modal:hover {
@@ -1729,6 +1718,12 @@ footer {
         animation: none;
     }
 
+    .etiqueta-nueva,
+    .etiqueta-plata {
+        animation: none;
+        will-change: auto;
+    }
+
     .maquina-item {
         animation: none;
     }
@@ -1921,6 +1916,7 @@ footer {
     width: 100%;
     height: 100%;
     background: rgba(15, 23, 42, 0.6);
+    -webkit-backdrop-filter: blur(12px);
     backdrop-filter: blur(12px);
     z-index: 10000;
     opacity: 0;
@@ -1953,7 +1949,7 @@ footer {
     opacity: 0;
     pointer-events: none;
     font-family: 'Inter', sans-serif;
-    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    transition: opacity 0.2s cubic-bezier(0.16, 1, 0.3, 1), transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .popup.visible {
@@ -2026,11 +2022,11 @@ footer {
     background: rgba(30, 41, 59, 0.4);
     border: 1px solid rgba(148, 163, 184, 0.05);
     border-radius: 12px;
-    transition: all 0.2s ease;
     cursor: pointer;
     text-decoration: none;
     /* For links */
     color: inherit;
+    transition: background 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
 }
 
 .ranking-item:hover {
@@ -2204,6 +2200,7 @@ footer {
     border-radius: 12px;
     border: 1px solid rgba(251, 191, 36, 0.6);
     font-weight: 500;
+    -webkit-backdrop-filter: blur(6px);
     backdrop-filter: blur(6px);
     box-shadow:
         0 0 6px rgba(251, 191, 36, 0.4),
@@ -2229,6 +2226,7 @@ footer {
     border-radius: 12px;
     border: 1px solid rgba(96, 165, 250, 0.6);
     font-weight: 500;
+    -webkit-backdrop-filter: blur(6px);
     backdrop-filter: blur(6px);
     box-shadow:
         0 0 6px rgba(96, 165, 250, 0.4),
@@ -2269,7 +2267,7 @@ footer {
     padding: 0.18rem 0.4rem;
     cursor: pointer;
     font-size: 0.9rem;
-    transition: all 0.2s ease;
+    transition: transform 0.2s ease, background 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -2407,7 +2405,8 @@ footer {
     border-radius: 999px;
     overflow: hidden;
     border: 2px solid rgba(51, 65, 85, 0.5);
-    transition: all 0.25s ease;
+    transition: opacity 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease, transform 0.25s ease;
+    will-change: transform, opacity;
     opacity: 0.7;
     flex-shrink: 0;
 }
@@ -2433,3 +2432,34 @@ footer {
     filter: grayscale(0%);
 }
 
+
+
+/* ===== Iconos de acción minimalistas (SVG inline, sin CDN) ===== */
+.ic-accion {
+    width: 1.05em;
+    height: 1.05em;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    vertical-align: -0.15em;
+    display: inline-block;
+    overflow: visible;
+    transition: transform 0.2s ease;
+}
+
+/* Micro-interacción al pasar el ratón: la flecha de descarga baja,
+   la de subida sube y el documento crece ligeramente. */
+.acciones button:hover .ic-accion,
+.actions button:hover .ic-accion {
+    transform: scale(1.06);
+}
+.acciones button:hover .ic-down,
+.actions button:hover .ic-down {
+    transform: translateY(2px);
+}
+.acciones button:hover .ic-up,
+.actions button:hover .ic-up {
+    transform: translateY(-2px);
+}

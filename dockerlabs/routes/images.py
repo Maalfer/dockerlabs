@@ -2,15 +2,16 @@ import io
 import os
 import re
 
-from fastapi import HTTPException, Request
+from fastapi import HTTPException
 from fastapi.responses import FileResponse, StreamingResponse
+from werkzeug.utils import secure_filename
 
+from dockerlabs.database import db_session
 from dockerlabs.models import Machine, User
 
 
 def register_image_routes(api_router, pages_router):
     def _serve_profile_image_logic(user_id: int):
-        from dockerlabs.database import db_session as _db_session
 
         base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
         profile_upload_folder = os.path.join(base_dir, "static", "dockerlabs", "images", "perfiles")
@@ -27,8 +28,6 @@ def register_image_routes(api_router, pages_router):
                 return default_image
             if "/" in username or "\\" in username or ".." in username:
                 return default_image
-            from werkzeug.utils import secure_filename
-
             candidates_names = [username, username.lower(), secure_filename(username), secure_filename(username).lower()]
             candidates_names = list(dict.fromkeys(candidates_names))
             for name in candidates_names:
@@ -39,16 +38,16 @@ def register_image_routes(api_router, pages_router):
             return default_image
 
         # Clean up any stale session from a previous request on this thread
-        _db_session.remove()
+        db_session.remove()
 
         try:
             user = User.query.get(user_id)
         except Exception:
-            _db_session.remove()
+            db_session.remove()
             user = None
 
         if user:
-            # 1. Primero buscar en el nuevo sistema (database/almacenamiento/perfiles)
+            # 1. Primero buscar en el nuevo sistema (uploads/perfiles)
             if user.profile_image_path:
                 try:
                     full_path = os.path.join(base_dir, user.profile_image_path)
@@ -67,8 +66,8 @@ def register_image_routes(api_router, pages_router):
             except Exception:
                 pass
 
-            # 2.5. Buscar en database/almacenamiento/perfiles/ por patrón user_{id}_*.ext
-            perfiles_dir = os.path.join(base_dir, "database", "almacenamiento", "perfiles")
+            # 2.5. Buscar en uploads/perfiles/ por patrón user_{id}_*.ext
+            perfiles_dir = os.path.join(base_dir, "uploads", "perfiles")
             if os.path.isdir(perfiles_dir):
                 _mime_map = {'.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.png': 'image/png', '.gif': 'image/gif', '.webp': 'image/webp'}
                 for fname in sorted(os.listdir(perfiles_dir), reverse=True):
@@ -92,21 +91,20 @@ def register_image_routes(api_router, pages_router):
         raise HTTPException(status_code=404, detail="Imagen no encontrada")
 
     def _serve_machine_logo_logic(machine_id: int):
-        from dockerlabs.database import db_session as _db_session
 
         base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 
         # Clean up any stale session from a previous request on this thread
-        _db_session.remove()
+        db_session.remove()
 
         try:
             machine = Machine.query.get(machine_id)
         except Exception:
-            _db_session.remove()
+            db_session.remove()
             machine = None
 
         if machine:
-            # 1. Primero buscar en el nuevo sistema (database/almacenamiento/logos)
+            # 1. Primero buscar en el nuevo sistema (uploads/logos)
             if machine.logo_path:
                 try:
                     full_path = os.path.join(base_dir, machine.logo_path)

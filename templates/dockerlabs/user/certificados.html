@@ -1,0 +1,257 @@
+{% extends "dockerlabs/base.html" %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ static_v('dockerlabs/css/dashboard.css') }}"
+      media="print" onload="this.media='all'">
+<noscript><link rel="stylesheet" href="{{ static_v('dockerlabs/css/dashboard.css') }}"></noscript>
+{% endblock %}
+
+{% block title %}Mis Certificados - DockerLabs{% endblock %}
+
+{% block canonical_path %}/certificados{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+    <div class="dashboard-header">
+        <div class="welcome-section">
+            <h1><i class="bi bi-patch-check-fill" style="color:#2dd4bf;"></i> Certificados</h1>
+            <p class="welcome-text">Tus diplomas y verificación de autenticidad</p>
+        </div>
+        <div class="dashboard-actions">
+            <a href="/dashboard" style="
+                display:inline-flex;align-items:center;gap:0.5rem;
+                padding:0.55rem 1.1rem;border-radius:10px;font-size:0.9rem;
+                font-weight:600;color:#94a3b8;border:1px solid #334155;
+                text-decoration:none;transition:all 0.2s;font-family:'Fira Code',monospace;">
+                <i class="bi bi-arrow-left"></i> Dashboard
+            </a>
+        </div>
+    </div>
+
+    <div class="dashboard-content">
+
+        <!-- ── Mis Certificados ────────────────────────────────────────── -->
+        <div class="security-section" id="certificados-section">
+            <div class="section-header" style="display:flex;justify-content:space-between;align-items:center;">
+                <h2><i class="bi bi-patch-check-fill" style="color:#2dd4bf;"></i> Mis Certificados</h2>
+                <button type="button" onclick="loadCertificados()" id="btn-reload-certs"
+                    style="background:transparent;border:1px solid #334155;color:#94a3b8;
+                           padding:0.35rem 0.9rem;border-radius:8px;font-size:0.8rem;cursor:pointer;
+                           font-family:'Fira Code',monospace;transition:all 0.2s;"
+                    onmouseover="this.style.borderColor='#475569';this.style.color='#e2e8f0';"
+                    onmouseout="this.style.borderColor='#334155';this.style.color='#94a3b8';">
+                    <i class="bi bi-arrow-clockwise"></i> Actualizar
+                </button>
+            </div>
+            <div id="certificados-list" style="margin-top:1rem;">
+                <p style="color:#64748b;font-size:0.9rem;text-align:center;padding:1.5rem 0;">
+                    <i class="bi bi-hourglass-split"></i> Cargando certificados...
+                </p>
+            </div>
+        </div>
+
+        <!-- ── Verificador de Certificados ────────────────────────────── -->
+        <div class="security-section" style="margin-top:2rem;">
+            <div class="section-header">
+                <h2><i class="bi bi-shield-check" style="color:#2dd4bf;"></i> Verificar Certificado</h2>
+            </div>
+            <div class="security-content">
+                <p style="color:#94a3b8;font-size:0.95rem;margin-bottom:1.5rem;">
+                    Introduce el ID de un diploma DockerLabs para comprobar su autenticidad.
+                    El ID tiene el formato <code style="color:#2dd4bf;background:#1e293b;padding:2px 6px;border-radius:4px;">DL-XXXXXX</code>.
+                </p>
+
+                <div style="display:flex;gap:0.75rem;align-items:center;max-width:480px;flex-wrap:wrap;">
+                    <input type="text" id="cert-validator-input" class="form-control"
+                           placeholder="DL-XXXXXX" maxlength="9"
+                           style="font-family:'Fira Code',monospace;letter-spacing:0.05em;text-transform:uppercase;
+                                  background:#1e293b;border:1px solid #334155;color:#f1f5f9;border-radius:10px;
+                                  padding:0.6rem 1rem;font-size:1rem;flex:1;min-width:160px;"
+                           oninput="this.value=this.value.toUpperCase()"
+                           onkeydown="if(event.key==='Enter') verificarCertificado()">
+                    <button type="button" onclick="verificarCertificado()" id="btn-verificar"
+                        style="display:inline-flex;align-items:center;gap:0.45rem;
+                               padding:0.6rem 1.4rem;border-radius:10px;font-size:0.95rem;font-weight:700;
+                               background:linear-gradient(135deg,#0d9488,#2dd4bf);
+                               color:#fff;border:none;cursor:pointer;transition:all 0.2s;white-space:nowrap;
+                               box-shadow:0 4px 14px rgba(45,212,191,0.3);"
+                        onmouseover="this.style.transform='translateY(-1px)';this.style.boxShadow='0 6px 18px rgba(45,212,191,0.45)'"
+                        onmouseout="this.style.transform='';this.style.boxShadow='0 4px 14px rgba(45,212,191,0.3)'">
+                        <i class="bi bi-search"></i> Verificar
+                    </button>
+                </div>
+
+                <div id="validator-result" style="margin-top:1.25rem;"></div>
+            </div>
+        </div>
+
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    function escapeHtml(t) {
+        const d = document.createElement('div');
+        d.appendChild(document.createTextNode(t || ''));
+        return d.innerHTML;
+    }
+
+    function loadCertificados() {
+        const list = document.getElementById('certificados-list');
+        if (!list) return;
+        list.innerHTML = '<p style="color:#64748b;font-size:0.9rem;text-align:center;padding:1.5rem 0;"><i class="bi bi-hourglass-split"></i> Cargando...</p>';
+
+        fetch('/api/certificados/mis-certificados')
+            .then(r => r.json())
+            .then(data => {
+                if (!data.certificados || data.certificados.length === 0) {
+                    list.innerHTML = `
+                        <div style="text-align:center;padding:2rem;color:#475569;">
+                            <i class="bi bi-patch-check" style="font-size:2.5rem;display:block;margin-bottom:0.75rem;color:#334155;"></i>
+                            <p style="margin:0;font-size:0.95rem;">Aún no tienes writeups publicados.<br>
+                            <span style="font-size:0.85rem;color:#64748b;">Cuando un writeup tuyo sea aprobado, podrás descargar el diploma aquí.</span></p>
+                        </div>`;
+                    return;
+                }
+
+                const diffColors = {
+                    'muy fácil': '#06b6d4', 'facil': '#8bc34a', 'fácil': '#8bc34a',
+                    'medio': '#e0a553', 'difícil': '#d83c31', 'dificil': '#d83c31'
+                };
+
+                const grid = document.createElement('div');
+                grid.style.cssText = 'display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:1rem;';
+
+                data.certificados.forEach(cert => {
+                    const diffKey = (cert.dificultad || '').toLowerCase();
+                    const diffColor = diffColors[diffKey] || cert.color || '#64748b';
+                    const card = document.createElement('div');
+                    card.style.cssText = `
+                        background:#1e293b;border:1px solid #334155;border-radius:14px;
+                        padding:1.25rem;display:flex;flex-direction:column;gap:0.75rem;
+                        border-left:3px solid ${diffColor};`;
+
+                    card.innerHTML = `
+                        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:0.5rem;">
+                            <span style="font-weight:700;color:#f1f5f9;font-family:'Fira Code',monospace;
+                                         font-size:1rem;word-break:break-word;">${escapeHtml(cert.maquina)}</span>
+                            <span style="font-size:0.7rem;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;
+                                         color:${diffColor};white-space:nowrap;padding:0.2rem 0.6rem;
+                                         border:1px solid ${diffColor}33;border-radius:999px;">${escapeHtml(cert.dificultad)}</span>
+                        </div>
+                        <div style="font-size:0.78rem;color:#64748b;display:flex;align-items:center;gap:0.4rem;">
+                            <i class="bi bi-calendar3"></i> Writeup publicado: ${escapeHtml(cert.fecha)}
+                        </div>
+                        <div style="font-size:0.75rem;color:#475569;font-family:'Fira Code',monospace;
+                                    background:#0f172a;padding:0.35rem 0.75rem;border-radius:6px;
+                                    display:flex;align-items:center;gap:0.5rem;cursor:pointer;"
+                             title="Haz clic para copiar el ID"
+                             onclick="copiarCertId('${escapeHtml(cert.cert_id)}', this)">
+                            <i class="bi bi-fingerprint" style="color:#2dd4bf;"></i>
+                            <span>${escapeHtml(cert.cert_id)}</span>
+                            <i class="bi bi-clipboard" style="margin-left:auto;color:#475569;"></i>
+                        </div>
+                        <a href="/api/certificado/${encodeURIComponent(cert.maquina)}"
+                           download
+                           style="display:flex;justify-content:center;align-items:center;gap:0.5rem;
+                                  padding:0.6rem 1rem;border-radius:10px;font-size:0.88rem;font-weight:600;
+                                  background:transparent;border:1px solid rgba(45,212,191,0.4);
+                                  color:#2dd4bf;text-decoration:none;transition:all 0.2s;
+                                  font-family:'Fira Code',monospace;"
+                           onmouseover="this.style.background='rgba(45,212,191,0.08)';this.style.borderColor='rgba(45,212,191,0.7)'"
+                           onmouseout="this.style.background='transparent';this.style.borderColor='rgba(45,212,191,0.4)'">
+                            <i class="bi bi-patch-check-fill"></i> Descargar Diploma
+                        </a>`;
+                    grid.appendChild(card);
+                });
+
+                list.innerHTML = '';
+                list.appendChild(grid);
+            })
+            .catch(() => {
+                list.innerHTML = '<p style="color:#ef4444;font-size:0.9rem;text-align:center;padding:1rem;">Error al cargar los certificados.</p>';
+            });
+    }
+
+    function copiarCertId(certId, el) {
+        navigator.clipboard.writeText(certId).then(() => {
+            const icon = el.querySelector('.bi-clipboard');
+            if (icon) { icon.className = 'bi bi-clipboard-check'; icon.style.color = '#2dd4bf'; }
+            setTimeout(() => {
+                if (icon) { icon.className = 'bi bi-clipboard'; icon.style.color = '#475569'; }
+            }, 2000);
+        });
+    }
+
+    function verificarCertificado() {
+        const input = document.getElementById('cert-validator-input');
+        const result = document.getElementById('validator-result');
+        const btn = document.getElementById('btn-verificar');
+        const certId = (input.value || '').trim().toUpperCase();
+
+        if (!certId) {
+            result.innerHTML = '<p style="color:#f59e0b;font-size:0.9rem;"><i class="bi bi-exclamation-triangle"></i> Introduce un ID de certificado.</p>';
+            return;
+        }
+        if (!/^DL-[0-9A-F]{6}$/.test(certId)) {
+            result.innerHTML = '<p style="color:#f59e0b;font-size:0.9rem;"><i class="bi bi-exclamation-triangle"></i> Formato inválido. El ID debe ser <code>DL-XXXXXX</code> (6 caracteres hex).</p>';
+            return;
+        }
+
+        btn.disabled = true;
+        result.innerHTML = '<p style="color:#64748b;font-size:0.9rem;"><i class="bi bi-hourglass-split"></i> Verificando...</p>';
+
+        fetch(`/api/certificado/verificar/${encodeURIComponent(certId)}`)
+            .then(r => r.json())
+            .then(data => {
+                if (data.valid) {
+                    result.innerHTML = `
+                        <div style="background:#0f2a1e;border:1px solid #22c55e;border-radius:12px;padding:1.25rem;max-width:440px;">
+                            <div style="display:flex;align-items:center;gap:0.75rem;margin-bottom:1rem;">
+                                <i class="bi bi-patch-check-fill" style="font-size:1.8rem;color:#22c55e;"></i>
+                                <div>
+                                    <div style="font-weight:700;color:#22c55e;font-size:1rem;">Certificado Válido</div>
+                                    <div style="font-size:0.8rem;color:#4ade80;">Diploma emitido por DockerLabs</div>
+                                </div>
+                            </div>
+                            <div style="display:flex;flex-direction:column;gap:0.5rem;font-size:0.9rem;">
+                                <div style="display:flex;gap:0.5rem;align-items:center;color:#94a3b8;">
+                                    <i class="bi bi-person-fill" style="color:#2dd4bf;width:16px;"></i>
+                                    <span>Autor:</span>
+                                    <strong style="color:#f1f5f9;">${escapeHtml(data.username)}</strong>
+                                </div>
+                                <div style="display:flex;gap:0.5rem;align-items:center;color:#94a3b8;">
+                                    <i class="bi bi-cpu-fill" style="color:#2dd4bf;width:16px;"></i>
+                                    <span>Máquina:</span>
+                                    <strong style="color:#f1f5f9;">${escapeHtml(data.machine)}</strong>
+                                </div>
+                                ${data.dificultad ? `<div style="display:flex;gap:0.5rem;align-items:center;color:#94a3b8;">
+                                    <i class="bi bi-bar-chart-fill" style="color:#2dd4bf;width:16px;"></i>
+                                    <span>Dificultad:</span>
+                                    <strong style="color:#f1f5f9;">${escapeHtml(data.dificultad)}</strong>
+                                </div>` : ''}
+                            </div>
+                        </div>`;
+                } else {
+                    result.innerHTML = `
+                        <div style="background:#1f0f0f;border:1px solid #ef4444;border-radius:12px;padding:1.25rem;max-width:440px;">
+                            <div style="display:flex;align-items:center;gap:0.75rem;">
+                                <i class="bi bi-x-circle-fill" style="font-size:1.8rem;color:#ef4444;"></i>
+                                <div>
+                                    <div style="font-weight:700;color:#ef4444;font-size:1rem;">Certificado No Válido</div>
+                                    <div style="font-size:0.85rem;color:#f87171;margin-top:0.25rem;">${escapeHtml(data.message || 'El ID no corresponde a ningún diploma emitido.')}</div>
+                                </div>
+                            </div>
+                        </div>`;
+                }
+            })
+            .catch(() => {
+                result.innerHTML = '<p style="color:#ef4444;font-size:0.9rem;"><i class="bi bi-x-circle"></i> Error de conexión al verificar.</p>';
+            })
+            .finally(() => { btn.disabled = false; });
+    }
+
+    document.addEventListener('DOMContentLoaded', loadCertificados);
+</script>
+{% endblock %}

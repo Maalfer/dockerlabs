@@ -1,24 +1,26 @@
 import secrets
+from datetime import datetime
+from sqlalchemy.exc import IntegrityError
 
 from fastapi import Depends, HTTPException, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
 
+from dockerlabs.models import Category, CompletedMachine, EmailVerificationToken, Machine, PasswordResetToken, User
+
 
 def register_pages_core_routes(
     pages_router,
-    get_flask_session,
-    create_flask_session_cookie,
+    get_session,
+    create_session_cookie,
     get_fastapi_profile_image_url,
     url_for,
     templates,
-    alchemy_db,
+    db,
 ):
     @pages_router.get("/", response_class=HTMLResponse)
-    def index_page(request: Request, flask_session: dict = Depends(get_flask_session)):
-        from dockerlabs.models import Category, CompletedMachine, Machine
-
+    def index_page(request: Request, session: dict = Depends(get_session)):
         query = (
-            alchemy_db.session.query(Machine, Category.categoria)
+            db.session.query(Machine, Category.categoria)
             .filter(Machine.origen == "docker")
             .outerjoin(Category, (Machine.id == Category.machine_id) & (Category.origen == "docker"))
             .order_by(Machine.id.asc())
@@ -64,11 +66,11 @@ def register_pages_core_routes(
 
         top_2_ids = {m["id"] for m, _ in top_2_items}
         top_2 = [m for m, _ in top_2_items]
-        rest = [m for m in all_maquinas if m["id"] not in top_2_ids]
+        rest = [m for m, _ in maquinas_con_fecha if m["id"] not in top_2_ids]
         maquinas = top_2 + rest
 
         completed_machines = []
-        user_id = flask_session.get("user_id")
+        user_id = session.get("user_id")
         if user_id:
             comp_objs = CompletedMachine.query.filter_by(user_id=user_id).all()
             completed_machines = [c.machine_name.strip() for c in comp_objs]
@@ -81,14 +83,13 @@ def register_pages_core_routes(
         session_data = {}
         current_user_role = ""
         if user_id:
-            current_user_role = flask_session.get("role", "")
-            session_data = {"user_id": user_id, "username": flask_session.get("username"), "role": current_user_role}
+            current_user_role = session.get("role", "")
+            session_data = {"user_id": user_id, "username": session.get("username"), "role": current_user_role}
 
-        # CSRF token handling - get from session or generate and store
-        csrf_token = flask_session.get("csrf_token")
+        csrf_token = session.get("csrf_token")
         if not csrf_token:
             csrf_token = secrets.token_urlsafe(32)
-            flask_session["csrf_token"] = csrf_token
+            session["csrf_token"] = csrf_token
 
         context = {
             "request": request,
@@ -107,14 +108,12 @@ def register_pages_core_routes(
         return templates.TemplateResponse(request, "dockerlabs/home.html", context)
 
     @pages_router.get("/dashboard", response_class=HTMLResponse)
-    def dashboard_page(request: Request, flask_session: dict = Depends(get_flask_session)):
-        from dockerlabs.models import Machine, User
-
-        user_id = flask_session.get("user_id")
+    def dashboard_page(request: Request, session: dict = Depends(get_session)):
+        user_id = session.get("user_id")
         if not user_id:
             return RedirectResponse(url="/login", status_code=302)
 
-        role = flask_session.get("role", "")
+        role = session.get("role", "")
         if role not in ["admin", "moderador", "jugador"]:
             raise HTTPException(status_code=403, detail="Acceso denegado")
 
@@ -122,21 +121,17 @@ def register_pages_core_routes(
             Machine.query.filter_by(origen="docker").with_entities(Machine.id, Machine.nombre, Machine.autor).order_by(Machine.nombre.asc()).all()
         )
 
-        current_username = flask_session.get("username")
+        current_username = session.get("username")
         profile_image_url = get_fastapi_profile_image_url(username=current_username, user_id=user_id)
 
-        # Fetch full user object for profile data
         user = User.query.get(user_id) if user_id else None
 
-        session_data = {}
-        if user_id:
-            session_data = {"user_id": user_id, "username": current_username, "role": role}
+        session_data = {"user_id": user_id, "username": current_username, "role": role}
 
-        # CSRF token handling - get from session or generate and store
-        csrf_token = flask_session.get("csrf_token")
+        csrf_token = session.get("csrf_token")
         if not csrf_token:
             csrf_token = secrets.token_urlsafe(32)
-            flask_session["csrf_token"] = csrf_token
+            session["csrf_token"] = csrf_token
 
         context = {
             "request": request,
@@ -152,6 +147,35 @@ def register_pages_core_routes(
         }
         return templates.TemplateResponse(request, "dockerlabs/admin/dashboard.html", context)
 
+    @pages_router.get("/certificados", response_class=HTMLResponse)
+    def certificados_page(request: Request, session: dict = Depends(get_session)):
+        user_id = session.get("user_id")
+        if not user_id:
+            return RedirectResponse(url="/login", status_code=302)
+
+        role = session.get("role", "")
+        if role not in ["admin", "moderador", "jugador"]:
+            raise HTTPException(status_code=403, detail="Acceso denegado")
+
+        current_username = session.get("username")
+        profile_image_url = get_fastapi_profile_image_url(username=current_username, user_id=user_id)
+
+        csrf_token = session.get("csrf_token")
+        if not csrf_token:
+            csrf_token = secrets.token_urlsafe(32)
+            session["csrf_token"] = csrf_token
+
+        context = {
+            "request": request,
+            "profile_image_url": profile_image_url,
+            "session": {"user_id": user_id, "username": current_username, "role": role},
+            "current_user_role": role,
+            "csrf_token_value": csrf_token,
+            "url_for": url_for,
+            "g": {"csp_nonce": secrets.token_urlsafe(32)},
+        }
+        return templates.TemplateResponse(request, "dockerlabs/user/certificados.html", context)
+
     @pages_router.get("/logout")
     def logout_page(request: Request):
         response = RedirectResponse(url="/", status_code=302)
@@ -159,18 +183,18 @@ def register_pages_core_routes(
         return response
 
     @pages_router.get("/login", response_class=HTMLResponse)
-    def login_page(request: Request, flask_session: dict = Depends(get_flask_session)):
-        user_id = flask_session.get("user_id")
+    def login_page(request: Request, session: dict = Depends(get_session)):
+        user_id = session.get("user_id")
         if user_id:
             return RedirectResponse(url="/dashboard", status_code=302)
 
         csrf_token = secrets.token_urlsafe(32)
-        flask_session["csrf_token"] = csrf_token
-        cookie_val = create_flask_session_cookie(
-            flask_session.get("user_id") or 0,
-            flask_session.get("username") or "",
-            flask_session.get("role") or "jugador",
-            existing_session=flask_session,
+        session["csrf_token"] = csrf_token
+        cookie_val = create_session_cookie(
+            session.get("user_id") or 0,
+            session.get("username") or "",
+            session.get("role") or "jugador",
+            existing_session=session,
         )
 
         context = {
@@ -178,7 +202,7 @@ def register_pages_core_routes(
             "csrf_token_value": csrf_token,
             "url_for": url_for,
             "g": {"csp_nonce": secrets.token_urlsafe(32)},
-            "session": flask_session,
+            "session": session,
             "success": None,
             "remaining": None,
         }
@@ -188,30 +212,22 @@ def register_pages_core_routes(
         return response
 
     @pages_router.get("/register", response_class=HTMLResponse)
-    def register_page(request: Request, flask_session: dict = Depends(get_flask_session)):
-        if flask_session.get("user_id"):
+    def register_page(request: Request, session: dict = Depends(get_session)):
+        if session.get("user_id"):
             return RedirectResponse(url="/dashboard", status_code=302)
 
         csrf_token = secrets.token_urlsafe(32)
-        flask_session["csrf_token"] = csrf_token
-        cookie_val = create_flask_session_cookie(
-            flask_session.get("user_id") or 0,
-            flask_session.get("username") or "",
-            flask_session.get("role") or "jugador",
-            existing_session=flask_session,
+        session["csrf_token"] = csrf_token
+        cookie_val = create_session_cookie(
+            session.get("user_id") or 0,
+            session.get("username") or "",
+            session.get("role") or "jugador",
+            existing_session=session,
         )
-
-        session_data = {}
-        if flask_session.get("user_id"):
-            session_data = {
-                "user_id": flask_session.get("user_id"),
-                "username": flask_session.get("username"),
-                "role": flask_session.get("role"),
-            }
 
         context = {
             "remaining": request.query_params.get("remaining"),
-            "session": session_data,
+            "session": {},
             "csrf_token_value": csrf_token,
             "url_for": url_for,
             "g": {"csp_nonce": secrets.token_urlsafe(32)},
@@ -221,38 +237,26 @@ def register_pages_core_routes(
         return response
 
     @pages_router.get("/recover", response_class=HTMLResponse)
-    def recover_page(request: Request, flask_session: dict = Depends(get_flask_session)):
-        if flask_session.get("user_id"):
+    def recover_page(request: Request, session: dict = Depends(get_session)):
+        if session.get("user_id"):
             return RedirectResponse(url="/dashboard", status_code=302)
 
         csrf_token = secrets.token_urlsafe(32)
-        flask_session["csrf_token"] = csrf_token
-        cookie_val = create_flask_session_cookie(
-            flask_session.get("user_id") or 0,
-            flask_session.get("username") or "",
-            flask_session.get("role") or "jugador",
-            existing_session=flask_session,
+        session["csrf_token"] = csrf_token
+        cookie_val = create_session_cookie(
+            session.get("user_id") or 0,
+            session.get("username") or "",
+            session.get("role") or "jugador",
+            existing_session=session,
         )
 
-        session_data = {}
-        if flask_session.get("user_id"):
-            session_data = {
-                "user_id": flask_session.get("user_id"),
-                "username": flask_session.get("username"),
-                "role": flask_session.get("role"),
-            }
-
-        context = {"session": session_data, "csrf_token_value": csrf_token, "url_for": url_for, "g": {"csp_nonce": secrets.token_urlsafe(32)}}
+        context = {"session": {}, "csrf_token_value": csrf_token, "url_for": url_for, "g": {"csp_nonce": secrets.token_urlsafe(32)}}
         response = templates.TemplateResponse(request, "dockerlabs/auth/recover.html", context)
         response.set_cookie(key="session", value=cookie_val, httponly=True, secure=True, path="/", samesite="lax")
         return response
 
     @pages_router.get("/verify-email", response_class=HTMLResponse)
     def verify_email_page(request: Request, token: str = ""):
-        from datetime import datetime
-        from sqlalchemy.exc import IntegrityError
-        from dockerlabs.models import EmailVerificationToken, User
-
         error = None
         success = False
         username = ""
@@ -264,16 +268,16 @@ def register_pages_core_routes(
             if not pending:
                 error = "Enlace de verificacion invalido o ya utilizado."
             elif datetime.utcnow() > pending.expires_at:
-                alchemy_db.session.delete(pending)
-                alchemy_db.session.commit()
+                db.session.delete(pending)
+                db.session.commit()
                 error = "El enlace de verificacion ha expirado. Vuelve a registrarte."
             else:
                 existing = User.query.filter(
                     (User.username == pending.username) | (User.email == pending.email)
                 ).first()
                 if existing:
-                    alchemy_db.session.delete(pending)
-                    alchemy_db.session.commit()
+                    db.session.delete(pending)
+                    db.session.commit()
                     error = "El usuario o correo ya esta registrado."
                 else:
                     try:
@@ -283,16 +287,16 @@ def register_pages_core_routes(
                             password_hash=pending.password_hash,
                             role="jugador",
                         )
-                        alchemy_db.session.add(new_user)
-                        alchemy_db.session.delete(pending)
-                        alchemy_db.session.commit()
+                        db.session.add(new_user)
+                        db.session.delete(pending)
+                        db.session.commit()
                         success = True
                         username = new_user.username
                     except IntegrityError:
-                        alchemy_db.session.rollback()
+                        db.session.rollback()
                         error = "El usuario o correo ya esta registrado."
                     except Exception:
-                        alchemy_db.session.rollback()
+                        db.session.rollback()
                         error = "Error al crear la cuenta. Intentalo de nuevo."
 
         context = {
@@ -309,9 +313,6 @@ def register_pages_core_routes(
 
     @pages_router.get("/reset-password", response_class=HTMLResponse)
     def reset_password_page(request: Request, token: str = ""):
-        from datetime import datetime
-        from dockerlabs.models import PasswordResetToken
-
         error = None
         valid_token = False
 

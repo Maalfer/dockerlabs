@@ -1,9 +1,4 @@
-"""
-AUTH - Helpers de perfil e imagen.
-
-Las rutas Flask (/logout, /request_username_change) han sido migradas a FastAPI (routers.py).
-Este módulo solo conserva las funciones helper que se importan desde app.py y routers.py.
-"""
+"""Helpers de imagen de perfil de usuario."""
 
 import os
 from werkzeug.utils import secure_filename
@@ -50,8 +45,8 @@ def get_profile_image_url(username=None, user_id=None):
     if user_id:
         return f'/img/perfil/{user_id}'
     if username:
-        from .models import User as _User
-        user = _User.query.filter_by(username=username).first()
+        from .models import User
+        user = User.query.filter_by(username=username).first()
         if user:
             return f'/img/perfil/{user.id}'
     return '/static/dockerlabs/images/balu.webp'

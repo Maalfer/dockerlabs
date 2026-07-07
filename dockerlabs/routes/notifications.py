@@ -17,16 +17,16 @@ class SendNotificationRequest(BaseModel):
     notification_type: Optional[str] = None
 
 
-def register_notification_routes(api_router, get_flask_session, verify_csrf_token, alchemy_db):
+def register_notification_routes(api_router, get_session, verify_csrf_token, db):
     @api_router.post("/notifications/send")
     def api_send_notification(
         request: Request,
         request_data: SendNotificationRequest,
-        flask_session: dict = Depends(get_flask_session),
+        session: dict = Depends(get_session),
         csrf_ok: bool = Depends(verify_csrf_token),
     ):
         """Enviar una notificación (solo admin/moderador)."""
-        user_id = flask_session.get("user_id")
+        user_id = session.get("user_id")
         if not user_id:
             return JSONResponse(status_code=401, content={"success": False, "message": "Debes iniciar sesión"})
 
@@ -51,18 +51,18 @@ def register_notification_routes(api_router, get_flask_session, verify_csrf_toke
                 content=request_data.content,
                 notification_type=request_data.notification_type,
             )
-            alchemy_db.session.add(notification)
-            alchemy_db.session.commit()
+            db.session.add(notification)
+            db.session.commit()
         except Exception as e:
-            alchemy_db.session.rollback()
+            db.session.rollback()
             return JSONResponse(status_code=500, content={"success": False, "message": f"Error al enviar: {str(e)}"})
 
         return {"success": True, "message": "Notificación enviada"}
 
     @api_router.get("/notifications")
-    def api_get_notifications(request: Request, flask_session: dict = Depends(get_flask_session)):
+    def api_get_notifications(request: Request, session: dict = Depends(get_session)):
         """Obtener notificaciones del usuario."""
-        user_id = flask_session.get("user_id")
+        user_id = session.get("user_id")
         if not user_id:
             return JSONResponse(status_code=401, content={"success": False, "message": "Debes iniciar sesión"})
 
@@ -120,7 +120,7 @@ def register_notification_routes(api_router, get_flask_session, verify_csrf_toke
             Notification.receiver_id == user_id,
             Notification.read == False,  # noqa: E712
         ).count()
-        read_global_subq = alchemy_db.session.query(NotificationRead.notification_id).filter(
+        read_global_subq = db.session.query(NotificationRead.notification_id).filter(
             NotificationRead.user_id == user_id
         ).scalar_subquery()
         unread_global = Notification.query.filter(
@@ -132,9 +132,9 @@ def register_notification_routes(api_router, get_flask_session, verify_csrf_toke
         return {"success": True, "notifications": result, "unread_count": unread_count}
 
     @api_router.post("/notifications/{notification_id}/read")
-    def api_mark_notification_read(request: Request, notification_id: int, flask_session: dict = Depends(get_flask_session), csrf_ok: bool = Depends(verify_csrf_token)):
+    def api_mark_notification_read(request: Request, notification_id: int, session: dict = Depends(get_session), csrf_ok: bool = Depends(verify_csrf_token)):
         """Marcar notificación como leída."""
-        user_id = flask_session.get("user_id")
+        user_id = session.get("user_id")
         if not user_id:
             return JSONResponse(status_code=401, content={"success": False, "message": "Debes iniciar sesión"})
 
@@ -142,7 +142,7 @@ def register_notification_routes(api_router, get_flask_session, verify_csrf_toke
         if not notification:
             return JSONResponse(status_code=404, content={"success": False, "message": "Notificación no encontrada"})
 
-        if flask_session.get("role") != "admin" and notification.receiver_id is not None and notification.receiver_id != user_id:
+        if session.get("role") != "admin" and notification.receiver_id is not None and notification.receiver_id != user_id:
             return JSONResponse(status_code=403, content={"success": False, "message": "No autorizado"})
 
         try:
@@ -152,13 +152,13 @@ def register_notification_routes(api_router, get_flask_session, verify_csrf_toke
                     notification_id=notification_id, user_id=user_id
                 ).first()
                 if not exists:
-                    alchemy_db.session.add(NotificationRead(notification_id=notification_id, user_id=user_id))
-                    alchemy_db.session.commit()
+                    db.session.add(NotificationRead(notification_id=notification_id, user_id=user_id))
+                    db.session.commit()
             else:
                 notification.read = True
-                alchemy_db.session.commit()
+                db.session.commit()
         except Exception as e:
-            alchemy_db.session.rollback()
+            db.session.rollback()
             return JSONResponse(status_code=500, content={"success": False, "message": f"Error: {str(e)}"})
         return {"success": True}
 
@@ -170,11 +170,11 @@ def register_notification_routes(api_router, get_flask_session, verify_csrf_toke
         request: Request,
         notification_id: int,
         request_data: ReactRequest,
-        flask_session: dict = Depends(get_flask_session),
+        session: dict = Depends(get_session),
         csrf_ok: bool = Depends(verify_csrf_token),
     ):
         """Toggle una reacción emoji en una notificación."""
-        user_id = flask_session.get("user_id")
+        user_id = session.get("user_id")
         if not user_id:
             return JSONResponse(status_code=401, content={"success": False, "message": "Debes iniciar sesión"})
 
@@ -185,7 +185,7 @@ def register_notification_routes(api_router, get_flask_session, verify_csrf_toke
         if not notification:
             return JSONResponse(status_code=404, content={"success": False, "message": "Notificación no encontrada"})
 
-        if flask_session.get("role") != "admin" and notification.receiver_id is not None and notification.receiver_id != user_id:
+        if session.get("role") != "admin" and notification.receiver_id is not None and notification.receiver_id != user_id:
             return JSONResponse(status_code=403, content={"success": False, "message": "No autorizado"})
 
         existing = NotificationReaction.query.filter_by(
@@ -196,7 +196,7 @@ def register_notification_routes(api_router, get_flask_session, verify_csrf_toke
 
         try:
             if existing:
-                alchemy_db.session.delete(existing)
+                db.session.delete(existing)
                 reacted = False
             else:
                 reaction = NotificationReaction(
@@ -204,11 +204,11 @@ def register_notification_routes(api_router, get_flask_session, verify_csrf_toke
                     user_id=user_id,
                     emoji=request_data.emoji,
                 )
-                alchemy_db.session.add(reaction)
+                db.session.add(reaction)
                 reacted = True
-            alchemy_db.session.commit()
+            db.session.commit()
         except Exception as e:
-            alchemy_db.session.rollback()
+            db.session.rollback()
             return JSONResponse(status_code=500, content={"success": False, "message": f"Error: {str(e)}"})
 
         # Devolver conteo actualizado para este emoji
@@ -220,9 +220,9 @@ def register_notification_routes(api_router, get_flask_session, verify_csrf_toke
         return {"success": True, "reacted": reacted, "emoji": request_data.emoji, "count": count}
 
     @api_router.delete("/notifications/{notification_id}")
-    def api_delete_notification(request: Request, notification_id: int, flask_session: dict = Depends(get_flask_session), csrf_ok: bool = Depends(verify_csrf_token)):
+    def api_delete_notification(request: Request, notification_id: int, session: dict = Depends(get_session), csrf_ok: bool = Depends(verify_csrf_token)):
         """Eliminar notificación."""
-        user_id = flask_session.get("user_id")
+        user_id = session.get("user_id")
         if not user_id:
             return JSONResponse(status_code=401, content={"success": False, "message": "Debes iniciar sesión"})
 
@@ -230,14 +230,14 @@ def register_notification_routes(api_router, get_flask_session, verify_csrf_toke
         if not notification:
             return JSONResponse(status_code=404, content={"success": False, "message": "Notificación no encontrada"})
 
-        if flask_session.get("role") != "admin" and notification.receiver_id != user_id:
+        if session.get("role") != "admin" and notification.receiver_id != user_id:
             return JSONResponse(status_code=403, content={"success": False, "message": "No autorizado"})
 
         try:
-            alchemy_db.session.delete(notification)
-            alchemy_db.session.commit()
+            db.session.delete(notification)
+            db.session.commit()
         except Exception as e:
-            alchemy_db.session.rollback()
+            db.session.rollback()
             return JSONResponse(status_code=500, content={"success": False, "message": f"Error: {str(e)}"})
         return {"success": True, "message": "Notificación eliminada"}
 

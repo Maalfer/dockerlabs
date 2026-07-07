@@ -1,6 +1,6 @@
-// Utility function to escape HTML and prevent XSS attacks
+// Construye y muestra el modal de presentación de una máquina.
+// Todas las variables dinámicas se escapan con escapeHtml() para evitar XSS.
 function presentacion(nombre, dificultad, tamaño, clase, color, autor_nombre, autor_enlace, fecha, imagen, descripcion) {
-    // Escapar variables
     const escapedNombre = escapeHtml(nombre);
     const escapedDificultad = escapeHtml(dificultad);
     const escapedColor = escapeHtml(color); // El color viene de backend (ej: #f87171)
@@ -23,6 +23,57 @@ function presentacion(nombre, dificultad, tamaño, clase, color, autor_nombre, a
     closeButton.className = 'bunker-modal-close';
     closeButton.innerHTML = '&times;';
     closeButton.addEventListener('click', closePopup);
+
+    // 3.b Botón compartir (arriba a la izquierda)
+    var shareButton = document.createElement('button');
+    shareButton.className = 'bunker-modal-share';
+    shareButton.type = 'button';
+    shareButton.setAttribute('aria-label', 'Compartir máquina');
+    shareButton.innerHTML = '<i class="bi bi-share-fill"></i><span class="bunker-share-text">Compartir</span>';
+
+    // Tooltip de feedback ("¡Enlace copiado!")
+    var shareToast = document.createElement('span');
+    shareToast.className = 'bunker-share-toast';
+    shareButton.appendChild(shareToast);
+
+    shareButton.addEventListener('click', function (e) {
+        e.stopPropagation();
+        // El enlace usa el dominio público de BunkerLabs
+        var shareUrl = window.location.origin + '/bunkerlabs?maquina=' + encodeURIComponent(nombre);
+
+        function showCopied(ok) {
+            shareToast.textContent = ok ? '¡Enlace copiado!' : 'Copia manual: ' + shareUrl;
+            shareButton.classList.add('copied');
+            setTimeout(function () { shareButton.classList.remove('copied'); }, 2200);
+        }
+
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(shareUrl).then(function () {
+                showCopied(true);
+            }).catch(function () {
+                fallbackCopy(shareUrl, showCopied);
+            });
+        } else {
+            fallbackCopy(shareUrl, showCopied);
+        }
+    });
+
+    function fallbackCopy(text, cb) {
+        try {
+            var ta = document.createElement('textarea');
+            ta.value = text;
+            ta.style.position = 'fixed';
+            ta.style.opacity = '0';
+            document.body.appendChild(ta);
+            ta.focus();
+            ta.select();
+            var ok = document.execCommand('copy');
+            document.body.removeChild(ta);
+            cb(ok);
+        } catch (err) {
+            cb(false);
+        }
+    }
 
     // 4. Estructura interna
     var contentDiv = document.createElement('div');
@@ -144,6 +195,7 @@ function presentacion(nombre, dificultad, tamaño, clase, color, autor_nombre, a
     contentDiv.appendChild(bodyDiv);
     contentDiv.appendChild(descDiv); // Append description
 
+    popupDiv.appendChild(shareButton);
     popupDiv.appendChild(closeButton);
     popupDiv.appendChild(contentDiv);
 
@@ -176,10 +228,4 @@ function presentacion(nombre, dificultad, tamaño, clase, color, autor_nombre, a
         popupDiv.style.transform = 'translate(-50%, -50%)';
         overlayDiv.style.opacity = '1';
     }, 10);
-}
-
-// Función para ajustar el diseño del popup en función del tamaño de la pantalla
-function ajustarPopup(popupDiv, infoContainer, imagenElem, infoDiv) {
-    // La nueva estructura CSS maneja la mayoría de esto, pero mantenemos compatibilidad básica si se llama
-    // El CSS ya tiene media queries, así que esta función puede ser simplificada o eliminada en el futuro.
 }

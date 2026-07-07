@@ -1840,3 +1840,169 @@ footer {
 .error-text {
     color: #f87171;
 }
+
+/* ==========================================================================
+   Compartir máquina + resaltado "fosforito" de la máquina compartida
+   ========================================================================== */
+
+/* --- Botón "Compartir" (arriba a la izquierda del modal) --- */
+.bunker-modal-share {
+    position: absolute;
+    top: 1rem;
+    left: 1.25rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    padding: 0.4rem 0.85rem;
+    background: rgba(139, 92, 246, 0.12);
+    border: 1px solid rgba(139, 92, 246, 0.45);
+    color: #c4b5fd;
+    font-family: 'Inter', sans-serif;
+    font-size: 0.82rem;
+    font-weight: 600;
+    line-height: 1;
+    border-radius: 999px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    z-index: 3;
+}
+
+.bunker-modal-share:hover {
+    background: rgba(139, 92, 246, 0.25);
+    border-color: rgba(167, 139, 250, 0.85);
+    color: #fff;
+    box-shadow: 0 0 16px rgba(139, 92, 246, 0.45);
+    transform: translateY(-1px);
+}
+
+.bunker-modal-share i {
+    font-size: 0.9rem;
+}
+
+.bunker-modal-share.copied {
+    background: rgba(34, 211, 238, 0.18);
+    border-color: rgba(34, 211, 238, 0.75);
+    color: #a5f3fc;
+    box-shadow: 0 0 18px rgba(34, 211, 238, 0.5);
+}
+
+/* Tooltip de confirmación */
+.bunker-share-toast {
+    position: absolute;
+    top: calc(100% + 8px);
+    left: 0;
+    white-space: nowrap;
+    background: #0f172a;
+    color: #a5f3fc;
+    border: 1px solid rgba(34, 211, 238, 0.5);
+    padding: 0.35rem 0.6rem;
+    border-radius: 8px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    opacity: 0;
+    transform: translateY(-4px);
+    pointer-events: none;
+    transition: opacity 0.2s ease, transform 0.2s ease;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.5);
+}
+
+.bunker-modal-share.copied .bunker-share-toast {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+@media (max-width: 480px) {
+    .bunker-share-text { display: none; }
+    .bunker-modal-share { padding: 0.4rem 0.55rem; top: 0.9rem; left: 0.9rem; }
+}
+
+/* --- Resaltado "fosforito" de la máquina compartida --- */
+@keyframes sharedPulse {
+    0%, 100% {
+        box-shadow: 0 0 0 2px rgba(167, 139, 250, 0.90),
+                    0 0 18px 2px rgba(139, 92, 246, 0.55),
+                    0 0 40px 6px rgba(34, 211, 238, 0.25);
+    }
+    50% {
+        box-shadow: 0 0 0 2px rgba(34, 211, 238, 0.95),
+                    0 0 26px 6px rgba(139, 92, 246, 0.75),
+                    0 0 60px 12px rgba(34, 211, 238, 0.40);
+    }
+}
+
+@keyframes sharedSweep {
+    0%   { background-position: 0% 50%; }
+    100% { background-position: 200% 50%; }
+}
+
+.item.shared-highlight {
+    overflow: visible;
+    z-index: 6;
+    border-color: transparent !important;
+    animation: sharedPulse 1.8s ease-in-out infinite;
+}
+
+/* Borde degradado animado tipo neón (marco) */
+.item.shared-highlight::after {
+    content: "";
+    position: absolute;
+    inset: -2px;
+    border-radius: 14px;
+    padding: 2px;
+    background: linear-gradient(90deg, #a78bfa, #22d3ee, #f472b6, #a78bfa);
+    background-size: 200% 100%;
+    animation: sharedSweep 3s linear infinite;
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    mask-composite: exclude;
+    pointer-events: none;
+    z-index: 1;
+}
+
+.item.shared-highlight span:first-child {
+    color: #fff;
+    text-shadow: 0 0 10px rgba(167, 139, 250, 0.7);
+}
+
+/* Chip flotante "Compartida" */
+.shared-badge {
+    position: absolute;
+    top: -13px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    padding: 0.22rem 0.7rem;
+    font-family: 'Inter', sans-serif;
+    font-size: 0.72rem;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: #0b1020;
+    background: linear-gradient(135deg, #a78bfa, #22d3ee);
+    border-radius: 999px;
+    box-shadow: 0 4px 14px rgba(34, 211, 238, 0.5), 0 0 0 2px rgba(11, 16, 32, 0.6);
+    white-space: nowrap;
+    z-index: 3;
+    animation: sharedBadgeIn 0.4s ease both, sharedBadgeFloat 2.4s ease-in-out 0.4s infinite;
+}
+
+.shared-badge i { font-size: 0.8rem; }
+
+@keyframes sharedBadgeIn {
+    from { opacity: 0; transform: translateX(-50%) translateY(6px) scale(0.8); }
+    to   { opacity: 1; transform: translateX(-50%) translateY(0) scale(1); }
+}
+
+@keyframes sharedBadgeFloat {
+    0%, 100% { transform: translateX(-50%) translateY(0); }
+    50%      { transform: translateX(-50%) translateY(-3px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .item.shared-highlight,
+    .item.shared-highlight::after,
+    .shared-badge { animation: none; }
+}

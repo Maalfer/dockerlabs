@@ -1,9 +1,9 @@
 {% extends "dockerlabs/base.html" %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{{ url_for('static', filename='dockerlabs/css/info/add-maquina.css') }}"
+<link rel="stylesheet" href="{{ static_v('dockerlabs/css/info/add-maquina.css') }}"
       media="print" onload="this.media='all'">
-<noscript><link rel="stylesheet" href="{{ url_for('static', filename='dockerlabs/css/info/add-maquina.css') }}"></noscript>
+<noscript><link rel="stylesheet" href="{{ static_v('dockerlabs/css/info/add-maquina.css') }}"></noscript>
 {% endblock %}
 
 {% block title %}Añadir máquina - DockerLabs{% endblock %}
@@ -357,6 +357,10 @@
                             <span class="dest-icon">🔒</span>
                             <span class="dest-label">BunkerLabs</span>
                         </button>
+                        <button type="button" class="dest-tab" data-value="empezar" onclick="setDestino('empezar')">
+                            <span class="dest-icon">🐣</span>
+                            <span class="dest-label">Empezar de 0</span>
+                        </button>
                     </div>
                     <input type="hidden" name="destino" id="destino" value="docker">
                 </div>
@@ -369,12 +373,12 @@
                             <label>Nombre de la máquina <span class="required">*</span></label>
                             <input type="text" name="nombre" id="nombre" placeholder="ej. Alpine" required>
                         </div>
-                        <div class="field">
+                        <div class="field" id="fecha-field">
                             <label>Fecha de publicación <span class="required">*</span></label>
                             <input type="date" name="fecha" id="fecha" required>
                         </div>
                     </div>
-                    <div class="field">
+                    <div class="field" id="autor-field">
                         <label>Autor <span class="required">*</span></label>
                         <div class="custom-select-wrapper">
                             <input type="text" id="autor-search" placeholder="Buscar usuario registrado…" autocomplete="off">
@@ -399,8 +403,18 @@
                     </div>
                 </div>
 
+                <!-- Empezar de 0: solo .py -->
+                <div class="form-section" id="empezar-section" style="display:none;">
+                    <div class="form-section-title">Script del laboratorio (.py)</div>
+                    <div class="field">
+                        <label>Archivo .py <span class="required">*</span></label>
+                        <input type="file" name="script" id="script" accept=".py,text/x-python,text/plain">
+                        <div class="field-hint">Sube el único <code>.py</code> del laboratorio. Para estos labs solo se piden el nombre y este archivo.</div>
+                    </div>
+                </div>
+
                 <!-- Content -->
-                <div class="form-section">
+                <div class="form-section" id="content-section">
                     <div class="form-section-title">Contenido</div>
                     <div class="field">
                         <label>Descripción <span class="required">*</span></label>
@@ -499,6 +513,15 @@ function updateActiveOption(opts) {
 function setDestino(val) {
     document.getElementById('destino').value = val;
     document.querySelectorAll('.dest-tab').forEach(t => t.classList.toggle('active', t.dataset.value === val));
+
+    // "Empezar de 0" solo pide nombre + .py: ocultamos el resto de secciones.
+    const isEmpezar = (val === 'empezar');
+    ['fecha-field', 'autor-field', 'dificultad-section', 'content-section'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.style.display = isEmpezar ? 'none' : '';
+    });
+    const emp = document.getElementById('empezar-section');
+    if (emp) emp.style.display = isEmpezar ? '' : 'none';
 }
 
 const diffMap = { 'Muy Fácil': 'muy-facil', 'Fácil': 'facil', 'Medio': 'medio', 'Difícil': 'dificil' };
@@ -540,6 +563,10 @@ async function submitForm() {
     const destino = document.getElementById('destino').value;
 
     if (!nombre) { alert('El nombre de la máquina es obligatorio.'); return; }
+
+    // Flujo "Empezar de 0": solo nombre + .py
+    if (destino === 'empezar') { return submitEmpezar(nombre); }
+
     if (!dificultad) { alert('Selecciona una dificultad.'); return; }
     if (!autor) { alert('Selecciona un autor.'); return; }
     if (!fecha) { alert('La fecha es obligatoria.'); return; }
@@ -556,9 +583,7 @@ async function submitForm() {
     const payload = {
         nombre, dificultad, autor, fecha, descripcion,
         link_descarga,
-        imagen: imageFile ? imageFile.name : 'dockerlabs/images/logos/logo_120.png',
-        destino,
-        entorno_real: false
+        destino
     };
 
     try {
@@ -569,10 +594,67 @@ async function submitForm() {
         });
         const result = await resp.json();
         if (resp.ok && result.success) {
+            // Subir la imagen de portada (logo) de la máquina recién creada
+            if (imageFile && result.machine_id) {
+                try {
+                    const logoData = new FormData();
+                    logoData.append('logo', imageFile);
+                    logoData.append('machine_id', result.machine_id);
+                    logoData.append('origen', result.origen || destino);
+                    logoData.append('csrf_token', csrfToken);
+                    const logoResp = await fetch('/api/gestion-maquinas/upload-logo', { method: 'POST', body: logoData });
+                    const logoResult = await logoResp.json().catch(() => ({}));
+                    if (!logoResp.ok || logoResult.error) {
+                        alert('Máquina creada, pero no se pudo subir la portada: ' + (logoResult.error || 'error desconocido') + '. Puedes subirla desde Gestión de máquinas.');
+                    }
+                } catch (e) {
+                    alert('Máquina creada, pero no se pudo subir la portada. Puedes subirla desde Gestión de máquinas.');
+                }
+            }
             alert(result.message || 'Máquina añadida correctamente');
             window.location.href = result.redirect_url || '/';
         } else {
             alert(result.error || result.message || 'Error al añadir la máquina');
+            btn.disabled = false;
+            btnText.style.display = 'inline';
+            btnLoader.style.display = 'none';
+        }
+    } catch (err) {
+        alert('Error de conexión con el servidor');
+        btn.disabled = false;
+        btnText.style.display = 'inline';
+        btnLoader.style.display = 'none';
+    }
+}
+
+async function submitEmpezar(nombre) {
+    const form = document.getElementById('add-form');
+    const btn = document.getElementById('submit-btn');
+    const btnText = btn.querySelector('.btn-text');
+    const btnLoader = btn.querySelector('.btn-loader');
+
+    const scriptFile = document.getElementById('script').files[0];
+    if (!scriptFile) { alert('Debes subir el archivo .py del laboratorio.'); return; }
+    if (!scriptFile.name.toLowerCase().endsWith('.py')) { alert('El archivo debe tener extensión .py'); return; }
+
+    btn.disabled = true;
+    btnText.style.display = 'none';
+    btnLoader.style.display = 'inline-flex';
+
+    const csrfToken = form.querySelector('input[name="csrf_token"]').value;
+    const data = new FormData();
+    data.append('nombre', nombre);
+    data.append('script', scriptFile);
+    data.append('csrf_token', csrfToken);
+
+    try {
+        const resp = await fetch('/api/empezar/add', { method: 'POST', body: data });
+        const result = await resp.json().catch(() => ({}));
+        if (resp.ok && result.success) {
+            alert(result.message || 'Lab de iniciación creado correctamente');
+            window.location.href = '/';
+        } else {
+            alert(result.error || result.message || 'Error al crear el laboratorio');
             btn.disabled = false;
             btnText.style.display = 'inline';
             btnLoader.style.display = 'none';

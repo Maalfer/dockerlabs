@@ -1,9 +1,9 @@
 {% extends "dockerlabs/base.html" %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{{ url_for('static', filename='dockerlabs/css/writeups_recibidos.css') }}"
+<link rel="stylesheet" href="{{ static_v('dockerlabs/css/writeups_recibidos.css') }}"
       media="print" onload="this.media='all'">
-<noscript><link rel="stylesheet" href="{{ url_for('static', filename='dockerlabs/css/writeups_recibidos.css') }}"></noscript>
+<noscript><link rel="stylesheet" href="{{ static_v('dockerlabs/css/writeups_recibidos.css') }}"></noscript>
 {% endblock %}
 
 {% block title %}Writeups Recibidos - DockerLabs{% endblock %}
@@ -90,5 +90,5 @@
     const currentUserRole = "{{ user.role if user.role else '' }}";
     const currentUsername = "{{ user.username if user.username else '' }}";
 </script>
-<script src="{{ url_for('static', filename='dockerlabs/js/writeups_recibidos.js') }}"></script>
+<script src="{{ static_v('dockerlabs/js/writeups_recibidos.js') }}"></script>
 {% endblock %}

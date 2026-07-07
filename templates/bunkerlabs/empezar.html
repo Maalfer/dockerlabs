@@ -1,0 +1,207 @@
+{% extends "bunkerlabs/base.html" %}
+
+{% block title %}Empezar de 0 · BunkerLabs{% endblock %}
+
+{% block content %}
+
+<style>
+    /* ===========================================================
+       "Empezar de 0": misma familia visual que BunkerLabs (morado
+       Tokyo-Night) pero un punto MÁS OSCURO y con tarjetas modernas.
+       Todo scoped a .empezar-page salvo body/footer (página propia).
+       =========================================================== */
+
+    /* Fondo un poco más profundo que el de BunkerLabs, mismo tinte morado */
+    body {
+        background:
+            radial-gradient(circle at 15% 0%, rgba(126, 87, 194, 0.16) 0%, transparent 45%),
+            radial-gradient(circle at 85% 105%, rgba(126, 87, 194, 0.10) 0%, transparent 50%),
+            #121320;
+        background-attachment: fixed;
+    }
+
+    /* El footer deja de ser una franja clara (#24283B) y se funde con el fondo */
+    .bunker-footer {
+        background: transparent;
+    }
+
+    .empezar-page {
+        max-width: 1040px;
+    }
+
+    /* Barra superior propia (sin la "baggage" de la clase .header) */
+    .empezar-page .empezar-toolbar {
+        display: flex;
+        align-items: center;
+        gap: .6rem;
+        margin: .25rem 0 1.5rem;
+    }
+    .empezar-page .empezar-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: .35rem;
+        font-size: .78rem;
+        font-weight: 600;
+        padding: .42rem .8rem;
+        border-radius: 9px;
+        color: var(--bunker-text);
+        text-decoration: none;
+        background: rgba(126, 87, 194, 0.10);
+        border: 1px solid rgba(126, 87, 194, 0.28);
+        transition: all .2s ease;
+    }
+    .empezar-page .empezar-btn:hover {
+        background: rgba(126, 87, 194, 0.22);
+        border-color: var(--bunker-primary-light);
+        box-shadow: 0 0 12px rgba(126, 87, 194, 0.30);
+        transform: translateY(-1px);
+    }
+
+    /* Buscador de labs */
+    .empezar-page .empezar-search {
+        margin-left: auto;
+        min-width: 180px;
+        max-width: 260px;
+        font-size: .78rem;
+        padding: .42rem .8rem;
+        border-radius: 9px;
+        color: var(--bunker-text);
+        background: rgba(126, 87, 194, 0.08);
+        border: 1px solid rgba(126, 87, 194, 0.28);
+        outline: none;
+        transition: all .2s ease;
+    }
+    .empezar-page .empezar-search::placeholder {
+        color: var(--bunker-text-muted);
+    }
+    .empezar-page .empezar-search:focus {
+        border-color: var(--bunker-primary-light);
+        background: rgba(126, 87, 194, 0.14);
+        box-shadow: 0 0 12px rgba(126, 87, 194, 0.30);
+    }
+
+    /* Rejilla de cuadraditos pequeños */
+    .empezar-page .machines-grid {
+        grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
+        gap: .7rem;
+    }
+
+    /* Tarjeta cuadrada y clicable (toda la tarjeta descarga el .py) */
+    .empezar-page .machines-grid .item {
+        min-height: 0;
+        aspect-ratio: 1 / 1;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        text-align: center;
+        gap: .3rem;
+        padding: .4rem;
+        border-radius: 12px;
+        background: linear-gradient(160deg, var(--bunker-surface) 0%, var(--bunker-background) 100%);
+        border: 1px solid var(--bunker-border-soft);
+        box-shadow: var(--bunker-shadow);
+        text-decoration: none;
+        color: inherit;
+        cursor: pointer;
+        transition: transform .2s ease, box-shadow .25s ease, border-color .25s ease;
+    }
+    .empezar-page .machines-grid .item::before {
+        display: none;
+    }
+    .empezar-page .machines-grid .item:hover {
+        transform: translateY(-5px);
+        border-color: var(--bunker-primary-light);
+        box-shadow: var(--bunker-glow), 0 10px 22px rgba(0, 0, 0, 0.45);
+    }
+    .empezar-page .machines-grid .item:focus-visible {
+        outline: 2px solid var(--bunker-primary-light);
+        outline-offset: 3px;
+    }
+
+    /* Icono .py como elemento protagonista */
+    .empezar-page .machines-grid .item .lab-icon {
+        font-size: 1.65rem;
+        line-height: 1;
+        color: var(--bunker-secondary);
+        transition: color .2s ease, transform .2s ease;
+    }
+    .empezar-page .machines-grid .item:hover .lab-icon {
+        color: var(--bunker-primary-light);
+        transform: scale(1.1);
+    }
+
+    /* Nombre del lab */
+    .empezar-page .machines-grid .item .lab-name {
+        font-size: .72rem;
+        font-weight: 600;
+        line-height: 1.12;
+        word-break: break-word;
+        color: var(--bunker-text);
+    }
+
+    /* Estado vacío */
+    .empezar-page .machines-grid > p {
+        grid-column: 1 / -1;
+        color: var(--bunker-text-muted);
+    }
+</style>
+
+<div class="container empezar-page">
+
+    <div class="empezar-toolbar">
+        <a href="/bunkerlabs" class="empezar-btn">← BunkerLabs</a>
+        <a href="{{ static_v('dockerlabs/scripts/lab.py') }}" download="lab.py" class="empezar-btn">📄 Plantilla lab.py</a>
+        <input type="text" id="lab-search" class="empezar-search" placeholder="🔎 Buscar lab..." autocomplete="off">
+    </div>
+
+    <div class="machines-grid">
+
+        {% for maquina in maquinas %}
+        <a class="item {{ maquina.clase }}" href="/bunkerlabs/empezar/descargar/{{ maquina.id }}"
+            title="Descargar {{ maquina.nombre }}.py">
+            <i class="bi bi-filetype-py lab-icon"></i>
+            <span class="lab-name">{{ maquina.nombre }}</span>
+        </a>
+        {% endfor %}
+
+        {% if not maquinas %}
+        <p class="text-center" style="opacity:.7;">
+            Aún no hay laboratorios de iniciación. Súbelos desde
+            «Añadir máquina» → pestaña «Empezar de 0».
+        </p>
+        {% endif %}
+
+        <p id="lab-no-results" class="text-center" style="display:none; opacity:.7;">
+            No hay labs que coincidan con la búsqueda.
+        </p>
+
+    </div>
+    <!-- END OF LABS GRID -->
+
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script nonce="{{ csp_nonce }}">
+    (function () {
+        const input = document.getElementById('lab-search');
+        if (!input) return;
+        const items = Array.prototype.slice.call(document.querySelectorAll('.machines-grid .item'));
+        const noResults = document.getElementById('lab-no-results');
+        input.addEventListener('input', function () {
+            const q = this.value.trim().toLowerCase();
+            let visible = 0;
+            items.forEach(function (it) {
+                const nameEl = it.querySelector('.lab-name');
+                const name = (nameEl ? nameEl.textContent : '').toLowerCase();
+                const match = name.indexOf(q) !== -1;
+                it.style.display = match ? '' : 'none';
+                if (match) visible++;
+            });
+            if (noResults) noResults.style.display = (items.length && visible === 0) ? '' : 'none';
+        });
+    })();
+</script>
+{% endblock %}

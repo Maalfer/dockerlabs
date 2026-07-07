@@ -1,9 +1,9 @@
 {% extends "dockerlabs/base.html" %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{{ url_for('static', filename='dockerlabs/css/gestion_maquinas.css') }}?v=2"
+<link rel="stylesheet" href="{{ static_v('dockerlabs/css/gestion_maquinas.css') }}"
       media="print" onload="this.media='all'">
-<noscript><link rel="stylesheet" href="{{ url_for('static', filename='dockerlabs/css/gestion_maquinas.css') }}?v=2"></noscript>
+<noscript><link rel="stylesheet" href="{{ static_v('dockerlabs/css/gestion_maquinas.css') }}"></noscript>
 {% endblock %}
 
 {% block title %}Gestión de Máquinas - DockerLabs{% endblock %}
@@ -400,5 +400,5 @@
 {% endblock %}
 
 {% block scripts %}
-<script src="{{ url_for('static', filename='dockerlabs/js/gestion_maquinas.js') }}?v=4"></script>
+<script src="{{ static_v('dockerlabs/js/gestion_maquinas.js') }}"></script>
 {% endblock %}

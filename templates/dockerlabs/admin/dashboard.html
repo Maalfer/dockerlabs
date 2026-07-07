@@ -1,9 +1,9 @@
 {% extends "dockerlabs/base.html" %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{{ url_for('static', filename='dockerlabs/css/dashboard.css') }}"
+<link rel="stylesheet" href="{{ static_v('dockerlabs/css/dashboard.css') }}"
       media="print" onload="this.media='all'">
-<noscript><link rel="stylesheet" href="{{ url_for('static', filename='dockerlabs/css/dashboard.css') }}"></noscript>
+<noscript><link rel="stylesheet" href="{{ static_v('dockerlabs/css/dashboard.css') }}"></noscript>
 {% endblock %}
 
 {% block title %}Dashboard - DockerLabs{% endblock %}
@@ -96,6 +96,15 @@
                             <label for="bio"><i class="bi bi-card-text"></i> Biografía</label>
                             <textarea id="bio" class="form-control" rows="3"
                                 placeholder="Cuéntanos algo sobre ti...">{{ user.biography or '' }}</textarea>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="nombre_diploma"><i class="bi bi-patch-check-fill"></i> Nombre para diplomas</label>
+                            <input type="text" id="nombre_diploma" class="form-control"
+                                maxlength="100"
+                                placeholder="Nombre que aparecerá en tus certificados"
+                                value="{{ user.nombre_diploma or '' }}">
+                            <small class="text-muted">Si lo dejas vacío se usará tu nombre de usuario.</small>
                         </div>
 
                         <div class="form-actions">
@@ -247,6 +256,28 @@
         </div>
         {% endif %}
 
+
+        <div class="security-section" style="margin-top: 2rem;">
+            <div class="section-header">
+                <h2><i class="bi bi-patch-check-fill" style="color:#2dd4bf;"></i> Mis Certificados</h2>
+            </div>
+            <div class="security-content" style="display:flex;align-items:center;gap:1.5rem;flex-wrap:wrap;">
+                <p style="color:#94a3b8;font-size:0.95rem;margin:0;">
+                    Consulta y descarga tus diplomas, y verifica la autenticidad de cualquier certificado de DockerLabs.
+                </p>
+                <a href="/certificados"
+                   style="display:inline-flex;align-items:center;gap:0.55rem;white-space:nowrap;
+                          padding:0.7rem 1.5rem;border-radius:12px;font-size:0.95rem;font-weight:700;
+                          background:linear-gradient(135deg,#0d9488,#2dd4bf);color:#fff;
+                          text-decoration:none;transition:all 0.2s;
+                          box-shadow:0 4px 14px rgba(45,212,191,0.3);"
+                   onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 6px 20px rgba(45,212,191,0.45)'"
+                   onmouseout="this.style.transform='';this.style.boxShadow='0 4px 14px rgba(45,212,191,0.3)'">
+                    <i class="bi bi-patch-check-fill"></i> Ver Mis Certificados
+                </a>
+            </div>
+        </div>
+
     </div>
 </div>
 
@@ -363,7 +394,7 @@
 {% endblock %}
 
 {% block scripts %}
-<script src="{{ url_for('static', filename='dockerlabs/js/dashboard.js') }}"></script>
+<script src="{{ static_v('dockerlabs/js/dashboard.js') }}"></script>
 <script>
     function openUsernameChangeModal() {
         const val = document.getElementById('requested_username').value;
@@ -560,5 +591,12 @@
             preview.textContent = content;
         }
     }
+
+    function escapeHtml(t) {
+        const d = document.createElement("div");
+        d.appendChild(document.createTextNode(t || ""));
+        return d.innerHTML;
+    }
+
 </script>
 {% endblock %}

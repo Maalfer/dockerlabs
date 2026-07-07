@@ -1,241 +1,82 @@
-# Dockerlabs - Agent Rules & Architecture Decisions
+# DockerLabs – Arquitectura y decisiones de diseño
 
-## 1. Almacenamiento de Imágenes Multimedia
+## 1. Almacenamiento de imágenes
 
-Las imágenes de perfil y logotipos de máquinas se almacenan en el sistema de archivos bajo `database/almacenamiento/` con la siguiente estructura:
+Las imágenes de perfil y logos de máquinas se guardan en `uploads/`:
 
 ```
-database/almacenamiento/
-├── perfiles/          # Fotos de perfil de usuarios
-└── logos/             # Logotipos de máquinas
+uploads/
+├── perfiles/    # user_{user_id}_{timestamp}.webp
+└── logos/       # docker_{machine_id}_{timestamp}.webp  |  bunker_{...}.webp
 ```
 
-### Control de Versiones (Git)
+El timestamp evita colisiones entre versiones. `.gitignore` excluye los archivos de imagen pero Git sí trackea las carpetas (via `.gitkeep`).
 
-**IMPORTANTE:** La carpeta `database/almacenamiento/` y sus subcarpetas deben incluirse en el repositorio Git, **pero sin las imágenes**. Esto garantiza que la estructura de directorios exista al clonar el proyecto.
+Las columnas `profile_image_data` y `logo_data` (BLOB) están marcadas como `deferred` en los modelos y solo se acceden si `*_path` es NULL — compatibilidad con datos anteriores a la migración a disco.
 
-**Configuración en `.gitignore`:**
-```gitignore
-# Ignorar solo los archivos de imagen, no las carpetas
-database/almacenamiento/**/*.jpg
-database/almacenamiento/**/*.jpeg
-database/almacenamiento/**/*.png
-database/almacenamiento/**/*.gif
-database/almacenamiento/**/*.webp
-database/almacenamiento/**/*.svg
-database/almacenamiento/**/*.bmp
-database/almacenamiento/**/*.ico
-```
+## 2. Stack técnico
 
-**Archivos `.gitkeep`:** Usar archivos `.gitkeep` vacíos en cada subcarpeta para asegurar que Git trackee la estructura de directorios.
+- **FastAPI** + Uvicorn (4 workers en producción)
+- **MariaDB** via PyMySQL y SQLAlchemy
+- **Jinja2** para templates HTML
+- **itsdangerous** para firmado de cookies de sesión
+- **Werkzeug** para hashing de contraseñas (scrypt) y `secure_filename`
+- **PIL/Pillow** para procesamiento de imágenes (WebP)
+- **Apache** como reverse proxy con SSL/TLS (Let's Encrypt)
 
-### Convenciones de Nombres (Estandarizadas)
+## 3. Base de datos
 
-| Tipo | Patrón | Ejemplo |
-|------|--------|---------|
-| Perfiles | `user_{user_id}_{timestamp}.{ext}` | `user_123_1699123456.jpg` |
-| Logos DockerLabs | `docker_{machine_id}_{timestamp}.{ext}` | `docker_456_1699123456.png` |
-| Logos BunkerLabs | `bunker_{machine_id}_{timestamp}.{ext}` | `bunker_789_1699123456.webp` |
+El `scoped_session` está indexado por un `ContextVar` por request (no por hilo), porque Uvicorn ejecuta los endpoints síncronos en un threadpool mientras el middleware corre en el event loop. La sesión se crea en el worker y se limpia en el middleware al finalizar el request.
 
-- El `timestamp` permite múltiples versiones sin sobrescribir archivos anteriores
-- Las extensiones permitidas: `.jpg`, `.jpeg`, `.png`, `.gif`, `.webp`, `.svg` (solo logos)
-- **Compatibilidad legacy:** Se mantiene soporte para imágenes almacenadas como BLOB en la base de datos (`profile_image_data`, `logo_data`)
+## 4. Sesiones
 
-### Referencias en Base de Datos
+Sesiones firmadas con `URLSafeTimedSerializer` de itsdangerous. La clave secreta vive en la tabla `session_config` (persiste entre reinicios del servicio).
 
-- `User.profile_image_path` → `database/almacenamiento/perfiles/{filename}`
-- `Machine.logo_path` → `database/almacenamiento/logos/{filename}`
+Función de inyección: `get_session(request)` en `routers.py`. Devuelve un dict con `user_id`, `username`, `role`, `csrf_token`.
 
-## 2. Stack Tecnológico
+## 5. CSRF
 
-### Backend (Arquitectura Híbrida FastAPI + Flask)
+Token HMAC stateless: `HMAC-SHA256(secret_key, session._id)`. No se persiste en la cookie — se recalcula en cada request a partir del `_id` de sesión. Los endpoints de escritura validan via `Depends(verify_csrf_token)`.
 
-- **FastAPI:** Framework principal para endpoints API (`/api/*`) y páginas HTML
-- **Flask:** Mantenido para compatibilidad con endpoints legacy (transición progresiva)
-- **SQLAlchemy:** ORM para base de datos SQLite
-- **Jinja2:** Motor de templates para renderizado HTML
-- **SlowAPI:** Rate limiting compatible con FastAPI y sesiones Flask
-
-### Estructura de Routers
+## 6. Estructura de routers
 
 ```python
-api_router = APIRouter(prefix="/api")      # Endpoints API REST
-pages_router = APIRouter()                  # Páginas HTML (sin prefijo)
+api_router   = APIRouter(prefix="/api")   # /api/*
+pages_router = APIRouter()                # Páginas HTML sin prefijo
 ```
 
-### Frontend
+Los submódulos bajo `routes/` se registran al final de `routers.py` via funciones `register_*_routes(api_router, pages_router, get_session, db, ...)`.
 
-- **Vanilla JS:** Sin frameworks reactivos (React/Vue/Angular)
-- **Bootstrap 5.3:** Framework CSS
-- **Jinja2 Templates:** Renderizado server-side
-- **Fetch API:** Para llamadas AJAX a endpoints
+## 7. DockerLabs vs BunkerLabs
 
-## 3. Autenticación y Seguridad
+Las dos plataformas comparten modelos y base de datos. Se distinguen por el campo `origen`:
+- `"docker"` → DockerLabs (acceso público)
+- `"bunker"` → BunkerLabs (acceso por PIN o invitación)
 
-### Sesiones
+BunkerLabs tiene un campo adicional `pin` y el modo `entorno_real` que omite el PIN y fija la dificultad a "Real".
 
-- Sesiones Flask compatibles via `SecureCookieSessionInterface`
-- `flask_session` inyectado en endpoints via `Depends(get_flask_session)`
-- Cookie `session` con `httponly=True, samesite=lax`
+## 8. Rate limiting
 
-### CSRF Tokens (Crítico)
+Middleware ASGI personalizado en `asgi.py`: 300 req/min por IP, ventana deslizante en memoria. Excluye `/static/`, `/img/` y `/database/`. Al ser en memoria, el límite efectivo con 4 workers es 300×4 por IP; suficiente para producción sin dependencias externas.
 
-**Generación y almacenamiento:**
-```python
-csrf_token = flask_session.get("csrf_token")
-if not csrf_token:
-    csrf_token = secrets.token_urlsafe(32)
-    flask_session["csrf_token"] = csrf_token
-```
+## 9. Seguridad en uploads
 
-**En templates:**
-- Meta tag: `<meta name="csrf-token" content="{{ csrf_token_value }}">`
-- Todas las páginas deben pasar `csrf_token_value` al contexto
+1. Verificación de tipo MIME (`content_type.startswith('image/')`)
+2. Apertura y verificación con PIL (`img.verify()`)
+3. Validación de contenido con `validators.validate_image_content()`
+4. Conversión a WebP antes de guardar (excepto SVG en logos)
+5. `secure_filename()` en el nombre original
+6. Límites de tamaño: 5 MB perfiles, 2 MB logos
 
-**Validación en endpoints:**
-- Header requerido: `X-CSRFToken` (o `X-CSRF-Token`)
-- Validación via: `Depends(verify_csrf_token)`
-- Para POST de formularios tradicionales, también se acepta campo `csrf_token`
+## 10. Cache-busting de estáticos
 
-### Contexto Requerido en Templates
+La función `static_v(filename)` en Jinja2 añade `?v=<mtime_hex>` a los assets. Cuando se modifica un archivo su mtime cambia → la URL cambia → navegadores y CDN descargan la versión nueva sin necesidad de invalidar manualmente.
 
-Todas las páginas deben incluir en el contexto:
-- `url_for`: Función para generar URLs
-- `current_user_role`: Rol del usuario actual (string)
-- `csrf_token_value`: Token CSRF para peticiones POST
-- `session`: Datos básicos de sesión
-- `g`: Objeto con `csp_nonce` para scripts inline
+## 11. Reglas para IAs y agentes que trabajen en este proyecto
 
-## 4. Gestión de Templates
-
-### Variables Globales Requeridas
-
-```python
-{
-    "request": request,                    # Requerido por Jinja2
-    "url_for": url_for,                    # Generación de URLs
-    "current_user_role": role,             # Rol para mostrar/ocultar botones
-    "csrf_token_value": csrf_token,        # Token para POSTs
-    "session": session_data,               # Datos de sesión
-    "g": {"csp_nonce": csp_nonce}        # Nonce para CSP
-}
-```
-
-### Jerarquía de Templates
-
-- `base.html`: Layout principal con navegación
-- `dockerlabs/`: Templates de DockerLabs principal
-- `bunkerlabs/`: Templates de BunkerLabs (zona protegida)
-- `dockerlabs/auth/`: Login, registro, recuperación
-- `dockerlabs/admin/`: Gestión de usuarios, máquinas, backups
-- `dockerlabs/user/`: Perfil, estadísticas, writeups
-
-## 5. Multi-Dominio: DockerLabs vs BunkerLabs
-
-| Característica | DockerLabs | BunkerLabs |
-|----------------|------------|------------|
-| **Origen** | `origen="docker"` | `origen="bunker"` |
-| **URL** | `/` | `/bunkerlabs` |
-| **Dificultad** | Muy Fácil, Fácil, Medio, Difícil | Muy Fácil, Fácil, Medio, Difícil, Real |
-| **PIN** | Opcional | Requerido (excepto Entorno Real) |
-| **Entorno Real** | No disponible | Checkbox disponible |
-| **Acceso** | Público | Requiere PIN o invitación |
-
-### Campos Específicos de BunkerLabs
-
-- `pin`: Flag/PIN de la máquina
-- `entorno_real`: Checkbox para máquinas de entorno de producción real (omite PIN y dificultad fija a "Real")
-
-## 6. Endpoints API Clave
-
-### Autenticación
-- `POST /api/auth/login` - Inicio de sesión
-- `POST /api/auth/register` - Registro de usuario
-- `POST /api/auth/recover` - Recuperación de contraseña con PIN
-
-### Writeups
-- `POST /api/submit_writeup` - Enviar writeup (requiere CSRF en header)
-- `POST /api/writeups/recibidos/{id}/aprobar` - Aprobar writeup pendiente
-
-### Máquinas (Admin)
-- `GET /add-maquina` - Página de formulario
-- `POST /api/add-maquina` - Crear máquina (requiere rol admin)
-- `POST /api/gestion-maquinas/upload-logo` - Subir logo de máquina
-
-### Perfil
-- `POST /api/upload-profile-photo` - Subir foto de perfil
-- `POST /api/update_social_links` - Actualizar LinkedIn, GitHub, YouTube
-- `POST /api/change_password` - Cambiar contraseña
-
-### Backups (Admin)
-- `GET /backups` - Página de gestión
-- `POST /backups/download` - Descargar backup ZIP
-- `POST /backups/restore` - Restaurar backup
-
-## 7. Patrones de Código
-
-### Estructura de Rutas
-
-Las rutas se registran en `routers.py` o en módulos separados bajo `dockerlabs/routes/`:
-
-```python
-def register_XXX_routes(api_router, pages_router, ...):
-    @api_router.post("/endpoint")
-    async def api_endpoint(..., csrf_ok: bool = Depends(verify_csrf_token)):
-        # Lógica API
-        pass
-
-    @pages_router.get("/page", response_class=HTMLResponse)
-    def page_endpoint(...):
-        # Renderizar template
-        pass
-```
-
-### Validación de Roles
-
-```python
-role = flask_session.get("role", "")
-if role not in ("admin", "moderador"):
-    return JSONResponse(status_code=403, content={"error": "Acceso denegado"})
-```
-
-### Manejo de Errores
-
-```python
-try:
-    # Operación DB
-    alchemy_db.session.commit()
-except Exception as e:
-    alchemy_db.session.rollback()
-    return JSONResponse(status_code=500, content={"error": str(e)})
-```
-
-## 8. Consideraciones de Seguridad
-
-1. **Siempre validar CSRF** en endpoints que modifiquen estado (POST, PUT, DELETE)
-2. **Nunca confiar en datos del cliente** sin validación (validators.py)
-3. **Sanitizar filenames** con `secure_filename()` de Werkzeug
-4. **Validar tipos MIME** de archivos subidos (imágenes solo)
-5. **Límites de tamaño:** 5MB para perfiles, 2MB para logos
-6. **CSP Nonce:** Scripts inline requieren `nonce="{{ g.csp_nonce }}"`
-7. **Rate limiting:** Endpoints sensibles deben usar `@limiter.limit()`
-
-## 9. Dependencias Clave
-
-```
-fastapi
-flask
-flask-sqlalchemy
-flask-login
-slowapi
-jinja2
-pillow  # Procesamiento de imágenes
-werkzeug
-bleach  # Sanitización HTML
-```
-
-## 10. Estado de la Migración
-
-- **Completado:** Sistema de autenticación, writeups, perfiles, backups
-- **En progreso:** Eliminación progresiva de endpoints Flask legacy
-- **Estable:** La arquitectura híbrida es funcional y mantenible a largo plazo
+- **Sin comentarios innecesarios.** Solo añadir un comentario cuando el motivo no sea evidente leyendo el código. No comentar lo que el código ya dice por sí solo.
+- **Sin emojis** en código, comentarios ni documentación técnica.
+- **Sin rastros de migración.** No dejar en el código alusiones a frameworks anteriores, fases de migración ni referencias a cómo estaba antes.
+- **Nombres claros.** Las variables, funciones y parámetros deben describir su propósito. No usar abreviaciones ni nombres genéricos como `data`, `obj`, `tmp` salvo que el contexto los haga obvios.
+- **No sobre-documentar.** Los módulos y funciones tienen una docstring corta solo si aporta información que el nombre no da. Sin bloques de docstring de varios párrafos.
+- **Código de producción.** Cada cambio debe ser seguro, reversible y no romper funcionalidad existente. Hacer backup de BD antes de cualquier cambio de esquema.

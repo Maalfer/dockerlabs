@@ -1,9 +1,9 @@
 {% extends "dockerlabs/base.html" %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{{ url_for('static', filename='dockerlabs/css/info/enviar_maquina.css') }}"
+<link rel="stylesheet" href="{{ static_v('dockerlabs/css/info/enviar_maquina.css') }}"
       media="print" onload="this.media='all'">
-<noscript><link rel="stylesheet" href="{{ url_for('static', filename='dockerlabs/css/info/enviar_maquina.css') }}"></noscript>
+<noscript><link rel="stylesheet" href="{{ static_v('dockerlabs/css/info/enviar_maquina.css') }}"></noscript>
 {% endblock %}
 
 {% block content %}
@@ -210,7 +210,6 @@
 </div>
 
 
-<script src="{{ url_for('static',
-filename='dockerlabs/js/machine_submission.js') }}"></script>
+<script src="{{ static_v('dockerlabs/js/machine_submission.js') }}"></script>
 
 {% endblock %}

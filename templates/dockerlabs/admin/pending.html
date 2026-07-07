@@ -3,9 +3,9 @@
 {% block title %}Máquinas Pendientes — DockerLabs{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{{ url_for('static', filename='dockerlabs/css/pending_machines.css') }}"
+<link rel="stylesheet" href="{{ static_v('dockerlabs/css/pending_machines.css') }}"
       media="print" onload="this.media='all'">
-<noscript><link rel="stylesheet" href="{{ url_for('static', filename='dockerlabs/css/pending_machines.css') }}"></noscript>
+<noscript><link rel="stylesheet" href="{{ static_v('dockerlabs/css/pending_machines.css') }}"></noscript>
 {% endblock %}
 
 {% block content %}
@@ -124,7 +124,7 @@
                     <form method="POST" action="{{ url_for('main.reject_machine', machine_id=m.id) }}" class="pm-reject-form">
                         <input type="hidden" name="csrf_token" value="{{ csrf_token_value }}">
                         <button type="submit" class="pm-btn pm-btn-reject"
-                                onclick="return confirm('¿Eliminar la máquina \\'{{ m.nombre }}\\'? Esta acción no se puede deshacer.')">
+                                onclick="return confirm('¿Eliminar la máquina ' + {{ m.nombre | tojson | forceescape }} + '? Esta acción no se puede deshacer.')">
                             <i class="bi bi-trash3"></i> Eliminar
                         </button>
                     </form>

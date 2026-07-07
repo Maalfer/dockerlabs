@@ -3,7 +3,7 @@
 {% block title %}BunkerLabs - Acceso{% endblock %}
 
 {% block content %}
-<link rel="stylesheet" href="{{ url_for('static', filename='bunkerlabs/css/bunkerlabs-login.css') }}">
+<link rel="stylesheet" href="{{ static_v('bunkerlabs/css/bunkerlabs-login.css') }}">
 
 <div class="bunker-container">
     <div class="bunker-box bunker-box-wide">
@@ -73,6 +73,7 @@
 
             <form method="post" class="bunker-form">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token_value }}">
+                {% if maquina %}<input type="hidden" name="maquina" value="{{ maquina }}">{% endif %}
                 <div class="form-group">
                     <label for="password" class="bunker-label">
                         <i class="bi bi-key"></i>
@@ -97,7 +98,7 @@
                 <p class="bunker-warning" style="font-size: 0.9rem; line-height: 1.5;">
                     <i class="bi bi-info-circle"></i>
                     Puedes acceder en modo de prueba a BunkerLabs a través de este
-                    <a href="{{ url_for('bunkerlabs.bunkerlabs_guest') }}"
+                    <a href="{{ url_for('bunkerlabs.bunkerlabs_guest') }}{% if maquina %}?maquina={{ maquina | urlencode }}{% endif %}"
                         style="color: #a78bfa; text-decoration: underline; font-weight: 600;">enlace</a>.
                 </p>
             </div>

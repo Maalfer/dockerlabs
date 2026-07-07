@@ -106,17 +106,6 @@ function createPopup(contenidoPopup) {
         .popup a:hover {
             color: #3b82f6;
         }
-        
-        .autor-registrado {
-            color: #fbbf24 !important;
-        }
-        
-        .autor-registrado::before {
-            content: "⭐ ";
-            font-size: 0.75rem;
-            margin-right: 4px;
-        }
-
         .modal-close-button {
             position: absolute;
             top: 1.25rem;
@@ -236,9 +225,10 @@ function showEnlaces(machine) {
                     const isVideo = enlace.type === 'video' || enlace.type === '🎥';
                     // Use Bootstrap icons instead of emojis for cleaner look
                     const icono = isVideo ? '<i class="bi bi-play-circle-fill"></i>' : '<i class="bi bi-file-earmark-text-fill"></i>';
-                    const nombre = enlace.name || "Autor desconocido";
-                    const url = enlace.url || "#";
-                    const clase = enlace.es_usuario_registrado ? "autor-registrado" : "";
+                    const clase = isVideo ? 'writeup-link video-link' : 'writeup-link';
+                    const nombre = escapeHtml(enlace.name || "Autor desconocido");
+                    const url = escapeHtml(enlace.url || "#");
+
                     const id = enlace.id;
 
                     content += `

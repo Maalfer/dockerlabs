@@ -5,7 +5,6 @@ uvicorn
 gunicorn
 fastapi
 jinja2
-slowapi
 bleach
 python-multipart
 scrypt
@@ -13,3 +12,4 @@ itsdangerous
 python-dotenv
 PyMySQL
 cryptography
+httpx==0.28.1

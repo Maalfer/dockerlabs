@@ -22,43 +22,35 @@
     <meta property="og:site_name" content="DockerLabs">
     <meta property="og:locale" content="es_ES">
 
-    <!-- Preconnect hints for performance -->
-    <link rel="preconnect" href="https://cdn.jsdelivr.net">
+    <!-- Preconnect hints for performance (solo Google Fonts; Bootstrap+iconos ya son mismo origen) -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 
-    <!-- Preload Bootstrap Icons WOFF2 → evita retraso font-display -->
+    <!-- Preload Bootstrap Icons WOFF2 (auto-alojado) → coincide con la url del @font-face del CSS -->
     <link rel="preload" as="font" type="font/woff2" crossorigin
-          href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/fonts/bootstrap-icons.woff2?dd67030699ad74e3e6818c16e0ea8f55">
+          href="/static/dockerlabs/vendor/fonts/bootstrap-icons.woff2?dd67030699838ea613ee6dbda90effa6">
 
     <!-- Preload CSS propio — el preparser los descarga en paralelo con Bootstrap -->
-    <link rel="preload" href="{{ url_for('static', filename='dockerlabs/css/styles.css') }}?v=2" as="style">
-    <link rel="preload" href="{{ url_for('static', filename='dockerlabs/css/base.css') }}?v=2" as="style">
+    <link rel="preload" href="{{ static_v('dockerlabs/css/styles.css') }}" as="style">
+    <link rel="preload" href="{{ static_v('dockerlabs/css/base.css') }}" as="style">
 
-    <!-- Bootstrap CSS: síncrono — crítico para layout -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap CSS: síncrono — crítico para layout. Auto-alojado (mismo origen)
+         para sacar jsDelivr de la ruta crítica de renderizado. Idéntico a v5.3.3. -->
+    <link href="{{ static_v('dockerlabs/vendor/bootstrap.min.css') }}" rel="stylesheet">
 
-    <!-- Bootstrap Icons: no bloqueante -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"
+    <!-- Bootstrap Icons: auto-alojado (mismo origen) y no bloqueante. El CSS ya incluye
+         font-display:swap, por lo que no hace falta el override inline. -->
+    <link rel="stylesheet" href="{{ static_v('dockerlabs/vendor/bootstrap-icons.min.css') }}"
           media="print" onload="this.media='all'">
-    <noscript><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"></noscript>
-
-    <!-- font-display:swap override para bootstrap-icons (CDN no lo incluye) -->
-    <style>
-        @font-face {
-            font-family: "bootstrap-icons";
-            src: url("https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/fonts/bootstrap-icons.woff2?dd67030699ad74e3e6818c16e0ea8f55") format("woff2");
-            font-display: swap;
-        }
-    </style>
+    <noscript><link rel="stylesheet" href="{{ static_v('dockerlabs/vendor/bootstrap-icons.min.css') }}"></noscript>
 
     <!-- Google Fonts: Fira Code + Inter — no bloqueantes, sin cadena de solicitudes críticas -->
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap"
           media="print" onload="this.media='all'">
     <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap"></noscript>
 
-    <script src="{{ url_for('static', filename='dockerlabs/js/marked.min.js') }}" defer></script>
-    <script src="{{ url_for('static', filename='dockerlabs/js/purify.min.js') }}" defer></script>
+    <script src="{{ static_v('dockerlabs/js/marked.min.js') }}" defer></script>
+    <script src="{{ static_v('dockerlabs/js/purify.min.js') }}" defer></script>
     <meta name="csrf-token" content="{{ csrf_token_value }}">
 
     <!-- CSS crítico inline para evitar FOUC y reservar espacio de layout -->
@@ -74,9 +66,9 @@
     </style>
 
     {% if not no_default_styles %}
-    <link rel="stylesheet" href="{{ url_for('static', filename='dockerlabs/css/styles.css') }}?v=2">
+    <link rel="stylesheet" href="{{ static_v('dockerlabs/css/styles.css') }}">
     {% endif %}
-    <link rel="stylesheet" href="{{ url_for('static', filename='dockerlabs/css/base.css') }}?v=2">
+    <link rel="stylesheet" href="{{ static_v('dockerlabs/css/base.css') }}">
 
     {% block extra_css %}{% endblock %}
 
@@ -142,7 +134,7 @@
                     <picture>
                         <source srcset="{{ url_for('static', filename='dockerlabs/images/logos/logo_60.webp') }} 1x, {{ url_for('static', filename='dockerlabs/images/logos/logo.webp') }} 2x" type="image/webp">
                         <img src="{{ url_for('static', filename='dockerlabs/images/logos/logo_120.png') }}" alt="DockerLabs"
-                            width="60" height="55" loading="eager">
+                            width="60" height="55" loading="eager" fetchpriority="high">
                     </picture>
                 </a>
             </div>
@@ -171,10 +163,6 @@
             </button>
 
             {% if session.get('user_id') %}
-            <button type="button" onclick="openMessagingModal()" class="btn-auth msg-btn" title="Mensajes">
-                <i class="bi bi-envelope"></i>
-                <span id="msg-badge" class="msg-badge">0</span>
-            </button>
 
             <button type="button" onclick="openNotificationsModal()" class="btn-auth notification-btn" title="Notificaciones">
                 <i class="bi bi-bell"></i>
@@ -195,11 +183,7 @@
             {% else %}
             <a href="{{ url_for('auth.login') }}" class="btn-auth" role="button">
                 <i class="bi bi-box-arrow-in-right"></i>
-                Iniciar sesión
-            </a>
-            <a href="{{ url_for('auth.register') }}" class="btn-auth" role="button">
-                <i class="bi bi-person-plus"></i>
-                Registro
+                Acceder
             </a>
             {% endif %}
         </div>
@@ -302,6 +286,10 @@
     			</div>
     		    <i class="bi bi-hdd-stack" style="color:#64748b;"></i>
 		</a>
+                <a href="/certificados" class="ranking-item">
+                    <div class="user-info"><span class="user-name">Mis Certificados</span></div>
+                    <i class="bi bi-patch-check-fill" style="color: #64748b;"></i>
+                </a>
 
                 {% if current_user_role in ['admin', 'moderador'] %}
                 <a href="{{ url_for('peticiones') }}" class="ranking-item">
@@ -341,87 +329,6 @@
         </div>
     </div>
 
-    <!-- Messaging Modal -->
-    <div id="messagingModal" class="overlay">
-        <div class="msg-popup">
-            <!-- Sidebar: conversation list -->
-            <div class="msg-sidebar" id="msgSidebar">
-                <div class="msg-sidebar-header">
-                    <span class="msg-sidebar-title"><i class="bi bi-chat-dots-fill"></i> Mensajes</span>
-                    <div class="msg-sidebar-actions">
-                        <button class="msg-icon-btn msg-new-btn" onclick="showNewMessageInput()" title="Nuevo mensaje">
-                            <i class="bi bi-pencil-square"></i>
-                        </button>
-                        {% if current_user_role == 'admin' %}
-                        <button class="msg-icon-btn" onclick="showBroadcastInput()" title="Difusión a todos">
-                            <i class="bi bi-megaphone"></i>
-                        </button>
-                        {% endif %}
-                        <button class="msg-icon-btn msg-close-btn" onclick="closeMessagingModal()" title="Cerrar">
-                            <i class="bi bi-x-lg"></i>
-                        </button>
-                    </div>
-                </div>
-
-                <!-- New message search panel -->
-                <div id="msgNew" style="display:none;">
-                    <div class="msg-search-box">
-                        <i class="bi bi-search msg-search-icon"></i>
-                        <input type="text" id="newMsgUser" class="msg-search-input" placeholder="Buscar usuario..." autocomplete="off">
-                    </div>
-                    <div id="searchResults" class="msg-search-results"></div>
-                    <button class="msg-cancel-search-btn" onclick="cancelNewMessage()">
-                        <i class="bi bi-arrow-left"></i> Volver
-                    </button>
-                </div>
-
-                <!-- Broadcast panel (admin only) -->
-                <div id="msgBroadcast" style="display:none;">
-                    <div class="msg-broadcast-panel">
-                        <p class="msg-broadcast-label"><i class="bi bi-megaphone-fill"></i> Difusión a todos los usuarios</p>
-                        <textarea id="broadcastContent" class="msg-broadcast-input" placeholder="Escribe tu mensaje..."></textarea>
-                        <div class="msg-broadcast-actions">
-                            <button class="msg-broadcast-send-btn" onclick="sendBroadcast()">Enviar</button>
-                            <button class="msg-cancel-search-btn" onclick="cancelBroadcast()">Cancelar</button>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Conversation list -->
-                <div class="msg-list" id="msgList">
-                    <div class="msg-state-text">Cargando...</div>
-                </div>
-            </div>
-
-            <!-- Content: active chat -->
-            <div class="msg-content" id="msgContent">
-                <div class="msg-chat-header">
-                    <button class="msg-back-btn" onclick="backToSidebar()">
-                        <i class="bi bi-arrow-left"></i>
-                    </button>
-                    <div class="msg-chat-user-info">
-                        <div class="msg-avatar msg-avatar-md" id="chatUserAvatar"></div>
-                        <span class="msg-chat-username" id="chatUserName">Selecciona un chat</span>
-                    </div>
-                    <button class="msg-icon-btn msg-delete-btn" id="deleteChatBtn" style="display:none;" onclick="deleteCurrentChat()" title="Eliminar conversación">
-                        <i class="bi bi-trash"></i>
-                    </button>
-                </div>
-
-                <div class="msg-chat-messages" id="chatMessages">
-                    <div class="msg-empty-state">
-                        <i class="bi bi-chat-dots"></i>
-                        <p>Selecciona una conversación para empezar</p>
-                    </div>
-                </div>
-
-                <div class="msg-input-area" id="inputArea" style="display:none;">
-                    <input type="text" id="messageInput" class="msg-input" placeholder="Escribe un mensaje..." onkeypress="handleEnter(event)" maxlength="1000">
-                    <button class="msg-send-btn" onclick="sendMessage()"><i class="bi bi-send-fill"></i></button>
-                </div>
-            </div>
-        </div>
-    </div>
 
     <!-- Notifications Modal -->
     <div id="notificationsModal" class="notif-overlay">
@@ -547,10 +454,9 @@
         });
     </script>
 
-    <script src="{{ url_for('static', filename='dockerlabs/js/utils.js') }}" defer></script>
+    <script src="{{ static_v('dockerlabs/js/utils.js') }}" defer></script>
     {% if session.get('user_id') %}
-    <script src="{{ url_for('static', filename='dockerlabs/js/messaging.js') }}" defer></script>
-    <script src="{{ url_for('static', filename='dockerlabs/js/notifications.js') }}" defer></script>
+    <script src="{{ static_v('dockerlabs/js/notifications.js') }}" defer></script>
     {% endif %}
     {% block scripts %}{% endblock %}
 </body>

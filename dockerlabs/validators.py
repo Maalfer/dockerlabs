@@ -16,18 +16,6 @@ def validate_machine_name(name):
         
     return True, None
 
-def validate_team_name(name):
-    """Valida el nombre de un equipo: longitud 3-50 y charset seguro
-    (letras, números, espacios, guion, guion bajo y punto). Evita XSS
-    porque el nombre se incrusta en notificaciones renderizadas."""
-    if not name:
-        return False, "El nombre del equipo es obligatorio"
-    name = name.strip()
-    if len(name) < 3 or len(name) > 50:
-        return False, "El nombre del equipo debe tener entre 3 y 50 caracteres"
-    if not re.match(r'^[\w\s\-_.]+$', name, re.UNICODE):
-        return False, "El nombre del equipo solo puede contener letras, números, espacios, guiones, guion bajo y puntos"
-    return True, None
 
 def validate_author_name(name):
            

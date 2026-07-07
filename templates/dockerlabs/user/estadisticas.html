@@ -1,15 +1,15 @@
 {% extends 'dockerlabs/base.html' %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{{ url_for('static', filename='dockerlabs/css/user/estadisticas.css') }}"
+<link rel="stylesheet" href="{{ static_v('dockerlabs/css/user/estadisticas.css') }}"
       media="print" onload="this.media='all'">
-<noscript><link rel="stylesheet" href="{{ url_for('static', filename='dockerlabs/css/user/estadisticas.css') }}"></noscript>
+<noscript><link rel="stylesheet" href="{{ static_v('dockerlabs/css/user/estadisticas.css') }}"></noscript>
 {% endblock %}
 
 {% block title %}Estadísticas - DockerLabs{% endblock %}
 
 {% block extra_head %}
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="{{ static_v('dockerlabs/vendor/chart.umd.min.js') }}"></script>
 {% endblock %}
 
 {% block content %}

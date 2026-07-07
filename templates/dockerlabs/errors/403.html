@@ -1,9 +1,9 @@
 {% extends "dockerlabs/base.html" %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{{ url_for('static', filename='dockerlabs/css/errors/403.css') }}"
+<link rel="stylesheet" href="{{ static_v('dockerlabs/css/errors/403.css') }}"
       media="print" onload="this.media='all'">
-<noscript><link rel="stylesheet" href="{{ url_for('static', filename='dockerlabs/css/errors/403.css') }}"></noscript>
+<noscript><link rel="stylesheet" href="{{ static_v('dockerlabs/css/errors/403.css') }}"></noscript>
 {% endblock %}
 
 {% block title %}Acceso Prohibido - DockerLabs{% endblock %}

@@ -3,7 +3,7 @@
 {% block title %}Gestión BunkerLabs{% endblock %}
 
 {% block content %}
-<link rel="stylesheet" href="{{ url_for('static', filename='bunkerlabs/css/bunkerlabs-accesos.css') }}">
+<link rel="stylesheet" href="{{ static_v('bunkerlabs/css/bunkerlabs-accesos.css') }}">
 
 <style>
 .gestion-nav {
@@ -129,10 +129,6 @@
             <i class="bi bi-key"></i> Accesos
             <span class="info-badge">{{ tokens|length }}</span>
         </button>
-        <button class="gestion-nav-btn" data-panel="writeups">
-            <i class="bi bi-book"></i> Writeups
-            <span class="info-badge">{{ writeups|length }}</span>
-        </button>
         <button class="gestion-nav-btn" data-panel="recursos">
             <i class="bi bi-folder2-open"></i> Recursos
             <span class="info-badge">{{ recursos|length }}</span>
@@ -215,106 +211,6 @@
                                             <button type="submit" class="btn btn-sm border-danger text-danger"
                                                 style="padding:2px 8px; font-size:0.7rem; background:rgba(239,68,68,0.1);"
                                                 onclick="return confirm('¿Eliminar este acceso?')">
-                                                <i class="bi bi-trash"></i>
-                                            </button>
-                                        </form>
-                                    </td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
-                    {% endif %}
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- ═══════════════ PANEL: WRITEUPS ═══════════════ -->
-    <div id="panel-writeups" class="panel-section">
-        <div class="row g-4">
-            <div class="col-lg-4">
-                <div class="glass-card">
-                    <div class="glass-header"><h5>Añadir Writeup</h5></div>
-                    <form method="post" action="/bunkerlabs/admin/writeups/add">
-                        <input type="hidden" name="csrf_token" value="{{ csrf_token_value }}">
-                        <div class="mb-3">
-                            <label class="form-label">Máquina</label>
-                            <select name="maquina" class="form-control form-control-dark" required>
-                                <option value="">Selecciona una máquina</option>
-                                {% for maquina in bunker_machines %}
-                                <option value="{{ maquina.nombre }}">{{ maquina.nombre }}</option>
-                                {% endfor %}
-                            </select>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Autor</label>
-                            <input type="text" name="autor" class="form-control form-control-dark" placeholder="Nombre del autor" required>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">URL</label>
-                            <input type="url" name="url" class="form-control form-control-dark" placeholder="https://..." required>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Tipo</label>
-                            <select name="tipo" class="form-control form-control-dark" required>
-                                <option value="">Selecciona tipo</option>
-                                <option value="texto">📄 Texto/Blog</option>
-                                <option value="video">🎥 Vídeo</option>
-                            </select>
-                        </div>
-                        <div class="mb-3 form-check">
-                            <input type="checkbox" class="form-check-input" id="writeup_locked" name="locked">
-                            <label class="form-check-label text-secondary" for="writeup_locked">
-                                <i class="bi bi-lock-fill"></i> Bloqueado (Candado)
-                            </label>
-                        </div>
-                        <button type="submit" class="btn-hack w-100">
-                            <i class="bi bi-plus-circle"></i> Añadir Writeup
-                        </button>
-                    </form>
-                </div>
-            </div>
-            <div class="col-lg-8">
-                <div class="glass-card">
-                    <div class="glass-header"><h5>Writeups Existentes</h5></div>
-                    {% if writeups|length == 0 %}
-                    <div class="text-center py-5">
-                        <i class="bi bi-book fs-1 text-secondary opacity-25 d-block mb-3"></i>
-                        <p class="text-secondary">Todavía no hay writeups añadidos.</p>
-                    </div>
-                    {% else %}
-                    <div class="table-responsive">
-                        <table class="custom-table align-middle">
-                            <thead>
-                                <tr><th>Máquina</th><th>Autor</th><th>Tipo</th><th>URL</th><th class="text-end">Acciones</th></tr>
-                            </thead>
-                            <tbody>
-                                {% for w in writeups %}
-                                <tr>
-                                    <td><span class="fw-bold text-white">{{ w.maquina }}</span></td>
-                                    <td>{{ w.autor }}</td>
-                                    <td>
-                                        {% if w.tipo == 'texto' %}
-                                        <span class="badge bg-primary">📄 Texto</span>
-                                        {% else %}
-                                        <span class="badge bg-danger">🎥 Vídeo</span>
-                                        {% endif %}
-                                    </td>
-                                    <td>
-                                        <a href="{{ w.url }}" target="_blank" class="text-accent-cyan text-decoration-none">
-                                            <i class="bi bi-link-45deg"></i> Ver
-                                        </a>
-                                    </td>
-                                    <td class="text-end">
-                                        <button class="btn btn-sm border-0 me-1" onclick="toggleLock({{ w.id }}, this)"
-                                            title="{{ 'Desbloquear' if w.locked else 'Bloquear' }}">
-                                            <i class="bi bi-{{ 'lock-fill text-danger' if w.locked else 'unlock-fill text-success' }}"></i>
-                                        </button>
-                                        <form method="post" action="/bunkerlabs/admin/writeups/delete/{{ w.id }}"
-                                            class="d-inline" onsubmit="return confirm('¿Eliminar este writeup?');">
-                                            <input type="hidden" name="csrf_token" value="{{ csrf_token_value }}">
-                                            <button type="submit" class="btn btn-sm btn-outline-danger border-0">
                                                 <i class="bi bi-trash"></i>
                                             </button>
                                         </form>
@@ -492,7 +388,7 @@
     </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="{{ static_v('dockerlabs/vendor/bootstrap.bundle.min.js') }}"></script>
 <script>
 // ─── Tab navigation ───────────────────────────────────────────────────────────
 document.querySelectorAll('.gestion-nav-btn').forEach(btn => {
@@ -508,7 +404,7 @@ document.querySelectorAll('.gestion-nav-btn').forEach(btn => {
 // Restore tab from hash
 (function () {
     const hash = window.location.hash.replace('#', '');
-    const validPanels = ['accesos', 'writeups', 'recursos'];
+    const validPanels = ['accesos', 'recursos'];
     if (hash && validPanels.includes(hash)) {
         document.querySelectorAll('.gestion-nav-btn').forEach(b => b.classList.remove('active'));
         document.querySelectorAll('.panel-section').forEach(p => p.classList.remove('active'));
@@ -571,21 +467,6 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 });
 
-// ─── Flags ────────────────────────────────────────────────────────────────────
-function toggleLock(id, btn) {
-    const icon = btn.querySelector('i');
-    const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
-    btn.disabled = true;
-    fetch(`/api/bunker/admin/writeups/toggle-lock/${id}`, { method: 'POST', headers: { 'X-CSRFToken': csrfToken } })
-        .then(r => r.json())
-        .then(data => {
-            if (!data.error) {
-                icon.className = data.locked ? 'bi bi-lock-fill text-danger' : 'bi bi-unlock-fill text-success';
-                btn.title = data.locked ? 'Desbloquear' : 'Bloquear';
-            }
-        })
-        .finally(() => { btn.disabled = false; });
-}
 
 
 // ─── Copy helpers ─────────────────────────────────────────────────────────────

@@ -209,7 +209,8 @@ function saveProfile() {
             'X-CSRFToken': csrf
         },
         body: JSON.stringify({
-            biography: bio
+            biography: bio,
+            nombre_diploma: (document.getElementById('nombre_diploma') || {}).value || ''
         })
     })
         .then(r => r.json().then(data => ({ ok: r.ok, data })))

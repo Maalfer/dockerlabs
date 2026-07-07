@@ -107,9 +107,9 @@ sudo find /var/www/dockerlabs -type f -exec chmod 644 {} \;
 sudo chmod 775 /var/www/dockerlabs
 sudo chmod 775 /var/www/dockerlabs/database
 sudo chmod 664 /var/www/dockerlabs/database/dockerlabs.db
-sudo chown -R www-data:www-data /var/www/dockerlabs/database/almacenamiento
-sudo find /var/www/dockerlabs/database/almacenamiento -type d -exec chmod 775 {} \;
-sudo find /var/www/dockerlabs/database/almacenamiento -type f -exec chmod 664 {} \;
+sudo chown -R www-data:www-data /var/www/dockerlabs/uploads
+sudo find /var/www/dockerlabs/uploads -type d -exec chmod 775 {} \;
+sudo find /var/www/dockerlabs/uploads -type f -exec chmod 664 {} \;
 sudo chmod +x /var/www/dockerlabs/venv/bin/uvicorn
 sudo systemctl restart dockerlabs.service
 ```

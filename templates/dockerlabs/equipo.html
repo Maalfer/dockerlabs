@@ -1,9 +1,9 @@
 {% extends "dockerlabs/base.html" %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{{ url_for('static', filename='dockerlabs/css/equipo.css') }}"
+<link rel="stylesheet" href="{{ static_v('dockerlabs/css/equipo.css') }}"
       media="print" onload="this.media='all'">
-<noscript><link rel="stylesheet" href="{{ url_for('static', filename='dockerlabs/css/equipo.css') }}"></noscript>
+<noscript><link rel="stylesheet" href="{{ static_v('dockerlabs/css/equipo.css') }}"></noscript>
 {% endblock %}
 
 {% block content %}
@@ -18,7 +18,7 @@
     <div class="card p-4 mt-2 mb-5 colaboradores-card">
         <div class="colaboradores-grid admins-grid">
 
-        <a href="https://github.com/Maalfer/" target="_blank" class="colaborador">
+        <a href="https://www.linkedin.com/in/maalfer1/" target="_blank" class="colaborador">
             <img src="/static/dockerlabs/images/agradecimientos/mario.png" alt="Maalfer">
             <span class="colaborador-name">El Pingüino de Mario</span>
             <div class="role-badge role-owner">

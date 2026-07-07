@@ -1,9 +1,9 @@
 {% extends "dockerlabs/base.html" %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{{ url_for('static', filename='dockerlabs/css/user/maquinas_hechas.css') }}"
+<link rel="stylesheet" href="{{ static_v('dockerlabs/css/user/maquinas_hechas.css') }}"
       media="print" onload="this.media='all'">
-<noscript><link rel="stylesheet" href="{{ url_for('static', filename='dockerlabs/css/user/maquinas_hechas.css') }}"></noscript>
+<noscript><link rel="stylesheet" href="{{ static_v('dockerlabs/css/user/maquinas_hechas.css') }}"></noscript>
 {% endblock %}
 
 {% block title %}Máquinas Completadas - DockerLabs{% endblock %}

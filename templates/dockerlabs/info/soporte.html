@@ -1,9 +1,9 @@
 {% extends 'dockerlabs/base.html' %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{{ url_for('static', filename='dockerlabs/css/info/soporte.css') }}"
+<link rel="stylesheet" href="{{ static_v('dockerlabs/css/info/soporte.css') }}"
       media="print" onload="this.media='all'">
-<noscript><link rel="stylesheet" href="{{ url_for('static', filename='dockerlabs/css/info/soporte.css') }}"></noscript>
+<noscript><link rel="stylesheet" href="{{ static_v('dockerlabs/css/info/soporte.css') }}"></noscript>
 {% endblock %}
 
 {% block title %}Soporte - DockerLabs{% endblock %}

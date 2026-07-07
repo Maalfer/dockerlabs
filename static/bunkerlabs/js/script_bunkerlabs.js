@@ -37,6 +37,9 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     });
 
+    // Resaltar la máquina compartida cuando se llega mediante ?maquina=...
+    highlightSharedMachine();
+
     const downloadBtns = document.querySelectorAll('.btn-download');
     const isGuest = document.querySelector('.machines-grid')?.getAttribute('data-is-guest') === 'true';
 
@@ -106,84 +109,50 @@ function filterItems() {
     });
 }
 
-// Writeup Modal Functions
-function openWriteupModal(machineName) {
-    const modal = document.getElementById('writeupModal');
-    const title = document.getElementById('writeup-machine-title');
-    const content = document.getElementById('writeup-content');
+// Resalta ("fosforito") la máquina que llega compartida por enlace y abre su modal
+function highlightSharedMachine() {
+    let sharedRaw;
+    try {
+        sharedRaw = new URLSearchParams(window.location.search).get('maquina');
+    } catch (e) {
+        return;
+    }
+    if (!sharedRaw) return;
 
-    title.textContent = `Writeups - ${machineName}`;
-    content.innerHTML = '<p class="loading-text">Cargando writeups...</p>';
-    modal.style.display = 'block';
+    // Limpiar la URL para que un refresco no vuelva a disparar el efecto
+    try {
+        window.history.replaceState({}, document.title, window.location.pathname);
+    } catch (e) { /* noop */ }
 
-    // Cargar writeups desde la API
-    fetch(`/api/bunker/writeups/${encodeURIComponent(machineName)}`)
-        .then(response => response.json())
-        .then(data => {
-            if (data.writeups && data.writeups.length > 0) {
-                const writeupsByType = {
-                    texto: data.writeups.filter(w => w.tipo === 'texto'),
-                    video: data.writeups.filter(w => w.tipo === 'video')
-                };
-
-                let html = '';
-
-                if (writeupsByType.texto.length > 0) {
-                    html += '<h4 class="writeup-section-title">📄 Writeups en Texto</h4><ul class="writeup-list">';
-                    writeupsByType.texto.forEach(w => {
-                        if (w.locked) {
-                            html += `<li class="locked"><i class="bi bi-lock-fill"></i> <span class="locked-text">${w.autor} (Bloqueado)</span></li>`;
-                        } else {
-                            html += `<li><a href="${w.url}" target="_blank" rel="noopener noreferrer">${w.autor}</a></li>`;
-                        }
-                    });
-                    html += '</ul>';
-                }
-
-                if (writeupsByType.video.length > 0) {
-                    html += '<h4 class="writeup-section-title">🎥 Writeups en Vídeo</h4><ul class="writeup-list">';
-                    writeupsByType.video.forEach(w => {
-                        if (w.locked) {
-                            html += `<li class="locked"><i class="bi bi-lock-fill"></i> <span class="locked-text">${w.autor} (Bloqueado)</span></li>`;
-                        } else {
-                            html += `<li><a href="${w.url}" target="_blank" rel="noopener noreferrer">${w.autor}</a></li>`;
-                        }
-                    });
-                    html += '</ul>';
-                }
-
-                content.innerHTML = html;
-            } else {
-                content.innerHTML = '<p class="no-writeups">No hay writeups disponibles para esta máquina.</p>';
-            }
-        })
-        .catch(error => {
-            console.error('Error loading writeups:', error);
-            content.innerHTML = '<p class="error-text">Error al cargar writeups. Inténtalo de nuevo.</p>';
-        });
-}
-
-function closeWriteupModal() {
-    const modal = document.getElementById('writeupModal');
-    modal.style.display = 'none';
-}
-
-// Event listeners
-document.addEventListener('DOMContentLoaded', function () {
-    // Click en botones de writeup
-    document.addEventListener('click', function (e) {
-        if (e.target.closest('.btn-writeup')) {
-            const button = e.target.closest('.btn-writeup');
-            const machineName = button.getAttribute('data-nombre');
-            openWriteupModal(machineName);
-        }
+    const target = sharedRaw.trim().toLowerCase();
+    const items = document.querySelectorAll('.item-selectable');
+    let matched = null;
+    items.forEach(item => {
+        const name = (item.getAttribute('data-nombre') || '').trim().toLowerCase();
+        if (!matched && name === target) matched = item;
     });
+    if (!matched) return;
 
-    // Cerrar modal al hacer clic fuera
-    window.addEventListener('click', function (e) {
-        const modal = document.getElementById('writeupModal');
-        if (e.target === modal) {
-            closeWriteupModal();
-        }
-    });
-});
+    // Marca visual
+    matched.classList.add('shared-highlight');
+
+    // Chip flotante "Compartida"
+    if (!matched.querySelector('.shared-badge')) {
+        const badge = document.createElement('div');
+        badge.className = 'shared-badge';
+        badge.innerHTML = '<i class="bi bi-stars"></i> Compartida';
+        matched.appendChild(badge);
+    }
+
+    // Desplazar suavemente hasta la máquina
+    setTimeout(() => {
+        matched.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }, 250);
+
+    // Abrir el modal de presentación automáticamente (salvo que esté bloqueada para invitados)
+    if (!matched.classList.contains('locked-guest-item')) {
+        setTimeout(() => {
+            matched.click();
+        }, 1100);
+    }
+}

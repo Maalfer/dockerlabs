@@ -1,10 +1,16 @@
+import json
+import os
 import secrets
+import time
+from datetime import datetime
 from typing import Optional
 
-from fastapi import Depends, Form, Request
+from fastapi import Depends, File, Form, Request, UploadFile
 from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
 from pydantic import BaseModel
+from werkzeug.utils import secure_filename
 
+from dockerlabs.maquinas import recalcular_ranking_creadores
 from dockerlabs.models import Category, CompletedMachine, Machine, MachineClaim, MachineEditRequest, User
 
 
@@ -40,6 +46,35 @@ class AddMaquinaRequest(BaseModel):
     categoria: Optional[str] = ""
 
 
+# Imagen de portada por defecto cuando no hay logo subido (logo_path)
+_DEFAULT_IMAGEN = "dockerlabs/images/logos/logo.png"
+# Directorio base del proyecto (.../dockerlabs) para validar rutas estáticas
+_BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
+
+
+def _sanitize_imagen(value: Optional[str]) -> str:
+    """Normaliza el campo `imagen` (fallback de portada).
+
+    El logo real de una máquina se sirve desde `logo_path`; `imagen` solo es el
+    fallback estático. El formulario a veces envía basura ('undefined', 'null',
+    un nombre suelto inexistente como 'gotham.png', etc.), lo que provocaba que
+    la portada cayera al logo genérico sin que se notara el dato corrupto.
+
+    Solo se conserva el valor si apunta a un fichero que existe bajo `static/`;
+    en cualquier otro caso se devuelve la imagen por defecto.
+    """
+    v = (value or "").strip()
+    if not v or v.lower() in ("undefined", "null", "none", "false"):
+        return _DEFAULT_IMAGEN
+    # Evitar path traversal / rutas absolutas
+    if ".." in v or v.startswith("/") or "\\" in v:
+        return _DEFAULT_IMAGEN
+    candidate = os.path.join(_BASE_DIR, "static", v)
+    if os.path.isfile(candidate):
+        return v
+    return _DEFAULT_IMAGEN
+
+
 def _difficulty_to_color_clase(dificultad: str):
     d = dificultad.strip().lower()
     if "muy" in d:
@@ -55,12 +90,12 @@ def _difficulty_to_color_clase(dificultad: str):
 def register_machine_routes(
     api_router,
     pages_router,
-    get_flask_session,
+    get_session,
     verify_csrf_token,
     require_auth_and_role,
-    set_flask_session_cookie,
+    encode_session_cookie,
     templates,
-    alchemy_db,
+    db,
     url_for,
 ):
     @api_router.post("/gestion-maquinas/actualizar")
@@ -77,13 +112,12 @@ def register_machine_routes(
         descripcion: str = Form(...),
         link_descarga: str = Form(...),
         categoria: str = Form(""),
-        flask_session: dict = Depends(get_flask_session),
+        session: dict = Depends(get_session),
         csrf_ok: bool = Depends(verify_csrf_token),
     ):
-        """API: Actualizar datos de una máquina."""
-        role = flask_session.get("role", "")
-        username = (flask_session.get("username") or "").strip()
-        user_id = flask_session.get("user_id")
+        role = session.get("role", "")
+        username = (session.get("username") or "").strip()
+        user_id = session.get("user_id")
 
         if not user_id:
             return JSONResponse(status_code=401, content={"error": "No autenticado"})
@@ -98,9 +132,7 @@ def register_machine_routes(
 
         if role not in ("admin", "moderador"):
             if role == "jugador" and maquina.autor == username:
-                import json as _json
-
-                nuevos_datos = _json.dumps(
+                nuevos_datos = json.dumps(
                     {
                         "nombre": nombre,
                         "dificultad": dificultad_texto,
@@ -122,11 +154,11 @@ def register_machine_routes(
                         nuevos_datos=nuevos_datos,
                         estado="pendiente",
                     )
-                    alchemy_db.session.add(edit_req)
-                    alchemy_db.session.commit()
+                    db.session.add(edit_req)
+                    db.session.commit()
                     return {"success": True, "message": "Solicitud de edición enviada para revisión"}
                 except Exception as e:
-                    alchemy_db.session.rollback()
+                    db.session.rollback()
                     return JSONResponse(status_code=500, content={"error": str(e)})
             return JSONResponse(status_code=403, content={"error": "Acceso denegado"})
 
@@ -138,30 +170,28 @@ def register_machine_routes(
             maquina.autor = autor
             maquina.enlace_autor = enlace_autor or ""
             maquina.fecha = fecha
-            maquina.imagen = imagen or ""
+            maquina.imagen = _sanitize_imagen(imagen)
             maquina.descripcion = descripcion
             maquina.link_descarga = link_descarga
-            alchemy_db.session.commit()
+            db.session.commit()
 
             cat_obj = Category.query.filter_by(machine_id=id, origen=origen).first()
             if categoria:
                 if cat_obj:
                     cat_obj.categoria = categoria
                 else:
-                    alchemy_db.session.add(Category(machine_id=id, origen=origen, categoria=categoria))
+                    db.session.add(Category(machine_id=id, origen=origen, categoria=categoria))
             else:
                 if cat_obj:
-                    alchemy_db.session.delete(cat_obj)
-            alchemy_db.session.commit()
+                    db.session.delete(cat_obj)
+            db.session.commit()
 
             if origen == "docker":
-                from dockerlabs.maquinas import recalcular_ranking_creadores
-
                 recalcular_ranking_creadores()
 
             return {"success": True, "message": "Máquina actualizada correctamente"}
         except Exception as e:
-            alchemy_db.session.rollback()
+            db.session.rollback()
             return JSONResponse(status_code=500, content={"error": str(e)})
 
     @api_router.post("/gestion-maquinas/eliminar")
@@ -169,12 +199,11 @@ def register_machine_routes(
         request: Request,
         id: int = Form(...),
         origen: str = Form(...),
-        flask_session: dict = Depends(get_flask_session),
+        session: dict = Depends(get_session),
         csrf_ok: bool = Depends(verify_csrf_token),
     ):
-        """API: Eliminar una máquina. Solo admin/moderador."""
-        role = flask_session.get("role", "")
-        user_id = flask_session.get("user_id")
+        role = session.get("role", "")
+        user_id = session.get("user_id")
         if not user_id or role not in ("admin", "moderador"):
             return JSONResponse(status_code=403, content={"error": "Acceso denegado"})
         if origen not in ("docker", "bunker"):
@@ -184,40 +213,36 @@ def register_machine_routes(
         if not maquina:
             return JSONResponse(status_code=404, content={"error": "Máquina no encontrada"})
         try:
-            alchemy_db.session.delete(maquina)
-            alchemy_db.session.commit()
+            db.session.delete(maquina)
+            db.session.commit()
             if origen == "docker":
-                from dockerlabs.maquinas import recalcular_ranking_creadores
-
                 recalcular_ranking_creadores()
             return {"success": True, "message": "Máquina eliminada correctamente"}
         except Exception as e:
-            alchemy_db.session.rollback()
+            db.session.rollback()
             return JSONResponse(status_code=500, content={"error": str(e)})
 
     @pages_router.get("/add-maquina", response_class=HTMLResponse)
-    def add_maquina_page_get(request: Request, flask_session: dict = Depends(get_flask_session)):
-        """Página de añadir máquina. Solo admin."""
-        ok, redir = require_auth_and_role(flask_session, ["admin"])
+    def add_maquina_page_get(request: Request, session: dict = Depends(get_session)):
+        ok, redir = require_auth_and_role(session, ["admin"])
         if not ok:
             return redir
-        current_user_role = flask_session.get("role", "")
+        current_user_role = session.get("role", "")
         return templates.TemplateResponse(
             request,
             "dockerlabs/info/add-maquina.html",
-            {"error": None, "session": flask_session, "url_for": url_for, "current_user_role": current_user_role, "g": {"csp_nonce": secrets.token_urlsafe(32)}},
+            {"error": None, "session": session, "url_for": url_for, "current_user_role": current_user_role, "g": {"csp_nonce": secrets.token_urlsafe(32)}},
         )
 
     @api_router.post("/add-maquina")
     async def api_add_maquina(
         request: Request,
         data: AddMaquinaRequest,
-        flask_session: dict = Depends(get_flask_session),
+        session: dict = Depends(get_session),
         csrf_ok: bool = Depends(verify_csrf_token),
     ):
-        """API: Añadir una nueva máquina. Solo admin."""
-        role = flask_session.get("role", "")
-        user_id = flask_session.get("user_id")
+        role = session.get("role", "")
+        user_id = session.get("user_id")
         if not user_id or role != "admin":
             return JSONResponse(status_code=403, content={"error": "Acceso denegado"})
 
@@ -225,9 +250,7 @@ def register_machine_routes(
             return JSONResponse(status_code=400, content={"error": "El autor no es un usuario registrado"})
 
         try:
-            from datetime import datetime as _dt
-
-            fecha = _dt.strptime(data.fecha, "%Y-%m-%d").strftime("%d/%m/%Y")
+            fecha = datetime.strptime(data.fecha, "%Y-%m-%d").strftime("%d/%m/%Y")
         except ValueError:
             return JSONResponse(status_code=400, content={"error": "Formato de fecha inválido (YYYY-MM-DD)"})
 
@@ -236,7 +259,7 @@ def register_machine_routes(
         if user_obj:
             enlace_autor = user_obj.youtube_url or user_obj.github_url or user_obj.linkedin_url or ""
 
-        imagen = data.imagen or "dockerlabs/images/logos/logo.png"
+        imagen = _sanitize_imagen(data.imagen)
 
         clase, dificultad_texto, color = _difficulty_to_color_clase(data.dificultad)
 
@@ -254,34 +277,118 @@ def register_machine_routes(
                 link_descarga=data.link_descarga,
                 origen=data.destino or "docker",
             )
-            alchemy_db.session.add(new_machine)
-            alchemy_db.session.commit()
+            db.session.add(new_machine)
+            db.session.commit()
             if data.destino == "docker":
-                from dockerlabs.maquinas import recalcular_ranking_creadores
-
                 recalcular_ranking_creadores()
             redirect_url = "/bunkerlabs" if data.destino == "bunker" else "/"
-            return {"success": True, "message": "Máquina añadida correctamente", "redirect_url": redirect_url}
+            return {
+                "success": True,
+                "message": "Máquina añadida correctamente",
+                "redirect_url": redirect_url,
+                "machine_id": new_machine.id,
+                "origen": new_machine.origen,
+            }
         except Exception as e:
-            alchemy_db.session.rollback()
+            db.session.rollback()
             return JSONResponse(status_code=500, content={"error": str(e)})
+
+    @api_router.post("/empezar/add")
+    async def api_add_empezar(
+        request: Request,
+        nombre: str = Form(...),
+        script: UploadFile = File(...),
+        session: dict = Depends(get_session),
+        csrf_ok: bool = Depends(verify_csrf_token),
+    ):
+        """Crea un lab de la sección 'Empezar de 0' (origen='empezar').
+
+        Solo pide nombre + el .py. El resto de campos NOT NULL del modelo se
+        rellenan con valores por defecto. El .py se guarda en disco y la ruta
+        queda en Machine.script_path; se sirve como descarga directa.
+        """
+        role = session.get("role", "")
+        user_id = session.get("user_id")
+        if not user_id or role not in ("admin", "moderador"):
+            return JSONResponse(status_code=403, content={"error": "Acceso denegado"})
+
+        nombre = (nombre or "").strip()
+        if not nombre:
+            return JSONResponse(status_code=400, content={"error": "El nombre es obligatorio"})
+
+        if not script or not script.filename:
+            return JSONResponse(status_code=400, content={"error": "Debes subir un archivo .py"})
+        safe_name = secure_filename(script.filename)
+        if not safe_name.lower().endswith(".py"):
+            return JSONResponse(status_code=400, content={"error": "El archivo debe tener extensión .py"})
+
+        content = await script.read()
+        if not content:
+            return JSONResponse(status_code=400, content={"error": "El archivo está vacío"})
+        if len(content) > 1 * 1024 * 1024:
+            return JSONResponse(status_code=400, content={"error": "El .py es demasiado grande (máx 1 MB)"})
+        try:
+            content.decode("utf-8")
+        except UnicodeDecodeError:
+            return JSONResponse(status_code=400, content={"error": "El .py debe ser texto UTF-8 válido"})
+
+        if Machine.query.filter_by(nombre=nombre).first():
+            return JSONResponse(status_code=400, content={"error": "Ya existe una máquina con ese nombre"})
+
+        autor = (session.get("username") or "").strip() or "DockerLabs"
+        fecha = datetime.now().strftime("%d/%m/%Y")
+
+        try:
+            new_lab = Machine(
+                nombre=nombre,
+                dificultad="Iniciación",
+                clase="empezar",
+                color="#43959b",
+                autor=autor,
+                enlace_autor="",
+                fecha=fecha,
+                imagen=_DEFAULT_IMAGEN,
+                descripcion="",
+                link_descarga="",
+                origen="empezar",
+            )
+            db.session.add(new_lab)
+            db.session.commit()
+        except Exception as e:
+            db.session.rollback()
+            return JSONResponse(status_code=500, content={"error": str(e)})
+
+        scripts_dir = os.path.join(_BASE_DIR, "uploads", "scripts")
+        os.makedirs(scripts_dir, exist_ok=True)
+        ts = int(time.time())
+        final_filename = f"empezar_{new_lab.id}_{ts}.py"
+        file_path = os.path.join(scripts_dir, final_filename)
+        try:
+            with open(file_path, "wb") as f:
+                f.write(content)
+            new_lab.script_path = f"uploads/scripts/{final_filename}"
+            db.session.commit()
+        except Exception as e:
+            db.session.rollback()
+            return JSONResponse(status_code=500, content={"error": f"No se pudo guardar el script: {e}"})
+
+        return {"success": True, "message": "Lab de iniciación creado correctamente", "machine_id": new_lab.id}
 
     @api_router.post("/reclamar-maquina")
     async def api_reclamar_maquina(
         request: Request,
         data: ReclamarMaquinaRequest,
-        flask_session: dict = Depends(get_flask_session),
+        session: dict = Depends(get_session),
         csrf_ok: bool = Depends(verify_csrf_token),
     ):
-        """API: Reclamar autoría de una máquina."""
-        user_id = flask_session.get("user_id")
-        username = (flask_session.get("username") or "").strip()
-        role = flask_session.get("role", "")
+        user_id = session.get("user_id")
+        username = (session.get("username") or "").strip()
+        role = session.get("role", "")
         if not user_id or role not in ("jugador", "admin", "moderador"):
             return JSONResponse(status_code=403, content={"error": "Acceso denegado"})
 
         try:
-            alchemy_db.session.add(
+            db.session.add(
                 MachineClaim(
                     user_id=user_id,
                     username=username,
@@ -291,21 +398,20 @@ def register_machine_routes(
                     estado="pendiente",
                 )
             )
-            alchemy_db.session.commit()
+            db.session.commit()
             return {"success": True, "message": "Reclamación enviada correctamente"}
         except Exception as e:
-            alchemy_db.session.rollback()
+            db.session.rollback()
             return JSONResponse(status_code=500, content={"error": str(e)})
 
     @api_router.post("/claims/{claim_id}/approve")
     async def api_approve_claim(
         request: Request,
         claim_id: int,
-        flask_session: dict = Depends(get_flask_session),
+        session: dict = Depends(get_session),
         csrf_ok: bool = Depends(verify_csrf_token),
     ):
-        """API: Aprobar reclamación de máquina. Solo admin."""
-        ok, _ = require_auth_and_role(flask_session, ["admin"])
+        ok, _ = require_auth_and_role(session, ["admin"])
         if not ok:
             return JSONResponse(status_code=403, content={"error": "Acceso denegado"})
         claim = MachineClaim.query.get(claim_id)
@@ -316,73 +422,66 @@ def register_machine_routes(
             if maquina:
                 maquina.autor = claim.username
             claim.estado = "aprobada"
-            alchemy_db.session.commit()
-            from dockerlabs.maquinas import recalcular_ranking_creadores
-
+            db.session.commit()
             recalcular_ranking_creadores()
             return {"success": True}
         except Exception as e:
-            alchemy_db.session.rollback()
+            db.session.rollback()
             return JSONResponse(status_code=500, content={"error": str(e)})
 
     @api_router.post("/claims/{claim_id}/reject")
     async def api_reject_claim(
         request: Request,
         claim_id: int,
-        flask_session: dict = Depends(get_flask_session),
+        session: dict = Depends(get_session),
         csrf_ok: bool = Depends(verify_csrf_token),
     ):
-        """API: Rechazar reclamación. Solo admin."""
-        ok, _ = require_auth_and_role(flask_session, ["admin"])
+        ok, _ = require_auth_and_role(session, ["admin"])
         if not ok:
             return JSONResponse(status_code=403, content={"error": "Acceso denegado"})
         claim = MachineClaim.query.get(claim_id)
         if not claim:
             return JSONResponse(status_code=404, content={"error": "No encontrada"})
         try:
-            alchemy_db.session.delete(claim)
-            alchemy_db.session.commit()
+            db.session.delete(claim)
+            db.session.commit()
             return {"success": True}
         except Exception as e:
-            alchemy_db.session.rollback()
+            db.session.rollback()
             return JSONResponse(status_code=500, content={"error": str(e)})
 
     @api_router.post("/claims/{claim_id}/revert")
     async def api_revert_claim(
         request: Request,
         claim_id: int,
-        flask_session: dict = Depends(get_flask_session),
+        session: dict = Depends(get_session),
         csrf_ok: bool = Depends(verify_csrf_token),
     ):
-        """API: Revertir reclamación a pendiente. Admin/moderador."""
-        ok, _ = require_auth_and_role(flask_session, ["admin", "moderador"])
+        ok, _ = require_auth_and_role(session, ["admin", "moderador"])
         if not ok:
             return JSONResponse(status_code=403, content={"error": "Acceso denegado"})
         claim = MachineClaim.query.get(claim_id)
         if not claim:
             return JSONResponse(status_code=404, content={"error": "No encontrada"})
         claim.estado = "pendiente"
-        alchemy_db.session.commit()
+        db.session.commit()
         return {"success": True}
 
     @api_router.post("/machine-edit-requests/{request_id}/approve")
     async def api_approve_machine_edit(
         request: Request,
         request_id: int,
-        flask_session: dict = Depends(get_flask_session),
+        session: dict = Depends(get_session),
         csrf_ok: bool = Depends(verify_csrf_token),
     ):
-        """API: Aprobar edición de máquina. Admin/moderador."""
-        ok, _ = require_auth_and_role(flask_session, ["admin", "moderador"])
+        ok, _ = require_auth_and_role(session, ["admin", "moderador"])
         if not ok:
             return JSONResponse(status_code=403, content={"error": "Acceso denegado"})
         req = MachineEditRequest.query.get(request_id)
         if not req:
             return JSONResponse(status_code=404, content={"error": "No encontrada"})
         try:
-            import json as _json
-
-            nuevos = _json.loads(req.nuevos_datos)
+            nuevos = json.loads(req.nuevos_datos)
         except Exception:
             nuevos = {}
         maquina = Machine.query.get(req.machine_id)
@@ -400,62 +499,59 @@ def register_machine_routes(
                 "link_descarga",
             ):
                 val = nuevos.get(field)
-                if val:
+                if field == "imagen":
+                    setattr(maquina, field, _sanitize_imagen(val))
+                elif val:
                     setattr(maquina, field, val)
-            alchemy_db.session.commit()
+            db.session.commit()
             if req.origen == "docker":
-                from dockerlabs.maquinas import recalcular_ranking_creadores
-
                 recalcular_ranking_creadores()
         req.estado = "aprobada"
-        alchemy_db.session.commit()
+        db.session.commit()
         return {"success": True}
 
     @api_router.post("/machine-edit-requests/{request_id}/reject")
     async def api_reject_machine_edit(
         request: Request,
         request_id: int,
-        flask_session: dict = Depends(get_flask_session),
+        session: dict = Depends(get_session),
         csrf_ok: bool = Depends(verify_csrf_token),
     ):
-        """API: Rechazar edición de máquina. Admin/moderador."""
-        ok, _ = require_auth_and_role(flask_session, ["admin", "moderador"])
+        ok, _ = require_auth_and_role(session, ["admin", "moderador"])
         if not ok:
             return JSONResponse(status_code=403, content={"error": "Acceso denegado"})
         req = MachineEditRequest.query.get(request_id)
         if not req:
             return JSONResponse(status_code=404, content={"error": "No encontrada"})
         req.estado = "rechazada"
-        alchemy_db.session.commit()
+        db.session.commit()
         return {"success": True}
 
     @api_router.post("/machine-edit-requests/{request_id}/revert")
     async def api_revert_machine_edit(
         request: Request,
         request_id: int,
-        flask_session: dict = Depends(get_flask_session),
+        session: dict = Depends(get_session),
         csrf_ok: bool = Depends(verify_csrf_token),
     ):
-        """API: Revertir edición a pendiente. Admin/moderador."""
-        ok, _ = require_auth_and_role(flask_session, ["admin", "moderador"])
+        ok, _ = require_auth_and_role(session, ["admin", "moderador"])
         if not ok:
             return JSONResponse(status_code=403, content={"error": "Acceso denegado"})
         req = MachineEditRequest.query.get(request_id)
         if not req:
             return JSONResponse(status_code=404, content={"error": "No encontrada"})
         req.estado = "pendiente"
-        alchemy_db.session.commit()
+        db.session.commit()
         return {"success": True}
 
     @pages_router.get("/maquinas-hechas", response_class=HTMLResponse)
-    def maquinas_hechas_page(request: Request, flask_session: dict = Depends(get_flask_session)):
-        """Página de máquinas completadas por el usuario."""
-        user_id = flask_session.get("user_id")
+    def maquinas_hechas_page(request: Request, session: dict = Depends(get_session)):
+        user_id = session.get("user_id")
         if not user_id:
             return RedirectResponse(url="/login", status_code=302)
 
         results = (
-            alchemy_db.session.query(
+            db.session.query(
                 CompletedMachine.machine_name,
                 CompletedMachine.completed_at,
                 Machine.id,
@@ -491,7 +587,7 @@ def register_machine_routes(
         completed_count = len(completed_machines)
         completion_percentage = round((completed_count / total_machines * 100), 1) if total_machines > 0 else 0
 
-        current_user_role = flask_session.get("role", "")
+        current_user_role = session.get("role", "")
         return templates.TemplateResponse(
             request,
             "dockerlabs/user/maquinas_hechas.html",
@@ -500,7 +596,7 @@ def register_machine_routes(
                 "total_machines": total_machines,
                 "completed_count": completed_count,
                 "completion_percentage": completion_percentage,
-                "session": flask_session,
+                "session": session,
                 "url_for": url_for,
                 "current_user_role": current_user_role,
                 "g": {"csp_nonce": secrets.token_urlsafe(32)},

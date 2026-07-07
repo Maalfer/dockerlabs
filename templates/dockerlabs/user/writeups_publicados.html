@@ -1,9 +1,9 @@
 {% extends "dockerlabs/base.html" %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{{ url_for('static', filename='dockerlabs/css/writeups_publicados.css') }}"
+<link rel="stylesheet" href="{{ static_v('dockerlabs/css/writeups_publicados.css') }}"
       media="print" onload="this.media='all'">
-<noscript><link rel="stylesheet" href="{{ url_for('static', filename='dockerlabs/css/writeups_publicados.css') }}"></noscript>
+<noscript><link rel="stylesheet" href="{{ static_v('dockerlabs/css/writeups_publicados.css') }}"></noscript>
 {% endblock %}
 
 {% block title %}Writeups publicados - DockerLabs{% endblock %}

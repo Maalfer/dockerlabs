@@ -26,26 +26,6 @@ class BunkerAccessLog(db.Model):
     # Optional: Relationship if needed
     # token = db.relationship('BunkerAccessToken', backref=db.backref('logs', lazy=True))
 
-class BunkerWriteup(db.Model):
-    """Writeups para máquinas de Entornos Reales en BunkerLabs"""
-    __tablename__ = 'bunker_writeups'
-
-    id = db.Column(db.Integer, primary_key=True)
-    maquina = db.Column(db.String, nullable=False)
-    autor = db.Column(db.String, nullable=False)
-    url = db.Column(db.String, nullable=False)
-    tipo = db.Column(db.String, nullable=False)  # 'texto' o 'video'
-    locked = db.Column(db.Boolean, default=False)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
-
-    __table_args__ = (
-        db.Index('idx_bunker_writeups_maquina', 'maquina'),
-    )
-
-    def __repr__(self):
-        return f'<BunkerWriteup {self.maquina} by {self.autor}>'
-
-
 class BunkerResource(db.Model):
     """Recursos compartidos en BunkerLabs (documentos, enlaces, etc.)"""
     __tablename__ = 'bunker_resources'

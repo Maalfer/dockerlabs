@@ -1,9 +1,9 @@
 {% extends "dockerlabs/base.html" %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{{ url_for('static', filename='dockerlabs/css/dashboard.css') }}"
+<link rel="stylesheet" href="{{ static_v('dockerlabs/css/dashboard.css') }}"
       media="print" onload="this.media='all'">
-<noscript><link rel="stylesheet" href="{{ url_for('static', filename='dockerlabs/css/dashboard.css') }}"></noscript>
+<noscript><link rel="stylesheet" href="{{ static_v('dockerlabs/css/dashboard.css') }}"></noscript>
 {% endblock %}
 
 {% block title %}Peticiones - DockerLabs{% endblock %}
@@ -588,5 +588,5 @@
 {% endblock %}
 
 {% block scripts %}
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="{{ static_v('dockerlabs/vendor/bootstrap.bundle.min.js') }}"></script>
 {% endblock %}

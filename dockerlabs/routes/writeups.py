@@ -1,3 +1,4 @@
+import logging
 from datetime import datetime
 from typing import List, Optional
 
@@ -6,7 +7,10 @@ from fastapi.responses import JSONResponse, StreamingResponse
 from pydantic import BaseModel
 from sqlalchemy import func
 
-from dockerlabs.models import Machine, PendingWriteup, User, Writeup, WriteupAnalysisResult, WriteupEditRequest, WriteupRanking, WriteupReport
+from dockerlabs import validators
+from dockerlabs.models import Machine, PendingWriteup, User, Writeup, WriteupAnalysisResult, WriteupEditRequest, WriteupReport
+
+_logger = logging.getLogger(__name__)
 
 
 class SubmitWriteupRequest(BaseModel):
@@ -50,74 +54,61 @@ class MaquinasWriteupsResponse(BaseModel):
     maquinas: List[MaquinaWriteupItem]
 
 
-def register_writeup_routes(api_router, get_flask_session, verify_csrf_token, alchemy_db):
+def register_writeup_routes(api_router, get_session, verify_csrf_token, db):
     @api_router.post("/submit_writeup")
     async def api_submit_writeup(
         request: Request,
         data: SubmitWriteupRequest,
-        flask_session: dict = Depends(get_flask_session),
+        session: dict = Depends(get_session),
         csrf_ok: bool = Depends(verify_csrf_token),
     ):
-        import logging
-        logger = logging.getLogger(__name__)
-
-        user_id = flask_session.get("user_id")
-        autor = flask_session.get("username", "").strip()
-        logger.info(f"Submit writeup attempt - user_id: {user_id}, autor: {autor}, maquina: {data.maquina}")
+        user_id = session.get("user_id")
+        autor = session.get("username", "").strip()
 
         if not user_id or not autor:
-            logger.warning(f"Submit writeup failed - no user_id or autor: user_id={user_id}, autor={autor}")
             return JSONResponse(status_code=403, content={"error": "Debes iniciar sesión"})
 
         maquina = data.maquina.strip()
         url = data.url.strip()
         tipo = data.tipo.strip().lower()
 
-        logger.info(f"Validating writeup data - maquina: {maquina}, url: {url}, tipo: {tipo}")
-
-        from dockerlabs import validators
 
         valid, err = validators.validate_machine_name(maquina)
         if not valid:
-            logger.warning(f"Machine name validation failed: {err}")
             return JSONResponse(status_code=400, content={"error": f"Campo 'maquina' inválido: {err}"})
         valid, err = validators.validate_url(url)
         if not valid:
-            logger.warning(f"URL validation failed: {err}")
             return JSONResponse(status_code=400, content={"error": f"URL inválida: {err}"})
         valid, err = validators.validate_writeup_type(tipo)
         if not valid:
-            logger.warning(f"Writeup type validation failed: {err}")
             return JSONResponse(status_code=400, content={"error": f"Tipo inválido: {err}"})
 
         tipo = "video" if tipo == "video" else "texto"
 
         machine = Machine.query.filter_by(nombre=maquina).first()
         if not machine:
-            logger.warning(f"Machine not found: {maquina}")
             return JSONResponse(status_code=400, content={"error": "La máquina especificada no existe"})
         try:
             new_pending = PendingWriteup(maquina=maquina, autor=autor, url=url, tipo=tipo)
-            alchemy_db.session.add(new_pending)
-            alchemy_db.session.commit()
-            logger.info(f"Writeup submitted successfully - autor={autor}, maquina={maquina}")
+            db.session.add(new_pending)
+            db.session.commit()
             return {"message": "Writeup enviado correctamente"}
         except Exception as e:
-            alchemy_db.session.rollback()
-            logger.error(f"Error saving writeup: {str(e)}", exc_info=True)
+            db.session.rollback()
+            _logger.error(f"Error saving writeup: {str(e)}", exc_info=True)
             return JSONResponse(status_code=500, content={"error": f"Error al guardar: {str(e)}"})
 
     @api_router.post("/writeups/recibidos/aprobar-todos")
     async def api_approve_all_writeups_recibidos(
         request: Request,
-        flask_session: dict = Depends(get_flask_session),
+        session: dict = Depends(get_session),
         csrf_ok: bool = Depends(verify_csrf_token),
     ):
-        caller_role = flask_session.get("role", "")
+        caller_role = session.get("role", "")
         if caller_role not in ("admin", "moderador"):
             return JSONResponse(status_code=403, content={"error": "Acceso denegado"})
 
-        alchemy_db.session.rollback()
+        db.session.rollback()
 
         try:
             pending_list = PendingWriteup.query.order_by(PendingWriteup.id.asc()).all()
@@ -135,34 +126,34 @@ def register_writeup_routes(api_router, get_flask_session, verify_csrf_token, al
                 key = (pending.maquina, autor_real, pending.url)
                 already_published = Writeup.query.filter_by(maquina=pending.maquina, autor=autor_real, url=pending.url).first()
                 if not already_published and key not in seen:
-                    alchemy_db.session.add(Writeup(maquina=pending.maquina, autor=autor_real, url=pending.url, tipo=pending.tipo))
+                    db.session.add(Writeup(maquina=pending.maquina, autor=autor_real, url=pending.url, tipo=pending.tipo))
                     seen.add(key)
 
-                alchemy_db.session.delete(pending)
+                db.session.delete(pending)
                 aprobados += 1
 
-            alchemy_db.session.commit()
+            db.session.commit()
 
             from dockerlabs.writeups import recalcular_ranking_writeups
             recalcular_ranking_writeups()
 
             return {"message": f"{aprobados} writeup(s) aprobado(s) correctamente.", "aprobados": aprobados}
         except Exception as e:
-            alchemy_db.session.rollback()
+            db.session.rollback()
             return JSONResponse(status_code=500, content={"error": f"Error al aprobar todos: {str(e)}"})
 
     @api_router.post("/writeups/recibidos/{writeup_id}/aprobar")
     async def api_approve_writeup_recibido(
         request: Request,
         writeup_id: int,
-        flask_session: dict = Depends(get_flask_session),
+        session: dict = Depends(get_session),
         csrf_ok: bool = Depends(verify_csrf_token),
     ):
-        caller_role = flask_session.get("role", "")
+        caller_role = session.get("role", "")
         if caller_role not in ("admin", "moderador"):
             return JSONResponse(status_code=403, content={"error": "Acceso denegado"})
 
-        alchemy_db.session.rollback()
+        db.session.rollback()
 
         try:
             pending = PendingWriteup.query.get(writeup_id)
@@ -176,27 +167,27 @@ def register_writeup_routes(api_router, get_flask_session, verify_csrf_token, al
 
             if not Writeup.query.filter_by(maquina=pending.maquina, autor=autor_real, url=pending.url).first():
                 new_writeup = Writeup(maquina=pending.maquina, autor=autor_real, url=pending.url, tipo=pending.tipo)
-                alchemy_db.session.add(new_writeup)
+                db.session.add(new_writeup)
 
-            alchemy_db.session.delete(pending)
-            alchemy_db.session.commit()
+            db.session.delete(pending)
+            db.session.commit()
 
             from dockerlabs.writeups import recalcular_ranking_writeups
 
             recalcular_ranking_writeups()
             return {"message": "Writeup aprobado y movido a publicados."}
         except Exception as e:
-            alchemy_db.session.rollback()
+            db.session.rollback()
             return JSONResponse(status_code=500, content={"error": f"Error al aprobar: {str(e)}"})
 
     @api_router.post("/writeups/edit-requests/{request_id}/approve")
     async def api_approve_writeup_edit(
         request: Request,
         request_id: int,
-        flask_session: dict = Depends(get_flask_session),
+        session: dict = Depends(get_session),
         csrf_ok: bool = Depends(verify_csrf_token),
     ):
-        caller_role = flask_session.get("role", "")
+        caller_role = session.get("role", "")
         if caller_role not in ("admin", "moderador"):
             return JSONResponse(status_code=403, content={"error": "Acceso denegado"})
 
@@ -214,9 +205,9 @@ def register_writeup_routes(api_router, get_flask_session, verify_csrf_token, al
             writeup.url = req.url_nueva or writeup.url
             writeup.tipo = req.tipo_nuevo or writeup.tipo
             req.estado = "aprobada"
-            alchemy_db.session.commit()
+            db.session.commit()
         except Exception as e:
-            alchemy_db.session.rollback()
+            db.session.rollback()
             return JSONResponse(status_code=500, content={"error": f"Error al aprobar edición: {str(e)}"})
 
         from dockerlabs.writeups import recalcular_ranking_writeups
@@ -228,10 +219,10 @@ def register_writeup_routes(api_router, get_flask_session, verify_csrf_token, al
     async def api_reject_writeup_edit(
         request: Request,
         request_id: int,
-        flask_session: dict = Depends(get_flask_session),
+        session: dict = Depends(get_session),
         csrf_ok: bool = Depends(verify_csrf_token),
     ):
-        caller_role = flask_session.get("role", "")
+        caller_role = session.get("role", "")
         if caller_role not in ("admin", "moderador"):
             return JSONResponse(status_code=403, content={"error": "Acceso denegado"})
 
@@ -239,9 +230,9 @@ def register_writeup_routes(api_router, get_flask_session, verify_csrf_token, al
         if req:
             try:
                 req.estado = "rechazada"
-                alchemy_db.session.commit()
+                db.session.commit()
             except Exception as e:
-                alchemy_db.session.rollback()
+                db.session.rollback()
                 return JSONResponse(status_code=500, content={"error": f"Error al rechazar: {str(e)}"})
         return {"message": "Petición rechazada.", "success": True}
 
@@ -249,10 +240,10 @@ def register_writeup_routes(api_router, get_flask_session, verify_csrf_token, al
     async def api_revert_writeup_edit(
         request: Request,
         request_id: int,
-        flask_session: dict = Depends(get_flask_session),
+        session: dict = Depends(get_session),
         csrf_ok: bool = Depends(verify_csrf_token),
     ):
-        caller_role = flask_session.get("role", "")
+        caller_role = session.get("role", "")
         if caller_role not in ("admin", "moderador"):
             return JSONResponse(status_code=403, content={"error": "Acceso denegado"})
 
@@ -260,9 +251,9 @@ def register_writeup_routes(api_router, get_flask_session, verify_csrf_token, al
         if req:
             try:
                 req.estado = "pendiente"
-                alchemy_db.session.commit()
+                db.session.commit()
             except Exception as e:
-                alchemy_db.session.rollback()
+                db.session.rollback()
                 return JSONResponse(status_code=500, content={"error": f"Error al revertir: {str(e)}"})
         return {"message": "Petición revertida a pendiente.", "success": True}
 
@@ -271,12 +262,12 @@ def register_writeup_routes(api_router, get_flask_session, verify_csrf_token, al
         request: Request,
         writeup_id: int,
         data: UpdateWriteupRequest,
-        flask_session: dict = Depends(get_flask_session),
+        session: dict = Depends(get_session),
         csrf_ok: bool = Depends(verify_csrf_token),
     ):
-        user_id = flask_session.get("user_id")
-        username = flask_session.get("username", "").strip()
-        caller_role = flask_session.get("role", "")
+        user_id = session.get("user_id")
+        username = session.get("username", "").strip()
+        caller_role = session.get("role", "")
         if not user_id:
             return JSONResponse(status_code=403, content={"error": "Debes iniciar sesión."})
 
@@ -300,13 +291,13 @@ def register_writeup_routes(api_router, get_flask_session, verify_csrf_token, al
             try:
                 writeup.url = data.url
                 writeup.tipo = data.tipo
-                alchemy_db.session.commit()
+                db.session.commit()
                 from dockerlabs.writeups import recalcular_ranking_writeups
 
                 recalcular_ranking_writeups()
                 return {"message": "Writeup actualizado correctamente"}
             except Exception as e:
-                alchemy_db.session.rollback()
+                db.session.rollback()
                 return JSONResponse(status_code=500, content={"error": str(e)})
 
         if not username or username.lower() != autor_db.lower():
@@ -326,29 +317,29 @@ def register_writeup_routes(api_router, get_flask_session, verify_csrf_token, al
                 url_nueva=data.url,
                 tipo_nuevo=data.tipo,
             )
-            alchemy_db.session.add(edit_request)
-            alchemy_db.session.commit()
+            db.session.add(edit_request)
+            db.session.commit()
             return {"message": "Tu petición de cambio ha sido enviada para revisión."}
         except Exception as e:
-            alchemy_db.session.rollback()
+            db.session.rollback()
             return JSONResponse(status_code=500, content={"error": str(e)})
 
     @api_router.post("/writeups/subidos/{writeup_id}/delete")
     async def api_delete_writeup_subido(
         request: Request,
         writeup_id: int,
-        flask_session: dict = Depends(get_flask_session),
+        session: dict = Depends(get_session),
         csrf_ok: bool = Depends(verify_csrf_token),
     ):
-        caller_role = flask_session.get("role", "")
+        caller_role = session.get("role", "")
         if caller_role not in ("admin", "moderador"):
             return JSONResponse(status_code=403, content={"error": "Acceso denegado"})
 
         writeup = Writeup.query.get(writeup_id)
         if not writeup:
             return JSONResponse(status_code=404, content={"error": "Writeup no encontrado"})
-        alchemy_db.session.delete(writeup)
-        alchemy_db.session.commit()
+        db.session.delete(writeup)
+        db.session.commit()
         from dockerlabs.writeups import recalcular_ranking_writeups
 
         recalcular_ranking_writeups()
@@ -358,10 +349,10 @@ def register_writeup_routes(api_router, get_flask_session, verify_csrf_token, al
     async def api_delete_writeup_subido_delete(
         request: Request,
         writeup_id: int,
-        flask_session: dict = Depends(get_flask_session),
+        session: dict = Depends(get_session),
         csrf_ok: bool = Depends(verify_csrf_token),
     ):
-        caller_role = flask_session.get("role", "")
+        caller_role = session.get("role", "")
         if caller_role not in ("admin", "moderador"):
             return JSONResponse(status_code=403, content={"error": "Acceso denegado"})
 
@@ -369,10 +360,10 @@ def register_writeup_routes(api_router, get_flask_session, verify_csrf_token, al
         if not writeup:
             return JSONResponse(status_code=404, content={"error": "Writeup no encontrado"})
         try:
-            alchemy_db.session.delete(writeup)
-            alchemy_db.session.commit()
+            db.session.delete(writeup)
+            db.session.commit()
         except Exception as e:
-            alchemy_db.session.rollback()
+            db.session.rollback()
             return JSONResponse(status_code=500, content={"error": f"Error al eliminar: {str(e)}"})
         from dockerlabs.writeups import recalcular_ranking_writeups
 
@@ -384,10 +375,10 @@ def register_writeup_routes(api_router, get_flask_session, verify_csrf_token, al
         request: Request,
         writeup_id: int,
         data: UpdateWriteupRecibidoRequest,
-        flask_session: dict = Depends(get_flask_session),
+        session: dict = Depends(get_session),
         csrf_ok: bool = Depends(verify_csrf_token),
     ):
-        caller_role = flask_session.get("role", "")
+        caller_role = session.get("role", "")
         if caller_role not in ("admin", "moderador"):
             return JSONResponse(status_code=403, content={"error": "Acceso denegado"})
 
@@ -411,9 +402,9 @@ def register_writeup_routes(api_router, get_flask_session, verify_csrf_token, al
             pending.autor = data.autor
             pending.url = data.url
             pending.tipo = data.tipo
-            alchemy_db.session.commit()
+            db.session.commit()
         except Exception as e:
-            alchemy_db.session.rollback()
+            db.session.rollback()
             return JSONResponse(status_code=500, content={"error": f"Error al actualizar: {str(e)}"})
         return {"message": "Writeup actualizado correctamente"}
 
@@ -421,10 +412,10 @@ def register_writeup_routes(api_router, get_flask_session, verify_csrf_token, al
     async def api_delete_writeup_recibido(
         request: Request,
         writeup_id: int,
-        flask_session: dict = Depends(get_flask_session),
+        session: dict = Depends(get_session),
         csrf_ok: bool = Depends(verify_csrf_token),
     ):
-        caller_role = flask_session.get("role", "")
+        caller_role = session.get("role", "")
         if caller_role not in ("admin", "moderador"):
             return JSONResponse(status_code=403, content={"error": "Acceso denegado"})
 
@@ -432,10 +423,10 @@ def register_writeup_routes(api_router, get_flask_session, verify_csrf_token, al
         if not pending:
             return JSONResponse(status_code=404, content={"error": "Writeup no encontrado"})
         try:
-            alchemy_db.session.delete(pending)
-            alchemy_db.session.commit()
+            db.session.delete(pending)
+            db.session.commit()
         except Exception as e:
-            alchemy_db.session.rollback()
+            db.session.rollback()
             return JSONResponse(status_code=500, content={"error": f"Error al eliminar: {str(e)}"})
         return {"message": "Writeup eliminado correctamente"}
 
@@ -443,10 +434,10 @@ def register_writeup_routes(api_router, get_flask_session, verify_csrf_token, al
     async def api_delete_writeup_recibido_delete(
         request: Request,
         writeup_id: int,
-        flask_session: dict = Depends(get_flask_session),
+        session: dict = Depends(get_session),
         csrf_ok: bool = Depends(verify_csrf_token),
     ):
-        caller_role = flask_session.get("role", "")
+        caller_role = session.get("role", "")
         if caller_role not in ("admin", "moderador"):
             return JSONResponse(status_code=403, content={"error": "Acceso denegado"})
 
@@ -454,17 +445,17 @@ def register_writeup_routes(api_router, get_flask_session, verify_csrf_token, al
         if not pending:
             return JSONResponse(status_code=404, content={"error": "Writeup no encontrado"})
         try:
-            alchemy_db.session.delete(pending)
-            alchemy_db.session.commit()
+            db.session.delete(pending)
+            db.session.commit()
         except Exception as e:
-            alchemy_db.session.rollback()
+            db.session.rollback()
             return JSONResponse(status_code=500, content={"error": f"Error al eliminar: {str(e)}"})
         return {"message": "Writeup eliminado correctamente"}
 
     @api_router.get("/writeups/{maquina_nombre}")
-    def api_writeups_maquina(request: Request, maquina_nombre: str, flask_session: dict = Depends(get_flask_session)):
+    def api_writeups_maquina(request: Request, maquina_nombre: str, session: dict = Depends(get_session)):
         results = (
-            alchemy_db.session.query(Writeup.id, Writeup.autor, Writeup.url, Writeup.tipo, User.id)
+            db.session.query(Writeup.id, Writeup.autor, Writeup.url, Writeup.tipo, User.id)
             .outerjoin(User, func.lower(User.username) == func.lower(Writeup.autor))
             .filter(Writeup.maquina == maquina_nombre)
             .order_by(Writeup.created_at.desc(), Writeup.id.desc())
@@ -479,8 +470,8 @@ def register_writeup_routes(api_router, get_flask_session, verify_csrf_token, al
         return writeups
 
     @api_router.post("/writeups/{writeup_id}/report")
-    def api_report_writeup(request: Request, writeup_id: int, data: ReportWriteupRequest, flask_session: dict = Depends(get_flask_session)):
-        user_id = flask_session.get("user_id")
+    def api_report_writeup(request: Request, writeup_id: int, data: ReportWriteupRequest, session: dict = Depends(get_session)):
+        user_id = session.get("user_id")
         if not user_id:
             return JSONResponse(status_code=401, content={"error": "Debes iniciar sesión para reportar"})
 
@@ -488,33 +479,33 @@ def register_writeup_routes(api_router, get_flask_session, verify_csrf_token, al
             return JSONResponse(status_code=404, content={"error": "Writeup no encontrado"})
         try:
             report = WriteupReport(writeup_id=writeup_id, reporter_id=user_id, reason=data.reason)
-            alchemy_db.session.add(report)
-            alchemy_db.session.commit()
+            db.session.add(report)
+            db.session.commit()
             return {"message": "Reporte enviado correctamente"}
         except Exception:
-            alchemy_db.session.rollback()
+            db.session.rollback()
             return JSONResponse(status_code=500, content={"error": "Error al guardar el reporte"})
 
     @api_router.post("/writeups/reports/{report_id}/ignore")
     async def api_ignore_report(
         request: Request,
         report_id: int,
-        flask_session: dict = Depends(get_flask_session),
+        session: dict = Depends(get_session),
         csrf_ok: bool = Depends(verify_csrf_token),
     ):
-        caller_role = flask_session.get("role", "")
+        caller_role = session.get("role", "")
         if caller_role not in ("admin", "moderador"):
             return JSONResponse(status_code=403, content={"error": "Acceso denegado"})
 
         report = WriteupReport.query.get(report_id)
         if report:
-            alchemy_db.session.delete(report)
-            alchemy_db.session.commit()
+            db.session.delete(report)
+            db.session.commit()
         return {"message": "Reporte ignorado/eliminado correctamente"}
 
     @api_router.get("/admin/writeup_reports")
-    def api_get_reports(request: Request, flask_session: dict = Depends(get_flask_session)):
-        caller_role = flask_session.get("role", "")
+    def api_get_reports(request: Request, session: dict = Depends(get_session)):
+        caller_role = session.get("role", "")
         if caller_role not in ("admin", "moderador"):
             return JSONResponse(status_code=403, content={"error": "Acceso denegado"})
 
@@ -542,12 +533,12 @@ def register_writeup_routes(api_router, get_flask_session, verify_csrf_token, al
         return reports
 
     @api_router.get("/writeups/recibidos/list")
-    def api_list_writeups_recibidos(request: Request, flask_session: dict = Depends(get_flask_session)):
-        caller_role = flask_session.get("role", "")
-        username = (flask_session.get("username") or "").strip()
+    def api_list_writeups_recibidos(request: Request, session: dict = Depends(get_session)):
+        caller_role = session.get("role", "")
+        username = (session.get("username") or "").strip()
 
         query = (
-            alchemy_db.session.query(PendingWriteup, Machine.id, Machine.imagen)
+            db.session.query(PendingWriteup, Machine.id, Machine.imagen)
             .outerjoin(Machine, PendingWriteup.maquina == Machine.nombre)
         )
 
@@ -575,7 +566,7 @@ def register_writeup_routes(api_router, get_flask_session, verify_csrf_token, al
         return writeups
 
     @api_router.get("/author_profile")
-    def api_author_profile(request: Request, nombre: str, flask_session: dict = Depends(get_flask_session)):
+    def api_author_profile(request: Request, nombre: str, session: dict = Depends(get_session)):
         if not nombre:
             return JSONResponse(status_code=400, content={"error": "Nombre requerido"})
 
@@ -607,11 +598,11 @@ def register_writeup_routes(api_router, get_flask_session, verify_csrf_token, al
         request: Request,
         maquina: Optional[str] = None,
         filter_mode: Optional[str] = None,
-        flask_session: dict = Depends(get_flask_session),
+        session: dict = Depends(get_session),
     ):
-        user_id = flask_session.get("user_id")
-        role = flask_session.get("role", "")
-        username = (flask_session.get("username") or "").strip()
+        user_id = session.get("user_id")
+        role = session.get("role", "")
+        username = (session.get("username") or "").strip()
 
         query = Writeup.query
 
@@ -645,16 +636,15 @@ def register_writeup_routes(api_router, get_flask_session, verify_csrf_token, al
     @api_router.get("/writeups-analisis")
     async def api_analisis_writeups(
         request: Request,
-        flask_session: dict = Depends(get_flask_session),
+        session: dict = Depends(get_session),
     ):
         """Comprueba el estado HTTP de todos los writeups publicados.
         Emite Server-Sent Events con progreso en tiempo real.
         El cliente puede cancelar cerrando la conexión."""
         import asyncio
         import httpx
-        import json as _json
 
-        caller_role = flask_session.get("role", "")
+        caller_role = session.get("role", "")
         if caller_role not in ("admin", "moderador"):
             return JSONResponse(status_code=403, content={"error": "Acceso denegado"})
 
@@ -667,7 +657,7 @@ def register_writeup_routes(api_router, get_flask_session, verify_csrf_token, al
 
         async def event_generator():
             if total == 0:
-                yield f"data: {_json.dumps({'type': 'complete', 'total_analizados': 0, 'total_rotos': 0, 'rotos': []})}\n\n"
+                yield f"data: {json.dumps({'type': 'complete', 'total_analizados': 0, 'total_rotos': 0, 'rotos': []})}\n\n"
                 return
 
             sem = asyncio.Semaphore(CONCURRENCY)
@@ -682,7 +672,12 @@ def register_writeup_routes(api_router, get_flask_session, verify_csrf_token, al
                         return None
                     try:
                         async with httpx.AsyncClient(
-                            follow_redirects=True,
+                            # Anti-SSRF: NO seguir redirecciones. is_public_http_url() solo valida
+                            # la URL ORIGINAL; si se siguieran los 3xx, un host publico podria
+                            # redirigir a una IP interna (169.254.169.254, RFC1918, loopback...)
+                            # evadiendo el control. Para un verificador de enlaces un 3xx significa
+                            # que el enlace existe (no roto), asi que tratarlo como vivo es correcto.
+                            follow_redirects=False,
                             timeout=TIMEOUT,
                             headers={"User-Agent": USER_AGENT},
                         ) as client:
@@ -728,17 +723,15 @@ def register_writeup_routes(api_router, get_flask_session, verify_csrf_token, al
                         broken.append(result)
 
                     percent = int(checked / total * 100)
-                    yield f"data: {_json.dumps({'type': 'progress', 'checked': checked, 'total': total, 'percent': percent, 'broken_count': len(broken)})}\n\n"
+                    yield f"data: {json.dumps({'type': 'progress', 'checked': checked, 'total': total, 'percent': percent, 'broken_count': len(broken)})}\n\n"
 
-                yield f"data: {_json.dumps({'type': 'complete', 'total_analizados': total, 'total_rotos': len(broken), 'rotos': broken})}\n\n"
+                yield f"data: {json.dumps({'type': 'complete', 'total_analizados': total, 'total_rotos': len(broken), 'rotos': broken})}\n\n"
 
-                # Persistir resultados en BD para que sobrevivan recargas
-                from datetime import datetime as _dt
-                _analyzed_at = _dt.utcnow()
+                _analyzed_at = datetime.utcnow()
                 try:
                     WriteupAnalysisResult.query.delete()
                     for _w in broken:
-                        alchemy_db.session.add(WriteupAnalysisResult(
+                        db.session.add(WriteupAnalysisResult(
                             writeup_id=_w['id'],
                             maquina=_w['maquina'],
                             autor=_w['autor'],
@@ -749,9 +742,9 @@ def register_writeup_routes(api_router, get_flask_session, verify_csrf_token, al
                             dismissed=False,
                             analyzed_at=_analyzed_at,
                         ))
-                    alchemy_db.session.commit()
+                    db.session.commit()
                 except Exception:
-                    alchemy_db.session.rollback()
+                    db.session.rollback()
 
             except asyncio.CancelledError:
                 for t in tasks:
@@ -766,10 +759,10 @@ def register_writeup_routes(api_router, get_flask_session, verify_csrf_token, al
     @api_router.get("/writeups-analisis/results")
     async def api_analisis_results_saved(
         request: Request,
-        flask_session: dict = Depends(get_flask_session),
+        session: dict = Depends(get_session),
     ):
         """Devuelve los resultados del último análisis guardados en BD."""
-        caller_role = flask_session.get("role", "")
+        caller_role = session.get("role", "")
         if caller_role not in ("admin", "moderador"):
             return JSONResponse(status_code=403, content={"error": "Acceso denegado"})
 
@@ -799,11 +792,11 @@ def register_writeup_routes(api_router, get_flask_session, verify_csrf_token, al
     async def api_analisis_dismiss(
         request: Request,
         writeup_id: int,
-        flask_session: dict = Depends(get_flask_session),
+        session: dict = Depends(get_session),
         csrf_ok: bool = Depends(verify_csrf_token),
     ):
         """Marca un resultado de análisis como falso positivo (lo oculta sin eliminar el writeup)."""
-        caller_role = flask_session.get("role", "")
+        caller_role = session.get("role", "")
         if caller_role not in ("admin", "moderador"):
             return JSONResponse(status_code=403, content={"error": "Acceso denegado"})
 
@@ -812,20 +805,20 @@ def register_writeup_routes(api_router, get_flask_session, verify_csrf_token, al
             return JSONResponse(status_code=404, content={"error": "Resultado no encontrado"})
         result.dismissed = True
         try:
-            alchemy_db.session.commit()
+            db.session.commit()
             return {"ok": True}
         except Exception as e:
-            alchemy_db.session.rollback()
+            db.session.rollback()
             return JSONResponse(status_code=500, content={"error": str(e)})
 
     @api_router.post("/writeups-analisis/delete-batch")
     async def api_delete_writeups_batch(
         request: Request,
-        flask_session: dict = Depends(get_flask_session),
+        session: dict = Depends(get_session),
         csrf_ok: bool = Depends(verify_csrf_token),
     ):
         """Elimina múltiples writeups publicados por ID."""
-        caller_role = flask_session.get("role", "")
+        caller_role = session.get("role", "")
         if caller_role not in ("admin", "moderador"):
             return JSONResponse(status_code=403, content={"error": "Acceso denegado"})
 
@@ -839,31 +832,31 @@ def register_writeup_routes(api_router, get_flask_session, verify_csrf_token, al
             for wid in ids:
                 w = Writeup.query.get(int(wid))
                 if w:
-                    alchemy_db.session.delete(w)
+                    db.session.delete(w)
                     deleted += 1
             # Limpiar también los resultados de análisis de los writeups eliminados
             for wid in ids:
                 WriteupAnalysisResult.query.filter_by(writeup_id=int(wid)).delete()
-            alchemy_db.session.commit()
+            db.session.commit()
             from dockerlabs.writeups import recalcular_ranking_writeups
             recalcular_ranking_writeups()
             return {"message": f"{deleted} writeup(s) eliminados correctamente", "deleted": deleted}
         except Exception as e:
-            alchemy_db.session.rollback()
+            db.session.rollback()
             return JSONResponse(status_code=500, content={"error": f"Error al eliminar: {str(e)}"})
 
     @api_router.get("/writeups_subidos/maquinas", response_model=MaquinasWriteupsResponse)
     def api_list_maquinas_writeups_subidos(
         request: Request,
         filter_mode: Optional[str] = None,
-        flask_session: dict = Depends(get_flask_session),
+        session: dict = Depends(get_session),
     ):
-        user_id = flask_session.get("user_id")
-        role = flask_session.get("role", "")
-        username = (flask_session.get("username") or "").strip()
+        user_id = session.get("user_id")
+        role = session.get("role", "")
+        username = (session.get("username") or "").strip()
 
         query = (
-            alchemy_db.session.query(Writeup.maquina, func.count().label("total"), Machine.imagen, Machine.logo_path, Machine.id)
+            db.session.query(Writeup.maquina, func.count().label("total"), Machine.imagen, Machine.logo_path, Machine.id)
             .outerjoin(Machine, Writeup.maquina == Machine.nombre)
             .filter(Writeup.maquina != None, Writeup.maquina != "")  # noqa: E711
         )
