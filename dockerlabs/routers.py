@@ -1557,6 +1557,7 @@ from dockerlabs.routes.certificados import register_certificado_routes
 from dockerlabs.routes.pending_admin import register_pending_admin_routes
 from dockerlabs.routes.pages_admin import register_pages_admin_routes
 from dockerlabs.routes.pages_core import register_pages_core_routes
+from dockerlabs.routes.public_profile import register_public_profile_routes
 
 register_notification_routes(
     api_router=api_router,
@@ -1640,6 +1641,11 @@ register_pages_core_routes(
 register_certificado_routes(
     api_router=api_router,
     get_session=get_session,
+    db=db,
+)
+
+register_public_profile_routes(
+    pages_router=pages_router,
     db=db,
 )
 

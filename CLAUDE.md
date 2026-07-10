@@ -27,6 +27,7 @@ dockerlabs/
   auth.py                # Helpers de imagen de perfil
   maquinas.py            # recalcular_ranking_creadores()
   writeups.py            # recalcular_ranking_writeups()
+  slugs.py               # Slug público de perfil (/u/<slug>), sincronizado con username
   validators.py          # Validación de inputs (nombres, URLs, imágenes)
   image_utils.py         # Conversión a WebP
   email.py               # Envío de correos (Postfix local)
@@ -39,12 +40,13 @@ dockerlabs/
     bunkerlabs_pages.py  # Páginas de BunkerLabs
     bunker_api.py        # API endpoints de BunkerLabs
     images.py            # Servicio de imágenes (perfil, logos)
-    certificados.py      # Certificados de usuario
+    certificados.py      # Certificados de usuario (render PNG + archivado del PDF)
+    public_profile.py    # API pública JSON del perfil: GET /u/<slug>
     pending_admin.py     # Revisión de envíos pendientes
 bunkerlabs/              # Módulos propios de BunkerLabs
 static/                  # Assets estáticos (JS, CSS, imágenes)
 templates/               # Plantillas Jinja2
-uploads/ # Imágenes en disco (perfiles y logos)
+uploads/ # Ficheros en disco (perfiles, logos y certificados PDF)
 ```
 
 ## Sesiones y autenticación
@@ -125,6 +127,30 @@ templates.TemplateResponse("plantilla.html", {
     "g": {"csp_nonce": request.state.csp_nonce},
 })
 ```
+
+## Perfil público (`/u/<slug>`)
+
+Cada usuario tiene un `slug` único derivado de su `username` (`El Pingüino de
+Mario` → `el-pinguino-de-mario`). Lo asignan los eventos `before_insert` /
+`before_update` de `slugs.py`, así que cualquier alta o renombrado de un `User`
+lo mantiene al día sin intervención del código llamante.
+
+`GET /u/<slug>` devuelve JSON puro y público (sin sesión) con el perfil, las
+máquinas resueltas, las máquinas creadas, los writeups publicados y los
+certificados. También acepta el `username` literal como alias del slug.
+
+## Certificados
+
+`GET /api/certificado/<maquina>` renderiza el diploma y, **en cada generación**,
+archiva una copia en PDF en `uploads/certificados/user_<id>/<CERT_ID>-<maquina>.pdf`
+y la registra en la tabla `certificados`. Acepta `?formato=png` (por defecto) o
+`?formato=pdf`.
+
+El PDF archivado se sirve luego de forma pública en
+`GET /api/certificado/pdf/<CERT_ID>`, que es el enlace que expone `/u/<slug>` en
+cada certificado con `generado: true`.
+
+El `cert_id` (`DL-XXXXXX`) es determinista: `sha256("<username>:<maquina>")[:6]`.
 
 ## Almacenamiento de imágenes
 

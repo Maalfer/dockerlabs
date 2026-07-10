@@ -13,6 +13,10 @@ class User(db.Model):
     role = db.Column(db.String(20), nullable=False, default='jugador')
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
+    # Identificador público del perfil (`/u/<slug>`). Lo asignan y mantienen
+    # sincronizado con `username` los eventos de dockerlabs/slugs.py.
+    slug = db.Column(db.String(64), unique=True, nullable=True)
+
     biography = db.Column(db.Text)
     nombre_diploma = db.Column(db.String(100), nullable=True)
     linkedin_url = db.Column(db.String(512))
@@ -32,6 +36,34 @@ class User(db.Model):
     )
 
     __repr__ = lambda self: f'<User {self.username}>'
+
+class Certificate(db.Model):
+    """Certificado de finalización ya emitido, con su PDF archivado en disco.
+
+    Se crea al generar el diploma desde `/api/certificado/<maquina>`; el PDF
+    persiste en `uploads/certificados/` para servirlo después sin re-renderizar.
+    """
+    __tablename__ = 'certificados'
+
+    id = db.Column(db.Integer, primary_key=True)
+    cert_id = db.Column(db.String(16), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='CASCADE'), nullable=False)
+    username = db.Column(db.String(64), nullable=False)
+    machine_name = db.Column(db.String(191), nullable=False)
+    pdf_path = db.Column(db.String(255), nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    user = db.relationship('User', backref=db.backref('certificados', cascade='all, delete-orphan'))
+
+    __table_args__ = (
+        db.UniqueConstraint('user_id', 'machine_name', name='idx_certificados_uniq'),
+        db.Index('idx_certificados_cert_id', 'cert_id'),
+        db.Index('idx_certificados_user_id', 'user_id'),
+    )
+
+    def __repr__(self):
+        return f'<Certificate {self.cert_id} {self.username}/{self.machine_name}>'
 
 class Machine(db.Model):
     __tablename__ = 'maquinas'
@@ -426,3 +458,10 @@ class WriteupAnalysisResult(db.Model):
 
     def __repr__(self):
         return f'<WriteupAnalysisResult writeup_id={self.writeup_id} dismissed={self.dismissed}>'
+
+
+# Mantiene `User.slug` sincronizado con `User.username` en cualquier alta o
+# renombrado, sea cual sea el módulo que lo provoque.
+from dockerlabs.slugs import register_slug_events
+
+register_slug_events(User)
