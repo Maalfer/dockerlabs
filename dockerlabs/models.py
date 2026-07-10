@@ -46,7 +46,9 @@ class Certificate(db.Model):
     __tablename__ = 'certificados'
 
     id = db.Column(db.Integer, primary_key=True)
-    cert_id = db.Column(db.String(16), nullable=False)
+    # Único: solo son 24 bits de hash y las colisiones ocurren de verdad.
+    # allocate_cert_id() elige el primer candidato libre del digest.
+    cert_id = db.Column(db.String(16), unique=True, nullable=False)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='CASCADE'), nullable=False)
     username = db.Column(db.String(64), nullable=False)
     machine_name = db.Column(db.String(191), nullable=False)
@@ -59,7 +61,6 @@ class Certificate(db.Model):
 
     __table_args__ = (
         db.UniqueConstraint('user_id', 'machine_name', name='idx_certificados_uniq'),
-        db.Index('idx_certificados_cert_id', 'cert_id'),
         db.Index('idx_certificados_user_id', 'user_id'),
     )
 

@@ -50,14 +50,27 @@ TEXT_COLOR   = (30, 65, 85)
 
 _gen_rate: dict = defaultdict(list)
 _ver_rate: dict = defaultdict(list)
-GEN_MAX_PER_MIN  = 5
+# Generar ya no renderiza 13 s: sirve un fichero archivado o compone un PNG en
+# 0,45 s. Un usuario con 59 diplomas tiene que poder descargarlos del tirón.
+GEN_MAX_PER_MIN  = 60
 VER_MAX_PER_MIN  = 20
+
+# A partir de aquí se purgan las IPs sin actividad reciente, para que el
+# diccionario no crezca indefinidamente con una IP por atacante.
+RATE_STORE_MAX_KEYS = 10_000
 
 _template_img = None
 
 
+def _prune(store: dict, now: float) -> None:
+    for key in [k for k, hits in store.items() if not hits or now - hits[-1] >= 60]:
+        del store[key]
+
+
 def _allow(store: dict, key: str, limit: int) -> bool:
     now = time.time()
+    if len(store) > RATE_STORE_MAX_KEYS:
+        _prune(store, now)
     store[key] = [t for t in store[key] if now - t < 60]
     if len(store[key]) >= limit:
         return False
@@ -65,11 +78,38 @@ def _allow(store: dict, key: str, limit: int) -> bool:
     return True
 
 
+def _cert_id_candidates(username: str, machine_name: str):
+    """Ventanas sucesivas del digest, como candidatos a ID."""
+    digest = hashlib.sha256(f"{username}:{machine_name}".encode()).hexdigest().upper()
+    for i in range(0, 60, 6):
+        yield "DL-" + digest[i:i + 6]
+
+
 def certificate_id(username: str, machine_name: str) -> str:
-    """ID público del certificado. Determinista por (usuario, máquina)."""
-    return "DL-" + hashlib.sha256(
-        f"{username}:{machine_name}".encode()
-    ).hexdigest()[:6].upper()
+    """ID preferente del certificado. Determinista por (usuario, máquina).
+
+    Solo son 24 bits: con unos pocos miles de certificados las colisiones son
+    probables (paradoja del cumpleaños). Para el ID definitivo usa
+    `allocate_cert_id()`, que resuelve la colisión; este valor es únicamente el
+    primer candidato, y el que se muestra cuando aún no hay fila emitida.
+    """
+    return next(_cert_id_candidates(username, machine_name))
+
+
+def allocate_cert_id(username: str, machine_name: str, user_id: int) -> str:
+    """ID único: el primer candidato libre, o el que ya tenga este certificado.
+
+    Mantiene estable el ID de los certificados existentes y solo desplaza al
+    segundo en llegar, de modo que los IDs ya publicados no cambian.
+    """
+    for candidate in _cert_id_candidates(username, machine_name):
+        dueno = Certificate.query.filter_by(cert_id=candidate).first()
+        if dueno is None or (dueno.user_id == user_id
+                             and dueno.machine_name == machine_name):
+            return candidate
+    raise RuntimeError(
+        f"No se encontró un cert_id libre para {username}/{machine_name}"
+    )
 
 
 def safe_name(value: str) -> str:
@@ -147,8 +187,15 @@ def image_relpath(user_id: int, cert_id: str, machine_name: str) -> str:
     return f"uploads/certificados/user_{user_id}/{cert_id}-{safe_name(machine_name)}.webp"
 
 
+CERT_ROOT = os.path.join(BASE_DIR, 'uploads', 'certificados')
+
+
 def abspath_for(relpath: str) -> str:
-    return os.path.join(BASE_DIR, relpath)
+    """Ruta absoluta, garantizando que no se sale de uploads/certificados."""
+    abspath = os.path.abspath(os.path.join(BASE_DIR, relpath))
+    if not abspath.startswith(CERT_ROOT + os.sep):
+        raise ValueError(f"Ruta de certificado fuera de {CERT_ROOT}: {relpath!r}")
+    return abspath
 
 
 def _write_atomic(data: bytes, relpath: str) -> None:
@@ -244,7 +291,7 @@ def ensure_certificate(user, machine_name: str, *, force: bool = False):
         return None
 
     canonical = writeup.maquina
-    cert_id   = certificate_id(user.username, canonical)
+    cert_id   = allocate_cert_id(user.username, canonical, user.id)
     relpath   = pdf_relpath(user.id, cert_id, canonical)
     img_relpath = image_relpath(user.id, cert_id, canonical)
 
@@ -370,7 +417,15 @@ def revoke_certificate_safe(username: str, machine_name: str) -> None:
 
 
 def sync_user_certificates_safe(user_id: int, *, force: bool = False) -> None:
-    """Igual que `sync_user_certificates`, pensado para tareas en segundo plano."""
+    """Resincroniza los certificados de un usuario en segundo plano.
+
+    Re-renderizar un diploma cuesta ~170 ms (PDF + WebP); un usuario con 59 de
+    ellos tardaría 10 s. Se ejecuta como BackgroundTask, después de responder,
+    con su propio ámbito de sesión: el del request ya se ha cerrado.
+    """
+    from dockerlabs.database import _request_scope_id, db_session
+
+    token = _request_scope_id.set(object())
     try:
         user = User.query.get(user_id)
         if user:
@@ -378,6 +433,9 @@ def sync_user_certificates_safe(user_id: int, *, force: bool = False) -> None:
     except Exception:
         db.session.rollback()
         logger.exception("No se pudieron sincronizar los certificados de user_id=%s", user_id)
+    finally:
+        db_session.remove()
+        _request_scope_id.reset(token)
 
 
 def register_certificado_routes(api_router, get_session, db):
@@ -415,7 +473,7 @@ def register_certificado_routes(api_router, get_session, db):
         )
 
         emitidos = {
-            c.machine_name: c
+            c.machine_name.lower(): c
             for c in Certificate.query.filter_by(user_id=user_id).all()
         } if user_id else {}
 
@@ -428,8 +486,10 @@ def register_certificado_routes(api_router, get_session, db):
             machine = Machine.query.filter(
                 func.lower(Machine.nombre) == func.lower(wu.maquina)
             ).first()
-            cert_id = certificate_id(username, wu.maquina)
-            emitido = emitidos.get(wu.maquina)
+            emitido = emitidos.get(wu.maquina.lower())
+            # El cert_id real es el de la fila: puede diferir del primer
+            # candidato del hash si hubo colisión al emitirlo.
+            cert_id = emitido.cert_id if emitido else certificate_id(username, wu.maquina)
             result.append({
                 "maquina":    machine.nombre    if machine else wu.maquina,
                 "dificultad": machine.dificultad if machine else "",
@@ -472,29 +532,9 @@ def register_certificado_routes(api_router, get_session, db):
                 "imagen_url": f"/api/certificado/imagen/{raw}",
             }
 
-        # Reserva: writeups de autores sin cuenta, que no tienen fila emitida.
-        target_hash = raw[3:]
-        pairs = (
-            db.session.query(Writeup.autor, Writeup.maquina)
-            .distinct()
-            .limit(10000)
-            .all()
-        )
-        for autor, maquina in pairs:
-            if certificate_id(autor, maquina)[3:] == target_hash:
-                machine = Machine.query.filter(
-                    func.lower(Machine.nombre) == func.lower(maquina)
-                ).first()
-                return {
-                    "valid":      True,
-                    "username":   autor,
-                    "machine":    machine.nombre    if machine else maquina,
-                    "dificultad": machine.dificultad if machine else "",
-                    "generado":   False,
-                    "pdf_url":    None,
-                    "imagen_url": None,
-                }
-
+        # Un certificado solo existe una vez emitido (tiene fila indexada). Ya no
+        # se escanea `writeups_subidos` calculando un hash por fila: era un
+        # barrido de tabla que cualquiera podía disparar sin autenticarse.
         return {"valid": False, "message": "Certificado no encontrado."}
 
     @api_router.get("/certificado/pdf/{cert_id}")

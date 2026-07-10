@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Request, Depends, HTTPException, Form, UploadFile, File
+from fastapi import APIRouter, BackgroundTasks, Request, Depends, HTTPException, Form, UploadFile, File
 from fastapi.responses import JSONResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 from fastapi.concurrency import run_in_threadpool
@@ -263,6 +263,26 @@ def get_session(request: Request) -> dict:
         sid = d.get("_id")
         if sid:
             d["csrf_token"] = compute_csrf_token(sid)
+
+        # El rol viaja firmado en la cookie (válida 30 días) y no hay almacén de
+        # sesiones que invalidar. Para que degradar o borrar a un admin surta
+        # efecto de inmediato, se revalida contra la BD SOLO cuando la cookie
+        # afirma un rol privilegiado (el caso peligroso); para un 'jugador' se
+        # evita la consulta. Un rol obsoleto elevado se corrige al valor real.
+        if d.get("role") in ("admin", "moderador"):
+            uid = d.get("user_id")
+            real = None
+            if uid:
+                try:
+                    real = db.session.query(User.role).filter(User.id == uid).scalar()
+                except Exception:
+                    db.session.rollback()
+                    real = None
+            if real != d["role"]:
+                # Cuenta borrada, o rol cambiado: se cae al rol real (o sin sesión).
+                if real is None:
+                    return {}
+                d["role"] = real
         return d
     except Exception as e:
         # Log para diagnosticar problemas de sesión (pero no exponer detalles al cliente)
@@ -864,7 +884,7 @@ async def api_change_password(request: Request, data: ChangePasswordRequest, ses
     return {"message": "Contraseña actualizada correctamente.", "success": True}
 
 @api_router.post("/update_profile")
-async def api_update_profile(request: Request, data: UpdateProfileRequest, session: dict = Depends(get_session), csrf_ok: bool = Depends(verify_csrf_token)):
+async def api_update_profile(request: Request, data: UpdateProfileRequest, background: BackgroundTasks, session: dict = Depends(get_session), csrf_ok: bool = Depends(verify_csrf_token)):
     user_id = session.get('user_id')
     if not user_id:
         return JSONResponse(status_code=401, content={"error": "Debes iniciar sesión"})
@@ -896,8 +916,10 @@ async def api_update_profile(request: Request, data: UpdateProfileRequest, sessi
 
         if diploma_cambiado:
             # El nombre va impreso en el PDF: los diplomas ya emitidos caducan.
+            # Re-renderizarlos cuesta ~170 ms cada uno, así que va después de
+            # responder y no hace esperar al usuario.
             from dockerlabs.routes.certificados import sync_user_certificates_safe
-            await run_in_threadpool(sync_user_certificates_safe, user_obj.id, force=True)
+            background.add_task(sync_user_certificates_safe, user_obj.id, force=True)
 
         return {"message": "Perfil actualizado correctamente.", "success": True}
     except Exception as e:
@@ -1145,7 +1167,7 @@ async def api_request_username_change(request: Request, data: RequestUsernameCha
         return JSONResponse(status_code=500, content={"error": "Error al procesar la solicitud."})
 
 @api_router.post("/admin/approve_username_change/{request_id}")
-async def api_approve_username_change(request: Request, request_id: int, session: dict = Depends(get_session), csrf_ok: bool = Depends(verify_csrf_token)):
+async def api_approve_username_change(request: Request, request_id: int, background: BackgroundTasks, session: dict = Depends(get_session), csrf_ok: bool = Depends(verify_csrf_token)):
     caller_id = session.get('user_id')
     caller_role = session.get('role', '')
     if not caller_id or caller_role not in ('admin',):
@@ -1202,7 +1224,7 @@ async def api_approve_username_change(request: Request, request_id: int, session
         # conflicto: en ese caso los writeups migraron al nombre nuevo. Si hubo
         # conflicto siguen bajo el nombre viejo, y resincronizar los retiraría.
         from dockerlabs.routes.certificados import sync_user_certificates_safe
-        await run_in_threadpool(sync_user_certificates_safe, user.id, force=True)
+        background.add_task(sync_user_certificates_safe, user.id, force=True)
 
     msg = f"Nombre cambiado correctamente a {requested_username}."
     if conflict_count > 0:

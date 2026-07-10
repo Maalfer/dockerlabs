@@ -95,19 +95,7 @@ def register_public_profile_routes(pages_router, db):
         username = user.username
         ulower = username.lower()
 
-        # --- Catálogo completo, una sola vez -------------------------------
-        maquinas = Machine.query.all()
-        por_nombre = {m.nombre.lower(): m for m in maquinas}
-
-        categorias = {
-            (c.machine_id, c.origen): c.categoria
-            for c in Category.query.all()
-        }
-
-        def categoria_de(m):
-            return categorias.get((m.id, m.origen))
-
-        # --- Writeups y certificados del usuario ---------------------------
+        # --- Writeups, resoluciones y certificados del usuario -------------
         writeups = (
             Writeup.query
             .filter(func.lower(Writeup.autor) == ulower)
@@ -126,7 +114,7 @@ def register_public_profile_routes(pages_router, db):
 
         def certificado_de(nombre_maquina):
             cert = certs.get(nombre_maquina.lower())
-            if not cert:
+            if not cert or es_restringida(nombre_maquina):
                 return None
             return {
                 "cert_id":    cert.cert_id,
@@ -136,7 +124,6 @@ def register_public_profile_routes(pages_router, db):
                 "verify_url": f"/api/certificado/verificar/{cert.cert_id}",
             }
 
-        # --- Máquinas resueltas --------------------------------------------
         completadas = (
             CompletedMachine.query
             .filter(CompletedMachine.user_id == user.id)
@@ -145,6 +132,48 @@ def register_public_profile_routes(pages_router, db):
             .all()
         )
 
+        # --- Solo las máquinas que este perfil menciona ---------------------
+        # Cargar el catálogo entero en cada petición (pública y sin auth) era
+        # gratis para el atacante y caro para el servidor.
+        nombres = {cm.machine_name.lower() for cm in completadas}
+        nombres |= {w.maquina.lower() for w in writeups}
+
+        relevantes = []
+        if nombres:
+            relevantes = Machine.query.filter(
+                func.lower(Machine.nombre).in_(nombres)
+            ).all()
+        creadas = (
+            Machine.query
+            .filter(func.lower(Machine.autor) == ulower,
+                    Machine.origen.in_(PUBLIC_ORIGINS))
+            .order_by(Machine.id.desc())
+            .limit(MAX_ITEMS)
+            .all()
+        )
+
+        por_nombre = {m.nombre.lower(): m for m in relevantes}
+
+        ids_origen = {(m.id, m.origen) for m in relevantes} | {(m.id, m.origen) for m in creadas}
+        categorias = {}
+        if ids_origen:
+            categorias = {
+                (c.machine_id, c.origen): c.categoria
+                for c in Category.query.filter(
+                    Category.machine_id.in_({i for i, _ in ids_origen})
+                ).all()
+            }
+
+        def categoria_de(m):
+            return categorias.get((m.id, m.origen))
+
+        def es_restringida(nombre_maquina):
+            # Solo se oculta lo que sabemos que es de BunkerLabs. Una máquina
+            # borrada (sin fila) no se puede clasificar: no se oculta su writeup.
+            m = por_nombre.get(nombre_maquina.lower())
+            return bool(m) and m.origen not in PUBLIC_ORIGINS
+
+        # --- Máquinas resueltas --------------------------------------------
         maquinas_hechas = []
         for cm in completadas:
             m = por_nombre.get(cm.machine_name.lower())
@@ -162,14 +191,11 @@ def register_public_profile_routes(pages_router, db):
             maquinas_hechas.append(item)
 
         # --- Máquinas creadas ------------------------------------------------
-        creadas = [
-            m for m in maquinas
-            if m.autor and m.autor.lower() == ulower and m.origen in PUBLIC_ORIGINS
-        ]
-        creadas.sort(key=lambda m: m.id, reverse=True)
         maquinas_creadas = [_machine_json(m, categoria_de(m)) for m in creadas]
 
         # --- Writeups ---------------------------------------------------------
+        # Los de máquinas de BunkerLabs no se listan: su contenido es cerrado.
+        writeups_publicos = [w for w in writeups if not es_restringida(w.maquina)]
         writeups_json = [
             {
                 "maquina":      w.maquina,
@@ -179,7 +205,7 @@ def register_public_profile_routes(pages_router, db):
                 "logo_url":     (f"/img/maquina/{por_nombre[w.maquina.lower()].id}"
                                  if w.maquina.lower() in por_nombre else None),
             }
-            for w in writeups
+            for w in writeups_publicos
         ]
 
         # --- Certificados -----------------------------------------------------
@@ -187,7 +213,7 @@ def register_public_profile_routes(pages_router, db):
         # se archivan al publicarlo, así que `generado` es true salvo rarezas.
         certificados = []
         vistos = set()
-        for w in writeups:
+        for w in writeups_publicos:
             clave = w.maquina.lower()
             if clave in vistos:
                 continue
@@ -195,6 +221,8 @@ def register_public_profile_routes(pages_router, db):
 
             m = por_nombre.get(clave)
             cert = certs.get(clave)
+            # El cert_id real es el de la fila: puede diferir del primer
+            # candidato del hash si hubo colisión al emitirlo.
             cid = cert.cert_id if cert else certificate_id(username, w.maquina)
 
             certificados.append({
@@ -210,20 +238,27 @@ def register_public_profile_routes(pages_router, db):
             })
 
         # --- Progreso sobre el catálogo público -------------------------------
-        catalogo = [m for m in maquinas if m.origen == CATALOGO_ORIGEN]
+        # Los totales se agregan en la base; no hace falta traerse las máquinas.
+        totales_por_clase = dict(
+            db.session.query(func.lower(Machine.clase), func.count(Machine.id))
+            .filter(Machine.origen == CATALOGO_ORIGEN)
+            .group_by(func.lower(Machine.clase))
+            .all()
+        )
+
         hechas_catalogo = {
-            cm.machine_name.lower() for cm in completadas
-            if (por_nombre.get(cm.machine_name.lower()) is not None
-                and por_nombre[cm.machine_name.lower()].origen == CATALOGO_ORIGEN)
+            nombre for nombre in (cm.machine_name.lower() for cm in completadas)
+            if por_nombre.get(nombre) is not None
+            and por_nombre[nombre].origen == CATALOGO_ORIGEN
         }
 
-        conteo = {}
-        for m in catalogo:
-            clase = (m.clase or '').lower()
-            slot = conteo.setdefault(clase, {"hechas": 0, "totales": 0})
-            slot["totales"] += 1
-            if m.nombre.lower() in hechas_catalogo:
-                slot["hechas"] += 1
+        conteo = {
+            clase: {"hechas": 0, "totales": total}
+            for clase, total in totales_por_clase.items()
+        }
+        for nombre in hechas_catalogo:
+            clase = (por_nombre[nombre].clase or '').lower()
+            conteo.setdefault(clase, {"hechas": 0, "totales": 0})["hechas"] += 1
 
         # Orden estable de fácil a difícil; lo desconocido, al final.
         claves = [c for c in ORDEN_CLASES if c in conteo]
@@ -232,7 +267,7 @@ def register_public_profile_routes(pages_router, db):
             ETIQUETA_CLASE.get(c, c or "Sin clasificar"): conteo[c] for c in claves
         }
 
-        total_catalogo = len(catalogo)
+        total_catalogo = sum(totales_por_clase.values())
         pos_writeups, puntos = _ranking_position(WriteupRanking, 'puntos', username)
         pos_creadores, _     = _ranking_position(CreatorRanking, 'maquinas', username)
 
@@ -247,7 +282,7 @@ def register_public_profile_routes(pages_router, db):
             "ranking_creadores":        pos_creadores,
         }
 
-        return JSONResponse(content={
+        return JSONResponse(headers={"Cache-Control": "public, max-age=60"}, content={
             "slug":     user.slug or raw,
             "username": username,
             "perfil": {

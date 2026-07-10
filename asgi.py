@@ -14,6 +14,9 @@ init_db()
 rate_limit_store = defaultdict(list)
 API_RATE_LIMIT = 300
 RATE_WINDOW = 60
+# Sin esto el diccionario crece con una entrada por IP vista y no se libera
+# nunca: cualquiera puede agotar la memoria del worker rotando IPs de origen.
+RATE_STORE_MAX_KEYS = 10_000
 
 fastapi_app = FastAPI(
     title="DockerLabs API",
@@ -51,6 +54,13 @@ async def rate_limit_middleware(request: Request, call_next):
         return response
 
     limit = API_RATE_LIMIT
+
+    if len(rate_limit_store) > RATE_STORE_MAX_KEYS:
+        for stale in [
+            ip for ip, hits in rate_limit_store.items()
+            if not hits or current_time - hits[-1] >= RATE_WINDOW
+        ]:
+            del rate_limit_store[stale]
 
     rate_limit_store[client_ip] = [
         t for t in rate_limit_store[client_ip]
@@ -108,6 +118,12 @@ async def security_headers_middleware(request: Request, call_next):
             response.headers['Cache-Control'] = 'public, max-age=31536000, immutable'
     elif 'text/html' in content_type:
         response.headers['Cache-Control'] = 'no-cache, must-revalidate'
+
+    # Las imágenes (logos, avatares) pueden ser SVG subidos por usuarios. Servidos
+    # como documento de primer nivel ejecutarían su <script>; una CSP restrictiva
+    # y EN VIGOR (no Report-Only) los deja inertes sin afectar al uso como <img>.
+    if path.startswith('/img/'):
+        response.headers['Content-Security-Policy'] = "default-src 'none'; style-src 'unsafe-inline'; sandbox"
 
     return response
 

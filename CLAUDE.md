@@ -12,7 +12,7 @@
 - **Base de datos:** MariaDB via PyMySQL, ORM SQLAlchemy
 - **Templates:** Jinja2 (server-side rendering)
 - **Frontend:** Vanilla JS, Bootstrap 5, Fetch API
-- **Servidor web:** Apache como reverse proxy (puerto 443 → uvicorn :9090)
+- **Servidor web:** nginx como reverse proxy (puerto 443 → uvicorn :9090)
 - **Servicio:** `systemctl restart dockerlabs`
 
 ## Estructura del proyecto
@@ -169,9 +169,13 @@ No guardes el diploma como PNG ni lo sirvas con `optimize=True`: pesa 1 MB y
 comprimirlo tarda ~13 s, tiempo de sobra para que el navegador abandone la
 descarga. El PNG que se descarga usa `compress_level=1` (0,45 s).
 
-El `cert_id` (`DL-XXXXXX`) es determinista: `sha256("<username>:<maquina>")[:6]`.
-La fecha impresa es la del writeup, no la de renderizado, para que regenerar un
-diploma no lo cambie.
+El `cert_id` (`DL-XXXXXX`) son 24 bits de `sha256("<username>:<maquina>")` y es
+ÚNICO en la tabla. Como 24 bits colisionan de verdad con miles de certificados,
+`allocate_cert_id()` elige el primer candidato libre del digest (ventanas de 6
+hex) y mantiene estable el ID de los ya emitidos. No uses `certificate_id()`
+para leer el ID definitivo: lee `Certificate.cert_id`. `fix_cert_id_collisions.py`
+repara duplicados heredados. La fecha impresa es la del writeup, no la de
+renderizado, para que regenerar un diploma no lo cambie.
 
 Como el `cert_id` depende del nombre de usuario y el diploma lleva impreso el
 `nombre_diploma`, ambos cambios reemiten los PDFs vía `sync_user_certificates()`.
@@ -207,7 +211,9 @@ idempotente (`--force` re-renderiza, `--dry-run` solo cuenta).
 4. Imágenes verificadas con PIL antes de guardar
 5. Límites: 5 MB perfiles, 2 MB logos
 6. Scripts inline en templates requieren `nonce="{{ g.csp_nonce }}"`
-7. Rate limit: 300 req/min por IP en el middleware ASGI (excluye `/static/`)
+7. Rate limit: 300 req/min por IP en el middleware ASGI (excluye `/static/`, `/img/`, `/database/`). Los diccionarios de rate-limit se purgan al superar 10.000 claves, para que rotar la IP de origen no agote la memoria del worker.
+8. El `rol` viaja firmado en la cookie (30 días, sin almacén de sesiones). `get_session` lo revalida contra la BD cuando la cookie afirma `admin`/`moderador`, de modo que degradar o borrar a un privilegiado surte efecto al instante.
+9. Las respuestas `/img/` llevan una CSP `sandbox` en vigor: un SVG subido como logo no ejecuta scripts al abrirlo como documento.
 
 ## Comandos útiles
 
