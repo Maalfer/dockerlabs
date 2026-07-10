@@ -278,6 +278,73 @@
             </div>
         </div>
 
+
+        <div class="security-section" style="margin-top: 2rem;">
+            <div class="section-header">
+                <h2><i class="bi bi-braces" style="color:#38bdf8;"></i> Tu perfil público</h2>
+            </div>
+            <div class="security-content">
+                <p style="color:#94a3b8;font-size:0.95rem;margin:0 0 1.25rem;">
+                    Tu perfil tiene una dirección pública propia que devuelve, en formato JSON,
+                    tus máquinas resueltas y creadas, tus writeups y tus certificados.
+                    Cualquiera puede consultarla sin iniciar sesión: compártela donde quieras.
+                </p>
+
+                <div style="display:flex;align-items:center;gap:0.75rem;flex-wrap:wrap;margin-bottom:1rem;">
+                    <span style="color:#64748b;font-size:0.85rem;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;">Tu slug</span>
+                    <code style="background:#0f172a;border:1px solid #1e293b;border-radius:8px;
+                                 padding:0.35rem 0.7rem;color:#2dd4bf;font-size:0.95rem;font-weight:600;">{{ perfil_slug }}</code>
+                </div>
+
+                <div style="display:flex;align-items:stretch;gap:0.6rem;flex-wrap:wrap;">
+                    <input id="perfilPublicoUrl" type="text" readonly value="{{ perfil_url }}"
+                           style="flex:1 1 320px;min-width:0;background:#0f172a;border:1px solid #1e293b;
+                                  border-radius:10px;padding:0.7rem 0.9rem;color:#e2e8f0;font-size:0.9rem;
+                                  font-family:ui-monospace,SFMono-Regular,Menlo,monospace;">
+                    <button type="button" id="perfilCopiarBtn"
+                            style="display:inline-flex;align-items:center;gap:0.5rem;white-space:nowrap;
+                                   padding:0.7rem 1.2rem;border:1px solid #1e293b;border-radius:10px;
+                                   background:#1e293b;color:#e2e8f0;font-size:0.9rem;font-weight:600;cursor:pointer;">
+                        <i class="bi bi-clipboard"></i> <span>Copiar</span>
+                    </button>
+                    <a href="{{ perfil_path }}" target="_blank" rel="noopener"
+                       style="display:inline-flex;align-items:center;gap:0.5rem;white-space:nowrap;
+                              padding:0.7rem 1.2rem;border-radius:10px;font-size:0.9rem;font-weight:700;
+                              background:linear-gradient(135deg,#0284c7,#38bdf8);color:#fff;text-decoration:none;">
+                        <i class="bi bi-box-arrow-up-right"></i> Abrir JSON
+                    </a>
+                </div>
+
+                <div id="perfilStats"
+                     style="display:flex;gap:1.75rem;flex-wrap:wrap;margin-top:1.25rem;color:#64748b;font-size:0.9rem;">
+                    <span>Cargando datos del perfil…</span>
+                </div>
+
+                <div style="margin-top:1.5rem;border-top:1px solid #1e293b;padding-top:1.25rem;">
+                    <div style="color:#64748b;font-size:0.85rem;font-weight:600;text-transform:uppercase;
+                                letter-spacing:0.05em;margin-bottom:0.75rem;">Endpoints disponibles</div>
+                    <ul style="list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:0.6rem;">
+                        <li style="display:flex;gap:0.75rem;flex-wrap:wrap;align-items:baseline;">
+                            <code style="color:#2dd4bf;font-size:0.85rem;">GET /u/{{ perfil_slug }}</code>
+                            <span style="color:#64748b;font-size:0.85rem;">Tu perfil completo en JSON</span>
+                        </li>
+                        <li style="display:flex;gap:0.75rem;flex-wrap:wrap;align-items:baseline;">
+                            <code style="color:#2dd4bf;font-size:0.85rem;">GET /api/certificado/pdf/&lt;ID&gt;</code>
+                            <span style="color:#64748b;font-size:0.85rem;">Descarga el PDF de un certificado ya generado</span>
+                        </li>
+                        <li style="display:flex;gap:0.75rem;flex-wrap:wrap;align-items:baseline;">
+                            <code style="color:#2dd4bf;font-size:0.85rem;">GET /api/certificado/verificar/&lt;ID&gt;</code>
+                            <span style="color:#64748b;font-size:0.85rem;">Comprueba la autenticidad de un certificado</span>
+                        </li>
+                    </ul>
+                    <p style="color:#475569;font-size:0.82rem;margin:1rem 0 0;">
+                        El PDF de un certificado se archiva la primera vez que lo generas desde
+                        <a href="/certificados" style="color:#38bdf8;">Mis Certificados</a>.
+                    </p>
+                </div>
+            </div>
+        </div>
+
     </div>
 </div>
 
@@ -395,6 +462,64 @@
 
 {% block scripts %}
 <script src="{{ static_v('dockerlabs/js/dashboard.js') }}"></script>
+<script nonce="{{ g.csp_nonce }}">
+(function () {
+    const input = document.getElementById('perfilPublicoUrl');
+    const boton = document.getElementById('perfilCopiarBtn');
+    const stats = document.getElementById('perfilStats');
+    if (!input || !boton || !stats) return;
+
+    const etiqueta = boton.querySelector('span');
+    const icono = boton.querySelector('i');
+
+    function confirmarCopia() {
+        const textoPrevio = etiqueta.textContent;
+        etiqueta.textContent = '¡Copiado!';
+        icono.className = 'bi bi-check-lg';
+        boton.style.color = '#2dd4bf';
+        setTimeout(function () {
+            etiqueta.textContent = textoPrevio;
+            icono.className = 'bi bi-clipboard';
+            boton.style.color = '';
+        }, 1800);
+    }
+
+    boton.addEventListener('click', function () {
+        // navigator.clipboard no existe en contextos no seguros; select()+execCommand cubre ese caso.
+        if (navigator.clipboard && window.isSecureContext) {
+            navigator.clipboard.writeText(input.value).then(confirmarCopia).catch(function () {
+                input.select();
+                document.execCommand('copy');
+                confirmarCopia();
+            });
+        } else {
+            input.select();
+            document.execCommand('copy');
+            confirmarCopia();
+        }
+    });
+
+    function chip(valor, texto) {
+        return '<span><strong style="color:#e2e8f0;font-size:1.05rem;">' + valor +
+               '</strong> ' + texto + '</span>';
+    }
+
+    fetch({{ perfil_path | tojson }})
+        .then(function (r) { if (!r.ok) throw new Error(r.status); return r.json(); })
+        .then(function (d) {
+            const e = d.estadisticas || {};
+            stats.innerHTML = [
+                chip(e.maquinas_hechas || 0, 'máquinas resueltas'),
+                chip(e.maquinas_creadas || 0, 'máquinas creadas'),
+                chip(e.writeups_publicados || 0, 'writeups'),
+                chip(e.certificados_generados || 0, 'certificados generados')
+            ].join('');
+        })
+        .catch(function () {
+            stats.innerHTML = '<span>No se pudieron cargar los datos del perfil.</span>';
+        });
+})();
+</script>
 <script>
     function openUsernameChangeModal() {
         const val = document.getElementById('requested_username').value;

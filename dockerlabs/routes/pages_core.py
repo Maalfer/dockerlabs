@@ -1,5 +1,7 @@
 import secrets
 from datetime import datetime
+from urllib.parse import quote
+
 from sqlalchemy.exc import IntegrityError
 
 from fastapi import Depends, HTTPException, Request
@@ -133,17 +135,27 @@ def register_pages_core_routes(
             csrf_token = secrets.token_urlsafe(32)
             session["csrf_token"] = csrf_token
 
+        # Perfil público (`/u/<slug>`). El slug lo mantiene dockerlabs/slugs.py;
+        # el username es el alias que acepta el endpoint si aún no hubiera slug.
+        perfil_slug = (user.slug if user and user.slug else current_username) or ""
+        perfil_path = f"/u/{quote(perfil_slug, safe='')}"
+
         context = {
             "request": request,
             "maquinas": maquinas,
             "profile_image_url": profile_image_url,
+            "perfil_slug": perfil_slug,
+            "perfil_path": perfil_path,
+            "perfil_url": f"https://dockerlabs.es{perfil_path}",
             "user": user,
             "current_user_role": role,
             "session": session_data,
             "csrf_token_value": csrf_token,
             "get_profile_image_url": get_fastapi_profile_image_url,
             "url_for": url_for,
-            "g": {"csp_nonce": secrets.token_urlsafe(32)},
+            # El nonce debe ser el que el middleware puso en la cabecera CSP,
+            # no uno nuevo, o el script inline no casaría con la política.
+            "g": {"csp_nonce": getattr(request.state, "csp_nonce", "")},
         }
         return templates.TemplateResponse(request, "dockerlabs/admin/dashboard.html", context)
 
