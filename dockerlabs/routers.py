@@ -887,10 +887,18 @@ async def api_update_profile(request: Request, data: UpdateProfileRequest, sessi
             return JSONResponse(status_code=400, content={"error": "Ese correo electrónico ya está en uso por otra cuenta."})
         user_obj.email = email_sanitized
 
+    diploma_cambiado = user_obj.nombre_diploma != nombre_diploma_sanitized
+
     try:
         user_obj.biography = biography_sanitized
         user_obj.nombre_diploma = nombre_diploma_sanitized
         db.session.commit()
+
+        if diploma_cambiado:
+            # El nombre va impreso en el PDF: los diplomas ya emitidos caducan.
+            from dockerlabs.routes.certificados import sync_user_certificates_safe
+            await run_in_threadpool(sync_user_certificates_safe, user_obj.id, force=True)
+
         return {"message": "Perfil actualizado correctamente.", "success": True}
     except Exception as e:
         db.session.rollback()
@@ -1187,6 +1195,14 @@ async def api_approve_username_change(request: Request, request_id: int, session
     req.processed_at = datetime.utcnow()
     req.decision_reason = decision_reason
     db.session.commit()
+
+    if user and conflict_count == 0:
+        # El cert_id es sha256("<username>:<maquina>"): al renombrar cambia, así
+        # que los diplomas se reemiten con el nombre nuevo. Solo cuando no hubo
+        # conflicto: en ese caso los writeups migraron al nombre nuevo. Si hubo
+        # conflicto siguen bajo el nombre viejo, y resincronizar los retiraría.
+        from dockerlabs.routes.certificados import sync_user_certificates_safe
+        await run_in_threadpool(sync_user_certificates_safe, user.id, force=True)
 
     msg = f"Nombre cambiado correctamente a {requested_username}."
     if conflict_count > 0:

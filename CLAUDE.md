@@ -141,16 +141,30 @@ certificados. También acepta el `username` literal como alias del slug.
 
 ## Certificados
 
-`GET /api/certificado/<maquina>` renderiza el diploma y, **en cada generación**,
-archiva una copia en PDF en `uploads/certificados/user_<id>/<CERT_ID>-<maquina>.pdf`
-y la registra en la tabla `certificados`. Acepta `?formato=png` (por defecto) o
-`?formato=pdf`.
+Un certificado **existe en cuanto el usuario tiene un writeup publicado** de una
+máquina: no hay que pedirlo. `ensure_certificate()` renderiza el diploma y
+archiva el PDF en `uploads/certificados/user_<id>/<CERT_ID>-<maquina>.pdf`,
+registrándolo en la tabla `certificados`. Se invoca automáticamente al aprobar
+un writeup, así que `/u/<slug>` siempre lo encuentra ya hecho.
 
-El PDF archivado se sirve luego de forma pública en
-`GET /api/certificado/pdf/<CERT_ID>`, que es el enlace que expone `/u/<slug>` en
-cada certificado con `generado: true`.
+El PDF se sirve público en `GET /api/certificado/pdf/<CERT_ID>`.
+`GET /api/certificado/<maquina>` descarga la imagen (`?formato=png`, por
+defecto) o el PDF archivado (`?formato=pdf`).
 
 El `cert_id` (`DL-XXXXXX`) es determinista: `sha256("<username>:<maquina>")[:6]`.
+La fecha impresa es la del writeup, no la de renderizado, para que regenerar un
+diploma no lo cambie.
+
+Como el `cert_id` depende del nombre de usuario y el diploma lleva impreso el
+`nombre_diploma`, ambos cambios reemiten los PDFs vía `sync_user_certificates()`.
+Al borrar un writeup se retira el diploma con `revoke_certificate_safe()`.
+
+`author_matches_user()` decide de quién es un writeup: coincidencia exacta, y la
+insensible a mayúsculas solo cuando no hay dos cuentas homónimas (existen
+`oscar` y `Oscar`). Usa **siempre** esa función; el backfill la comparte.
+
+`backfill_certificados.py` emite los que falten y retira los sobrantes. Es
+idempotente (`--force` re-renderiza, `--dry-run` solo cuenta).
 
 ## Almacenamiento de imágenes
 

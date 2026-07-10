@@ -152,17 +152,29 @@
                             <span>${escapeHtml(cert.cert_id)}</span>
                             <i class="bi bi-clipboard" style="margin-left:auto;color:#475569;"></i>
                         </div>
+                        <div style="display:flex;gap:0.5rem;">
                         <a href="/api/certificado/${encodeURIComponent(cert.maquina)}"
                            download
-                           style="display:flex;justify-content:center;align-items:center;gap:0.5rem;
+                           style="flex:1;display:flex;justify-content:center;align-items:center;gap:0.5rem;
                                   padding:0.6rem 1rem;border-radius:10px;font-size:0.88rem;font-weight:600;
                                   background:transparent;border:1px solid rgba(45,212,191,0.4);
                                   color:#2dd4bf;text-decoration:none;transition:all 0.2s;
                                   font-family:'Fira Code',monospace;"
                            onmouseover="this.style.background='rgba(45,212,191,0.08)';this.style.borderColor='rgba(45,212,191,0.7)'"
                            onmouseout="this.style.background='transparent';this.style.borderColor='rgba(45,212,191,0.4)'">
-                            <i class="bi bi-patch-check-fill"></i> Descargar Diploma
-                        </a>`;
+                            <i class="bi bi-image"></i> Imagen
+                        </a>
+                        <a href="${escapeHtml(cert.pdf_url || '/api/certificado/pdf/' + cert.cert_id)}"
+                           style="flex:1;display:flex;justify-content:center;align-items:center;gap:0.5rem;
+                                  padding:0.6rem 1rem;border-radius:10px;font-size:0.88rem;font-weight:600;
+                                  background:transparent;border:1px solid rgba(45,212,191,0.4);
+                                  color:#2dd4bf;text-decoration:none;transition:all 0.2s;
+                                  font-family:'Fira Code',monospace;"
+                           onmouseover="this.style.background='rgba(45,212,191,0.08)';this.style.borderColor='rgba(45,212,191,0.7)'"
+                           onmouseout="this.style.background='transparent';this.style.borderColor='rgba(45,212,191,0.4)'">
+                            <i class="bi bi-file-earmark-pdf"></i> PDF
+                        </a>
+                        </div>`;
                     grid.appendChild(card);
                 });
 

@@ -137,6 +137,11 @@ def register_writeup_routes(api_router, get_session, verify_csrf_token, db):
             from dockerlabs.writeups import recalcular_ranking_writeups
             recalcular_ranking_writeups()
 
+            # El diploma se emite al publicar el writeup, no cuando el usuario lo pide.
+            from dockerlabs.routes.certificados import ensure_certificate_safe
+            for maquina, autor, _ in seen:
+                ensure_certificate_safe(autor, maquina)
+
             return {"message": f"{aprobados} writeup(s) aprobado(s) correctamente.", "aprobados": aprobados}
         except Exception as e:
             db.session.rollback()
@@ -169,12 +174,18 @@ def register_writeup_routes(api_router, get_session, verify_csrf_token, db):
                 new_writeup = Writeup(maquina=pending.maquina, autor=autor_real, url=pending.url, tipo=pending.tipo)
                 db.session.add(new_writeup)
 
+            maquina_aprobada = pending.maquina
             db.session.delete(pending)
             db.session.commit()
 
             from dockerlabs.writeups import recalcular_ranking_writeups
 
             recalcular_ranking_writeups()
+
+            # El diploma se emite al publicar el writeup, no cuando el usuario lo pide.
+            from dockerlabs.routes.certificados import ensure_certificate_safe
+            ensure_certificate_safe(autor_real, maquina_aprobada)
+
             return {"message": "Writeup aprobado y movido a publicados."}
         except Exception as e:
             db.session.rollback()
@@ -338,11 +349,16 @@ def register_writeup_routes(api_router, get_session, verify_csrf_token, db):
         writeup = Writeup.query.get(writeup_id)
         if not writeup:
             return JSONResponse(status_code=404, content={"error": "Writeup no encontrado"})
+        autor, maquina = writeup.autor, writeup.maquina
         db.session.delete(writeup)
         db.session.commit()
         from dockerlabs.writeups import recalcular_ranking_writeups
 
         recalcular_ranking_writeups()
+
+        from dockerlabs.routes.certificados import revoke_certificate_safe
+        revoke_certificate_safe(autor, maquina)
+
         return {"message": "Writeup eliminado correctamente"}
 
     @api_router.delete("/writeups_subidos/{writeup_id}")
@@ -359,6 +375,7 @@ def register_writeup_routes(api_router, get_session, verify_csrf_token, db):
         writeup = Writeup.query.get(writeup_id)
         if not writeup:
             return JSONResponse(status_code=404, content={"error": "Writeup no encontrado"})
+        autor, maquina = writeup.autor, writeup.maquina
         try:
             db.session.delete(writeup)
             db.session.commit()
@@ -368,6 +385,9 @@ def register_writeup_routes(api_router, get_session, verify_csrf_token, db):
         from dockerlabs.writeups import recalcular_ranking_writeups
 
         recalcular_ranking_writeups()
+
+        from dockerlabs.routes.certificados import revoke_certificate_safe
+        revoke_certificate_safe(autor, maquina)
         return {"message": "Writeup eliminado correctamente"}
 
     @api_router.post("/writeups/recibidos/{writeup_id}/update")
