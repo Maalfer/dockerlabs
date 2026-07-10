@@ -33,6 +33,10 @@ _SAFE_NAME_RE = re.compile(r'[^A-Za-z0-9_-]')
 
 BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
 
+# BunkerLabs no tiene certificados: es de acceso cerrado. Solo se emiten diplomas
+# para máquinas de estos orígenes; cualquier otro (p. ej. 'bunker') queda excluido.
+CERT_ORIGENES = ('docker', 'empezar')
+
 TEMPLATE_PATH = os.path.join(BASE_DIR, 'static', 'dockerlabs', 'images', 'diploma.png')
 FONT_PATH = '/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf'
 
@@ -247,6 +251,16 @@ def author_matches_user(autor: str, user) -> bool:
     return homonimos == 1
 
 
+def machine_certificable(machine_name: str) -> bool:
+    """¿Esta máquina puede tener certificado? No, si es de BunkerLabs.
+
+    Una máquina sin fila en el catálogo (borrada) se considera certificable: no
+    se puede afirmar que fuera de bunker y ya podría tener un diploma emitido.
+    """
+    machine = Machine.query.filter(func.lower(Machine.nombre) == func.lower(machine_name)).first()
+    return machine is None or machine.origen in CERT_ORIGENES
+
+
 def machines_with_writeups(user) -> list:
     """Máquinas de las que el usuario tiene writeup publicado (nombre canónico)."""
     filas = (
@@ -257,7 +271,8 @@ def machines_with_writeups(user) -> list:
     )
     vistas, maquinas = set(), []
     for autor, maquina in filas:
-        if author_matches_user(autor, user) and maquina.lower() not in vistas:
+        if (author_matches_user(autor, user) and maquina.lower() not in vistas
+                and machine_certificable(maquina)):
             vistas.add(maquina.lower())
             maquinas.append(maquina)
     return maquinas
@@ -288,6 +303,10 @@ def ensure_certificate(user, machine_name: str, *, force: bool = False):
     """
     writeup = _writeup_for(user, machine_name)
     if not writeup:
+        return None
+
+    # BunkerLabs no tiene certificados: no se emite diploma aunque haya writeup.
+    if not machine_certificable(writeup.maquina):
         return None
 
     canonical = writeup.maquina
@@ -452,6 +471,8 @@ def register_certificado_routes(api_router, get_session, db):
         user = User.query.filter(User.username == username).first()
         if not user:
             return {"disponible": False}
+        if not machine_certificable(machine_name):
+            return {"disponible": False}
         return {"disponible": bool(_writeup_for(user, machine_name))}
 
     @api_router.get("/certificados/mis-certificados")
@@ -483,6 +504,8 @@ def register_certificado_routes(api_router, get_session, db):
             if wu.maquina in seen:
                 continue
             seen.add(wu.maquina)
+            if not machine_certificable(wu.maquina):
+                continue
             machine = Machine.query.filter(
                 func.lower(Machine.nombre) == func.lower(wu.maquina)
             ).first()
@@ -626,6 +649,12 @@ def register_certificado_routes(api_router, get_session, db):
         user_obj = User.query.filter(User.username == username).first()
         if not user_obj:
             return JSONResponse(status_code=401, content={"error": "No autenticado"})
+
+        if not machine_certificable(machine_name):
+            return JSONResponse(
+                status_code=403,
+                content={"error": "Esta máquina no tiene certificado."},
+            )
 
         writeup = _writeup_for(user_obj, machine_name)
         if not writeup:

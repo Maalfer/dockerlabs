@@ -6,6 +6,15 @@
 > con `sudo systemctl restart dockerlabs`. **No** despliegues con `git pull`: GitHub
 > `main` está desactualizado. Detalles completos en **`DEPLOYMENT.md`**.
 
+> ## 🔒 API pública estable — NO romper
+> `GET /u/<slug>`, `GET /api/certificado/{pdf,imagen,verificar}/<CERT_ID>` y
+> `GET /img/{maquina,perfil}/<id>` son una **API pública consumida por otras
+> aplicaciones**, sin autenticación. Sus rutas, campos, tipos y formatos son un
+> **contrato**: no los renombres, cambies ni elimines. Puedes añadir campos;
+> quitar o cambiar los existentes rompe a los consumidores. Contrato completo en
+> **`API_PUBLICA.md`** — léelo antes de tocar `routes/public_profile.py` o
+> `routes/certificados.py`.
+
 ## Stack
 
 - **Backend:** FastAPI + Uvicorn (4 workers), Python 3.11
@@ -135,6 +144,8 @@ Mario` → `el-pinguino-de-mario`). Lo asignan los eventos `before_insert` /
 `before_update` de `slugs.py`, así que cualquier alta o renombrado de un `User`
 lo mantiene al día sin intervención del código llamante.
 
+> Contrato estable en **`API_PUBLICA.md`**: no renombres ni quites campos.
+
 `GET /u/<slug>` devuelve JSON puro y público (sin sesión): perfil, `progreso`
 sobre el catálogo de DockerLabs (total, hechas, porcentaje y desglose por
 dificultad), las máquinas resueltas y las creadas con su ficha completa y su
@@ -153,8 +164,17 @@ Carga el catálogo y las categorías por lotes; no añadas consultas por máquin
 
 ## Certificados
 
+> **API pública, contrato estable — ver `API_PUBLICA.md`.** No cambies rutas ni
+> campos de los endpoints de certificados/perfil: hay apps externas leyéndolos.
+
+**BunkerLabs no tiene certificados.** Solo se emiten diplomas para máquinas de
+`CERT_ORIGENES = ('docker', 'empezar')`; el candado está en `machine_certificable()`
+(usado por `ensure_certificate`, la disponibilidad, la generación y
+`mis-certificados`). No emitas ni expongas certificados de máquinas con
+`origen == 'bunker'`.
+
 Un certificado **existe en cuanto el usuario tiene un writeup publicado** de una
-máquina: no hay que pedirlo. `ensure_certificate()` renderiza el diploma y
+máquina de DockerLabs: no hay que pedirlo. `ensure_certificate()` renderiza el diploma y
 archiva el PDF en `uploads/certificados/user_<id>/<CERT_ID>-<maquina>.pdf`,
 registrándolo en la tabla `certificados`. Se invoca automáticamente al aprobar
 un writeup, así que `/u/<slug>` siempre lo encuentra ya hecho.
