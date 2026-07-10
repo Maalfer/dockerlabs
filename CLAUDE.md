@@ -135,9 +135,21 @@ Mario` → `el-pinguino-de-mario`). Lo asignan los eventos `before_insert` /
 `before_update` de `slugs.py`, así que cualquier alta o renombrado de un `User`
 lo mantiene al día sin intervención del código llamante.
 
-`GET /u/<slug>` devuelve JSON puro y público (sin sesión) con el perfil, las
-máquinas resueltas, las máquinas creadas, los writeups publicados y los
-certificados. También acepta el `username` literal como alias del slug.
+`GET /u/<slug>` devuelve JSON puro y público (sin sesión): perfil, `progreso`
+sobre el catálogo de DockerLabs (total, hechas, porcentaje y desglose por
+dificultad), las máquinas resueltas y las creadas con su ficha completa y su
+`logo_url`, los writeups y los certificados con `pdf_url` e `imagen_url`. Cada
+máquina resuelta incluye además su `writeup_url` y su `certificado` si existen.
+También acepta el `username` literal como alias del slug.
+
+De las máquinas de BunkerLabs solo se expone que fueron resueltas (nombre,
+dificultad y logo); nunca su `descripcion` ni su `descarga`, y no cuentan para
+el porcentaje de progreso.
+
+El desglose por dificultad agrupa por `Machine.clase`, no por `Machine.dificultad`:
+esta última está sin normalizar en la base ('Fácil' y 'Facil' conviven).
+
+Carga el catálogo y las categorías por lotes; no añadas consultas por máquina.
 
 ## Certificados
 
