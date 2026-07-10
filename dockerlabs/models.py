@@ -51,6 +51,7 @@ class Certificate(db.Model):
     username = db.Column(db.String(64), nullable=False)
     machine_name = db.Column(db.String(191), nullable=False)
     pdf_path = db.Column(db.String(255), nullable=False)
+    image_path = db.Column(db.String(255), nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 

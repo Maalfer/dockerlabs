@@ -160,6 +160,7 @@ def register_public_profile_routes(pages_router, db):
                 "generado":    bool(cert),
                 "emitido_el":  _iso(cert.created_at) if cert else None,
                 "pdf_url":     f"/api/certificado/pdf/{cid}" if cert else None,
+                "imagen_url":  f"/api/certificado/imagen/{cid}" if cert else None,
                 "verify_url":  f"/api/certificado/verificar/{cid}",
             })
 

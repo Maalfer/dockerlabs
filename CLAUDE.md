@@ -147,9 +147,15 @@ archiva el PDF en `uploads/certificados/user_<id>/<CERT_ID>-<maquina>.pdf`,
 registrándolo en la tabla `certificados`. Se invoca automáticamente al aprobar
 un writeup, así que `/u/<slug>` siempre lo encuentra ya hecho.
 
-El PDF se sirve público en `GET /api/certificado/pdf/<CERT_ID>`.
-`GET /api/certificado/<maquina>` descarga la imagen (`?formato=png`, por
-defecto) o el PDF archivado (`?formato=pdf`).
+Junto al PDF se archiva el diploma como WebP (`.webp`, ~85 KB). Ambos se
+sirven públicos: `GET /api/certificado/pdf/<CERT_ID>` y
+`GET /api/certificado/imagen/<CERT_ID>` (este último, `inline`, para verlo o
+incrustarlo). `GET /api/certificado/<maquina>` sigue descargando un PNG
+(`?formato=png`, por defecto) o el PDF (`?formato=pdf`).
+
+No guardes el diploma como PNG ni lo sirvas con `optimize=True`: pesa 1 MB y
+comprimirlo tarda ~13 s, tiempo de sobra para que el navegador abandone la
+descarga. El PNG que se descarga usa `compress_level=1` (0,45 s).
 
 El `cert_id` (`DL-XXXXXX`) es determinista: `sha256("<username>:<maquina>")[:6]`.
 La fecha impresa es la del writeup, no la de renderizado, para que regenerar un

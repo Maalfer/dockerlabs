@@ -153,8 +153,8 @@
                             <i class="bi bi-clipboard" style="margin-left:auto;color:#475569;"></i>
                         </div>
                         <div style="display:flex;gap:0.5rem;">
-                        <a href="/api/certificado/${encodeURIComponent(cert.maquina)}"
-                           download
+                        <a href="${escapeHtml(cert.imagen_url || '/api/certificado/imagen/' + cert.cert_id)}"
+                           target="_blank" rel="noopener"
                            style="flex:1;display:flex;justify-content:center;align-items:center;gap:0.5rem;
                                   padding:0.6rem 1rem;border-radius:10px;font-size:0.88rem;font-weight:600;
                                   background:transparent;border:1px solid rgba(45,212,191,0.4);

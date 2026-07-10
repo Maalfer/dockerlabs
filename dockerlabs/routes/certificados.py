@@ -143,22 +143,37 @@ def pdf_relpath(user_id: int, cert_id: str, machine_name: str) -> str:
     return f"uploads/certificados/user_{user_id}/{cert_id}-{safe_name(machine_name)}.pdf"
 
 
+def image_relpath(user_id: int, cert_id: str, machine_name: str) -> str:
+    return f"uploads/certificados/user_{user_id}/{cert_id}-{safe_name(machine_name)}.webp"
+
+
 def abspath_for(relpath: str) -> str:
     return os.path.join(BASE_DIR, relpath)
 
 
-def _write_pdf(img, relpath: str) -> None:
+def _write_atomic(data: bytes, relpath: str) -> None:
+    """Escritura atómica: un lector concurrente nunca ve un fichero a medias."""
     abspath = abspath_for(relpath)
     os.makedirs(os.path.dirname(abspath), exist_ok=True)
-
-    buf = io.BytesIO()
-    img.convert('RGB').save(buf, format='PDF', resolution=150.0)
-
-    # Escritura atómica: un lector concurrente nunca ve un PDF a medias.
     tmp_path = f"{abspath}.tmp"
     with open(tmp_path, 'wb') as fh:
-        fh.write(buf.getvalue())
+        fh.write(data)
     os.replace(tmp_path, abspath)
+
+
+def _write_pdf(img, relpath: str) -> None:
+    buf = io.BytesIO()
+    img.convert('RGB').save(buf, format='PDF', resolution=150.0)
+    _write_atomic(buf.getvalue(), relpath)
+
+
+def _write_image(img, relpath: str) -> None:
+    # WebP con method=2: 85 KB y 0,15 s. Un PNG del mismo diploma pesa 1 MB y
+    # con optimize=True tarda 13 s, tiempo suficiente para que el navegador o
+    # el proxy abandonen la descarga.
+    buf = io.BytesIO()
+    img.convert('RGB').save(buf, format='WEBP', quality=88, method=2)
+    _write_atomic(buf.getvalue(), relpath)
 
 
 def _remove_file(relpath: str) -> None:
@@ -231,10 +246,12 @@ def ensure_certificate(user, machine_name: str, *, force: bool = False):
     canonical = writeup.maquina
     cert_id   = certificate_id(user.username, canonical)
     relpath   = pdf_relpath(user.id, cert_id, canonical)
+    img_relpath = image_relpath(user.id, cert_id, canonical)
 
     existing = Certificate.query.filter_by(user_id=user.id, machine_name=canonical).first()
     if (existing and not force and existing.cert_id == cert_id
-            and os.path.isfile(abspath_for(existing.pdf_path))):
+            and os.path.isfile(abspath_for(existing.pdf_path))
+            and existing.image_path and os.path.isfile(abspath_for(existing.image_path))):
         return existing
 
     machine = Machine.query.filter(func.lower(Machine.nombre) == func.lower(canonical)).first()
@@ -243,13 +260,17 @@ def ensure_certificate(user, machine_name: str, *, force: bool = False):
 
     img = render_diploma(display_name_for(user), display_machine, cert_id, fecha)
     _write_pdf(img, relpath)
+    _write_image(img, img_relpath)
 
     if existing:
         if existing.pdf_path != relpath:
             _remove_file(existing.pdf_path)
-        existing.cert_id  = cert_id
-        existing.username = user.username
-        existing.pdf_path = relpath
+        if existing.image_path and existing.image_path != img_relpath:
+            _remove_file(existing.image_path)
+        existing.cert_id    = cert_id
+        existing.username   = user.username
+        existing.pdf_path   = relpath
+        existing.image_path = img_relpath
     else:
         existing = Certificate(
             cert_id=cert_id,
@@ -257,6 +278,7 @@ def ensure_certificate(user, machine_name: str, *, force: bool = False):
             username=user.username,
             machine_name=canonical,
             pdf_path=relpath,
+            image_path=img_relpath,
         )
         db.session.add(existing)
 
@@ -289,6 +311,8 @@ def sync_user_certificates(user, *, force: bool = False) -> dict:
     for cert in Certificate.query.filter_by(user_id=user.id).all():
         if cert.machine_name.lower() not in vigentes:
             _remove_file(cert.pdf_path)
+            if cert.image_path:
+                _remove_file(cert.image_path)
             db.session.delete(cert)
             retirados += 1
     if retirados:
@@ -336,6 +360,8 @@ def revoke_certificate_safe(username: str, machine_name: str) -> None:
         )
         if cert:
             _remove_file(cert.pdf_path)
+            if cert.image_path:
+                _remove_file(cert.image_path)
             db.session.delete(cert)
             db.session.commit()
     except Exception:
@@ -412,6 +438,7 @@ def register_certificado_routes(api_router, get_session, db):
                 "cert_id":    cert_id,
                 "generado":   bool(emitido),
                 "pdf_url":    f"/api/certificado/pdf/{cert_id}" if emitido else None,
+                "imagen_url": f"/api/certificado/imagen/{cert_id}" if emitido else None,
             })
 
         return {"certificados": result}
@@ -442,6 +469,7 @@ def register_certificado_routes(api_router, get_session, db):
                 "dificultad": machine.dificultad if machine else "",
                 "generado":   True,
                 "pdf_url":    f"/api/certificado/pdf/{raw}",
+                "imagen_url": f"/api/certificado/imagen/{raw}",
             }
 
         # Reserva: writeups de autores sin cuenta, que no tienen fila emitida.
@@ -464,6 +492,7 @@ def register_certificado_routes(api_router, get_session, db):
                     "dificultad": machine.dificultad if machine else "",
                     "generado":   False,
                     "pdf_url":    None,
+                    "imagen_url": None,
                 }
 
         return {"valid": False, "message": "Certificado no encontrado."}
@@ -497,6 +526,36 @@ def register_certificado_routes(api_router, get_session, db):
             media_type="application/pdf",
             filename=f"diploma-dockerlabs-{safe_name(cert.machine_name)}.pdf",
             headers={"Cache-Control": "public, max-age=86400"},
+        )
+
+    @api_router.get("/certificado/imagen/{cert_id}")
+    def api_certificado_imagen(cert_id: str, request: Request):
+        """Sirve el diploma como imagen, para verlo o incrustarlo. Público."""
+        raw = cert_id.strip().upper()
+        if not _CERT_ID_RE.match(raw):
+            return JSONResponse(status_code=400, content={"error": "Formato de certificado inválido."})
+
+        cert = Certificate.query.filter_by(cert_id=raw).first()
+        if not cert:
+            return JSONResponse(status_code=404, content={"error": "Certificado no encontrado."})
+
+        if not cert.image_path or not os.path.isfile(abspath_for(cert.image_path)):
+            # Falta el fichero (o la fila es anterior a que se guardara imagen):
+            # reemitirlo es mejor que devolver un 404.
+            user = User.query.get(cert.user_id)
+            if user:
+                ensure_certificate(user, cert.machine_name, force=True)
+            cert = Certificate.query.filter_by(cert_id=raw).first()
+            if not cert or not cert.image_path or not os.path.isfile(abspath_for(cert.image_path)):
+                return JSONResponse(status_code=404, content={"error": "La imagen del certificado no está disponible."})
+
+        return FileResponse(
+            abspath_for(cert.image_path),
+            media_type="image/webp",
+            headers={
+                "Cache-Control": "public, max-age=86400",
+                "Content-Disposition": f'inline; filename="diploma-dockerlabs-{safe_name(cert.machine_name)}.webp"',
+            },
         )
 
     @api_router.get("/certificado/{machine_name}")
@@ -555,8 +614,10 @@ def register_certificado_routes(api_router, get_session, db):
             cert.cert_id,
             writeup.created_at.strftime("%d/%m/%Y") if writeup.created_at else "",
         )
+        # optimize=True recomprime durante ~13 s y solo ahorra un 7 %: el
+        # navegador abandonaba la descarga antes de recibir nada.
         buf = io.BytesIO()
-        img.save(buf, format="PNG", optimize=True)
+        img.convert("RGB").save(buf, format="PNG", compress_level=1)
 
         return Response(
             content=buf.getvalue(),

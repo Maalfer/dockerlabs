@@ -26,6 +26,15 @@ def add_slug_column(conn):
     print('✓ users.slug creada + índice único')
 
 
+def add_image_column(conn):
+    cols = {c['name'] for c in inspect(engine).get_columns('certificados')}
+    if 'image_path' in cols:
+        print('· certificados.image_path ya existe')
+        return
+    conn.execute(text('ALTER TABLE certificados ADD COLUMN image_path VARCHAR(255) NULL'))
+    print('✓ certificados.image_path creada')
+
+
 def backfill(conn):
     rows = conn.execute(
         text("SELECT id, username FROM users WHERE slug IS NULL OR slug = '' ORDER BY id")
@@ -50,6 +59,7 @@ if __name__ == '__main__':
 
     with engine.begin() as conn:
         add_slug_column(conn)
+        add_image_column(conn)
         backfill(conn)
 
     with engine.connect() as conn:
