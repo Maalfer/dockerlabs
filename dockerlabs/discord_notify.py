@@ -85,24 +85,6 @@ async def notify_new_machine(machine) -> None:
     await _send(embed)
 
 
-async def notify_new_writeup(maquina: str, autor: str, url: str, tipo: str, machine_id: int | None = None) -> None:
-    embed = {
-        "author": {"name": "Nuevo writeup"},
-        "title": maquina,
-        "url": url,
-        "color": _COLOR_WRITEUP,
-        "fields": [
-            {"name": "Autor", "value": autor, "inline": True},
-            {"name": "Tipo", "value": tipo, "inline": True},
-        ],
-        "footer": _footer("DockerLabs"),
-        "timestamp": datetime.now(timezone.utc).isoformat(),
-    }
-    if machine_id is not None:
-        embed["thumbnail"] = {"url": f"{_app_url()}/img/maquina/{machine_id}"}
-    await _send(embed)
-
-
 async def notify_writeups_batch(writeups: list) -> None:
     """writeups: lista de objetos con .maquina, .autor, .tipo (p.ej. Writeup)."""
     if not writeups:
