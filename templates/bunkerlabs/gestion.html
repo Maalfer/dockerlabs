@@ -49,45 +49,6 @@
     color: var(--accent-cyan, #22d3ee);
     text-transform: uppercase;
 }
-.recurso-card {
-    background: rgba(255,255,255,0.03);
-    border: 1px solid rgba(255,255,255,0.07);
-    border-radius: 12px;
-    padding: 16px 20px;
-    display: flex;
-    align-items: center;
-    gap: 14px;
-    transition: border-color 0.2s, background 0.2s;
-}
-.recurso-card:hover { border-color: rgba(34,211,238,0.25); background: rgba(34,211,238,0.04); }
-.recurso-icon {
-    width: 42px;
-    height: 42px;
-    border-radius: 10px;
-    background: rgba(34,211,238,0.1);
-    color: var(--accent-cyan, #22d3ee);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.2rem;
-    flex-shrink: 0;
-}
-.recurso-info { flex: 1; min-width: 0; }
-.recurso-title { font-weight: 700; color: #fff; font-size: 0.9rem; margin-bottom: 2px; }
-.recurso-desc { color: rgba(255,255,255,0.45); font-size: 0.78rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.recurso-actions { display: flex; gap: 6px; align-items: center; flex-shrink: 0; }
-
-/* Edit modal */
-#editRecursoModal { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.7); z-index:10001; align-items:center; justify-content:center; }
-#editRecursoModal.open { display:flex; }
-.edit-modal-box {
-    background: #141414;
-    border: 1px solid rgba(255,255,255,0.1);
-    border-radius: 16px;
-    padding: 28px 32px;
-    width: 100%;
-    max-width: 480px;
-}
 </style>
 
 <div class="container my-5">
@@ -128,10 +89,6 @@
         <button class="gestion-nav-btn active" data-panel="accesos">
             <i class="bi bi-key"></i> Accesos
             <span class="info-badge">{{ tokens|length }}</span>
-        </button>
-        <button class="gestion-nav-btn" data-panel="recursos">
-            <i class="bi bi-folder2-open"></i> Recursos
-            <span class="info-badge">{{ recursos|length }}</span>
         </button>
     </nav>
 
@@ -226,102 +183,7 @@
         </div>
     </div>
 
-    <!-- ═══════════════ PANEL: RECURSOS ═══════════════ -->
-    <div id="panel-recursos" class="panel-section">
-        <div class="row g-4">
-            <div class="col-lg-4">
-                <div class="glass-card">
-                    <div class="glass-header"><h5>Añadir Recurso</h5></div>
-                    <form method="post" action="/bunkerlabs/admin/recursos/add">
-                        <input type="hidden" name="csrf_token" value="{{ csrf_token_value }}">
-                        <div class="mb-3">
-                            <label class="form-label small uppercase fw-bold">Título</label>
-                            <input type="text" name="titulo" class="form-control form-control-dark" placeholder="Nombre del recurso" required>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label small uppercase fw-bold">Descripción <span class="text-secondary">(opcional)</span></label>
-                            <textarea name="descripcion" class="form-control form-control-dark" rows="2" placeholder="Breve descripción..."></textarea>
-                        </div>
-                        <div class="mb-4">
-                            <label class="form-label small uppercase fw-bold">URL</label>
-                            <input type="url" name="url" class="form-control form-control-dark" placeholder="https://..." required>
-                        </div>
-                        <button type="submit" class="btn-hack w-100">
-                            <i class="bi bi-plus-circle"></i> Añadir Recurso
-                        </button>
-                    </form>
-                </div>
-
-                <div class="glass-card mt-4">
-                    <div class="glass-header"><h5>Enlace directo</h5></div>
-                    <p class="text-secondary small mb-3">Comparte esta URL para que cualquiera pueda ver los recursos sin autenticarse.</p>
-                    <div class="d-flex gap-2">
-                        <code class="form-control form-control-dark text-accent-cyan small px-2" id="recursos-share-url" style="font-size:0.75rem;"></code>
-                        <button class="btn-hack" onclick="copyRecursosUrl(this)" title="Copiar enlace">
-                            <i class="bi bi-clipboard"></i>
-                        </button>
-                    </div>
-                    <script>document.getElementById('recursos-share-url').textContent = window.location.origin + '/bunkerlabs/recursos';</script>
-                </div>
-            </div>
-
-            <div class="col-lg-8">
-                <div class="glass-card">
-                    <div class="glass-header d-flex justify-content-between align-items-center">
-                        <h5 class="mb-0">Recursos Existentes</h5>
-                        <a href="/bunkerlabs/recursos" target="_blank" class="btn btn-sm text-accent-cyan border-0 p-0" style="font-size:0.8rem;">
-                            <i class="bi bi-box-arrow-up-right me-1"></i>Ver página
-                        </a>
-                    </div>
-                    {% if recursos|length == 0 %}
-                    <div class="text-center py-5">
-                        <i class="bi bi-folder2-open fs-1 text-secondary opacity-25 d-block mb-3"></i>
-                        <p class="text-secondary">Todavía no hay recursos añadidos.</p>
-                    </div>
-                    {% else %}
-                    <div class="d-flex flex-column gap-2">
-                        {% for r in recursos %}
-                        <div class="recurso-card">
-                            <div class="recurso-icon">
-                                {% if r.descripcion and 'ídeo' in r.descripcion %}
-                                <i class="bi bi-play-circle-fill"></i>
-                                {% elif r.descripcion and 'bsidian' in r.descripcion %}
-                                <i class="bi bi-journal-richtext"></i>
-                                {% else %}
-                                <i class="bi bi-file-earmark-pdf"></i>
-                                {% endif %}
-                            </div>
-                            <div class="recurso-info">
-                                <div class="recurso-title">{{ r.titulo }}</div>
-                                {% if r.descripcion %}
-                                <div class="recurso-desc">{{ r.descripcion }}</div>
-                                {% endif %}
-                            </div>
-                            <div class="recurso-actions">
-                                <a href="{{ r.url }}" target="_blank" class="btn btn-sm border-0 text-accent-cyan" title="Abrir enlace">
-                                    <i class="bi bi-box-arrow-up-right"></i>
-                                </a>
-                                <button class="btn btn-sm border-0 text-white-50" title="Editar"
-                                    onclick="openEditRecurso({{ r.id }}, '{{ r.titulo | replace("'", "\\'") }}', '{{ (r.descripcion or '') | replace("'", "\\'") }}', '{{ r.url | replace("'", "\\'") }}')">
-                                    <i class="bi bi-pencil"></i>
-                                </button>
-                                <form method="post" action="/bunkerlabs/admin/recursos/delete/{{ r.id }}" class="d-inline"
-                                    onsubmit="return confirm('¿Eliminar este recurso?');">
-                                    <input type="hidden" name="csrf_token" value="{{ csrf_token_value }}">
-                                    <button type="submit" class="btn btn-sm border-0 text-danger">
-                                        <i class="bi bi-trash"></i>
-                                    </button>
-                                </form>
-                            </div>
-                        </div>
-                        {% endfor %}
-                    </div>
-                    {% endif %}
-                </div>
-            </div>
-        </div>
     </div>
-</div>
 
 <!-- Modal historial de accesos -->
 <div class="modal fade" id="logsModal" tabindex="-1" aria-labelledby="logsModalLabel" aria-hidden="true">
@@ -360,34 +222,6 @@
     </div>
 </div>
 
-<!-- Modal editar recurso -->
-<div id="editRecursoModal">
-    <div class="edit-modal-box">
-        <h5 class="text-white fw-bold mb-4"><i class="bi bi-pencil me-2"></i>Editar Recurso</h5>
-        <form method="post" id="editRecursoForm">
-            <input type="hidden" name="csrf_token" value="{{ csrf_token_value }}">
-            <div class="mb-3">
-                <label class="form-label small uppercase fw-bold">Título</label>
-                <input type="text" name="titulo" id="editTitulo" class="form-control form-control-dark" required>
-            </div>
-            <div class="mb-3">
-                <label class="form-label small uppercase fw-bold">Descripción <span class="text-secondary">(opcional)</span></label>
-                <textarea name="descripcion" id="editDescripcion" class="form-control form-control-dark" rows="2"></textarea>
-            </div>
-            <div class="mb-4">
-                <label class="form-label small uppercase fw-bold">URL</label>
-                <input type="url" name="url" id="editUrl" class="form-control form-control-dark" required>
-            </div>
-            <div class="d-flex gap-2 justify-content-end">
-                <button type="button" class="btn btn-sm btn-outline-secondary border-0" onclick="closeEditRecurso()">Cancelar</button>
-                <button type="submit" class="btn-hack">
-                    <i class="bi bi-check-lg me-1"></i>Guardar
-                </button>
-            </div>
-        </form>
-    </div>
-</div>
-
 <script src="{{ static_v('dockerlabs/vendor/bootstrap.bundle.min.js') }}"></script>
 <script>
 // ─── Tab navigation ───────────────────────────────────────────────────────────
@@ -404,7 +238,7 @@ document.querySelectorAll('.gestion-nav-btn').forEach(btn => {
 // Restore tab from hash
 (function () {
     const hash = window.location.hash.replace('#', '');
-    const validPanels = ['accesos', 'recursos'];
+    const validPanels = ['accesos'];
     if (hash && validPanels.includes(hash)) {
         document.querySelectorAll('.gestion-nav-btn').forEach(b => b.classList.remove('active'));
         document.querySelectorAll('.panel-section').forEach(p => p.classList.remove('active'));
@@ -490,29 +324,5 @@ function copyToClipboard(text, btn) {
 function copyDirectLink(token, btn) {
     copyToClipboard(window.location.origin + '/bunkerlabs/?token=' + token, btn);
 }
-
-function copyRecursosUrl(btn) {
-    copyToClipboard(window.location.origin + '/bunkerlabs/recursos', btn);
-    const orig = btn.innerHTML;
-    btn.innerHTML = '<i class="bi bi-check-lg"></i>';
-    setTimeout(() => { btn.innerHTML = orig; }, 2000);
-}
-
-// ─── Edit recurso modal ───────────────────────────────────────────────────────
-function openEditRecurso(id, titulo, descripcion, url) {
-    document.getElementById('editRecursoForm').action = '/bunkerlabs/admin/recursos/edit/' + id;
-    document.getElementById('editTitulo').value = titulo;
-    document.getElementById('editDescripcion').value = descripcion;
-    document.getElementById('editUrl').value = url;
-    document.getElementById('editRecursoModal').classList.add('open');
-}
-
-function closeEditRecurso() {
-    document.getElementById('editRecursoModal').classList.remove('open');
-}
-
-document.getElementById('editRecursoModal').addEventListener('click', function(e) {
-    if (e.target === this) closeEditRecurso();
-});
 </script>
 {% endblock %}

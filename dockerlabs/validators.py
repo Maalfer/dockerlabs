@@ -146,33 +146,6 @@ def validate_image_content(file_stream, max_size_mb=5):
         file_stream.seek(0)
         return False, "El archivo no es una imagen válida o está corrupto"
 
-def sanitize_html(text, allowed_tags=None, allowed_attributes=None):
-    """
-    Sanitiza texto HTML para prevenir XSS.
-    Por defecto, permite etiquetas básicas de formato.
-    """
-    if not text:
-        return text
-
-    if allowed_tags is None:
-        allowed_tags = ['b', 'i', 'u', 'em', 'strong', 'a', 'p', 'br', 'ul', 'ol', 'li', 'code', 'pre']
-
-    if allowed_attributes is None:
-        allowed_attributes = {
-            'a': ['href', 'title'],
-            '*': ['class']
-        }
-
-    try:
-        return bleach.clean(
-            text,
-            tags=allowed_tags,
-            attributes=allowed_attributes,
-            strip=True
-        )
-    except Exception:
-        return text
-
 def sanitize_text(text):
     """
     Sanitiza texto plano eliminando cualquier HTML/JS potencialmente peligroso.

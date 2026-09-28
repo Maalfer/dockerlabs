@@ -91,11 +91,7 @@
 
 {% block scripts %}
 <script>
-    function escapeHtml(t) {
-        const d = document.createElement('div');
-        d.appendChild(document.createTextNode(t || ''));
-        return d.innerHTML;
-    }
+    // escapeHtml() la aporta utils.js, cargado desde base.html.
 
     function loadCertificados() {
         const list = document.getElementById('certificados-list');

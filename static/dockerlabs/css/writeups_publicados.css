@@ -1,10 +1,10 @@
 /* Writeups Publicados - Modern Grid Layout */
 
 .container {
-    padding-top: 96px;
+    padding-top: 32px;
     padding-bottom: 40px;
     max-width: 1400px;
-    min-height: calc(100vh - 96px);
+    min-height: calc(100vh - 32px);
 }
 
 /* Header */
@@ -280,40 +280,7 @@ h2.text-center.mb-3 {
     font-size: 1rem;
     font-weight: 600;
     color: var(--text-primary);
-}
-
-.type-badge {
-    font-size: 0.75rem;
-    font-weight: 600;
-    padding: 0.3rem 0.8rem;
-    border-radius: 20px;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-}
-
-.type-video {
-    background: #1d4ed8;
-    color: white;
-}
-
-.type-text {
-    background: #16a34a;
-    color: white;
-}
-
-.writeup-detail-body {
-    margin-bottom: 1rem;
-}
-
-.form-label-sm {
-    font-size: 0.85rem;
-    color: var(--text-secondary);
-    margin-bottom: 0.4rem;
-    display: block;
-}
-
-.form-control-sm,
-.form-select-sm {
+}.form-control-sm {
     width: 100%;
     padding: 0.6rem 0.9rem;
     font-size: 0.9rem;
@@ -322,10 +289,7 @@ h2.text-center.mb-3 {
     border-radius: 8px;
     color: var(--text-primary);
     transition: all 0.2s ease;
-}
-
-.form-control-sm:focus,
-.form-select-sm:focus {
+}.form-control-sm:focus {
     outline: none;
     border-color: rgba(59, 130, 246, 0.6);
     box-shadow: 0 0 10px rgba(59, 130, 246, 0.15);

@@ -49,7 +49,7 @@ document.addEventListener('DOMContentLoaded', function () {
             const link = this.getAttribute('data-link');
 
             if (link) {
-                window.open(link, '_blank');
+                window.location.href = link;
             } else if (isGuest) {
                 alert('El modo de prueba no permite descargar máquinas.');
             }

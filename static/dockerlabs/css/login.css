@@ -237,63 +237,6 @@
     margin-right: 0.6rem;
 }
 
-/* Links */
-.login-links {
-    text-align: center;
-}
-
-.login-links a {
-    color: var(--text-secondary);
-    text-decoration: none;
-    font-size: 0.9rem;
-    transition: all 0.2s ease;
-    display: inline-flex;
-    align-items: center;
-    padding: 0.3rem 0.6rem;
-    border-radius: 6px;
-}
-
-.login-links a:hover {
-    color: var(--accent-cyan);
-    background: rgba(34, 211, 238, 0.05);
-}
-
-.login-links a i {
-    margin-right: 0.5rem;
-    font-size: 0.85rem;
-    color: var(--primary-blue-light);
-}
-
-.login-links a:hover i {
-    color: var(--accent-cyan);
-}
-
-/* Divider */
-.login-divider {
-    text-align: center;
-    position: relative;
-    margin: 0.5rem 0;
-}
-
-.login-divider::before {
-    content: '';
-    position: absolute;
-    top: 50%;
-    left: 0;
-    right: 0;
-    height: 1px;
-    background: linear-gradient(to right, transparent, rgba(255, 255, 255, 0.1), transparent);
-}
-
-.login-divider span {
-    background: transparent;
-    padding: 0 1rem;
-    color: var(--text-muted);
-    font-size: 0.85rem;
-    position: relative;
-    backdrop-filter: blur(10px);
-}
-
 /* Alerts */
 .alert {
     padding: 1rem 1.25rem;
@@ -345,30 +288,6 @@
     font-weight: 700;
     color: var(--accent-yellow);
     font-variant-numeric: tabular-nums;
-}
-
-/* Security Badge */
-.security-badge {
-    text-align: center;
-    margin-top: 2rem;
-    padding-top: 1.5rem;
-    border-top: 1px solid rgba(255, 255, 255, 0.05);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: 0.5rem;
-}
-
-.security-badge i {
-    color: var(--accent-green);
-    font-size: 0.9rem;
-}
-
-.security-badge span {
-    color: var(--text-muted);
-    font-size: 0.8rem;
-    font-weight: 500;
-    letter-spacing: 0.02em;
 }
 
 /* Responsive */

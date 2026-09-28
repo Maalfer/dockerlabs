@@ -197,10 +197,9 @@ document.addEventListener('DOMContentLoaded', function () {
                     return (input?.value || cell.textContent || '').trim().toLowerCase();
                 };
 
-                if (filterValues.nombre && !getValue(1, 'input[name="nombre"]').includes(filterValues.nombre)) show = false;
-                if (filterValues.dificultad && getValue(2, 'select[name="dificultad"]') !== filterValues.dificultad) show = false;
-                if (filterValues.autor && !getValue(3, 'input[name="autor"]').includes(filterValues.autor)) show = false;
-                if (filterValues.fecha && !getValue(5, 'input[name="fecha"]').includes(filterValues.fecha)) show = false;
+                if (filterValues.nombre && !getValue(0, 'input[name="nombre"]').includes(filterValues.nombre)) show = false;
+                if (filterValues.dificultad && getValue(1, 'select[name="dificultad"]') !== filterValues.dificultad) show = false;
+                if (filterValues.autor && !getValue(2, 'input[name="autor"]').includes(filterValues.autor)) show = false;
 
                 row.style.display = show ? '' : 'none';
             });
@@ -246,4 +245,187 @@ function toggleGuestAccess(machineId, btn) {
             console.error('Error:', error);
             alert('Ocurrió un error al intentar cambiar el estado.');
         });
+}
+
+// === Modal de estadisticas de maquina (writeups, descargas, valoracion) ===
+let lastStatsModalTrigger = null;
+
+document.addEventListener('DOMContentLoaded', function () {
+    // Delegacion: cualquier boton .machine-name-link, en cualquiera de las
+    // dos tablas, abre el modal con el id/nombre que lleva en sus data-*.
+    document.addEventListener('click', function (e) {
+        const btn = e.target.closest('.machine-name-link');
+        if (btn) openMachineStatsModal(btn.dataset.machineId, btn.dataset.machineName, btn);
+    });
+
+    const statsModal = document.getElementById('machineStatsModal');
+    if (statsModal) {
+        // Cerrar al hacer clic en el backdrop (mismo patron que el resto de
+        // modales del sitio, definidos en base.html).
+        statsModal.addEventListener('click', function (e) {
+            if (e.target === statsModal) closeMachineStatsModal();
+        });
+    }
+
+    // Cerrar con Escape y devolver el foco al boton que abrio el modal.
+    document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape' && statsModal && statsModal.classList.contains('visible')) {
+            closeMachineStatsModal();
+        }
+    });
+});
+
+function closeMachineStatsModal() {
+    closeModal('machineStatsModal');
+    if (lastStatsModalTrigger) {
+        lastStatsModalTrigger.focus();
+        lastStatsModalTrigger = null;
+    }
+}
+
+function openMachineStatsModal(machineId, machineName, triggerEl) {
+    lastStatsModalTrigger = triggerEl || null;
+
+    const subtitle = document.getElementById('machineStatsModalSubtitle');
+    const body = document.getElementById('machineStatsModalBody');
+    if (subtitle) subtitle.textContent = machineName || '';
+    if (body) {
+        body.innerHTML = '';
+        const loading = document.createElement('div');
+        loading.className = 'machine-stats-loading';
+        loading.textContent = 'Cargando...';
+        body.appendChild(loading);
+    }
+
+    openModal('machineStatsModal');
+
+    const closeBtn = document.querySelector('#machineStatsModal .modal-close-button');
+    if (closeBtn) closeBtn.focus();
+
+    fetch(`/api/gestion-maquinas/machine-stats/${encodeURIComponent(machineId)}`)
+        .then(response => response.json().then(data => ({ ok: response.ok, data })))
+        .then(({ ok, data }) => {
+            if (!body) return;
+            body.innerHTML = '';
+
+            if (!ok || data.error) {
+                const err = document.createElement('div');
+                err.className = 'machine-stats-error';
+                err.textContent = data.error || 'No se pudieron cargar las estadísticas.';
+                body.appendChild(err);
+                return;
+            }
+
+            body.appendChild(buildStatCard('bi-file-earmark-text', data.writeups, 'Writeups publicados'));
+            body.appendChild(buildStatCard('bi-download', data.descargas, 'Descargas'));
+
+            const ratingLabel = data.rating_count > 0
+                ? `Valoración (${data.rating_count} ${data.rating_count === 1 ? 'voto' : 'votos'})`
+                : 'Valoración (sin votos)';
+            body.appendChild(buildStatCard('bi-star-fill', `${data.rating_avg} / 5`, ratingLabel));
+        })
+        .catch(() => {
+            if (!body) return;
+            body.innerHTML = '';
+            const err = document.createElement('div');
+            err.className = 'machine-stats-error';
+            err.textContent = 'Error de red al cargar las estadísticas.';
+            body.appendChild(err);
+        });
+}
+
+function buildStatCard(iconClass, value, label) {
+    const card = document.createElement('div');
+    card.className = 'machine-stat-card';
+
+    const icon = document.createElement('i');
+    icon.className = `bi ${iconClass} machine-stat-icon`;
+    icon.setAttribute('aria-hidden', 'true');
+
+    const valueEl = document.createElement('div');
+    valueEl.className = 'machine-stat-value';
+    valueEl.textContent = value;
+
+    const labelEl = document.createElement('div');
+    labelEl.className = 'machine-stat-label';
+    labelEl.textContent = label;
+
+    const textWrap = document.createElement('div');
+    textWrap.appendChild(valueEl);
+    textWrap.appendChild(labelEl);
+
+    card.appendChild(icon);
+    card.appendChild(textWrap);
+    return card;
+}
+
+// === Modal de detalles editables (enlace autor, descripcion, link
+// descarga). Estos campos ya no se muestran en la tabla porque no entraban;
+// siguen viviendo como inputs ocultos dentro del <form> de cada fila, y
+// este modal solo es una vista/edicion ampliada de esos mismos campos. ===
+let currentDetailsRow = null; // { form, enlaceInput, descTextarea, linkInput }
+
+document.addEventListener('DOMContentLoaded', function () {
+    const detailsModal = document.getElementById('machineDetailsModal');
+    if (detailsModal) {
+        detailsModal.addEventListener('click', function (e) {
+            if (e.target === detailsModal) closeMachineDetailsModal();
+        });
+    }
+
+    document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape' && detailsModal && detailsModal.classList.contains('visible')) {
+            closeMachineDetailsModal();
+        }
+    });
+});
+
+function openMachineDetailsModal(triggerBtn) {
+    const row = triggerBtn.closest('tr');
+    if (!row) return;
+
+    const form = row.querySelector('form.d-contents');
+    const nameBtn = row.querySelector('.machine-name-link');
+    if (!form) return;
+
+    const enlaceInput = form.querySelector('[name="enlace_autor"]');
+    const descTextarea = form.querySelector('[name="descripcion"]');
+    const linkInput = form.querySelector('[name="link_descarga"]');
+
+    currentDetailsRow = { form, enlaceInput, descTextarea, linkInput, triggerBtn };
+
+    const subtitle = document.getElementById('machineDetailsModalSubtitle');
+    if (subtitle) subtitle.textContent = nameBtn ? nameBtn.dataset.machineName : '';
+
+    document.getElementById('detailsEnlaceAutor').value = enlaceInput ? enlaceInput.value : '';
+    document.getElementById('detailsDescripcion').value = descTextarea ? descTextarea.value : '';
+    document.getElementById('detailsLinkDescarga').value = linkInput ? linkInput.value : '';
+
+    openModal('machineDetailsModal');
+    document.getElementById('detailsEnlaceAutor').focus();
+}
+
+function closeMachineDetailsModal() {
+    closeModal('machineDetailsModal');
+    if (currentDetailsRow && currentDetailsRow.triggerBtn) {
+        currentDetailsRow.triggerBtn.focus();
+    }
+    currentDetailsRow = null;
+}
+
+function saveMachineDetailsModal() {
+    if (!currentDetailsRow) return;
+    const { form, enlaceInput, descTextarea, linkInput } = currentDetailsRow;
+
+    if (enlaceInput) enlaceInput.value = document.getElementById('detailsEnlaceAutor').value;
+    if (descTextarea) descTextarea.value = document.getElementById('detailsDescripcion').value;
+    if (linkInput) linkInput.value = document.getElementById('detailsLinkDescarga').value;
+
+    closeModal('machineDetailsModal');
+    currentDetailsRow = null;
+
+    // Mismo submit que dispara el boton "Guardar" de la fila: un POST de
+    // formulario normal (sin AJAX), asi que se guardan a la vez todos los
+    // campos de la fila (nombre, dificultad, autor, categoria, etc.).
+    form.requestSubmit();
 }

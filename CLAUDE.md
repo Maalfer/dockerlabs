@@ -168,7 +168,7 @@ Carga el catálogo y las categorías por lotes; no añadas consultas por máquin
 > campos de los endpoints de certificados/perfil: hay apps externas leyéndolos.
 
 **BunkerLabs no tiene certificados.** Solo se emiten diplomas para máquinas de
-`CERT_ORIGENES = ('docker', 'empezar')`; el candado está en `machine_certificable()`
+`CERT_ORIGENES = ('docker',)`; el candado está en `machine_certificable()`
 (usado por `ensure_certificate`, la disponibilidad, la generación y
 `mis-certificados`). No emitas ni expongas certificados de máquinas con
 `origen == 'bunker'`.

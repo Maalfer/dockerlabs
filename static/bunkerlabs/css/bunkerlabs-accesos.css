@@ -58,10 +58,6 @@
     color: var(--text-secondary) !important;
 }
 
-.form-text {
-    color: var(--text-muted) !important;
-}
-
 .form-control-dark {
     background: rgba(2, 6, 23, 0.6) !important;
     border: 1px solid var(--border-strong) !important;

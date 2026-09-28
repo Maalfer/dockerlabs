@@ -257,9 +257,9 @@
 #notificationsModal {
     position: fixed;
     inset: 0;
-    background: rgba(2, 6, 23, 0.80);
-    backdrop-filter: blur(14px);
-    -webkit-backdrop-filter: blur(14px);
+    background: rgba(15, 23, 42, 0.6);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
     display: none;
     align-items: center;
     justify-content: center;
@@ -275,19 +275,16 @@
 /* Dialog */
 .notif-dialog {
     position: relative;
-    background: linear-gradient(160deg, #0a1628 0%, #0d1e35 60%, #0f172a 100%);
-    border: 1px solid rgba(59, 130, 246, 0.18);
-    border-radius: 22px;
+    background: #1e293b;
+    border: 1px solid rgba(148, 163, 184, 0.1);
+    border-radius: 16px;
     width: 100%;
     max-width: 680px;
     max-height: 85vh;
     display: flex;
     flex-direction: column;
     overflow: hidden;
-    box-shadow:
-        0 0 0 1px rgba(59, 130, 246, 0.08),
-        0 30px 70px -15px rgba(0, 0, 0, 0.9),
-        0 0 100px -25px rgba(59, 130, 246, 0.18);
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
     animation: notifPop 0.28s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
@@ -296,11 +293,9 @@
     to   { opacity: 1; transform: scale(1)    translateY(0); }
 }
 
-/* Accent gradient bar */
+/* Accent gradient bar (retirada para coincidir con el resto de modales) */
 .notif-accent-bar {
-    height: 3px;
-    background: linear-gradient(90deg, #3b82f6 0%, #8b5cf6 55%, #06b6d4 100%);
-    flex-shrink: 0;
+    display: none;
 }
 
 /* Close button */
@@ -311,73 +306,66 @@
     width: 30px;
     height: 30px;
     border-radius: 8px;
-    border: 1px solid rgba(51, 65, 85, 0.5);
-    background: rgba(15, 23, 42, 0.6);
-    color: #475569;
-    font-size: 0.8rem;
+    border: none;
+    background: transparent;
+    color: #64748b;
+    font-size: 0.9rem;
     display: flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease, transform 0.2s ease;
+    transition: background 0.2s ease, color 0.2s ease;
     z-index: 10;
     line-height: 1;
     padding: 0;
 }
 
 .notif-close-btn:hover {
-    background: rgba(239, 68, 68, 0.14);
-    border-color: rgba(239, 68, 68, 0.4);
-    color: #ef4444;
-    transform: scale(1.08);
+    background: rgba(255, 255, 255, 0.05);
+    color: #f1f5f9;
 }
 
 /* Header */
 .notif-header {
     padding: 1.4rem 1.5rem 1rem;
-    border-bottom: 1px solid rgba(51, 65, 85, 0.35);
+    border-bottom: 1px solid rgba(148, 163, 184, 0.1);
     flex-shrink: 0;
-    background: rgba(10, 20, 40, 0.4);
+    background: transparent;
+    text-align: center;
 }
 
 .notif-header-inner {
     display: flex;
     align-items: center;
+    justify-content: center;
     gap: 0.8rem;
 }
 
 .notif-terminal-prompt {
-    color: #22c55e;
-    font-family: 'Fira Code', 'Courier New', monospace;
-    font-size: 1.35rem;
-    font-weight: 700;
-    opacity: 0.85;
-    flex-shrink: 0;
-    text-shadow: 0 0 12px rgba(34, 197, 94, 0.5);
+    display: none;
 }
 
 .notif-header-icon {
-    font-size: 1.5rem;
+    font-size: 1.3rem;
     color: #3b82f6;
-    filter: drop-shadow(0 0 10px rgba(59, 130, 246, 0.55));
     flex-shrink: 0;
 }
 
 .notif-header-title {
-    font-family: 'Fira Code', 'Courier New', monospace;
-    font-size: 1.15rem;
-    font-weight: 600;
-    color: #f1f5f9;
-    letter-spacing: 0.06em;
+    font-family: 'Inter', sans-serif;
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #ffffff;
     line-height: 1.2;
 }
 
 .notif-header-subtitle {
-    font-family: 'Fira Code', 'Courier New', monospace;
-    font-size: 0.7rem;
-    color: #334155;
-    letter-spacing: 0.04em;
-    margin-top: 0.2rem;
+    font-family: 'Inter', sans-serif;
+    font-size: 0.75rem;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-top: 0.3rem;
 }
 
 /* Tabs bar */
@@ -385,8 +373,8 @@
     display: flex;
     gap: 0.3rem;
     padding: 0.65rem 1rem;
-    border-bottom: 1px solid rgba(51, 65, 85, 0.3);
-    background: rgba(10, 20, 40, 0.25);
+    border-bottom: 1px solid rgba(148, 163, 184, 0.1);
+    background: transparent;
     flex-shrink: 0;
     overflow-x: auto;
     scrollbar-width: none;
@@ -402,14 +390,13 @@
     border-radius: 8px;
     border: 1px solid transparent;
     background: transparent;
-    color: #475569;
-    font-family: 'Fira Code', 'Courier New', monospace;
-    font-size: 0.78rem;
+    color: #64748b;
+    font-family: 'Inter', sans-serif;
+    font-size: 0.8rem;
     font-weight: 500;
     cursor: pointer;
     transition: color 0.18s ease, background 0.18s ease, border-color 0.18s ease;
     white-space: nowrap;
-    letter-spacing: 0.03em;
 }
 
 .notif-tab-btn:hover {
@@ -453,25 +440,19 @@
     display: flex;
     align-items: center;
     gap: 0.6rem;
-    color: #334155;
-    font-family: 'Fira Code', 'Courier New', monospace;
-    font-size: 0.88rem;
+    color: #64748b;
+    font-family: 'Inter', sans-serif;
+    font-size: 0.9rem;
     padding: 4rem 1rem;
     justify-content: center;
-    letter-spacing: 0.03em;
 }
 
 .notif-loading-prompt {
-    color: #22c55e;
-    font-weight: 700;
-    text-shadow: 0 0 8px rgba(34, 197, 94, 0.4);
+    display: none;
 }
 
 .notif-cursor {
-    display: inline-block;
-    color: #3b82f6;
-    animation: notifBlink 1s step-end infinite;
-    font-weight: 700;
+    display: none;
 }
 
 @keyframes notifBlink {
@@ -486,13 +467,12 @@
     justify-content: center;
     gap: 0.5rem;
     padding: 0.8rem;
-    background: rgba(10, 20, 40, 0.5);
+    background: transparent;
     border: none;
-    border-top: 1px solid rgba(51, 65, 85, 0.25);
-    color: #334155;
-    font-family: 'Fira Code', 'Courier New', monospace;
-    font-size: 0.75rem;
-    letter-spacing: 0.04em;
+    border-top: 1px solid rgba(148, 163, 184, 0.1);
+    color: #64748b;
+    font-family: 'Inter', sans-serif;
+    font-size: 0.8rem;
     cursor: pointer;
     transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
     width: 100%;
@@ -524,15 +504,10 @@
     }
 }
 
-/* Legacy selectors kept for backward compat */
-.toggle-read-btn {
-    display: none;
-}
-
 .notification-item {
-    background: rgba(15, 28, 50, 0.6);
-    border: 1px solid rgba(51, 65, 85, 0.4);
-    border-radius: 14px;
+    background: rgba(30, 41, 59, 0.4);
+    border: 1px solid rgba(148, 163, 184, 0.1);
+    border-radius: 12px;
     padding: 1.25rem 1.4rem;
     margin-bottom: 0.85rem;
     transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
@@ -821,32 +796,6 @@
 }
 
 .notification-delete-btn:active {
-    transform: translateY(0);
-}
-
-.toggle-read-btn {
-    background: linear-gradient(135deg, rgba(30, 41, 59, 0.9) 0%, rgba(51, 65, 85, 0.7) 100%);
-    border-top: 1px solid rgba(51, 65, 85, 0.5);
-    color: #94a3b8;
-    cursor: pointer;
-    font-weight: 600;
-    padding: 1.25rem;
-    display: none;
-    align-items: center;
-    justify-content: center;
-    gap: 0.5rem;
-    transition: background 0.3s ease, color 0.3s ease, transform 0.3s ease;
-    -webkit-backdrop-filter: blur(10px);
-    backdrop-filter: blur(10px);
-}
-
-.toggle-read-btn:hover {
-    background: linear-gradient(135deg, rgba(51, 65, 85, 0.9) 0%, rgba(71, 85, 105, 0.7) 100%);
-    color: #f8fafc;
-    transform: translateY(-2px);
-}
-
-.toggle-read-btn:active {
     transform: translateY(0);
 }
 

@@ -106,7 +106,7 @@ function saveField(fieldId) {
 }
 
 function saveProfile() {
-    // Only validate the profile fields (username and email), not the requested_username field
+    // Only validate the profile fields (username and email)
     const username = document.getElementById('username');
     const email = document.getElementById('email');
     let hasErrors = false;
@@ -386,14 +386,3 @@ function showAlert(message, type = 'info') {
     }, 5000);
 }
 
-function openClaimMachineModal() {
-    openModal('claimMachineModal');
-}
-
-function closeClaimMachineModal() {
-    closeModal('claimMachineModal');
-}
-
-document.addEventListener('DOMContentLoaded', function () {
-    initModalCloseOnClickOutside('claimMachineModal');
-});

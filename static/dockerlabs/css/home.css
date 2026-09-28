@@ -88,34 +88,6 @@
     margin: 0.5rem 0;
 }
 
-/* Estilos legacy - mantener para compatibilidad */
-.search-with-filter {
-    position: relative;
-    display: inline-block;
-}
-
-.search-with-filter .btn {
-    position: absolute;
-    right: 0;
-    top: 0;
-    bottom: 0;
-    border: none;
-    background: transparent;
-    color: #6c757d;
-    z-index: 10;
-    padding: 0 10px;
-}
-
-.search-with-filter .btn:hover {
-    background: transparent;
-    color: #495057;
-}
-
-.search-with-filter .dropdown-menu {
-    font-size: 0.875rem;
-    z-index: 1100 !important;
-}
-
 .btn-academia {
     display: inline-flex;
     align-items: center;

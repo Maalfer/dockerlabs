@@ -25,16 +25,3 @@ class BunkerAccessLog(db.Model):
 
     # Optional: Relationship if needed
     # token = db.relationship('BunkerAccessToken', backref=db.backref('logs', lazy=True))
-
-class BunkerResource(db.Model):
-    """Recursos compartidos en BunkerLabs (documentos, enlaces, etc.)"""
-    __tablename__ = 'bunker_resources'
-
-    id = db.Column(db.Integer, primary_key=True)
-    titulo = db.Column(db.String(200), nullable=False)
-    descripcion = db.Column(db.Text, nullable=True)
-    url = db.Column(db.String(1000), nullable=False)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
-
-    def __repr__(self):
-        return f'<BunkerResource {self.titulo}>'

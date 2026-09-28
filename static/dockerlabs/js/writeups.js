@@ -212,7 +212,7 @@ function showEnlaces(machine) {
                         <i class="bi bi-file-text" style="color: #3b82f6;"></i>
                         Writeups
                     </h2>
-                    <p class="popup-subtitle">Recursos disponibles para ${machine}</p>
+                    <p class="popup-subtitle">Recursos disponibles para ${escapeHtml(machine)}</p>
                 </div>
             `;
 

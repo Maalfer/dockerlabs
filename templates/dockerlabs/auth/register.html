@@ -87,6 +87,7 @@
                         <label for="username"><i class="fas fa-user"></i> Nombre de usuario</label>
                         <input type="text" name="username" id="username" placeholder="Elige tu nombre de usuario"
                             required autocomplete="username" autofocus minlength="3" maxlength="20">
+                        <small id="username-counter" style="display:block;margin-top:4px;font-size:0.8em;opacity:0.7;">Máximo 20 caracteres</small>
                     </div>
 
                     <div class="form-group">
@@ -276,6 +277,22 @@ document.addEventListener("DOMContentLoaded", function() {
     const pinDisplay = document.getElementById("register-pin");
     const registerBtn = document.getElementById("register-btn");
     const loadingOverlay = document.getElementById("loading-overlay");
+
+    // Aviso de límite de caracteres: el input tiene maxlength=20 y antes no
+    // avisaba de nada, así que quien escribía un nombre más largo (p.ej. un
+    // apellido completo) veía cómo se recortaba en silencio sin darse cuenta,
+    // y acababa con un username distinto al que creía haber elegido.
+    const usernameInput = document.getElementById("username");
+    const usernameCounter = document.getElementById("username-counter");
+    if (usernameInput && usernameCounter) {
+        const updateUsernameCounter = function() {
+            const len = usernameInput.value.length;
+            usernameCounter.textContent = len + "/20 caracteres";
+            usernameCounter.style.color = len >= 20 ? "#e74c3c" : "";
+        };
+        usernameInput.addEventListener("input", updateUsernameCounter);
+        updateUsernameCounter();
+    }
 
     form.addEventListener("submit", async function(e) {
         e.preventDefault();

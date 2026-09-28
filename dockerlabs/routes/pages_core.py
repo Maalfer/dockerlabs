@@ -1,24 +1,56 @@
+import hashlib
+import os
+import re
 import secrets
 from datetime import datetime
-from urllib.parse import quote
+from urllib.parse import quote, urlencode
 
 from sqlalchemy.exc import IntegrityError
 
 from fastapi import Depends, HTTPException, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
+from dockerlabs.models import OutboundClickLog
 
-from dockerlabs.models import Category, CompletedMachine, EmailVerificationToken, Machine, PasswordResetToken, User
+from dockerlabs.models import ApiToken, Category, Certificate, CompletedMachine, EmailChangeToken, EmailVerificationToken, Machine, PasswordResetToken, User
 
 
 def register_pages_core_routes(
     pages_router,
     get_session,
     create_session_cookie,
+    compute_csrf_token,
     get_fastapi_profile_image_url,
     url_for,
     templates,
     db,
 ):
+    # Enlaces salientes hacia elrincondelhacker.es con recuento propio y UTM (trazabilidad de leads:
+    # MailerUp guarda utm_source=dockerlabs como origen del suscriptor). Ver /opt/mailerup/docs/TRAZABILIDAD.md
+    _GO_DESTINOS = {
+        "newsletter": "https://elrincondelhacker.es/newsletter",
+        "academia": "https://elrincondelhacker.es/",
+    }
+    _GO_BOTS = ("bot", "crawl", "spider", "curl", "wget", "python-requests", "headless", "preview", "monitor", "facebookexternalhit")
+
+    @pages_router.get("/go/{destino}", include_in_schema=False)
+    def go_externo(destino: str, request: Request, o: str = "footer"):
+        base = _GO_DESTINOS.get(destino)
+        if not base:
+            raise HTTPException(status_code=404)
+        origen = re.sub(r"[^a-z0-9-]", "", (o or "").lower())[:30] or "footer"
+        ua = request.headers.get("user-agent", "")
+        if ua and not any(b in ua.lower() for b in _GO_BOTS):
+            try:
+                ip = request.headers.get("cf-connecting-ip") or (request.client.host if request.client else "")
+                day = datetime.utcnow().strftime("%Y-%m-%d")
+                visitor = hashlib.sha256(f"{os.environ.get('SECRET_KEY', 'dockerlabs')}|{ip}|{ua}|{day}".encode()).hexdigest()[:16]
+                db.session.add(OutboundClickLog(destino=destino, origen=origen, visitor=visitor))
+                db.session.commit()
+            except Exception:
+                db.session.rollback()   # el recuento nunca debe impedir la redirección
+        qs = urlencode({"utm_source": "dockerlabs", "utm_medium": origen, "utm_campaign": destino})
+        return RedirectResponse(f"{base}?{qs}", status_code=302, headers={"Cache-Control": "no-store"})
+
     @pages_router.get("/", response_class=HTMLResponse)
     def index_page(request: Request, session: dict = Depends(get_session)):
         query = (
@@ -60,7 +92,8 @@ def register_pages_core_routes(
             except Exception:
                 pass
 
-        maquinas_con_fecha.sort(key=lambda x: x[1], reverse=True)
+        # La fecha no guarda hora: a igualdad de dia, el id (orden de subida) desempata
+        maquinas_con_fecha.sort(key=lambda x: (x[1], x[0]["id"]), reverse=True)
         machine_ranks = {}
         top_2_items = maquinas_con_fecha[:2]
         for idx, (m, _) in enumerate(top_2_items):
@@ -119,10 +152,6 @@ def register_pages_core_routes(
         if role not in ["admin", "moderador", "jugador"]:
             raise HTTPException(status_code=403, detail="Acceso denegado")
 
-        maquinas = (
-            Machine.query.filter_by(origen="docker").with_entities(Machine.id, Machine.nombre, Machine.autor).order_by(Machine.nombre.asc()).all()
-        )
-
         current_username = session.get("username")
         profile_image_url = get_fastapi_profile_image_url(username=current_username, user_id=user_id)
 
@@ -139,14 +168,32 @@ def register_pages_core_routes(
         # el username es el alias que acepta el endpoint si aún no hubiera slug.
         perfil_slug = (user.slug if user and user.slug else current_username) or ""
         perfil_path = f"/u/{quote(perfil_slug, safe='')}"
+        perfil_web_path = f"/perfil/{quote(perfil_slug, safe='')}"
+        perfil_publico = bool(user.perfil_publico) if user else True
+
+        # Un cert_id real del usuario para que los enlaces de ejemplo de la API
+        # se puedan copiar y pegar tal cual. Si no tiene ninguno, se omiten.
+        cert = Certificate.query.filter_by(user_id=user_id).first() if user_id else None
+        perfil_cert_id = cert.cert_id if cert else None
+
+        # Sección "Tokens de API": solo se calcula (y solo se pinta en la
+        # plantilla) para admins. Nunca se envía el token en claro; solo lo
+        # que ya vive en BD (label, prefijo, fechas).
+        api_tokens = []
+        if role == "admin":
+            api_tokens = ApiToken.query.order_by(ApiToken.created_at.desc()).all()
 
         context = {
             "request": request,
-            "maquinas": maquinas,
             "profile_image_url": profile_image_url,
             "perfil_slug": perfil_slug,
             "perfil_path": perfil_path,
             "perfil_url": f"https://dockerlabs.es{perfil_path}",
+            "perfil_web_path": perfil_web_path,
+            "perfil_web_url": f"https://dockerlabs.es{perfil_web_path}",
+            "perfil_publico": perfil_publico,
+            "perfil_cert_id": perfil_cert_id,
+            "api_tokens": api_tokens,
             "user": user,
             "current_user_role": role,
             "session": session_data,
@@ -194,20 +241,44 @@ def register_pages_core_routes(
         response.delete_cookie(key="session", path="/")
         return response
 
+    def _anonymous_csrf_token(session):
+        """Token CSRF para un GET de login/register/recover.
+
+        Si ya hay una sesión (con `_id`), `get_session()` ya calculó el token
+        real (determinista, HMAC del `_id`) en `session['csrf_token']` y se
+        reutiliza tal cual. Si no hay sesión todavía, se crea una nueva con
+        un `_id` fijado de antemano para poder calcular aquí mismo ese mismo
+        token — antes se generaba un token aleatorio sin relación alguna con
+        el que `verify_csrf_token` acaba comprobando, así que el formulario
+        nunca podía validarse con el token que el usuario veía.
+
+        Devuelve (csrf_token, cookie_val_o_None). cookie_val es None cuando
+        se reutiliza la sesión existente y no hace falta reescribir la cookie.
+        """
+        csrf_token = session.get("csrf_token")
+        if csrf_token:
+            return csrf_token, None
+
+        import hashlib
+        import os
+        new_id = hashlib.sha512(os.urandom(24)).hexdigest()
+        csrf_token = compute_csrf_token(new_id)
+        cookie_val = create_session_cookie(
+            session.get("user_id") or 0,
+            session.get("username") or "",
+            session.get("role") or "jugador",
+            existing_session=session,
+            _id=new_id,
+        )
+        return csrf_token, cookie_val
+
     @pages_router.get("/login", response_class=HTMLResponse)
     def login_page(request: Request, session: dict = Depends(get_session)):
         user_id = session.get("user_id")
         if user_id:
             return RedirectResponse(url="/dashboard", status_code=302)
 
-        csrf_token = secrets.token_urlsafe(32)
-        session["csrf_token"] = csrf_token
-        cookie_val = create_session_cookie(
-            session.get("user_id") or 0,
-            session.get("username") or "",
-            session.get("role") or "jugador",
-            existing_session=session,
-        )
+        csrf_token, cookie_val = _anonymous_csrf_token(session)
 
         context = {
             "request": request,
@@ -220,7 +291,8 @@ def register_pages_core_routes(
         }
 
         response = templates.TemplateResponse(request, "dockerlabs/auth/login.html", context)
-        response.set_cookie(key="session", value=cookie_val, httponly=True, secure=True, path="/", samesite="lax")
+        if cookie_val:
+            response.set_cookie(key="session", value=cookie_val, httponly=True, secure=True, path="/", samesite="lax")
         return response
 
     @pages_router.get("/register", response_class=HTMLResponse)
@@ -228,14 +300,7 @@ def register_pages_core_routes(
         if session.get("user_id"):
             return RedirectResponse(url="/dashboard", status_code=302)
 
-        csrf_token = secrets.token_urlsafe(32)
-        session["csrf_token"] = csrf_token
-        cookie_val = create_session_cookie(
-            session.get("user_id") or 0,
-            session.get("username") or "",
-            session.get("role") or "jugador",
-            existing_session=session,
-        )
+        csrf_token, cookie_val = _anonymous_csrf_token(session)
 
         context = {
             "remaining": request.query_params.get("remaining"),
@@ -245,7 +310,8 @@ def register_pages_core_routes(
             "g": {"csp_nonce": secrets.token_urlsafe(32)},
         }
         response = templates.TemplateResponse(request, "dockerlabs/auth/register.html", context)
-        response.set_cookie(key="session", value=cookie_val, httponly=True, secure=True, path="/", samesite="lax")
+        if cookie_val:
+            response.set_cookie(key="session", value=cookie_val, httponly=True, secure=True, path="/", samesite="lax")
         return response
 
     @pages_router.get("/recover", response_class=HTMLResponse)
@@ -253,18 +319,12 @@ def register_pages_core_routes(
         if session.get("user_id"):
             return RedirectResponse(url="/dashboard", status_code=302)
 
-        csrf_token = secrets.token_urlsafe(32)
-        session["csrf_token"] = csrf_token
-        cookie_val = create_session_cookie(
-            session.get("user_id") or 0,
-            session.get("username") or "",
-            session.get("role") or "jugador",
-            existing_session=session,
-        )
+        csrf_token, cookie_val = _anonymous_csrf_token(session)
 
         context = {"session": {}, "csrf_token_value": csrf_token, "url_for": url_for, "g": {"csp_nonce": secrets.token_urlsafe(32)}}
         response = templates.TemplateResponse(request, "dockerlabs/auth/recover.html", context)
-        response.set_cookie(key="session", value=cookie_val, httponly=True, secure=True, path="/", samesite="lax")
+        if cookie_val:
+            response.set_cookie(key="session", value=cookie_val, httponly=True, secure=True, path="/", samesite="lax")
         return response
 
     @pages_router.get("/verify-email", response_class=HTMLResponse)
@@ -322,6 +382,71 @@ def register_pages_core_routes(
             "g": {"csp_nonce": secrets.token_urlsafe(32)},
         }
         return templates.TemplateResponse(request, "dockerlabs/auth/verify_email.html", context)
+
+    @pages_router.get("/confirm-email-change", response_class=HTMLResponse)
+    def confirm_email_change_page(request: Request, session: dict = Depends(get_session), token: str = ""):
+        error = None
+        success = False
+        new_email = ""
+        changed_user_id = None
+
+        if not token:
+            error = "Enlace invalido."
+        else:
+            change_tok = EmailChangeToken.query.filter_by(token=token, used=False).first()
+            if not change_tok:
+                error = "Enlace invalido o ya utilizado."
+            elif datetime.utcnow() > change_tok.expires_at:
+                error = "El enlace ha expirado. Solicita el cambio de correo de nuevo desde tu perfil."
+            else:
+                existing = User.query.filter(
+                    User.email == change_tok.new_email, User.id != change_tok.user_id
+                ).first()
+                if existing:
+                    error = "Ese correo ya esta registrado por otra cuenta."
+                else:
+                    user_obj = User.query.get(change_tok.user_id)
+                    if not user_obj:
+                        error = "Usuario no encontrado."
+                    else:
+                        user_obj.email = change_tok.new_email
+                        # Invalida el resto de sesiones abiertas, igual que un
+                        # cambio de contraseña: el email es tan sensible como
+                        # ella (es la vía de "olvidé mi contraseña").
+                        user_obj.session_version = (user_obj.session_version or 1) + 1
+                        change_tok.used = True
+                        db.session.commit()
+                        success = True
+                        new_email = user_obj.email
+                        changed_user_id = user_obj.id
+
+        context = {
+            "request": request,
+            "success": success,
+            "error": error,
+            "new_email": new_email,
+            "url_for": url_for,
+            "session": {},
+            "current_user_role": "",
+            "g": {"csp_nonce": secrets.token_urlsafe(32)},
+        }
+        response = templates.TemplateResponse(request, "dockerlabs/auth/confirm_email_change.html", context)
+
+        # Si quien confirma es la misma sesión que lo solicitó, se refresca su
+        # cookie con el session_version nuevo para que no quede ella misma
+        # deslogueada por el cambio que acaba de hacer a propósito.
+        if success and session.get("user_id") == changed_user_id:
+            cookie_val = create_session_cookie(
+                changed_user_id,
+                session.get("username") or "",
+                session.get("role") or "jugador",
+                existing_session=session,
+                _id=session.get("_id"),
+                session_version=User.query.get(changed_user_id).session_version,
+            )
+            response.set_cookie(key="session", value=cookie_val, httponly=True, secure=True, path="/", samesite="lax")
+
+        return response
 
     @pages_router.get("/reset-password", response_class=HTMLResponse)
     def reset_password_page(request: Request, token: str = ""):

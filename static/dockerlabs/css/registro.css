@@ -234,63 +234,6 @@
     margin-right: 0.6rem;
 }
 
-/* Links */
-.register-links {
-    text-align: center;
-}
-
-.register-links a {
-    color: var(--text-secondary);
-    text-decoration: none;
-    font-size: 0.9rem;
-    transition: all 0.2s ease;
-    display: inline-flex;
-    align-items: center;
-    padding: 0.3rem 0.6rem;
-    border-radius: 6px;
-}
-
-.register-links a:hover {
-    color: var(--accent-cyan);
-    background: rgba(34, 211, 238, 0.05);
-}
-
-.register-links a i {
-    margin-right: 0.5rem;
-    font-size: 0.85rem;
-    color: var(--primary-blue-light);
-}
-
-.register-links a:hover i {
-    color: var(--accent-cyan);
-}
-
-/* Divider */
-.register-divider {
-    text-align: center;
-    position: relative;
-    margin: 0.5rem 0;
-}
-
-.register-divider::before {
-    content: '';
-    position: absolute;
-    top: 50%;
-    left: 0;
-    right: 0;
-    height: 1px;
-    background: linear-gradient(to right, transparent, rgba(255, 255, 255, 0.1), transparent);
-}
-
-.register-divider span {
-    background: transparent;
-    padding: 0 1rem;
-    color: var(--text-muted);
-    font-size: 0.85rem;
-    position: relative;
-    backdrop-filter: blur(10px);
-}
-
 /* Alerts */
 .alert {
     padding: 1rem 1.25rem;
@@ -342,48 +285,6 @@
     border-color: rgba(59, 130, 246, 0.2);
     color: #93c5fd;
     backdrop-filter: blur(4px);
-}
-
-/* PIN Display */
-.pin-display {
-    font-size: 1.8rem;
-    font-weight: 700;
-    margin: 1.25rem 0;
-    padding: 1.25rem;
-    background: rgba(16, 185, 129, 0.1);
-    border: 2px dashed rgba(16, 185, 129, 0.4);
-    border-radius: 12px;
-    text-align: center;
-    color: #6ee7b7;
-    letter-spacing: 0.15em;
-    font-family: 'Fira Code', monospace;
-    text-shadow: 0 0 20px rgba(16, 185, 129, 0.4);
-    box-shadow: 0 0 15px rgba(16, 185, 129, 0.1) inset;
-    transition: all 0.3s ease;
-}
-
-.pin-display:hover {
-    background: rgba(16, 185, 129, 0.15);
-    border-color: rgba(16, 185, 129, 0.6);
-    transform: scale(1.02);
-}
-
-.pin-warning {
-    margin-top: 0.75rem;
-    font-size: 0.85rem;
-    color: #94a3b8;
-    font-style: italic;
-    background: rgba(15, 23, 42, 0.4);
-    padding: 0.8rem;
-    border-radius: 8px;
-    border-left: 3px solid #eab308;
-    display: flex;
-    align-items: center;
-    gap: 0.6rem;
-}
-
-.pin-warning i {
-    color: #eab308;
 }
 
 /* Rate Limit Timer */
@@ -495,30 +396,6 @@
 .terms-checkbox a:hover {
     color: var(--accent-cyan);
     border-bottom-color: var(--accent-cyan);
-}
-
-/* Security Badge */
-.security-badge {
-    text-align: center;
-    margin-top: 2rem;
-    padding-top: 1.5rem;
-    border-top: 1px solid rgba(255, 255, 255, 0.05);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: 0.5rem;
-}
-
-.security-badge i {
-    color: var(--accent-green);
-    font-size: 0.9rem;
-}
-
-.security-badge span {
-    color: var(--text-muted);
-    font-size: 0.8rem;
-    font-weight: 500;
-    letter-spacing: 0.02em;
 }
 
 /* Responsive */

@@ -13,9 +13,21 @@ class User(db.Model):
     role = db.Column(db.String(20), nullable=False, default='jugador')
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
+    # Se incrementa al cambiar contraseña, cambiar email o resetear la
+    # contraseña vía "olvidé mi contraseña". get_session() la compara contra
+    # el valor guardado en la cookie: si no coincide, la sesión se trata como
+    # inválida. Así una cookie robada deja de servir en cuanto el titular
+    # legítimo cambia sus credenciales, sin necesitar un almacén de sesiones.
+    session_version = db.Column(db.Integer, nullable=False, default=1, server_default='1')
+
     # Identificador público del perfil (`/u/<slug>`). Lo asignan y mantienen
     # sincronizado con `username` los eventos de dockerlabs/slugs.py.
     slug = db.Column(db.String(64), unique=True, nullable=True)
+
+    # Visibilidad del perfil público (`/u/<slug>` y `/perfil/<slug>`). Público
+    # por defecto: en privado ambos responden 404 aunque el usuario exista.
+    perfil_publico = db.Column(db.Boolean, nullable=False, default=True,
+                               server_default='1')
 
     biography = db.Column(db.Text)
     nombre_diploma = db.Column(db.String(100), nullable=True)
@@ -67,6 +79,22 @@ class Certificate(db.Model):
     def __repr__(self):
         return f'<Certificate {self.cert_id} {self.username}/{self.machine_name}>'
 
+class CertificateRequestLog(db.Model):
+    """Registro de cada solicitud de certificado (GET /api/certificado/<maquina>),
+    para el desglose diario de /estadisticas. Se registra tanto si el
+    certificado ya existía como si se emite en ese momento."""
+    __tablename__ = 'certificate_request_log'
+
+    id = db.Column(db.Integer, primary_key=True)
+    cert_id = db.Column(db.String(16), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='SET NULL'), nullable=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    __table_args__ = (
+        db.Index('idx_certificate_request_log_cert_id', 'cert_id'),
+        db.Index('idx_certificate_request_log_created_at', 'created_at'),
+    )
+
 class Machine(db.Model):
     __tablename__ = 'maquinas'
 
@@ -83,15 +111,15 @@ class Machine(db.Model):
     link_descarga = db.Column(db.String, nullable=False)
     guest_access = db.Column(db.Boolean, default=False)
     origen = db.Column(db.String, nullable=False, default='docker')
+    # Contador de descargas: se incrementa cada vez que se sirve la pagina
+    # de descarga de la maquina (ver machines.py::descargar_maquina_page).
+    descargas = db.Column(db.Integer, nullable=False, default=0)
 
     # Logo almacenado en archivo (nuevo sistema)
     logo_path = db.Column(db.String(255), nullable=True)
     # Mantener compatibilidad con datos antiguos en BD
     logo_data = deferred(db.Column(db.LargeBinary, nullable=True))
     logo_mime = deferred(db.Column(db.String(50), nullable=True))
-
-    # Script .py de los labs de la sección "Empezar de 0" (origen='empezar')
-    script_path = db.Column(db.String(255), nullable=True)
 
     __table_args__ = (
         db.Index('idx_maquinas_autor', 'autor'),
@@ -100,6 +128,54 @@ class Machine(db.Model):
 
     def __repr__(self):
         return f'<Machine {self.nombre}>'
+
+class PageVisitLog(db.Model):
+    """Una fila por página HTML servida (no bots), para las visitas diarias de
+    /estadisticas. `visitor` es un hash truncado de IP+UA+día: permite contar
+    visitantes únicos por día sin almacenar la IP."""
+    __tablename__ = 'page_visit_log'
+
+    id = db.Column(db.Integer, primary_key=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    visitor = db.Column(db.String(16), nullable=False)
+
+    __table_args__ = (
+        db.Index('idx_page_visit_log_created_at', 'created_at'),
+    )
+
+
+class OutboundClickLog(db.Model):
+    """Clic en un enlace saliente propio (/go/<destino>): botón Newsletter del footer y botón Academia.
+    Permite saber cuántas visitas envía DockerLabs a elrincondelhacker.es (ver /estadisticas)."""
+    __tablename__ = 'outbound_click_log'
+
+    id = db.Column(db.Integer, primary_key=True)
+    destino = db.Column(db.String(20), nullable=False)      # newsletter | academia
+    origen = db.Column(db.String(30), nullable=False)       # footer | home-boton ...
+    visitor = db.Column(db.String(16), nullable=False, default='')
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    __table_args__ = (
+        db.Index('idx_outbound_click_log_created_at', 'created_at'),
+        db.Index('idx_outbound_click_log_destino', 'destino'),
+    )
+
+
+class MachineDownloadLog(db.Model):
+    """Registro individual de cada descarga, con fecha, para el desglose
+    diario de /estadisticas. El contador agregado histórico sigue viviendo en
+    `Machine.descargas`; esta tabla solo aporta granularidad temporal desde
+    que se empezó a registrar."""
+    __tablename__ = 'machine_download_log'
+
+    id = db.Column(db.Integer, primary_key=True)
+    machine_id = db.Column(db.Integer, db.ForeignKey('maquinas.id', ondelete='CASCADE'), nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    __table_args__ = (
+        db.Index('idx_machine_download_log_machine_id', 'machine_id'),
+        db.Index('idx_machine_download_log_created_at', 'created_at'),
+    )
 
 class Category(db.Model):
     __tablename__ = 'categorias'
@@ -174,30 +250,6 @@ class WriteupReport(db.Model):
     def __repr__(self):
         return f'<WriteupReport {self.id} for Writeup {self.writeup_id}>'
 
-class WriteupEditRequest(db.Model):
-    __tablename__ = 'writeup_edit_requests'
-
-    id = db.Column(db.Integer, primary_key=True)
-    writeup_id = db.Column(db.Integer, nullable=False)                                                                                        
-    user_id = db.Column(db.Integer, nullable=False)
-    username = db.Column(db.String, nullable=False)
-    
-    maquina_original = db.Column(db.String, nullable=False)
-    autor_original = db.Column(db.String, nullable=False)
-    url_original = db.Column(db.String(2048), nullable=False)
-    tipo_original = db.Column(db.String, nullable=False)
-
-    maquina_nueva = db.Column(db.String, nullable=False)
-    autor_nuevo = db.Column(db.String, nullable=False)
-    url_nueva = db.Column(db.String(2048), nullable=False)
-    tipo_nuevo = db.Column(db.String, nullable=False)
-    
-    estado = db.Column(db.String, nullable=False, default='pendiente')
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
-
-    def __repr__(self):
-        return f'<WriteupEditRequest {self.id} for {self.writeup_id}>'
-
 class CreatorRanking(db.Model):
     __tablename__ = 'ranking_creadores'
     id = db.Column(db.Integer, primary_key=True)
@@ -205,55 +257,6 @@ class CreatorRanking(db.Model):
     maquinas = db.Column(db.Integer, nullable=False)
 
     user = db.relationship('User', foreign_keys=[nombre], primaryjoin=lambda: func.lower(User.username) == func.lower(CreatorRanking.nombre))
-
-class MachineClaim(db.Model):
-    __tablename__ = 'maquina_claims'
-    id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, nullable=False)
-    username = db.Column(db.String, nullable=False)
-    maquina_nombre = db.Column(db.String, nullable=False)
-    contacto = db.Column(db.String, nullable=False)
-    prueba = db.Column(db.String, nullable=False)
-    estado = db.Column(db.String, nullable=False, default='pendiente')
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
-
-class NameClaim(db.Model):
-    __tablename__ = 'nombre_claims'
-    id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String, nullable=False)
-    email = db.Column(db.String, nullable=False)
-    password_hash = db.Column(db.String, nullable=False)
-    nombre_solicitado = db.Column(db.String, nullable=False)
-    nombre_actual = db.Column(db.String, nullable=False)
-    motivo = db.Column(db.String, nullable=False)
-    estado = db.Column(db.String, nullable=False, default='pendiente')
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
-
-class MachineEditRequest(db.Model):
-    __tablename__ = 'machine_edit_requests'
-    id = db.Column(db.Integer, primary_key=True)
-
-    machine_id = db.Column(db.Integer, nullable=False) 
-    origen = db.Column(db.String, nullable=False)
-    autor = db.Column(db.String, nullable=False)
-    nuevos_datos = db.Column(db.Text, nullable=False)
-    estado = db.Column(db.String, nullable=False, default='pendiente')
-    fecha = db.Column(db.DateTime, default=datetime.utcnow)
-
-class UsernameChangeRequest(db.Model):
-    __tablename__ = 'username_change_requests'
-    id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, nullable=False)
-    old_username = db.Column(db.String, nullable=False)
-    requested_username = db.Column(db.String, nullable=False)
-    reason = db.Column(db.String)
-    contacto_opcional = db.Column(db.String)
-    estado = db.Column(db.String, nullable=False, default='pendiente')
-
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    processed_by = db.Column(db.Integer)
-    processed_at = db.Column(db.DateTime)           
-    decision_reason = db.Column(db.String)
 
 class Rating(db.Model):
     __tablename__ = 'puntuaciones'
@@ -439,6 +442,34 @@ class PasswordResetToken(db.Model):
         return f'<PasswordResetToken for user_id={self.user_id}>'
 
 
+class EmailChangeToken(db.Model):
+    """Cambio de email pendiente de confirmación.
+
+    El nuevo email se guarda aquí, no en `users.email`, hasta que se confirma
+    a través del enlace enviado a esa dirección: así se comprueba que el
+    usuario controla el correo antes de aplicarlo (y no solo que tiene sesión
+    activa, que es lo único que exigía el endpoint anterior)."""
+    __tablename__ = 'email_change_tokens'
+
+    id = db.Column(db.Integer, primary_key=True)
+    token = db.Column(db.String(64), unique=True, nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='CASCADE'), nullable=False)
+    new_email = db.Column(db.String(120), nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    expires_at = db.Column(db.DateTime, nullable=False)
+    used = db.Column(db.Boolean, default=False)
+
+    user = db.relationship('User', backref=db.backref('email_change_tokens', cascade='all, delete-orphan'))
+
+    __table_args__ = (
+        db.Index('idx_email_change_token', 'token'),
+        db.Index('idx_email_change_user_id', 'user_id'),
+    )
+
+    def __repr__(self):
+        return f'<EmailChangeToken for user_id={self.user_id}>'
+
+
 class WriteupAnalysisResult(db.Model):
     __tablename__ = 'writeup_analysis_results'
 
@@ -460,6 +491,37 @@ class WriteupAnalysisResult(db.Model):
 
     def __repr__(self):
         return f'<WriteupAnalysisResult writeup_id={self.writeup_id} dismissed={self.dismissed}>'
+
+
+class ApiToken(db.Model):
+    """Token de API de administrador, generado desde /dashboard.
+
+    Da acceso equivalente a una sesión de admin logueado (ver
+    `get_session()` en routers.py, que lo acepta por cabecera). El token en
+    claro NUNCA se guarda: solo su hash (`dockerlabs.token_auth`). Se
+    muestra una única vez al crearlo.
+    """
+    __tablename__ = 'api_tokens'
+
+    id = db.Column(db.Integer, primary_key=True)
+    admin_user_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='CASCADE'), nullable=False)
+    label = db.Column(db.String(120), nullable=False)
+    token_hash = db.Column(db.String(255), nullable=False)
+    # Fragmento no sensible (p.ej. "dlab_ab12cd34") para reconocer el token
+    # en la UI sin poder reconstruirlo a partir de él.
+    token_prefix = db.Column(db.String(16), nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    last_used_at = db.Column(db.DateTime, nullable=True)
+    revoked_at = db.Column(db.DateTime, nullable=True)
+
+    admin_user = db.relationship('User', backref=db.backref('api_tokens', cascade='all, delete-orphan'))
+
+    __table_args__ = (
+        db.Index('idx_api_tokens_admin_user_id', 'admin_user_id'),
+    )
+
+    def __repr__(self):
+        return f'<ApiToken {self.label!r} admin={self.admin_user_id} revoked={bool(self.revoked_at)}>'
 
 
 # Mantiene `User.slug` sincronizado con `User.username` en cualquier alta o

@@ -1,37 +1,15 @@
-import json
 import os
 import secrets
-import time
 from datetime import datetime
 from typing import Optional
 
-from fastapi import Depends, File, Form, Request, UploadFile
+from fastapi import Depends, Form, HTTPException, Request
 from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
 from pydantic import BaseModel
-from werkzeug.utils import secure_filename
 
+from dockerlabs.discord_notify import notify_new_machine
 from dockerlabs.maquinas import recalcular_ranking_creadores
-from dockerlabs.models import Category, CompletedMachine, Machine, MachineClaim, MachineEditRequest, User
-
-
-class ActualizarMaquinaRequest(BaseModel):
-    id: int
-    origen: str
-    nombre: str
-    dificultad: str
-    autor: str
-    enlace_autor: Optional[str] = ""
-    fecha: str
-    imagen: Optional[str] = ""
-    descripcion: str
-    link_descarga: str
-    categoria: Optional[str] = ""
-
-
-class ReclamarMaquinaRequest(BaseModel):
-    maquina_nombre: str
-    contacto: str
-    prueba: str
+from dockerlabs.models import Category, CompletedMachine, Machine, MachineDownloadLog, User
 
 
 class AddMaquinaRequest(BaseModel):
@@ -130,44 +108,45 @@ def register_machine_routes(
         if not maquina:
             return JSONResponse(status_code=404, content={"error": "Máquina no encontrada"})
 
-        if role not in ("admin", "moderador"):
-            if role == "jugador" and maquina.autor == username:
-                nuevos_datos = json.dumps(
-                    {
-                        "nombre": nombre,
-                        "dificultad": dificultad_texto,
-                        "clase": clase,
-                        "color": color,
-                        "autor": autor,
-                        "enlace_autor": enlace_autor,
-                        "fecha": fecha,
-                        "imagen": imagen,
-                        "descripcion": descripcion,
-                        "link_descarga": link_descarga,
-                    }
-                )
-                try:
-                    edit_req = MachineEditRequest(
-                        machine_id=id,
-                        origen=origen,
-                        autor=username,
-                        nuevos_datos=nuevos_datos,
-                        estado="pendiente",
-                    )
-                    db.session.add(edit_req)
-                    db.session.commit()
-                    return {"success": True, "message": "Solicitud de edición enviada para revisión"}
-                except Exception as e:
-                    db.session.rollback()
-                    return JSONResponse(status_code=500, content={"error": str(e)})
-            return JSONResponse(status_code=403, content={"error": "Acceso denegado"})
+        is_privileged = role in ("admin", "moderador")
+        if not is_privileged:
+            if not (role == "jugador" and maquina.autor == username):
+                return JSONResponse(status_code=403, content={"error": "Acceso denegado"})
+
+        # Fix de seguridad (auditoria VDP): un jugador editando su propia
+        # maquina escribia estos campos directamente en produccion sin
+        # ninguna validacion, permitiendo XSS almacenado (nombre/enlaces/
+        # descripcion se renderizan sin escapar en la home y en el listado
+        # de writeups) y mass assignment del autor (reasignar la autoria a
+        # cualquier usuario, manipulando el ranking publico de creadores).
+        from dockerlabs import validators
+
+        _dangerous_chars = set('<>"\'`')
+        if any(c in _dangerous_chars for c in nombre) or any(ord(c) < 32 for c in nombre):
+            return JSONResponse(status_code=400, content={"error": "El nombre de la máquina contiene caracteres no permitidos"})
+
+        ok, err = validators.validate_url(link_descarga)
+        if not ok:
+            return JSONResponse(status_code=400, content={"error": f"Link de descarga: {err}"})
+
+        if enlace_autor:
+            ok, err = validators.validate_url(enlace_autor)
+            if not ok:
+                return JSONResponse(status_code=400, content={"error": f"Enlace autor: {err}"})
+
+        descripcion = validators.sanitize_text(descripcion)
+
+        # El autor solo lo puede reasignar un admin/moderador: un jugador no
+        # puede cambiar la autoria (y por tanto el ranking publico) de su
+        # propia maquina editandola.
+        nuevo_autor = autor if is_privileged else maquina.autor
 
         try:
             maquina.nombre = nombre
             maquina.dificultad = dificultad_texto
             maquina.clase = clase
             maquina.color = color
-            maquina.autor = autor
+            maquina.autor = nuevo_autor
             maquina.enlace_autor = enlace_autor or ""
             maquina.fecha = fecha
             maquina.imagen = _sanitize_imagen(imagen)
@@ -281,7 +260,10 @@ def register_machine_routes(
             db.session.commit()
             if data.destino == "docker":
                 recalcular_ranking_creadores()
-            redirect_url = "/bunkerlabs" if data.destino == "bunker" else "/"
+            await notify_new_machine(new_machine)
+            redirect_url = {
+                "bunker": "/bunkerlabs",
+            }.get(data.destino, "/")
             return {
                 "success": True,
                 "message": "Máquina añadida correctamente",
@@ -292,257 +274,6 @@ def register_machine_routes(
         except Exception as e:
             db.session.rollback()
             return JSONResponse(status_code=500, content={"error": str(e)})
-
-    @api_router.post("/empezar/add")
-    async def api_add_empezar(
-        request: Request,
-        nombre: str = Form(...),
-        script: UploadFile = File(...),
-        session: dict = Depends(get_session),
-        csrf_ok: bool = Depends(verify_csrf_token),
-    ):
-        """Crea un lab de la sección 'Empezar de 0' (origen='empezar').
-
-        Solo pide nombre + el .py. El resto de campos NOT NULL del modelo se
-        rellenan con valores por defecto. El .py se guarda en disco y la ruta
-        queda en Machine.script_path; se sirve como descarga directa.
-        """
-        role = session.get("role", "")
-        user_id = session.get("user_id")
-        if not user_id or role not in ("admin", "moderador"):
-            return JSONResponse(status_code=403, content={"error": "Acceso denegado"})
-
-        nombre = (nombre or "").strip()
-        if not nombre:
-            return JSONResponse(status_code=400, content={"error": "El nombre es obligatorio"})
-
-        if not script or not script.filename:
-            return JSONResponse(status_code=400, content={"error": "Debes subir un archivo .py"})
-        safe_name = secure_filename(script.filename)
-        if not safe_name.lower().endswith(".py"):
-            return JSONResponse(status_code=400, content={"error": "El archivo debe tener extensión .py"})
-
-        content = await script.read()
-        if not content:
-            return JSONResponse(status_code=400, content={"error": "El archivo está vacío"})
-        if len(content) > 1 * 1024 * 1024:
-            return JSONResponse(status_code=400, content={"error": "El .py es demasiado grande (máx 1 MB)"})
-        try:
-            content.decode("utf-8")
-        except UnicodeDecodeError:
-            return JSONResponse(status_code=400, content={"error": "El .py debe ser texto UTF-8 válido"})
-
-        if Machine.query.filter_by(nombre=nombre).first():
-            return JSONResponse(status_code=400, content={"error": "Ya existe una máquina con ese nombre"})
-
-        autor = (session.get("username") or "").strip() or "DockerLabs"
-        fecha = datetime.now().strftime("%d/%m/%Y")
-
-        try:
-            new_lab = Machine(
-                nombre=nombre,
-                dificultad="Iniciación",
-                clase="empezar",
-                color="#43959b",
-                autor=autor,
-                enlace_autor="",
-                fecha=fecha,
-                imagen=_DEFAULT_IMAGEN,
-                descripcion="",
-                link_descarga="",
-                origen="empezar",
-            )
-            db.session.add(new_lab)
-            db.session.commit()
-        except Exception as e:
-            db.session.rollback()
-            return JSONResponse(status_code=500, content={"error": str(e)})
-
-        scripts_dir = os.path.join(_BASE_DIR, "uploads", "scripts")
-        os.makedirs(scripts_dir, exist_ok=True)
-        ts = int(time.time())
-        final_filename = f"empezar_{new_lab.id}_{ts}.py"
-        file_path = os.path.join(scripts_dir, final_filename)
-        try:
-            with open(file_path, "wb") as f:
-                f.write(content)
-            new_lab.script_path = f"uploads/scripts/{final_filename}"
-            db.session.commit()
-        except Exception as e:
-            db.session.rollback()
-            return JSONResponse(status_code=500, content={"error": f"No se pudo guardar el script: {e}"})
-
-        return {"success": True, "message": "Lab de iniciación creado correctamente", "machine_id": new_lab.id}
-
-    @api_router.post("/reclamar-maquina")
-    async def api_reclamar_maquina(
-        request: Request,
-        data: ReclamarMaquinaRequest,
-        session: dict = Depends(get_session),
-        csrf_ok: bool = Depends(verify_csrf_token),
-    ):
-        user_id = session.get("user_id")
-        username = (session.get("username") or "").strip()
-        role = session.get("role", "")
-        if not user_id or role not in ("jugador", "admin", "moderador"):
-            return JSONResponse(status_code=403, content={"error": "Acceso denegado"})
-
-        try:
-            db.session.add(
-                MachineClaim(
-                    user_id=user_id,
-                    username=username,
-                    maquina_nombre=data.maquina_nombre,
-                    contacto=data.contacto,
-                    prueba=data.prueba,
-                    estado="pendiente",
-                )
-            )
-            db.session.commit()
-            return {"success": True, "message": "Reclamación enviada correctamente"}
-        except Exception as e:
-            db.session.rollback()
-            return JSONResponse(status_code=500, content={"error": str(e)})
-
-    @api_router.post("/claims/{claim_id}/approve")
-    async def api_approve_claim(
-        request: Request,
-        claim_id: int,
-        session: dict = Depends(get_session),
-        csrf_ok: bool = Depends(verify_csrf_token),
-    ):
-        ok, _ = require_auth_and_role(session, ["admin"])
-        if not ok:
-            return JSONResponse(status_code=403, content={"error": "Acceso denegado"})
-        claim = MachineClaim.query.get(claim_id)
-        if not claim:
-            return JSONResponse(status_code=404, content={"error": "No encontrada"})
-        try:
-            maquina = Machine.query.filter_by(nombre=claim.maquina_nombre).first()
-            if maquina:
-                maquina.autor = claim.username
-            claim.estado = "aprobada"
-            db.session.commit()
-            recalcular_ranking_creadores()
-            return {"success": True}
-        except Exception as e:
-            db.session.rollback()
-            return JSONResponse(status_code=500, content={"error": str(e)})
-
-    @api_router.post("/claims/{claim_id}/reject")
-    async def api_reject_claim(
-        request: Request,
-        claim_id: int,
-        session: dict = Depends(get_session),
-        csrf_ok: bool = Depends(verify_csrf_token),
-    ):
-        ok, _ = require_auth_and_role(session, ["admin"])
-        if not ok:
-            return JSONResponse(status_code=403, content={"error": "Acceso denegado"})
-        claim = MachineClaim.query.get(claim_id)
-        if not claim:
-            return JSONResponse(status_code=404, content={"error": "No encontrada"})
-        try:
-            db.session.delete(claim)
-            db.session.commit()
-            return {"success": True}
-        except Exception as e:
-            db.session.rollback()
-            return JSONResponse(status_code=500, content={"error": str(e)})
-
-    @api_router.post("/claims/{claim_id}/revert")
-    async def api_revert_claim(
-        request: Request,
-        claim_id: int,
-        session: dict = Depends(get_session),
-        csrf_ok: bool = Depends(verify_csrf_token),
-    ):
-        ok, _ = require_auth_and_role(session, ["admin", "moderador"])
-        if not ok:
-            return JSONResponse(status_code=403, content={"error": "Acceso denegado"})
-        claim = MachineClaim.query.get(claim_id)
-        if not claim:
-            return JSONResponse(status_code=404, content={"error": "No encontrada"})
-        claim.estado = "pendiente"
-        db.session.commit()
-        return {"success": True}
-
-    @api_router.post("/machine-edit-requests/{request_id}/approve")
-    async def api_approve_machine_edit(
-        request: Request,
-        request_id: int,
-        session: dict = Depends(get_session),
-        csrf_ok: bool = Depends(verify_csrf_token),
-    ):
-        ok, _ = require_auth_and_role(session, ["admin", "moderador"])
-        if not ok:
-            return JSONResponse(status_code=403, content={"error": "Acceso denegado"})
-        req = MachineEditRequest.query.get(request_id)
-        if not req:
-            return JSONResponse(status_code=404, content={"error": "No encontrada"})
-        try:
-            nuevos = json.loads(req.nuevos_datos)
-        except Exception:
-            nuevos = {}
-        maquina = Machine.query.get(req.machine_id)
-        if maquina:
-            for field in (
-                "nombre",
-                "dificultad",
-                "clase",
-                "color",
-                "autor",
-                "enlace_autor",
-                "fecha",
-                "imagen",
-                "descripcion",
-                "link_descarga",
-            ):
-                val = nuevos.get(field)
-                if field == "imagen":
-                    setattr(maquina, field, _sanitize_imagen(val))
-                elif val:
-                    setattr(maquina, field, val)
-            db.session.commit()
-            if req.origen == "docker":
-                recalcular_ranking_creadores()
-        req.estado = "aprobada"
-        db.session.commit()
-        return {"success": True}
-
-    @api_router.post("/machine-edit-requests/{request_id}/reject")
-    async def api_reject_machine_edit(
-        request: Request,
-        request_id: int,
-        session: dict = Depends(get_session),
-        csrf_ok: bool = Depends(verify_csrf_token),
-    ):
-        ok, _ = require_auth_and_role(session, ["admin", "moderador"])
-        if not ok:
-            return JSONResponse(status_code=403, content={"error": "Acceso denegado"})
-        req = MachineEditRequest.query.get(request_id)
-        if not req:
-            return JSONResponse(status_code=404, content={"error": "No encontrada"})
-        req.estado = "rechazada"
-        db.session.commit()
-        return {"success": True}
-
-    @api_router.post("/machine-edit-requests/{request_id}/revert")
-    async def api_revert_machine_edit(
-        request: Request,
-        request_id: int,
-        session: dict = Depends(get_session),
-        csrf_ok: bool = Depends(verify_csrf_token),
-    ):
-        ok, _ = require_auth_and_role(session, ["admin", "moderador"])
-        if not ok:
-            return JSONResponse(status_code=403, content={"error": "Acceso denegado"})
-        req = MachineEditRequest.query.get(request_id)
-        if not req:
-            return JSONResponse(status_code=404, content={"error": "No encontrada"})
-        req.estado = "pendiente"
-        db.session.commit()
-        return {"success": True}
 
     @pages_router.get("/maquinas-hechas", response_class=HTMLResponse)
     def maquinas_hechas_page(request: Request, session: dict = Depends(get_session)):
@@ -596,6 +327,33 @@ def register_machine_routes(
                 "total_machines": total_machines,
                 "completed_count": completed_count,
                 "completion_percentage": completion_percentage,
+                "session": session,
+                "url_for": url_for,
+                "current_user_role": current_user_role,
+                "g": {"csp_nonce": secrets.token_urlsafe(32)},
+            },
+        )
+
+    @pages_router.get("/maquinas/{machine_id}/descargar", response_class=HTMLResponse)
+    def descargar_maquina_page(machine_id: int, request: Request, session: dict = Depends(get_session)):
+        maquina = Machine.query.get(machine_id)
+        if not maquina:
+            raise HTTPException(status_code=404)
+        if maquina.origen == "bunker":
+            return RedirectResponse(url=f"/bunkerlabs/maquinas/{maquina.id}/descargar", status_code=302)
+        if maquina.origen != "docker":
+            raise HTTPException(status_code=404)
+
+        maquina.descargas = (maquina.descargas or 0) + 1
+        db.session.add(MachineDownloadLog(machine_id=maquina.id))
+        db.session.commit()
+
+        current_user_role = session.get("role", "")
+        return templates.TemplateResponse(
+            request,
+            "dockerlabs/info/descargar.html",
+            {
+                "maquina": maquina,
                 "session": session,
                 "url_for": url_for,
                 "current_user_role": current_user_role,

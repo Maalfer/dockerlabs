@@ -1,3 +1,5 @@
+import hashlib
+import os
 import secrets
 import time
 from collections import defaultdict
@@ -6,7 +8,8 @@ load_dotenv()
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
-from dockerlabs.database import db_session, init_db, _request_scope_id
+from starlette.concurrency import run_in_threadpool
+from dockerlabs.database import db_session, init_db, _request_scope_id, engine
 from dockerlabs.routers import api_router, pages_router
 
 init_db()
@@ -76,6 +79,41 @@ async def rate_limit_middleware(request: Request, call_next):
     rate_limit_store[client_ip].append(current_time)
 
     response = await call_next(request)
+    return response
+
+_VISIT_SKIP_PREFIXES = ("/static/", "/img/", "/database/", "/api/", "/fastapi-", "/u/")
+_BOT_MARKERS = ("bot", "crawl", "spider", "slurp", "curl", "wget", "python-requests",
+                "httpx", "monitor", "uptime", "headless", "facebookexternalhit")
+_VISIT_SALT = os.environ.get("SECRET_KEY", "dockerlabs")
+
+
+def _record_visit(visitor: str):
+    from sqlalchemy.orm import Session
+    from dockerlabs.models import PageVisitLog
+    try:
+        with Session(engine) as s:
+            s.add(PageVisitLog(visitor=visitor))
+            s.commit()
+    except Exception:
+        pass  # el contador nunca debe romper una petición
+
+
+@fastapi_app.middleware("http")
+async def visit_counter_middleware(request: Request, call_next):
+    response = await call_next(request)
+    try:
+        path = request.url.path
+        if (request.method == "GET" and response.status_code == 200
+                and not path.startswith(_VISIT_SKIP_PREFIXES)
+                and response.headers.get("content-type", "").startswith("text/html")):
+            ua = request.headers.get("user-agent", "")
+            if ua and not any(b in ua.lower() for b in _BOT_MARKERS):
+                ip = request.headers.get("cf-connecting-ip") or (request.client.host if request.client else "")
+                day = time.strftime("%Y-%m-%d", time.gmtime())
+                visitor = hashlib.sha256(f"{_VISIT_SALT}|{ip}|{ua}|{day}".encode()).hexdigest()[:16]
+                await run_in_threadpool(_record_visit, visitor)
+    except Exception:
+        pass
     return response
 
 @fastapi_app.middleware("http")

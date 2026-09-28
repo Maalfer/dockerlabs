@@ -19,14 +19,6 @@
             <p class="welcome-text">Bienvenido de nuevo, <span class="username">{{ session.get('username') }}</span></p>
         </div>
 
-        <div class="dashboard-actions">
-            {% if current_user_role not in ['admin', 'moderador'] %}
-            <button type="button" class="btn-claim-machine" onclick="openClaimMachineModal()">
-                <i class="bi bi-flag"></i>
-                Reclamar Autoría Máquina
-            </button>
-            {% endif %}
-        </div>
     </div>
 
     <div class="dashboard-content">
@@ -114,19 +106,6 @@
                             <button type="button" class="btn-cancel" onclick="cancelEdit()">
                                 <i class="bi bi-x-circle"></i> Cancelar
                             </button>
-                        </div>
-
-                        <div class="form-group mt-4">
-                            <label for="requested_username"><i class="bi bi-person"></i> Solicitar cambio de nombre de
-                                usuario</label>
-                            <div class="d-flex gap-2 align-items-center">
-                                <input type="text" id="requested_username" class="form-control"
-                                    placeholder="Nuevo nombre deseado" minlength="3" maxlength="20">
-                                <button type="button" class="btn btn-warning" onclick="openUsernameChangeModal()">
-                                    <i class="bi bi-send"></i> Solicitar
-                                </button>
-                            </div>
-                            <small class="text-muted">La solicitud será revisada por un admin o moderador.</small>
                         </div>
 
                     </form>
@@ -220,42 +199,91 @@
         </div>
         {% endif %}
 
-        {% if current_user_role in ['admin', 'moderador'] and claims %}
-        <div class="claims-section">
+        {# Tokens de API: SOLO admin (ni siquiera moderador). El backend ya
+           calcula api_tokens=[] para cualquier rol distinto de admin (ver
+           dashboard_page en pages_core.py), así que aunque esta condición
+           fallase, no habría datos de tokens en el contexto para pintar. #}
+        {% if current_user_role == 'admin' %}
+        <div class="security-section" style="margin-top: 2rem;">
             <div class="section-header">
-                <h2><i class="bi bi-flag"></i> Reclamaciones de autoría de máquinas</h2>
+                <h2><i class="bi bi-key-fill" style="color:#38bdf8;"></i> Tokens de API</h2>
             </div>
-            <div class="claims-list">
-                {% for c in claims %}
-                <div class="claim-card">
-                    <div class="claim-header d-flex justify-content-between align-items-center">
-                        <span class="claim-machine"><i class="bi bi-cpu"></i> {{ c.maquina_nombre }}</span>
-                        <span class="claim-status badge bg-warning text-dark text-uppercase">{{ c.estado }}</span>
-                    </div>
-                    <div class="claim-body">
-                        <p><strong>Usuario:</strong> {{ c.username }}</p>
-                        <p><strong>Contacto:</strong> {{ c.contacto | e }}</p>
-                        <p><strong>Prueba aportada:</strong></p>
-                        <p class="claim-proof">{{ c.prueba | e }}</p>
-                        <p class="claim-date"><small>Recibida: {{ c.created_at }}</small></p>
+            <div class="security-content">
+                <p style="color: var(--text-secondary); margin-bottom: 1.5rem; font-size: 0.95rem;">
+                    Genera un token para dar acceso completo de administrador a la API de DockerLabs
+                    (por ejemplo, para un agente de IA como Claude Code). El token equivale a tu sesión
+                    de admin: guárdalo con cuidado y revócalo si dejas de necesitarlo.
+                </p>
 
-                        {% if current_user_role == 'admin' and c.estado == 'pendiente' %}
-                        <div class="claim-actions d-flex gap-2 mt-2">
-                            <button type="button" class="btn btn-sm btn-success" onclick="approveClaim({{ c.id }}, this)">
-                                <i class="bi bi-check-circle"></i> Aprobar
-                            </button>
-                            <button type="button" class="btn btn-sm btn-danger" onclick="rejectClaim({{ c.id }}, this)">
-                                <i class="bi bi-x-circle"></i> Rechazar
-                            </button>
-                        </div>
-                        {% endif %}
-                    </div>
+                <div style="overflow-x:auto;margin-bottom:1.25rem;">
+                    <table style="width:100%;border-collapse:collapse;font-size:0.88rem;">
+                        <thead>
+                            <tr style="text-align:left;color:#64748b;text-transform:uppercase;font-size:0.75rem;letter-spacing:0.05em;">
+                                <th style="padding:0.6rem 0.75rem;border-bottom:1px solid #1e293b;">Nombre</th>
+                                <th style="padding:0.6rem 0.75rem;border-bottom:1px solid #1e293b;">Token</th>
+                                <th style="padding:0.6rem 0.75rem;border-bottom:1px solid #1e293b;">Creado</th>
+                                <th style="padding:0.6rem 0.75rem;border-bottom:1px solid #1e293b;">Último uso</th>
+                                <th style="padding:0.6rem 0.75rem;border-bottom:1px solid #1e293b;">Estado</th>
+                                <th style="padding:0.6rem 0.75rem;border-bottom:1px solid #1e293b;"></th>
+                            </tr>
+                        </thead>
+                        <tbody id="apiTokensTableBody">
+                            {% for t in api_tokens %}
+                            <tr data-token-id="{{ t.id }}" {% if t.revoked_at %}style="opacity:0.5;"{% endif %}>
+                                <td style="padding:0.6rem 0.75rem;border-bottom:1px solid #1e293b;color:#e2e8f0;">{{ t.label }}</td>
+                                <td style="padding:0.6rem 0.75rem;border-bottom:1px solid #1e293b;">
+                                    <code style="color:#38bdf8;">{{ t.token_prefix }}&hellip;</code>
+                                </td>
+                                <td style="padding:0.6rem 0.75rem;border-bottom:1px solid #1e293b;color:#94a3b8;">{{ t.created_at.strftime('%d/%m/%Y %H:%M') if t.created_at else '-' }}</td>
+                                <td class="token-last-used" style="padding:0.6rem 0.75rem;border-bottom:1px solid #1e293b;color:#94a3b8;">{{ t.last_used_at.strftime('%d/%m/%Y %H:%M') if t.last_used_at else 'Nunca' }}</td>
+                                <td class="token-status" style="padding:0.6rem 0.75rem;border-bottom:1px solid #1e293b;">
+                                    {% if t.revoked_at %}
+                                    <span style="color:#f87171;font-weight:600;">Revocado</span>
+                                    {% else %}
+                                    <span style="color:#2dd4bf;font-weight:600;">Activo</span>
+                                    {% endif %}
+                                </td>
+                                <td style="padding:0.6rem 0.75rem;border-bottom:1px solid #1e293b;text-align:right;">
+                                    {% if not t.revoked_at %}
+                                    <button type="button" class="api-token-revoke-btn"
+                                            style="padding:0.4rem 0.9rem;border:1px solid rgba(248,113,113,0.4);border-radius:8px;
+                                                   background:rgba(248,113,113,0.08);color:#f87171;font-size:0.82rem;font-weight:600;cursor:pointer;">
+                                        Revocar
+                                    </button>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr id="apiTokensEmptyRow">
+                                <td colspan="6" style="padding:1rem 0.75rem;color:#64748b;">Todavía no has generado ningún token.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
                 </div>
-                {% endfor %}
+
+                <button type="button" id="apiTokenCreateBtn" style="
+                    display: inline-flex;
+                    align-items: center;
+                    gap: 0.6rem;
+                    padding: 0.75rem 1.5rem;
+                    background: linear-gradient(135deg, #0284c7, #38bdf8);
+                    color: white;
+                    border: none;
+                    border-radius: 10px;
+                    font-size: 0.95rem;
+                    font-weight: 600;
+                    cursor: pointer;
+                    transition: all 0.2s ease;
+                    box-shadow: 0 4px 15px rgba(56, 189, 248, 0.35);
+                " onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 6px 20px rgba(56,189,248,0.45)'"
+                   onmouseout="this.style.transform='translateY(0)';this.style.boxShadow='0 4px 15px rgba(56,189,248,0.35)'">
+                    <i class="bi bi-plus-circle" style="font-size: 1.1rem;"></i>
+                    Generar nuevo token
+                </button>
             </div>
         </div>
         {% endif %}
-
 
         <div class="security-section" style="margin-top: 2rem;">
             <div class="section-header">
@@ -281,14 +309,66 @@
 
         <div class="security-section" style="margin-top: 2rem;">
             <div class="section-header">
-                <h2><i class="bi bi-braces" style="color:#38bdf8;"></i> Tu perfil público</h2>
+                <h2><i class="bi bi-code-slash" style="color:#38bdf8;"></i> Tu perfil público</h2>
             </div>
             <div class="security-content">
                 <p style="color:#94a3b8;font-size:0.95rem;margin:0 0 1.25rem;">
-                    Tu perfil tiene una dirección pública propia que devuelve, en formato JSON,
-                    tus máquinas resueltas y creadas, tus writeups y tus certificados.
-                    Cualquiera puede consultarla sin iniciar sesión: compártela donde quieras.
+                    Tu perfil tiene una dirección pública propia con tus máquinas resueltas y
+                    creadas, tus writeups y tus certificados. Puedes compartirla como página web
+                    o consumirla en formato JSON. Si prefieres que nadie la vea, ponla en privado.
                 </p>
+
+                <div id="perfilVisibilidad"
+                     style="display:flex;align-items:center;justify-content:space-between;gap:1rem;
+                            flex-wrap:wrap;background:#0f172a;border:1px solid #1e293b;
+                            border-radius:12px;padding:1rem 1.25rem;margin-bottom:1.5rem;">
+                    <div style="display:flex;align-items:center;gap:0.9rem;min-width:0;">
+                        <i id="perfilVisibilidadIcono"
+                           class="bi {% if perfil_publico %}bi-unlock-fill{% else %}bi-lock-fill{% endif %}"
+                           style="font-size:1.5rem;color:{% if perfil_publico %}#2dd4bf{% else %}#f87171{% endif %};"></i>
+                        <div style="min-width:0;">
+                            <div id="perfilVisibilidadTitulo"
+                                 style="color:#e2e8f0;font-weight:700;font-size:1rem;">
+                                {% if perfil_publico %}Perfil público{% else %}Perfil privado{% endif %}
+                            </div>
+                            <div id="perfilVisibilidadTexto" style="color:#64748b;font-size:0.85rem;">
+                                {% if perfil_publico %}
+                                    Cualquiera puede ver tu perfil y consultarlo sin iniciar sesión.
+                                {% else %}
+                                    Solo tú lo ves. Tu enlace público deja de funcionar mientras esté en privado.
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    {# .form-switch da el aspecto de interruptor; los estilos inline
+                       anulan el padding y el margen negativo que trae de Bootstrap. #}
+                    <label class="form-switch" for="perfilVisibilidadSwitch"
+                           style="display:inline-flex;align-items:center;gap:0.7rem;
+                                  cursor:pointer;margin:0;padding:0;">
+                        <span id="perfilVisibilidadEstado"
+                              style="color:{% if perfil_publico %}#2dd4bf{% else %}#f87171{% endif %};
+                                     font-size:0.85rem;font-weight:700;
+                                     text-transform:uppercase;letter-spacing:0.05em;">
+                            {% if perfil_publico %}Público{% else %}Privado{% endif %}
+                        </span>
+                        <input type="checkbox" id="perfilVisibilidadSwitch" class="form-check-input"
+                               role="switch" {% if perfil_publico %}checked{% endif %}
+                               style="width:3rem;height:1.6rem;margin:0;cursor:pointer;flex-shrink:0;">
+                    </label>
+                </div>
+
+                <div id="perfilPrivadoAviso"
+                     style="display:{% if perfil_publico %}none{% else %}flex{% endif %};
+                            align-items:center;gap:0.75rem;background:rgba(248,113,113,0.08);
+                            border:1px solid rgba(248,113,113,0.25);border-radius:12px;
+                            padding:0.9rem 1.1rem;margin-bottom:1.25rem;color:#fca5a5;font-size:0.9rem;">
+                    <i class="bi bi-lock-fill"></i>
+                    <span>Tu perfil está en privado: tanto la página como el JSON responden 404 a quien los visite.</span>
+                </div>
+
+                <div id="perfilPublicoBloque"
+                     style="display:{% if perfil_publico %}block{% else %}none{% endif %};">
 
                 <div style="display:flex;align-items:center;gap:0.75rem;flex-wrap:wrap;margin-bottom:1rem;">
                     <span style="color:#64748b;font-size:0.85rem;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;">Tu slug</span>
@@ -307,11 +387,17 @@
                                    background:#1e293b;color:#e2e8f0;font-size:0.9rem;font-weight:600;cursor:pointer;">
                         <i class="bi bi-clipboard"></i> <span>Copiar</span>
                     </button>
+                    <a href="{{ perfil_web_path }}" target="_blank" rel="noopener"
+                       style="display:inline-flex;align-items:center;gap:0.5rem;white-space:nowrap;
+                              padding:0.7rem 1.2rem;border-radius:10px;font-size:0.9rem;font-weight:700;
+                              background:linear-gradient(135deg,#0d9488,#2dd4bf);color:#fff;text-decoration:none;">
+                        <i class="bi bi-box-arrow-up-right"></i> Abrir página
+                    </a>
                     <a href="{{ perfil_path }}" target="_blank" rel="noopener"
                        style="display:inline-flex;align-items:center;gap:0.5rem;white-space:nowrap;
                               padding:0.7rem 1.2rem;border-radius:10px;font-size:0.9rem;font-weight:700;
                               background:linear-gradient(135deg,#0284c7,#38bdf8);color:#fff;text-decoration:none;">
-                        <i class="bi bi-box-arrow-up-right"></i> Abrir JSON
+                        <i class="bi bi-code-slash"></i> Abrir JSON
                     </a>
                 </div>
 
@@ -321,102 +407,80 @@
                 </div>
 
                 <div style="margin-top:1.5rem;border-top:1px solid #1e293b;padding-top:1.25rem;">
-                    <div style="color:#64748b;font-size:0.85rem;font-weight:600;text-transform:uppercase;
-                                letter-spacing:0.05em;margin-bottom:0.75rem;">Endpoints disponibles</div>
-                    <ul style="list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:0.6rem;">
-                        <li style="display:flex;gap:0.75rem;flex-wrap:wrap;align-items:baseline;">
-                            <code style="color:#2dd4bf;font-size:0.85rem;">GET /u/{{ perfil_slug }}</code>
-                            <span style="color:#64748b;font-size:0.85rem;">Tu perfil completo en JSON</span>
-                        </li>
-                        <li style="display:flex;gap:0.75rem;flex-wrap:wrap;align-items:baseline;">
-                            <code style="color:#2dd4bf;font-size:0.85rem;">GET /api/certificado/pdf/&lt;ID&gt;</code>
-                            <span style="color:#64748b;font-size:0.85rem;">Descarga el PDF de un certificado ya generado</span>
-                        </li>
-                        <li style="display:flex;gap:0.75rem;flex-wrap:wrap;align-items:baseline;">
-                            <code style="color:#2dd4bf;font-size:0.85rem;">GET /api/certificado/imagen/&lt;ID&gt;</code>
-                            <span style="color:#64748b;font-size:0.85rem;">Ve el diploma de una máquina como imagen</span>
-                        </li>
-                        <li style="display:flex;gap:0.75rem;flex-wrap:wrap;align-items:baseline;">
-                            <code style="color:#2dd4bf;font-size:0.85rem;">GET /api/certificado/verificar/&lt;ID&gt;</code>
-                            <span style="color:#64748b;font-size:0.85rem;">Comprueba la autenticidad de un certificado</span>
-                        </li>
-                    </ul>
-                    <p style="color:#475569;font-size:0.82rem;margin:1rem 0 0;">
-                        El PDF de un certificado se archiva la primera vez que lo generas desde
-                        <a href="/certificados" style="color:#38bdf8;">Mis Certificados</a>.
-                    </p>
+                    <button type="button" id="perfilEndpointsBtn"
+                            style="display:inline-flex;align-items:center;gap:0.5rem;
+                                   padding:0.55rem 1rem;border:1px solid #1e293b;border-radius:10px;
+                                   background:#0f172a;color:#38bdf8;font-size:0.85rem;font-weight:600;cursor:pointer;">
+                        <i class="bi bi-code-slash"></i> Ver endpoints de la API
+                    </button>
                 </div>
+
+                </div><!-- /perfilPublicoBloque -->
             </div>
         </div>
 
     </div>
 </div>
 
-<div id="usernameChangeModal" class="claim-modal" style="display:none;">
-    <div class="claim-modal-dialog">
-        <button type="button" class="modal-close-button" onclick="closeUsernameChangeModal()">&times;</button>
-        <h3>Solicitar cambio de nombre de usuario</h3>
-        <div id="usernameChangeMsg" style="display:none;" class="mb-3"></div>
-        <form id="usernameChangeForm">
-            <div class="form-group">
-                <label for="requested_username_input">Nuevo nombre</label>
-                <input id="requested_username_input" name="requested_username" class="form-control" required
-                    minlength="3" maxlength="20">
-            </div>
-
-            <div class="form-group mt-3">
-                <label for="reason">Motivo (opcional)</label>
-                <textarea id="reason" name="reason" class="form-control" rows="3"></textarea>
-            </div>
-
-            <div class="form-group mt-3">
-                <label for="contacto_opcional">Correo o usuario de Telegram/Discord (opcional)</label>
-                <input id="contacto_opcional" name="contacto_opcional" class="form-control"
-                    placeholder="Ejemplo: usuario@correo.com / @usuario">
-            </div>
-
-            <div class="form-actions d-flex justify-content-end gap-2 mt-4">
-                <button type="button" class="btn btn-secondary" onclick="closeUsernameChangeModal()">Cancelar</button>
-                <button type="submit" class="btn btn-primary">Enviar solicitud</button>
-            </div>
-        </form>
-    </div>
-</div>
-
-<div id="claimMachineModal" class="claim-modal">
-    <div class="claim-modal-dialog">
-        <button type="button" class="modal-close-button" onclick="closeClaimMachineModal()">&times;</button>
-        <h2>Reclamar Autoría de Máquina</h2>
-        <p class="modal-description">
-            Selecciona la máquina que quieres reclamar y proporciona tus datos de contacto y una prueba de que esa
-            máquina es tuya.
+{#
+  Endpoints de la API pública. Cada fila lleva la URL absoluta ya resuelta con
+  el slug y, si el usuario tiene alguno emitido, con un cert_id real suyo: así
+  se copia y se pega sin editar nada.
+#}
+<div id="perfilEndpointsModal" class="claim-modal">
+    <div class="claim-modal-dialog" style="max-width:720px;">
+        <button type="button" class="modal-close-button" id="perfilEndpointsCerrar">&times;</button>
+        <h3><i class="bi bi-code-slash" style="color:#38bdf8;"></i> Endpoints de tu perfil</h3>
+        <p style="color:#94a3b8;font-size:0.88rem;margin-bottom:1.25rem;">
+            Enlaces directos, listos para copiar y pegar. Son públicos: no necesitan iniciar sesión.
         </p>
-        <div id="claimMachineMsg" style="display:none;" class="mb-3"></div>
-        <form id="claimMachineForm" class="claim-form">
-            <div class="form-group mb-3">
-                <label for="maquina_nombre"><i class="bi bi-cpu"></i> Máquina</label>
-                <select id="maquina_nombre" name="maquina_nombre" class="form-control" required>
-                    <option value="" disabled selected>Selecciona una máquina</option>
-                    {% for m in maquinas %}
-                    <option value="{{ m.nombre }}">{{ m.nombre }} (autor actual: {{ m.autor }})</option>
-                    {% endfor %}
-                </select>
+
+        <div id="perfilEndpointsLista" style="display:flex;flex-direction:column;gap:1rem;">
+            {% set endpoints = [
+                (perfil_web_url,  'Tu perfil como página web'),
+                (perfil_url,      'Tu perfil completo en JSON'),
+            ] %}
+            {% if perfil_cert_id %}
+              {% set endpoints = endpoints + [
+                ('https://dockerlabs.es/api/certificado/pdf/'       ~ perfil_cert_id, 'Descarga el PDF de ese certificado'),
+                ('https://dockerlabs.es/api/certificado/imagen/'    ~ perfil_cert_id, 'Ve ese diploma como imagen'),
+                ('https://dockerlabs.es/api/certificado/verificar/' ~ perfil_cert_id, 'Comprueba la autenticidad de ese certificado'),
+              ] %}
+            {% endif %}
+
+            {% for url, descripcion in endpoints %}
+            <div>
+                <div style="color:#64748b;font-size:0.82rem;margin-bottom:0.4rem;">{{ descripcion }}</div>
+                <div style="display:flex;align-items:stretch;gap:0.5rem;">
+                    <input type="text" readonly value="{{ url }}" class="perfil-endpoint-url"
+                           style="flex:1 1 auto;min-width:0;background:#0f172a;border:1px solid #1e293b;
+                                  border-radius:8px;padding:0.55rem 0.75rem;color:#e2e8f0;font-size:0.82rem;
+                                  font-family:ui-monospace,SFMono-Regular,Menlo,monospace;">
+                    <button type="button" class="perfil-endpoint-copiar"
+                            title="Copiar enlace"
+                            style="display:inline-flex;align-items:center;gap:0.4rem;white-space:nowrap;
+                                   padding:0.55rem 0.9rem;border:1px solid #1e293b;border-radius:8px;
+                                   background:#1e293b;color:#e2e8f0;font-size:0.82rem;font-weight:600;cursor:pointer;">
+                        <i class="bi bi-clipboard"></i> <span>Copiar</span>
+                    </button>
+                </div>
             </div>
-            <div class="form-group mb-3">
-                <label for="contacto"><i class="bi bi-envelope"></i> Datos de contacto</label>
-                <input type="text" id="contacto" name="contacto" class="form-control"
-                    placeholder="Correo, usuario de Telegram, etc." required>
-            </div>
-            <div class="form-group mb-3">
-                <label for="prueba"><i class="bi bi-clipboard-check"></i> Prueba de autoría</label>
-                <textarea id="prueba" name="prueba" class="form-control" rows="4"
-                    placeholder="Incluye enlaces, capturas, referencias, etc." required></textarea>
-            </div>
-            <div class="form-actions d-flex justify-content-end gap-2">
-                <button type="button" class="btn btn-secondary" onclick="closeClaimMachineModal()">Cancelar</button>
-                <button type="submit" class="btn btn-primary">Enviar reclamación</button>
-            </div>
-        </form>
+            {% endfor %}
+        </div>
+
+        {% if perfil_cert_id %}
+        <p style="color:#475569;font-size:0.8rem;margin:1.25rem 0 0;">
+            Los enlaces de certificado usan <code style="color:#2dd4bf;">{{ perfil_cert_id }}</code>,
+            uno de los tuyos. Cada diploma tiene su propio ID; los verás todos en
+            <a href="/certificados" style="color:#38bdf8;">Mis Certificados</a>.
+        </p>
+        {% else %}
+        <p style="color:#475569;font-size:0.8rem;margin:1.25rem 0 0;">
+            Todavía no tienes certificados emitidos. Publica un writeup de una máquina de
+            DockerLabs y aparecerán aquí sus enlaces, en
+            <a href="/certificados" style="color:#38bdf8;">Mis Certificados</a>.
+        </p>
+        {% endif %}
     </div>
 </div>
 
@@ -462,80 +526,203 @@
         </form>
     </div>
 </div>
+
+{% if current_user_role == 'admin' %}
+<div id="apiTokenCreateModal" class="claim-modal">
+    <div class="claim-modal-dialog" style="max-width:480px;">
+        <button type="button" class="modal-close-button" id="apiTokenCreateCerrar">&times;</button>
+        <h3><i class="bi bi-key-fill" style="color:#38bdf8;"></i> Nuevo token de API</h3>
+        <p style="color:#94a3b8;font-size:0.88rem;margin-bottom:1.25rem;">
+            Dale un nombre para reconocerlo luego (por ejemplo, "Claude Code"). El token
+            completo solo se mostrará una vez, justo después de crearlo.
+        </p>
+        <form id="apiTokenCreateForm" class="claim-form">
+            <div class="form-group mb-3">
+                <label for="apiTokenLabel">Nombre / etiqueta</label>
+                <input type="text" id="apiTokenLabel" class="form-control" maxlength="120"
+                       placeholder="Ej: Claude Code" required>
+            </div>
+            <div class="form-actions d-flex justify-content-end gap-2">
+                <button type="button" class="btn btn-secondary" id="apiTokenCreateCancelar">Cancelar</button>
+                <button type="submit" class="btn btn-primary">Generar token</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div id="apiTokenRevealModal" class="claim-modal">
+    <div class="claim-modal-dialog" style="max-width:560px;">
+        <button type="button" class="modal-close-button" id="apiTokenRevealCerrar">&times;</button>
+        <h3><i class="bi bi-shield-check" style="color:#2dd4bf;"></i> Token generado</h3>
+        <div style="display:flex;align-items:center;gap:0.75rem;background:rgba(248,113,113,0.08);
+                    border:1px solid rgba(248,113,113,0.25);border-radius:12px;
+                    padding:0.9rem 1.1rem;margin-bottom:1.25rem;color:#fca5a5;font-size:0.9rem;">
+            <i class="bi bi-exclamation-triangle-fill"></i>
+            <span>Cópialo ahora: no se volverá a mostrar. Si lo pierdes, tendrás que generar uno nuevo.</span>
+        </div>
+        <div style="display:flex;align-items:stretch;gap:0.6rem;">
+            <input id="apiTokenRevealValue" type="text" readonly value=""
+                   style="flex:1 1 auto;min-width:0;background:#0f172a;border:1px solid #1e293b;
+                          border-radius:10px;padding:0.7rem 0.9rem;color:#e2e8f0;font-size:0.85rem;
+                          font-family:ui-monospace,SFMono-Regular,Menlo,monospace;">
+            <button type="button" id="apiTokenRevealCopiar"
+                    style="display:inline-flex;align-items:center;gap:0.5rem;white-space:nowrap;
+                           padding:0.7rem 1.2rem;border:1px solid #1e293b;border-radius:10px;
+                           background:#1e293b;color:#e2e8f0;font-size:0.9rem;font-weight:600;cursor:pointer;">
+                <i class="bi bi-clipboard"></i> <span>Copiar</span>
+            </button>
+        </div>
+        <p style="color:#475569;font-size:0.8rem;margin:1.25rem 0 0;">
+            Úsalo en la cabecera <code style="color:#2dd4bf;">Authorization: Bearer &lt;token&gt;</code>
+            de tus peticiones a la API (equivale a estar logueado como admin).
+        </p>
+    </div>
+</div>
+{% endif %}
 {% endblock %}
 
 {% block scripts %}
 <script src="{{ static_v('dockerlabs/js/dashboard.js') }}"></script>
 <script nonce="{{ g.csp_nonce }}">
 (function () {
-    const input = document.getElementById('perfilPublicoUrl');
-    const boton = document.getElementById('perfilCopiarBtn');
     const stats = document.getElementById('perfilStats');
-    if (!input || !boton || !stats) return;
 
-    const etiqueta = boton.querySelector('span');
-    const icono = boton.querySelector('i');
+    function conectarCopia(input, boton) {
+        if (!input || !boton) return;
+        const etiqueta = boton.querySelector('span');
+        const icono = boton.querySelector('i');
 
-    function confirmarCopia() {
-        const textoPrevio = etiqueta.textContent;
-        etiqueta.textContent = '¡Copiado!';
-        icono.className = 'bi bi-check-lg';
-        boton.style.color = '#2dd4bf';
-        setTimeout(function () {
-            etiqueta.textContent = textoPrevio;
-            icono.className = 'bi bi-clipboard';
-            boton.style.color = '';
-        }, 1800);
-    }
+        function confirmarCopia() {
+            const textoPrevio = etiqueta.textContent;
+            etiqueta.textContent = '¡Copiado!';
+            icono.className = 'bi bi-check-lg';
+            boton.style.color = '#2dd4bf';
+            setTimeout(function () {
+                etiqueta.textContent = textoPrevio;
+                icono.className = 'bi bi-clipboard';
+                boton.style.color = '';
+            }, 1800);
+        }
 
-    boton.addEventListener('click', function () {
-        // navigator.clipboard no existe en contextos no seguros; select()+execCommand cubre ese caso.
-        if (navigator.clipboard && window.isSecureContext) {
-            navigator.clipboard.writeText(input.value).then(confirmarCopia).catch(function () {
+        boton.addEventListener('click', function () {
+            // navigator.clipboard no existe en contextos no seguros; select()+execCommand cubre ese caso.
+            if (navigator.clipboard && window.isSecureContext) {
+                navigator.clipboard.writeText(input.value).then(confirmarCopia).catch(function () {
+                    input.select();
+                    document.execCommand('copy');
+                    confirmarCopia();
+                });
+            } else {
                 input.select();
                 document.execCommand('copy');
                 confirmarCopia();
-            });
-        } else {
-            input.select();
-            document.execCommand('copy');
-            confirmarCopia();
-        }
-    });
+            }
+        });
+    }
 
+    conectarCopia(document.getElementById('perfilPublicoUrl'),
+                  document.getElementById('perfilCopiarBtn'));
+
+    // --- Modal de endpoints -------------------------------------------------
+    const modal = document.getElementById('perfilEndpointsModal');
+    if (modal) {
+        modal.querySelectorAll('.perfil-endpoint-copiar').forEach(function (btn) {
+            conectarCopia(btn.parentElement.querySelector('.perfil-endpoint-url'), btn);
+        });
+
+        // `.visible` es lo que centra el overlay (display:flex en dashboard.css).
+        const abrir = document.getElementById('perfilEndpointsBtn');
+        const cerrar = document.getElementById('perfilEndpointsCerrar');
+        function cerrarModal() { modal.classList.remove('visible'); }
+        if (abrir) abrir.addEventListener('click', function () { modal.classList.add('visible'); });
+        if (cerrar) cerrar.addEventListener('click', cerrarModal);
+        modal.addEventListener('click', function (ev) { if (ev.target === modal) cerrarModal(); });
+        document.addEventListener('keydown', function (ev) {
+            if (ev.key === 'Escape' && modal.classList.contains('visible')) cerrarModal();
+        });
+    }
+
+    // --- Visibilidad del perfil -------------------------------------------
+    const check   = document.getElementById('perfilVisibilidadSwitch');
+    const bloque  = document.getElementById('perfilPublicoBloque');
+    const aviso   = document.getElementById('perfilPrivadoAviso');
+    const titulo  = document.getElementById('perfilVisibilidadTitulo');
+    const texto   = document.getElementById('perfilVisibilidadTexto');
+    const estado  = document.getElementById('perfilVisibilidadEstado');
+    const iconoV  = document.getElementById('perfilVisibilidadIcono');
+
+    function pintarVisibilidad(publico) {
+        bloque.style.display = publico ? 'block' : 'none';
+        aviso.style.display  = publico ? 'none' : 'flex';
+        titulo.textContent   = publico ? 'Perfil público' : 'Perfil privado';
+        texto.textContent    = publico
+            ? 'Cualquiera puede ver tu perfil y consultarlo sin iniciar sesión.'
+            : 'Solo tú lo ves. Tu enlace público deja de funcionar mientras esté en privado.';
+        estado.textContent   = publico ? 'Público' : 'Privado';
+        estado.style.color   = publico ? '#2dd4bf' : '#f87171';
+        iconoV.className     = publico ? 'bi bi-unlock-fill' : 'bi bi-lock-fill';
+        iconoV.style.color   = publico ? '#2dd4bf' : '#f87171';
+    }
+
+    if (check) {
+        check.addEventListener('change', function () {
+            const publico = check.checked;
+            check.disabled = true;
+            const meta = document.querySelector('meta[name="csrf-token"]');
+            fetch('/api/perfil/visibilidad', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': meta ? meta.content : ''
+                },
+                body: JSON.stringify({ publico: publico })
+            })
+            .then(function (r) { if (!r.ok) throw new Error(r.status); return r.json(); })
+            .then(function (d) {
+                if (!d.success) throw new Error('respuesta no válida');
+                pintarVisibilidad(d.publico);
+                if (d.publico) cargarStats();
+            })
+            .catch(function () {
+                // Revertir: el servidor no llegó a guardar el cambio.
+                check.checked = !publico;
+                if (typeof showAlert === 'function') {
+                    showAlert('No se pudo cambiar la visibilidad del perfil.', 'danger');
+                }
+            })
+            .finally(function () { check.disabled = false; });
+        });
+    }
+
+    // --- Estadísticas del perfil -------------------------------------------
     function chip(valor, texto) {
         return '<span><strong style="color:#e2e8f0;font-size:1.05rem;">' + valor +
                '</strong> ' + texto + '</span>';
     }
 
-    fetch({{ perfil_path | tojson }})
-        .then(function (r) { if (!r.ok) throw new Error(r.status); return r.json(); })
-        .then(function (d) {
-            const e = d.estadisticas || {};
-            stats.innerHTML = [
-                chip(e.maquinas_hechas || 0, 'máquinas resueltas'),
-                chip(e.maquinas_creadas || 0, 'máquinas creadas'),
-                chip(e.writeups_publicados || 0, 'writeups'),
-                chip(e.certificados_generados || 0, 'certificados generados')
-            ].join('');
-        })
-        .catch(function () {
-            stats.innerHTML = '<span>No se pudieron cargar los datos del perfil.</span>';
-        });
+    function cargarStats() {
+        if (!stats) return;
+        stats.innerHTML = '<span>Cargando datos del perfil…</span>';
+        fetch({{ perfil_path | tojson }})
+            .then(function (r) { if (!r.ok) throw new Error(r.status); return r.json(); })
+            .then(function (d) {
+                const e = d.estadisticas || {};
+                stats.innerHTML = [
+                    chip(e.maquinas_hechas || 0, 'máquinas resueltas'),
+                    chip(e.maquinas_creadas || 0, 'máquinas creadas'),
+                    chip(e.writeups_publicados || 0, 'writeups'),
+                    chip(e.certificados_generados || 0, 'certificados generados')
+                ].join('');
+            })
+            .catch(function () {
+                stats.innerHTML = '<span>No se pudieron cargar los datos del perfil.</span>';
+            });
+    }
+
+    if (check && check.checked) cargarStats();
 })();
 </script>
 <script>
-    function openUsernameChangeModal() {
-        const val = document.getElementById('requested_username').value;
-        document.getElementById('requested_username_input').value = val || "";
-        const msg = document.getElementById('usernameChangeMsg');
-        msg.style.display = 'none';
-        msg.textContent = '';
-        document.getElementById('usernameChangeModal').style.display = 'block';
-    }
-    function closeUsernameChangeModal() {
-        document.getElementById('usernameChangeModal').style.display = 'none';
-    }
     function openSendNotificationModal() {
         document.getElementById('sendNotificationModal').classList.add('visible');
     }
@@ -543,121 +730,7 @@
         document.getElementById('sendNotificationModal').classList.remove('visible');
     }
 
-    async function approveClaim(claimId, btn) {
-        btn.disabled = true;
-        try {
-            const resp = await fetch(`/api/claims/${claimId}/approve`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCsrfToken() },
-                body: JSON.stringify({})
-            });
-            const data = await resp.json();
-            if (data.success) {
-                btn.closest('.claim-card').remove();
-                showAlert('Reclamación aprobada correctamente.', 'success');
-            } else {
-                showAlert(data.error || 'Error al aprobar.', 'danger');
-                btn.disabled = false;
-            }
-        } catch {
-            showAlert('Error de conexión.', 'danger');
-            btn.disabled = false;
-        }
-    }
-
-    async function rejectClaim(claimId, btn) {
-        btn.disabled = true;
-        try {
-            const resp = await fetch(`/api/claims/${claimId}/reject`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCsrfToken() },
-                body: JSON.stringify({})
-            });
-            const data = await resp.json();
-            if (data.success) {
-                btn.closest('.claim-card').remove();
-                showAlert('Reclamación rechazada.', 'success');
-            } else {
-                showAlert(data.error || 'Error al rechazar.', 'danger');
-                btn.disabled = false;
-            }
-        } catch {
-            showAlert('Error de conexión.', 'danger');
-            btn.disabled = false;
-        }
-    }
-
     document.addEventListener('DOMContentLoaded', function() {
-        // Username change form
-        const usernameChangeForm = document.getElementById('usernameChangeForm');
-        if (usernameChangeForm) {
-            usernameChangeForm.addEventListener('submit', async function(e) {
-                e.preventDefault();
-                const submitBtn = usernameChangeForm.querySelector('[type="submit"]');
-                const msgEl = document.getElementById('usernameChangeMsg');
-                submitBtn.disabled = true;
-                msgEl.style.display = 'none';
-
-                try {
-                    const resp = await fetch('/api/auth/request_username_change', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCsrfToken() },
-                        body: JSON.stringify({
-                            requested_username: document.getElementById('requested_username_input').value,
-                            reason: document.getElementById('reason').value,
-                            contacto_opcional: document.getElementById('contacto_opcional').value
-                        })
-                    });
-                    const data = await resp.json();
-                    msgEl.className = data.success ? 'mb-3 alert alert-success' : 'mb-3 alert alert-danger';
-                    msgEl.textContent = data.message || data.error || 'Error desconocido.';
-                    msgEl.style.display = 'block';
-                    if (data.success) usernameChangeForm.reset();
-                } catch {
-                    msgEl.className = 'mb-3 alert alert-danger';
-                    msgEl.textContent = 'Error de conexión.';
-                    msgEl.style.display = 'block';
-                } finally {
-                    submitBtn.disabled = false;
-                }
-            });
-        }
-
-        // Claim machine form
-        const claimMachineForm = document.getElementById('claimMachineForm');
-        if (claimMachineForm) {
-            claimMachineForm.addEventListener('submit', async function(e) {
-                e.preventDefault();
-                const submitBtn = claimMachineForm.querySelector('[type="submit"]');
-                const msgEl = document.getElementById('claimMachineMsg');
-                submitBtn.disabled = true;
-                msgEl.style.display = 'none';
-
-                try {
-                    const resp = await fetch('/api/reclamar-maquina', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCsrfToken() },
-                        body: JSON.stringify({
-                            maquina_nombre: document.getElementById('maquina_nombre').value,
-                            contacto: document.getElementById('contacto').value,
-                            prueba: document.getElementById('prueba').value
-                        })
-                    });
-                    const data = await resp.json();
-                    msgEl.className = data.success ? 'mb-3 alert alert-success' : 'mb-3 alert alert-danger';
-                    msgEl.textContent = data.message || data.error || 'Error desconocido.';
-                    msgEl.style.display = 'block';
-                    if (data.success) claimMachineForm.reset();
-                } catch {
-                    msgEl.className = 'mb-3 alert alert-danger';
-                    msgEl.textContent = 'Error de conexión.';
-                    msgEl.style.display = 'block';
-                } finally {
-                    submitBtn.disabled = false;
-                }
-            });
-        }
-
         // Send notification form
         const sendNotificationForm = document.getElementById('sendNotificationForm');
         if (sendNotificationForm) {
@@ -704,6 +777,155 @@
         // Vista previa en tiempo real de markdown
         const notificationContent = document.getElementById('notification_content');
         if (notificationContent) notificationContent.addEventListener('input', updateMarkdownPreview);
+
+        // --- Tokens de API (solo se pinta esta sección para role == admin) ----
+        const apiTokenCreateBtn = document.getElementById('apiTokenCreateBtn');
+        const apiTokenCreateModal = document.getElementById('apiTokenCreateModal');
+        const apiTokenCreateForm = document.getElementById('apiTokenCreateForm');
+        const apiTokenRevealModal = document.getElementById('apiTokenRevealModal');
+        const apiTokensTableBody = document.getElementById('apiTokensTableBody');
+
+        function openApiTokenCreateModal() {
+            if (apiTokenCreateModal) apiTokenCreateModal.classList.add('visible');
+        }
+        function closeApiTokenCreateModal() {
+            if (apiTokenCreateModal) apiTokenCreateModal.classList.remove('visible');
+            if (apiTokenCreateForm) apiTokenCreateForm.reset();
+        }
+        function closeApiTokenRevealModal() {
+            if (apiTokenRevealModal) apiTokenRevealModal.classList.remove('visible');
+            const input = document.getElementById('apiTokenRevealValue');
+            if (input) input.value = '';
+        }
+
+        if (apiTokenCreateBtn) apiTokenCreateBtn.addEventListener('click', openApiTokenCreateModal);
+
+        const apiTokenCreateCerrar = document.getElementById('apiTokenCreateCerrar');
+        const apiTokenCreateCancelar = document.getElementById('apiTokenCreateCancelar');
+        if (apiTokenCreateCerrar) apiTokenCreateCerrar.addEventListener('click', closeApiTokenCreateModal);
+        if (apiTokenCreateCancelar) apiTokenCreateCancelar.addEventListener('click', closeApiTokenCreateModal);
+        if (apiTokenCreateModal) apiTokenCreateModal.addEventListener('click', function (e) {
+            if (e.target === apiTokenCreateModal) closeApiTokenCreateModal();
+        });
+
+        const apiTokenRevealCerrar = document.getElementById('apiTokenRevealCerrar');
+        if (apiTokenRevealCerrar) apiTokenRevealCerrar.addEventListener('click', closeApiTokenRevealModal);
+        if (apiTokenRevealModal) apiTokenRevealModal.addEventListener('click', function (e) {
+            if (e.target === apiTokenRevealModal) closeApiTokenRevealModal();
+        });
+
+        const apiTokenRevealCopiar = document.getElementById('apiTokenRevealCopiar');
+        if (apiTokenRevealCopiar) {
+            apiTokenRevealCopiar.addEventListener('click', function () {
+                const input = document.getElementById('apiTokenRevealValue');
+                const etiqueta = apiTokenRevealCopiar.querySelector('span');
+                const icono = apiTokenRevealCopiar.querySelector('i');
+                function confirmarCopia() {
+                    const previo = etiqueta.textContent;
+                    etiqueta.textContent = '¡Copiado!';
+                    icono.className = 'bi bi-check-lg';
+                    setTimeout(function () { etiqueta.textContent = previo; icono.className = 'bi bi-clipboard'; }, 1800);
+                }
+                if (navigator.clipboard && window.isSecureContext) {
+                    navigator.clipboard.writeText(input.value).then(confirmarCopia).catch(function () {
+                        input.select();
+                        document.execCommand('copy');
+                        confirmarCopia();
+                    });
+                } else {
+                    input.select();
+                    document.execCommand('copy');
+                    confirmarCopia();
+                }
+            });
+        }
+
+        function apiTokenRowHtml() {
+            return '<td style="padding:0.6rem 0.75rem;border-bottom:1px solid #1e293b;color:#e2e8f0;"></td>' +
+                '<td style="padding:0.6rem 0.75rem;border-bottom:1px solid #1e293b;"><code style="color:#38bdf8;"></code></td>' +
+                '<td style="padding:0.6rem 0.75rem;border-bottom:1px solid #1e293b;color:#94a3b8;"></td>' +
+                '<td class="token-last-used" style="padding:0.6rem 0.75rem;border-bottom:1px solid #1e293b;color:#94a3b8;">Nunca</td>' +
+                '<td class="token-status" style="padding:0.6rem 0.75rem;border-bottom:1px solid #1e293b;"><span style="color:#2dd4bf;font-weight:600;">Activo</span></td>' +
+                '<td style="padding:0.6rem 0.75rem;border-bottom:1px solid #1e293b;text-align:right;">' +
+                '<button type="button" class="api-token-revoke-btn" style="padding:0.4rem 0.9rem;border:1px solid rgba(248,113,113,0.4);' +
+                'border-radius:8px;background:rgba(248,113,113,0.08);color:#f87171;font-size:0.82rem;font-weight:600;cursor:pointer;">Revocar</button></td>';
+        }
+
+        function addApiTokenRow(tok) {
+            const emptyRow = document.getElementById('apiTokensEmptyRow');
+            if (emptyRow) emptyRow.remove();
+            if (!apiTokensTableBody) return;
+            const tr = document.createElement('tr');
+            tr.dataset.tokenId = tok.id;
+            tr.innerHTML = apiTokenRowHtml();
+            // textContent, no innerHTML, para el label: evita XSS con nombres con HTML.
+            tr.children[0].textContent = tok.label;
+            tr.children[1].querySelector('code').textContent = tok.token_prefix + '…';
+            tr.children[2].textContent = new Date(tok.created_at).toLocaleString('es-ES');
+            const revokeBtn = tr.querySelector('.api-token-revoke-btn');
+            if (revokeBtn) revokeBtn.addEventListener('click', function () { revokeApiToken(tok.id, tr); });
+            apiTokensTableBody.prepend(tr);
+        }
+
+        async function revokeApiToken(tokenId, row) {
+            if (!confirm('¿Revocar este token? Dejará de funcionar de inmediato.')) return;
+            try {
+                const resp = await fetch('/api/admin/tokens/' + tokenId + '/revoke', {
+                    method: 'POST',
+                    headers: { 'X-CSRFToken': getCsrfToken() }
+                });
+                const data = await resp.json();
+                if (!resp.ok || !data.success) {
+                    showAlert('Error: ' + (data.error || 'no se pudo revocar el token'), 'danger');
+                    return;
+                }
+                row.style.opacity = '0.5';
+                const statusCell = row.querySelector('.token-status');
+                if (statusCell) statusCell.innerHTML = '<span style="color:#f87171;font-weight:600;">Revocado</span>';
+                const btn = row.querySelector('.api-token-revoke-btn');
+                if (btn) btn.remove();
+                showAlert('Token revocado.', 'success');
+            } catch {
+                showAlert('Error al revocar el token.', 'danger');
+            }
+        }
+
+        if (apiTokensTableBody) {
+            apiTokensTableBody.querySelectorAll('tr[data-token-id]').forEach(function (row) {
+                const btn = row.querySelector('.api-token-revoke-btn');
+                if (btn) btn.addEventListener('click', function () { revokeApiToken(row.dataset.tokenId, row); });
+            });
+        }
+
+        if (apiTokenCreateForm) {
+            apiTokenCreateForm.addEventListener('submit', async function (e) {
+                e.preventDefault();
+                const label = document.getElementById('apiTokenLabel').value;
+                const submitBtn = apiTokenCreateForm.querySelector('[type="submit"]');
+                submitBtn.disabled = true;
+                try {
+                    const resp = await fetch('/api/admin/tokens', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCsrfToken() },
+                        body: JSON.stringify({ label: label })
+                    });
+                    const data = await resp.json();
+                    if (!resp.ok || !data.success) {
+                        showAlert('Error: ' + (data.error || 'no se pudo generar el token'), 'danger');
+                        return;
+                    }
+                    closeApiTokenCreateModal();
+                    addApiTokenRow({ id: data.id, label: data.label, token_prefix: data.token_prefix, created_at: data.created_at });
+                    const revealInput = document.getElementById('apiTokenRevealValue');
+                    if (revealInput) revealInput.value = data.token;
+                    if (apiTokenRevealModal) apiTokenRevealModal.classList.add('visible');
+                } catch {
+                    showAlert('Error al generar el token.', 'danger');
+                } finally {
+                    submitBtn.disabled = false;
+                }
+            });
+        }
     });
 
     function updateMarkdownPreview() {
@@ -721,11 +943,7 @@
         }
     }
 
-    function escapeHtml(t) {
-        const d = document.createElement("div");
-        d.appendChild(document.createTextNode(t || ""));
-        return d.innerHTML;
-    }
+    // escapeHtml() la aporta utils.js, cargado desde base.html.
 
 </script>
 {% endblock %}

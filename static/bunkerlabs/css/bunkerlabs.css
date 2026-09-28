@@ -136,8 +136,8 @@ body {
 }
 
 .logo-container img {
-    height: 45px;
-    width: auto;
+    height: 55px;
+    width: 60px;
     filter: drop-shadow(0 0 5px rgba(139, 92, 246, 0.5));
     transition: transform 0.3s ease, filter 0.3s ease;
 }
@@ -145,20 +145,6 @@ body {
 .logo-container:hover img {
     transform: scale(1.05);
     filter: drop-shadow(0 0 12px rgba(139, 92, 246, 0.8));
-}
-
-.logo-text {
-    font-family: 'Fira Code', monospace;
-    font-weight: 400;
-    font-size: 1.3rem;
-    color: #fff;
-    letter-spacing: 0.12em;
-    text-shadow: none;
-    transition: all 0.3s ease;
-}
-
-.logo-text:hover {
-    text-shadow: 0 0 15px rgba(255, 255, 255, 0.3);
 }
 
 /* --- Brand Title Animation - Minimalist (BunkerLabs) --- */
@@ -187,41 +173,6 @@ body {
 .brand-title:hover .brand-text {
     color: #8b5cf6 !important;
     text-shadow: 0 0 15px rgba(139, 92, 246, 0.4);
-}
-
-/* NAV LINKS (CENTER) */
-.nav-links {
-    display: flex;
-    gap: 2rem;
-    justify-content: center;
-}
-
-.nav-links a {
-    text-decoration: none;
-    color: var(--bunker-text-muted);
-    font-weight: 500;
-    font-size: 0.95rem;
-    transition: all 0.3s ease;
-    padding: 0.5rem 1rem;
-    border-radius: 8px;
-    position: relative;
-}
-
-.nav-links a:hover,
-.nav-links a.active {
-    color: #fff;
-    background: rgba(139, 92, 246, 0.1);
-}
-
-.nav-links a.active::after {
-    content: '';
-    position: absolute;
-    bottom: -24px;
-    /* Pegado al borde inferior del header */
-    left: 0;
-    width: 100%;
-    background: var(--bunker-primary-light);
-    box-shadow: 0 0 10px var(--bunker-primary);
 }
 
 /* RIGHT ACTIONS (USER & BUTTONS) */
@@ -304,45 +255,6 @@ body {
 .dropdown-item i {
     color: var(--bunker-primary-light);
     font-size: 1rem;
-}
-
-/* AUTH BUTTONS (ESTILO DOCKERLABS PERO MORADO) */
-.btn-auth-bunker {
-    font-family: 'Fira Code', monospace;
-    padding: 0.5rem 1.1rem;
-    font-size: 0.85rem;
-    cursor: pointer;
-    border-radius: 6px;
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    text-decoration: none;
-    white-space: nowrap;
-    background: transparent;
-    color: var(--bunker-primary-light);
-    border: 1px solid var(--bunker-primary);
-    transition: all 0.2s ease;
-    font-weight: 600;
-    letter-spacing: 0.5px;
-}
-
-.btn-auth-bunker:hover {
-    background: rgba(139, 92, 246, 0.15);
-    color: #fff;
-    box-shadow: 0 0 15px rgba(139, 92, 246, 0.4);
-    transform: translateY(-1px);
-}
-
-.btn-auth-bunker.btn-logout {
-    color: #f87171;
-    /* Rojo suave */
-    border-color: #f87171;
-}
-
-.btn-auth-bunker.btn-logout:hover {
-    background: rgba(248, 113, 113, 0.15);
-    color: #fff;
-    box-shadow: 0 0 15px rgba(248, 113, 113, 0.4);
 }
 
 /* =====================
@@ -544,14 +456,6 @@ button.btn-sm:hover {
 .item:hover {
     transform: translateY(-4px);
     box-shadow: 0 12px 20px rgba(0, 0, 0, 0.3);
-}
-
-/* CSS syntax fixed - removed dangling variable */
-.item-content {
-    display: flex;
-    align-items: center;
-    gap: 0.8rem;
-    flex: 1;
 }
 
 .item span:first-child {
@@ -760,14 +664,6 @@ button.btn-sm:hover {
     padding: 0;
     color: var(--bunker-text-secondary);
     font-size: 0.85rem;
-}
-
-.footer-divider {
-    width: 40%;
-    max-width: 250px;
-    height: 1px;
-    background: linear-gradient(90deg, transparent, var(--bunker-border-soft), transparent);
-    margin: 0.4rem auto;
 }
 
 
@@ -1019,15 +915,6 @@ button.btn-sm:hover {
     }
 }
 
-
-.nav-user {
-    margin-left: 1rem;
-    margin-right: 1rem;
-    display: flex;
-    align-items: center;
-    font-size: 0.85rem;
-}
-
 .user-pill {
     display: inline-flex;
     align-items: center;
@@ -1044,18 +931,6 @@ button.btn-sm:hover {
 .user-pill-anon {
     opacity: 0.7;
     font-style: italic;
-}
-
-.bunker-user-banner {
-    margin: 0 auto 0.75rem auto;
-    max-width: 1100px;
-    padding: 0.5rem 0.75rem;
-    border-radius: 0.5rem;
-    background: rgba(15, 118, 110, 0.12);
-    /* tono verde-azulado suave */
-    border: 1px solid rgba(45, 212, 191, 0.35);
-    color: #e0fdf7;
-    font-size: 0.9rem;
 }
 
 /* =====================
@@ -1092,14 +967,6 @@ button.btn-sm:hover {
         padding: 0.75rem 1rem;
     }
 
-    .logo-text {
-        display: none;
-    }
-
-    .nav-links {
-        gap: 1rem;
-    }
-
     .container {
         padding-inline: 1rem;
         padding-top: 1.5rem;
@@ -1107,12 +974,6 @@ button.btn-sm:hover {
 
     .item {
         padding: 0.9rem 1rem;
-    }
-
-    .item-content {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 0.5rem;
     }
 
     .actions {
@@ -1142,10 +1003,6 @@ button.btn-sm:hover {
 @media (max-width: 480px) {
     header {
         padding-inline: 0.8rem;
-    }
-
-    .nav-links {
-        font-size: 0.9rem;
     }
 
     .header {
@@ -1687,35 +1544,6 @@ footer {
     }
 }
 
-/* Real Environments Banner */
-.real-env-info {
-    background: linear-gradient(135deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.05));
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    border-radius: 12px;
-    padding: 1.25rem;
-    margin-bottom: 1.5rem;
-    color: #e2e8f0;
-    backdrop-filter: blur(10px);
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
-}
-
-.real-env-info h6 {
-    color: #ffffff;
-    font-size: 0.95rem;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-}
-
-.real-env-info p {
-    color: #cbd5e1;
-    font-size: 0.9rem;
-    line-height: 1.6;
-}
-
-.real-env-info i {
-    color: #ffffff;
-}
-
 /* Botón de Writeup */
 .btn-writeup {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -1752,32 +1580,6 @@ footer {
     background-color: rgba(0, 0, 0, 0.7);
 }
 
-.modal-writeup-content {
-    background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
-    margin: 5% auto;
-    padding: 2rem;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 16px;
-    width: 90%;
-    max-width: 600px;
-    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
-    color: #e2e8f0;
-}
-
-.close-writeup {
-    color: #94a3b8;
-    float: right;
-    font-size: 28px;
-    font-weight: bold;
-    cursor: pointer;
-    transition: color 0.3s ease;
-}
-
-.close-writeup:hover,
-.close-writeup:focus {
-    color: #ffffff;
-}
-
 #writeup-machine-title {
     color: #ffffff;
     margin-top: 0;
@@ -1788,45 +1590,6 @@ footer {
 
 #writeup-content {
     min-height: 100px;
-}
-
-.writeup-section-title {
-    color: #ffffff;
-    margin-top: 1.5rem;
-    margin-bottom: 0.75rem;
-    font-size: 1.1rem;
-    border-bottom: 2px solid rgba(102, 126, 234, 0.3);
-    padding-bottom: 0.5rem;
-}
-
-.writeup-list {
-    list-style: none;
-    padding: 0;
-    margin: 0 0 1rem 0;
-}
-
-.writeup-list li {
-    margin: 0.5rem 0;
-    padding: 0.75rem;
-    background: rgba(255, 255, 255, 0.05);
-    border-radius: 8px;
-    transition: all 0.3s ease;
-}
-
-.writeup-list li:hover {
-    background: rgba(255, 255, 255, 0.1);
-    transform: translateX(5px);
-}
-
-.writeup-list a {
-    color: #60a5fa;
-    text-decoration: none;
-    font-weight: 500;
-    display: block;
-}
-
-.writeup-list a:hover {
-    color: #93c5fd;
 }
 
 .loading-text,

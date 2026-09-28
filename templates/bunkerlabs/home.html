@@ -13,11 +13,6 @@
         <!-- Left Section: Search & Actions -->
         <div class="header-left d-flex align-items-center gap-2">
             <input type="text" id="search" class="form-control-sm" placeholder="Buscar en BunkerLabs...">
-
-            {% if not is_guest %}
-            <a href="/bunkerlabs/recursos" class="btn btn-sm btn-action" style="text-decoration:none;">Recursos 📁</a>
-            {% endif %}
-            <a href="/bunkerlabs/empezar" class="btn btn-sm btn-action" style="text-decoration:none;">Empezar de 0 🐣</a>
         </div>
 
         <!-- Right Section: Filters -->
@@ -84,7 +79,7 @@
 
             <div class="actions icon-container">
                 <button class="download btn-download" {% if not is_locked_for_guest
-                    %}data-link="{{ maquina.link_descarga }}" {% endif %}>
+                    %}data-link="/bunkerlabs/maquinas/{{ maquina.id }}/descargar" {% endif %}>
                     <i class="bi bi-cloud-arrow-down-fill"></i>
                 </button>
             </div>

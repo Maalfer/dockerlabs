@@ -1,0 +1,409 @@
+{% extends "dockerlabs/base.html" %}
+
+{#
+  Página pública del perfil (`/perfil/<slug>`). Recibe en `perfil` el mismo
+  diccionario que sirve `GET /u/<slug>`; no consulta la base por su cuenta.
+#}
+
+{% set p = perfil.perfil %}
+{% set e = perfil.estadisticas %}
+{% set pr = perfil.progreso %}
+
+{% macro fecha(iso) %}{% if iso %}{{ iso[8:10] }}/{{ iso[5:7] }}/{{ iso[0:4] }}{% endif %}{% endmacro %}
+
+{% block title %}{{ perfil.username }} - Perfil público | DockerLabs{% endblock %}
+{% block og_title %}{{ perfil.username }} en DockerLabs{% endblock %}
+{% block canonical_path %}/perfil/{{ perfil.slug }}{% endblock %}
+{% block og_path %}/perfil/{{ perfil.slug }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .pp-wrap { max-width: 1140px; margin: 0 auto; padding: 2rem 1rem 4rem; }
+
+    .pp-hero {
+        position: relative; overflow: hidden;
+        background: linear-gradient(135deg, rgba(13,148,136,0.14), rgba(2,132,199,0.10));
+        border: 1px solid #1e293b; border-radius: 20px;
+        padding: 2.25rem; margin-bottom: 1.75rem;
+        display: flex; align-items: center; gap: 2rem; flex-wrap: wrap;
+    }
+    .pp-hero::after {
+        content: ""; position: absolute; inset: auto -60px -120px auto;
+        width: 320px; height: 320px; border-radius: 50%;
+        background: radial-gradient(circle, rgba(45,212,191,0.16), transparent 70%);
+        pointer-events: none;
+    }
+    .pp-avatar {
+        width: 132px; height: 132px; border-radius: 50%; object-fit: cover;
+        border: 3px solid rgba(45,212,191,0.55);
+        box-shadow: 0 10px 30px rgba(2,6,23,0.6); flex-shrink: 0;
+    }
+    .pp-ident { flex: 1 1 320px; min-width: 0; }
+    .pp-name {
+        font-size: clamp(1.8rem, 4vw, 2.6rem); font-weight: 800; color: #f8fafc;
+        margin: 0 0 0.5rem; line-height: 1.15; word-break: break-word;
+    }
+    .pp-meta { display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap; margin-bottom: 0.9rem; }
+    .pp-badge {
+        display: inline-flex; align-items: center; gap: 0.4rem;
+        padding: 0.3rem 0.8rem; border-radius: 999px;
+        font-size: 0.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em;
+        background: rgba(45,212,191,0.12); color: #2dd4bf; border: 1px solid rgba(45,212,191,0.3);
+    }
+    .pp-since { color: #64748b; font-size: 0.88rem; }
+    .pp-bio { color: #94a3b8; font-size: 0.98rem; line-height: 1.6; margin: 0 0 1.1rem; max-width: 62ch; }
+    .pp-social { display: flex; gap: 0.6rem; flex-wrap: wrap; }
+    .pp-social a {
+        display: inline-flex; align-items: center; gap: 0.5rem;
+        padding: 0.5rem 1rem; border-radius: 10px; text-decoration: none;
+        background: #0f172a; border: 1px solid #1e293b; color: #cbd5e1;
+        font-size: 0.88rem; font-weight: 600; transition: all 0.2s;
+    }
+    .pp-social a:hover { border-color: #2dd4bf; color: #2dd4bf; transform: translateY(-2px); }
+
+    .pp-stats {
+        display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+        gap: 1rem; margin-bottom: 1.75rem;
+    }
+    .pp-stat {
+        background: #0b1120; border: 1px solid #1e293b; border-radius: 16px;
+        padding: 1.35rem 1.25rem; text-align: center; transition: border-color 0.2s, transform 0.2s;
+    }
+    .pp-stat:hover { border-color: #334155; transform: translateY(-2px); }
+    .pp-stat i { font-size: 1.4rem; display: block; margin-bottom: 0.55rem; }
+    .pp-stat-num { font-size: 1.9rem; font-weight: 800; color: #f1f5f9; line-height: 1; }
+    .pp-stat-lbl { color: #64748b; font-size: 0.8rem; margin-top: 0.4rem;
+                   text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600; }
+
+    .pp-card {
+        background: #0b1120; border: 1px solid #1e293b; border-radius: 18px;
+        padding: 1.75rem; margin-bottom: 1.75rem;
+    }
+    .pp-card-head {
+        display: flex; align-items: center; justify-content: space-between;
+        gap: 1rem; flex-wrap: wrap; margin-bottom: 1.35rem;
+    }
+    .pp-card-head h2 {
+        display: flex; align-items: center; gap: 0.65rem; margin: 0;
+        font-size: 1.25rem; font-weight: 700; color: #e2e8f0;
+    }
+    .pp-count {
+        background: #1e293b; color: #94a3b8; border-radius: 999px;
+        padding: 0.2rem 0.7rem; font-size: 0.8rem; font-weight: 700;
+    }
+
+    .pp-progress-top { display: flex; align-items: baseline; gap: 0.6rem; margin-bottom: 0.85rem; }
+    .pp-progress-pct { font-size: 2.4rem; font-weight: 800; color: #2dd4bf; line-height: 1; }
+    .pp-progress-sub { color: #64748b; font-size: 0.95rem; }
+    .pp-bar { height: 12px; background: #0f172a; border-radius: 999px; overflow: hidden; border: 1px solid #1e293b; }
+    .pp-bar > span {
+        display: block; height: 100%; border-radius: 999px;
+        background: linear-gradient(90deg, #0d9488, #2dd4bf);
+    }
+    .pp-breakdown {
+        display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 0.9rem; margin-top: 1.5rem;
+    }
+    .pp-diff { background: #0f172a; border: 1px solid #1e293b; border-radius: 12px; padding: 0.9rem 1rem; }
+    .pp-diff-name { color: #94a3b8; font-size: 0.82rem; font-weight: 600;
+                    text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 0.45rem; }
+    .pp-diff-num { color: #e2e8f0; font-size: 1.15rem; font-weight: 700; }
+    .pp-diff-num small { color: #475569; font-weight: 500; font-size: 0.9rem; }
+    .pp-diff-bar { height: 5px; background: #1e293b; border-radius: 999px; margin-top: 0.6rem; overflow: hidden; }
+    .pp-diff-bar > span { display: block; height: 100%; background: #2dd4bf; border-radius: 999px; }
+
+    .pp-grid {
+        display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 1rem;
+    }
+    .pp-machine {
+        display: flex; align-items: center; gap: 0.9rem;
+        background: #0f172a; border: 1px solid #1e293b; border-radius: 14px;
+        padding: 0.9rem 1rem; transition: border-color 0.2s, transform 0.2s;
+    }
+    .pp-machine:hover { border-color: #334155; transform: translateY(-2px); }
+    .pp-machine img { width: 46px; height: 46px; border-radius: 10px; object-fit: cover; flex-shrink: 0; background: #1e293b; }
+    .pp-machine-body { min-width: 0; flex: 1; }
+    .pp-machine-name {
+        color: #e2e8f0; font-weight: 700; font-size: 0.98rem;
+        white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .pp-machine-sub { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; margin-top: 0.35rem; }
+    .pp-diff-tag { font-size: 0.72rem; font-weight: 700; padding: 0.15rem 0.55rem; border-radius: 6px;
+                   text-transform: uppercase; letter-spacing: 0.03em; }
+    .pp-date { color: #475569; font-size: 0.76rem; }
+    .pp-machine-links { display: flex; gap: 0.4rem; flex-shrink: 0; }
+    .pp-machine-links a {
+        display: inline-flex; align-items: center; justify-content: center;
+        width: 32px; height: 32px; border-radius: 8px; text-decoration: none;
+        background: #1e293b; color: #94a3b8; transition: all 0.2s;
+    }
+    .pp-machine-links a:hover { background: #2dd4bf; color: #04211f; }
+
+    .pp-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 0.7rem; }
+    .pp-writeup {
+        display: flex; align-items: center; gap: 0.9rem; text-decoration: none;
+        background: #0f172a; border: 1px solid #1e293b; border-radius: 12px;
+        padding: 0.85rem 1rem; transition: border-color 0.2s, transform 0.2s;
+    }
+    .pp-writeup:hover { border-color: #38bdf8; transform: translateX(3px); }
+    .pp-writeup img { width: 38px; height: 38px; border-radius: 9px; object-fit: cover; background: #1e293b; }
+    .pp-writeup-name { color: #e2e8f0; font-weight: 600; font-size: 0.95rem; }
+    .pp-writeup-meta { color: #64748b; font-size: 0.78rem; margin-top: 0.2rem; }
+    .pp-writeup > i { margin-left: auto; color: #475569; }
+
+    .pp-certs { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1rem; }
+    .pp-cert {
+        background: #0f172a; border: 1px solid #1e293b; border-radius: 14px;
+        overflow: hidden; transition: border-color 0.2s, transform 0.2s;
+    }
+    .pp-cert:hover { border-color: #2dd4bf; transform: translateY(-2px); }
+    /* `contain`: el diploma es apaisado y con `cover` se le recortaba la cabecera. */
+    .pp-cert-img { display: block; width: 100%; aspect-ratio: 3 / 2; object-fit: contain; background: #0b1120; }
+    .pp-cert-body { padding: 0.9rem 1rem; }
+    .pp-cert-name { color: #e2e8f0; font-weight: 700; font-size: 0.95rem; }
+    .pp-cert-id { color: #2dd4bf; font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+                  font-size: 0.78rem; margin-top: 0.2rem; }
+    .pp-cert-actions { display: flex; gap: 0.5rem; margin-top: 0.75rem; }
+    .pp-cert-actions a {
+        flex: 1; text-align: center; text-decoration: none; border-radius: 8px;
+        padding: 0.42rem 0.5rem; font-size: 0.8rem; font-weight: 600;
+        background: #1e293b; color: #cbd5e1; transition: all 0.2s;
+    }
+    .pp-cert-actions a:hover { background: #2dd4bf; color: #04211f; }
+
+    .pp-empty { color: #475569; font-size: 0.92rem; text-align: center; padding: 1.5rem 0; }
+
+    .pp-json {
+        display: inline-flex; align-items: center; gap: 0.5rem; text-decoration: none;
+        padding: 0.5rem 1rem; border-radius: 10px; font-size: 0.85rem; font-weight: 600;
+        background: #0f172a; border: 1px solid #1e293b; color: #38bdf8;
+    }
+    .pp-json:hover { border-color: #38bdf8; }
+
+    @media (max-width: 640px) {
+        .pp-hero { padding: 1.5rem; gap: 1.25rem; justify-content: center; text-align: center; }
+        .pp-ident { text-align: center; }
+        .pp-meta, .pp-social { justify-content: center; }
+        .pp-bio { margin-left: auto; margin-right: auto; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="pp-wrap">
+
+    <header class="pp-hero">
+        <img class="pp-avatar" src="{{ p.avatar_url }}" alt="Avatar de {{ perfil.username }}"
+             loading="eager" width="132" height="132">
+        <div class="pp-ident">
+            <h1 class="pp-name">{{ perfil.username }}</h1>
+            <div class="pp-meta">
+                <span class="pp-badge"><i class="bi bi-person-badge"></i> {{ p.rol }}</span>
+                {% if e.ranking_writeups %}
+                <span class="pp-badge" style="background:rgba(56,189,248,0.12);color:#38bdf8;border-color:rgba(56,189,248,0.3);">
+                    <i class="bi bi-stars"></i> #{{ e.ranking_writeups }} en writeups
+                </span>
+                {% endif %}
+                {% if p.miembro_desde %}
+                <span class="pp-since"><i class="bi bi-calendar3"></i> Miembro desde {{ fecha(p.miembro_desde) }}</span>
+                {% endif %}
+            </div>
+            {% if p.biografia %}
+            <p class="pp-bio">{{ p.biografia }}</p>
+            {% endif %}
+            <div class="pp-social">
+                {% if p.redes.github %}
+                <a href="{{ p.redes.github }}" target="_blank" rel="noopener nofollow"><i class="bi bi-github"></i> GitHub</a>
+                {% endif %}
+                {% if p.redes.linkedin %}
+                <a href="{{ p.redes.linkedin }}" target="_blank" rel="noopener nofollow"><i class="bi bi-linkedin"></i> LinkedIn</a>
+                {% endif %}
+                {% if p.redes.youtube %}
+                <a href="{{ p.redes.youtube }}" target="_blank" rel="noopener nofollow"><i class="bi bi-youtube"></i> YouTube</a>
+                {% endif %}
+                <a class="pp-json" href="/u/{{ perfil.slug }}" target="_blank" rel="noopener">
+                    <i class="bi bi-code-slash"></i> Ver en JSON
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <section class="pp-stats">
+        <div class="pp-stat">
+            <i class="bi bi-hdd-stack" style="color:#2dd4bf;"></i>
+            <div class="pp-stat-num">{{ e.maquinas_hechas }}</div>
+            <div class="pp-stat-lbl">Máquinas resueltas</div>
+        </div>
+        <div class="pp-stat">
+            <i class="bi bi-tools" style="color:#f59e0b;"></i>
+            <div class="pp-stat-num">{{ e.maquinas_creadas }}</div>
+            <div class="pp-stat-lbl">Máquinas creadas</div>
+        </div>
+        <div class="pp-stat">
+            <i class="bi bi-journal-richtext" style="color:#38bdf8;"></i>
+            <div class="pp-stat-num">{{ e.writeups_publicados }}</div>
+            <div class="pp-stat-lbl">Writeups</div>
+        </div>
+        <div class="pp-stat">
+            <i class="bi bi-patch-check-fill" style="color:#a78bfa;"></i>
+            <div class="pp-stat-num">{{ e.certificados_generados }}</div>
+            <div class="pp-stat-lbl">Certificados</div>
+        </div>
+        <div class="pp-stat">
+            <i class="bi bi-star-fill" style="color:#fbbf24;"></i>
+            <div class="pp-stat-num">{{ e.puntos_writeups }}</div>
+            <div class="pp-stat-lbl">Puntos</div>
+        </div>
+    </section>
+
+    <section class="pp-card">
+        <div class="pp-card-head">
+            <h2><i class="bi bi-bar-chart-line" style="color:#2dd4bf;"></i> Progreso en DockerLabs</h2>
+        </div>
+        <div class="pp-progress-top">
+            <span class="pp-progress-pct">{{ pr.porcentaje }}%</span>
+            <span class="pp-progress-sub">{{ pr.maquinas_hechas }} de {{ pr.maquinas_totales }} máquinas del catálogo</span>
+        </div>
+        <div class="pp-bar"><span style="width: {{ pr.porcentaje }}%;"></span></div>
+
+        {% if pr.por_dificultad %}
+        <div class="pp-breakdown">
+            {% for nombre, d in pr.por_dificultad.items() %}
+            <div class="pp-diff">
+                <div class="pp-diff-name">{{ nombre }}</div>
+                <div class="pp-diff-num">{{ d.hechas }} <small>/ {{ d.totales }}</small></div>
+                <div class="pp-diff-bar">
+                    <span style="width: {{ (d.hechas * 100 / d.totales) | round(1) if d.totales else 0 }}%;"></span>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+    </section>
+
+    <section class="pp-card">
+        <div class="pp-card-head">
+            <h2><i class="bi bi-check2-circle" style="color:#2dd4bf;"></i> Máquinas resueltas</h2>
+            <span class="pp-count">{{ perfil.maquinas_hechas | length }}</span>
+        </div>
+        {% if perfil.maquinas_hechas %}
+        <div class="pp-grid">
+            {% for m in perfil.maquinas_hechas %}
+            <article class="pp-machine">
+                {% if m.logo_url %}
+                <img src="{{ m.logo_url }}" alt="{{ m.nombre }}" loading="lazy" width="46" height="46">
+                {% endif %}
+                <div class="pp-machine-body">
+                    <div class="pp-machine-name" title="{{ m.nombre }}">{{ m.nombre }}</div>
+                    <div class="pp-machine-sub">
+                        {% if m.dificultad %}
+                        <span class="pp-diff-tag"
+                              style="background:{{ m.color or '#334155' }}22;color:{{ m.color or '#94a3b8' }};">
+                            {{ m.dificultad }}
+                        </span>
+                        {% endif %}
+                        {% if m.completada_el %}<span class="pp-date">{{ fecha(m.completada_el) }}</span>{% endif %}
+                    </div>
+                </div>
+                <div class="pp-machine-links">
+                    {% if m.writeup_url %}
+                    <a href="{{ m.writeup_url }}" target="_blank" rel="noopener nofollow" title="Ver writeup">
+                        <i class="bi bi-journal-richtext"></i>
+                    </a>
+                    {% endif %}
+                    {% if m.certificado %}
+                    <a href="{{ m.certificado.imagen_url }}" target="_blank" rel="noopener" title="Ver certificado">
+                        <i class="bi bi-patch-check"></i>
+                    </a>
+                    {% endif %}
+                </div>
+            </article>
+            {% endfor %}
+        </div>
+        {% else %}
+        <p class="pp-empty">Todavía no ha resuelto ninguna máquina.</p>
+        {% endif %}
+    </section>
+
+    {% if perfil.maquinas_creadas %}
+    <section class="pp-card">
+        <div class="pp-card-head">
+            <h2><i class="bi bi-tools" style="color:#f59e0b;"></i> Máquinas creadas</h2>
+            <span class="pp-count">{{ perfil.maquinas_creadas | length }}</span>
+        </div>
+        <div class="pp-grid">
+            {% for m in perfil.maquinas_creadas %}
+            <article class="pp-machine">
+                {% if m.logo_url %}
+                <img src="{{ m.logo_url }}" alt="{{ m.nombre }}" loading="lazy" width="46" height="46">
+                {% endif %}
+                <div class="pp-machine-body">
+                    <div class="pp-machine-name" title="{{ m.nombre }}">{{ m.nombre }}</div>
+                    <div class="pp-machine-sub">
+                        {% if m.dificultad %}
+                        <span class="pp-diff-tag"
+                              style="background:{{ m.color or '#334155' }}22;color:{{ m.color or '#94a3b8' }};">
+                            {{ m.dificultad }}
+                        </span>
+                        {% endif %}
+                        {% if m.categoria %}<span class="pp-date">{{ m.categoria }}</span>{% endif %}
+                    </div>
+                </div>
+            </article>
+            {% endfor %}
+        </div>
+    </section>
+    {% endif %}
+
+    {% if perfil.writeups %}
+    <section class="pp-card">
+        <div class="pp-card-head">
+            <h2><i class="bi bi-journal-richtext" style="color:#38bdf8;"></i> Writeups publicados</h2>
+            <span class="pp-count">{{ perfil.writeups | length }}</span>
+        </div>
+        <div class="pp-list">
+            {% for w in perfil.writeups %}
+            <a class="pp-writeup" href="{{ w.url }}" target="_blank" rel="noopener nofollow">
+                {% if w.logo_url %}
+                <img src="{{ w.logo_url }}" alt="{{ w.maquina }}" loading="lazy" width="38" height="38">
+                {% endif %}
+                <div>
+                    <div class="pp-writeup-name">{{ w.maquina }}</div>
+                    <div class="pp-writeup-meta">
+                        {{ w.tipo or 'writeup' }}{% if w.publicado_el %} · {{ fecha(w.publicado_el) }}{% endif %}
+                    </div>
+                </div>
+                <i class="bi bi-box-arrow-up-right"></i>
+            </a>
+            {% endfor %}
+        </div>
+    </section>
+    {% endif %}
+
+    {% set certs = perfil.certificados | selectattr('generado') | list %}
+    {% if certs %}
+    <section class="pp-card">
+        <div class="pp-card-head">
+            <h2><i class="bi bi-patch-check-fill" style="color:#a78bfa;"></i> Certificados</h2>
+            <span class="pp-count">{{ certs | length }}</span>
+        </div>
+        <div class="pp-certs">
+            {% for c in certs %}
+            <article class="pp-cert">
+                <img class="pp-cert-img" src="{{ c.imagen_url }}" alt="Certificado de {{ c.maquina }}" loading="lazy">
+                <div class="pp-cert-body">
+                    <div class="pp-cert-name">{{ c.maquina }}</div>
+                    <div class="pp-cert-id">{{ c.cert_id }}</div>
+                    <div class="pp-cert-actions">
+                        <a href="{{ c.pdf_url }}" target="_blank" rel="noopener"><i class="bi bi-file-earmark-pdf"></i> PDF</a>
+                        <a href="{{ c.verify_url }}" target="_blank" rel="noopener"><i class="bi bi-shield-check"></i> Verificar</a>
+                    </div>
+                </div>
+            </article>
+            {% endfor %}
+        </div>
+    </section>
+    {% endif %}
+
+</div>
+{% endblock %}

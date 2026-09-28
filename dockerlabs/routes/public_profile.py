@@ -4,12 +4,18 @@ Devuelve, sin autenticación, todo el progreso público de un usuario: las
 máquinas que ha resuelto con su ficha completa, las que ha creado, sus writeups
 y sus certificados (PDF e imagen ya archivados).
 
+`GET /perfil/<slug>` sirve exactamente los mismos datos como página HTML.
+
+Ambas rutas respetan `User.perfil_publico`: si el usuario ha puesto su perfil en
+privado responden 404, como si el perfil no existiera.
+
 Las consultas van por lotes: cargar el catálogo de máquinas y las categorías de
 una vez evita una consulta por cada máquina resuelta.
 """
 
-from fastapi import Request
-from fastapi.responses import JSONResponse
+from fastapi import Depends, Request
+from fastapi.responses import HTMLResponse, JSONResponse
+from pydantic import BaseModel
 from sqlalchemy import func
 
 from dockerlabs.models import (
@@ -22,7 +28,7 @@ MAX_ITEMS = 1000
 
 # BunkerLabs es de acceso restringido: de sus máquinas solo se expone que
 # fueron resueltas, nunca su descripción ni su enlace de descarga.
-PUBLIC_ORIGINS = ('docker', 'empezar')
+PUBLIC_ORIGINS = ('docker',)
 
 # El catálogo sobre el que se mide el porcentaje de progreso.
 CATALOGO_ORIGEN = 'docker'
@@ -42,7 +48,13 @@ def _iso(dt):
     return dt.isoformat() + 'Z' if dt else None
 
 
-def register_public_profile_routes(pages_router, db):
+class VisibilidadPerfil(BaseModel):
+    publico: bool
+
+
+def register_public_profile_routes(pages_router, db, api_router=None,
+                                   get_session=None, verify_csrf_token=None,
+                                   templates=None):
 
     def _ranking_position(model, points_column, username):
         row = model.query.filter(func.lower(model.nombre) == username.lower()).first()
@@ -79,19 +91,23 @@ def register_public_profile_routes(pages_router, db):
         })
         return base
 
-    @pages_router.get("/u/{slug}", include_in_schema=True, tags=["API Pública"])
-    def api_public_profile(slug: str, request: Request):
+    def _buscar_usuario(slug):
+        """Usuario público con ese slug (o username), o None."""
         raw = (slug or '').strip().lower()
         if not raw or len(raw) > 64:
-            return JSONResponse(status_code=404, content={"error": "Perfil no encontrado", "slug": slug})
+            return None, raw
 
         user = User.query.filter(func.lower(User.slug) == raw).first()
         if not user:
             # Compatibilidad: aceptar también el nombre de usuario literal.
             user = User.query.filter(func.lower(User.username) == raw).first()
-        if not user:
-            return JSONResponse(status_code=404, content={"error": "Perfil no encontrado", "slug": slug})
+        # Un perfil en privado no existe para nadie de fuera.
+        if user and not user.perfil_publico:
+            return None, raw
+        return user, raw
 
+    def _perfil_payload(user, raw):
+        """Todo el perfil público de `user` como diccionario serializable."""
         username = user.username
         ulower = username.lower()
 
@@ -282,7 +298,7 @@ def register_public_profile_routes(pages_router, db):
             "ranking_creadores":        pos_creadores,
         }
 
-        return JSONResponse(headers={"Cache-Control": "public, max-age=60"}, content={
+        return {
             "slug":     user.slug or raw,
             "username": username,
             "perfil": {
@@ -310,4 +326,63 @@ def register_public_profile_routes(pages_router, db):
             "maquinas_creadas": maquinas_creadas,
             "writeups":         writeups_json,
             "certificados":     certificados,
-        })
+        }
+
+    @pages_router.get("/u/{slug}", include_in_schema=True, tags=["API Pública"])
+    def api_public_profile(slug: str, request: Request):
+        user, raw = _buscar_usuario(slug)
+        if not user:
+            return JSONResponse(status_code=404, content={"error": "Perfil no encontrado", "slug": slug})
+
+        return JSONResponse(headers={"Cache-Control": "public, max-age=60"},
+                            content=_perfil_payload(user, raw))
+
+    @pages_router.get("/perfil/{slug}", response_class=HTMLResponse,
+                      tags=["Páginas HTML"])
+    def pagina_perfil_publico(slug: str, request: Request,
+                              session: dict = Depends(get_session)):
+        """Versión HTML del perfil público: los mismos datos que `/u/<slug>`.
+
+        La sesión solo alimenta la barra de navegación; el perfil se muestra
+        igual haya o no usuario conectado.
+        """
+        contexto_base = {
+            "session":            session or {},
+            "current_user_role":  (session or {}).get("role", ""),
+            "csrf_token_value":   (session or {}).get("csrf_token", ""),
+            "g": {"csp_nonce": getattr(request.state, "csp_nonce", "")},
+        }
+
+        user, raw = _buscar_usuario(slug)
+        if not user:
+            return templates.TemplateResponse(
+                request, "dockerlabs/errors/404.html", contexto_base, status_code=404)
+
+        return templates.TemplateResponse(
+            request, "dockerlabs/perfil_publico.html",
+            {**contexto_base, "perfil": _perfil_payload(user, raw)})
+
+    if api_router is None:
+        return
+
+    @api_router.post("/perfil/visibilidad", include_in_schema=False)
+    def api_cambiar_visibilidad(
+        request: Request,
+        datos: VisibilidadPerfil,
+        session: dict = Depends(get_session),
+        csrf_ok: bool = Depends(verify_csrf_token),
+    ):
+        """El dueño del perfil decide si `/u/<slug>` y `/perfil/<slug>` responden."""
+        user_id = session.get("user_id")
+        if not user_id:
+            return JSONResponse(status_code=401,
+                                content={"success": False, "error": "Debes iniciar sesión"})
+
+        user = User.query.get(user_id)
+        if not user:
+            return JSONResponse(status_code=404,
+                                content={"success": False, "error": "Usuario no encontrado"})
+
+        user.perfil_publico = bool(datos.publico)
+        db.session.commit()
+        return {"success": True, "publico": user.perfil_publico}

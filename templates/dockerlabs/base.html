@@ -245,10 +245,6 @@
                     <div class="user-info"><span class="user-name">Cómo se Crea una Máquina</span></div>
                     <i class="bi bi-chevron-right" style="color: #64748b;"></i>
                 </a>
-                <a href="{{ url_for('main.estadisticas') }}" class="ranking-item">
-                    <div class="user-info"><span class="user-name">Estadísticas</span></div>
-                    <i class="bi bi-bar-chart-line" style="color: #64748b;"></i>
-                </a>
                 <!-- Swagger UI eliminado - migración a FastAPI planificada -->
                 <a href="{{ url_for('main.agradecimientos') }}" class="ranking-item">
                     <div class="user-info"><span class="user-name">Agradecimientos</span></div>
@@ -292,9 +288,9 @@
                 </a>
 
                 {% if current_user_role in ['admin', 'moderador'] %}
-                <a href="{{ url_for('peticiones') }}" class="ranking-item">
-                    <div class="user-info"><span class="user-name">Peticiones</span></div>
-                    <i class="bi bi-inbox" style="color: #64748b;"></i>
+                <a href="{{ url_for('main.estadisticas') }}" class="ranking-item">
+                    <div class="user-info"><span class="user-name">Estadísticas</span></div>
+                    <i class="bi bi-bar-chart-line" style="color: #64748b;"></i>
                 </a>
                 <a href="{{ url_for('auth.gestion_usuarios') }}" class="ranking-item">
                     <div class="user-info"><span class="user-name">Gestión Usuarios</span></div>
@@ -378,6 +374,7 @@
             <p class="copyright">
                 <i class="bi bi-c-circle"></i> Copyright DockerLabs {{ current_year() }} ·
                 <a href="{{ url_for('main.equipo') }}" class="footer-link nowrap">Equipo de DockerLabs</a> ·
+                <a href="/go/newsletter?o=footer" class="footer-link" target="_blank" rel="noopener nofollow">Newsletter</a> ·
                 <a href="{{ url_for('main.politica_privacidad') }}" class="footer-link">Política de Privacidad</a> ·
                 <a href="{{ url_for('main.politica_cookies') }}" class="footer-link">Cookies</a> ·
                 <a href="{{ url_for('main.condiciones_uso') }}" class="footer-link">Condiciones de Uso</a>

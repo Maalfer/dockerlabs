@@ -5,7 +5,7 @@
 .pending-wrap {
     max-width: 1400px;
     margin: 0 auto;
-    padding: 6.5rem 2rem 5rem;
+    padding: 2rem 2rem 5rem;
 }
 
 /* ── Page header ── */
@@ -85,7 +85,7 @@
 
 @media (max-width: 640px) {
     .pending-grid { grid-template-columns: 1fr; }
-    .pending-wrap { padding-top: 5.5rem; }
+    .pending-wrap { padding-top: 2rem; }
 }
 
 /* ── Single card ── */

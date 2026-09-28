@@ -24,7 +24,7 @@ from sqlalchemy import func
 from sqlalchemy.exc import IntegrityError
 
 from dockerlabs.extensions import db
-from dockerlabs.models import Certificate, Writeup, Machine, User
+from dockerlabs.models import Certificate, CertificateRequestLog, Writeup, Machine, User
 
 logger = logging.getLogger(__name__)
 
@@ -34,8 +34,8 @@ _SAFE_NAME_RE = re.compile(r'[^A-Za-z0-9_-]')
 BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
 
 # BunkerLabs no tiene certificados: es de acceso cerrado. Solo se emiten diplomas
-# para máquinas de estos orígenes; cualquier otro (p. ej. 'bunker') queda excluido.
-CERT_ORIGENES = ('docker', 'empezar')
+# para máquinas de DockerLabs; cualquier otro origen queda excluido.
+CERT_ORIGENES = ('docker',)
 
 TEMPLATE_PATH = os.path.join(BASE_DIR, 'static', 'dockerlabs', 'images', 'diploma.png')
 FONT_PATH = '/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf'
@@ -212,18 +212,27 @@ def _write_atomic(data: bytes, relpath: str) -> None:
     os.replace(tmp_path, abspath)
 
 
-def _write_pdf(img, relpath: str) -> None:
-    buf = io.BytesIO()
-    img.convert('RGB').save(buf, format='PDF', resolution=150.0)
-    _write_atomic(buf.getvalue(), relpath)
+def _pdf_bytes_from_webp(webp_relpath: str) -> bytes:
+    """Compone el PDF del diploma al vuelo a partir del WebP archivado.
+
+    Ya no se archiva un PDF por certificado (duplicaba la misma imagen y ocupaba
+    ~349 MB en disco); el WebP es la única copia archivada, y el PDF —que casi
+    nunca se descarga— se genera en el momento envolviendo ese WebP.
+    """
+    from PIL import Image as _PILImage
+    with _PILImage.open(abspath_for(webp_relpath)) as im:
+        im.load()
+        buf = io.BytesIO()
+        im.convert('RGB').save(buf, format='PDF', resolution=150.0)
+        return buf.getvalue()
 
 
 def _write_image(img, relpath: str) -> None:
-    # WebP con method=2: 85 KB y 0,15 s. Un PNG del mismo diploma pesa 1 MB y
-    # con optimize=True tarda 13 s, tiempo suficiente para que el navegador o
-    # el proxy abandonen la descarga.
+    # WebP con method=6 (compresión máxima) y quality=82: ~65 KB, sin pérdida
+    # visible en un diploma (gráfico plano). Es la ÚNICA copia archivada del
+    # certificado; el PDF de descarga se compone al vuelo desde aquí.
     buf = io.BytesIO()
-    img.convert('RGB').save(buf, format='WEBP', quality=88, method=2)
+    img.convert('RGB').save(buf, format='WEBP', quality=82, method=6)
     _write_atomic(buf.getvalue(), relpath)
 
 
@@ -316,7 +325,6 @@ def ensure_certificate(user, machine_name: str, *, force: bool = False):
 
     existing = Certificate.query.filter_by(user_id=user.id, machine_name=canonical).first()
     if (existing and not force and existing.cert_id == cert_id
-            and os.path.isfile(abspath_for(existing.pdf_path))
             and existing.image_path and os.path.isfile(abspath_for(existing.image_path))):
         return existing
 
@@ -325,7 +333,7 @@ def ensure_certificate(user, machine_name: str, *, force: bool = False):
     fecha = writeup.created_at.strftime("%d/%m/%Y") if writeup.created_at else ""
 
     img = render_diploma(display_name_for(user), display_machine, cert_id, fecha)
-    _write_pdf(img, relpath)
+    # Solo se archiva el WebP; el PDF se compone al vuelo al descargarlo.
     _write_image(img, img_relpath)
 
     if existing:
@@ -562,7 +570,7 @@ def register_certificado_routes(api_router, get_session, db):
 
     @api_router.get("/certificado/pdf/{cert_id}")
     def api_certificado_pdf(cert_id: str, request: Request):
-        """Sirve el PDF archivado de un certificado. Público."""
+        """Sirve el PDF del certificado, compuesto al vuelo desde el WebP. Público."""
         raw = cert_id.strip().upper()
         if not _CERT_ID_RE.match(raw):
             return JSONResponse(status_code=400, content={"error": "Formato de certificado inválido."})
@@ -574,21 +582,24 @@ def register_certificado_routes(api_router, get_session, db):
                 content={"error": "Certificado no encontrado."},
             )
 
-        abspath = abspath_for(cert.pdf_path)
-        if not os.path.isfile(abspath):
-            # La fila existe pero el fichero no: reemitirlo es mejor que un 404.
+        # El PDF ya no se archiva: se compone al vuelo desde el WebP guardado.
+        if not cert.image_path or not os.path.isfile(abspath_for(cert.image_path)):
+            # Falta el WebP: reemitirlo es mejor que un 404.
             user = User.query.get(cert.user_id)
             if user:
                 ensure_certificate(user, cert.machine_name, force=True)
-            if not os.path.isfile(abspath_for(cert.pdf_path)):
+            cert = Certificate.query.filter_by(cert_id=raw).first()
+            if not cert or not cert.image_path or not os.path.isfile(abspath_for(cert.image_path)):
                 return JSONResponse(status_code=404, content={"error": "El PDF del certificado no está disponible."})
-            abspath = abspath_for(cert.pdf_path)
 
-        return FileResponse(
-            abspath,
+        pdf_bytes = _pdf_bytes_from_webp(cert.image_path)
+        return Response(
+            content=pdf_bytes,
             media_type="application/pdf",
-            filename=f"diploma-dockerlabs-{safe_name(cert.machine_name)}.pdf",
-            headers={"Cache-Control": "public, max-age=86400"},
+            headers={
+                "Cache-Control": "public, max-age=86400",
+                "Content-Disposition": f'attachment; filename="diploma-dockerlabs-{safe_name(cert.machine_name)}.pdf"',
+            },
         )
 
     @api_router.get("/certificado/imagen/{cert_id}")
@@ -666,6 +677,9 @@ def register_certificado_routes(api_router, get_session, db):
         cert = ensure_certificate(user_obj, machine_name)
         if not cert:
             return JSONResponse(status_code=500, content={"error": "No se pudo emitir el certificado."})
+
+        db.session.add(CertificateRequestLog(cert_id=cert.cert_id, user_id=user_obj.id))
+        db.session.commit()
 
         filename_base = f"diploma-dockerlabs-{safe_name(machine_name)}"
 

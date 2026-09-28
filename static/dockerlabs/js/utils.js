@@ -47,15 +47,4 @@ function closeModal(modalId) {
     if (modal) modal.classList.remove('visible');
 }
 
-/**
- * Initialize click-outside-to-close behavior for a modal.
- * @param {string} modalId - The ID of the modal element
- */
-function initModalCloseOnClickOutside(modalId) {
-    const modal = document.getElementById(modalId);
-    if (modal) {
-        modal.addEventListener('click', function (e) {
-            if (e.target === modal) closeModal(modalId);
-        });
-    }
-}
+

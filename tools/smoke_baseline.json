@@ -1,0 +1,1705 @@
+{
+  "errores_compilacion": [],
+  "errores_plantillas": [],
+  "http": {
+    "/": 200,
+    "/add-maquina": 302,
+    "/agradecimientos": 200,
+    "/api": 200,
+    "/api/ranking_autores": 200,
+    "/api/ranking_writeups": 200,
+    "/bunkerlabs": 302,
+    "/gestion-maquinas": 302,
+    "/img/maquina/277": 200,
+    "/login": 200,
+    "/maquinas-hechas": 302,
+    "/register": 200,
+    "/ruta-que-no-existe-smoke-test": 404,
+    "/static/dockerlabs/js/utils.js": 200
+  },
+  "modulos_compilados": 43,
+  "n_rutas": 234,
+  "plantillas": [
+    "bunkerlabs/base.html",
+    "bunkerlabs/gestion.html",
+    "bunkerlabs/home.html",
+    "bunkerlabs/login-bunkerlabs.html",
+    "bunkerlabs/recursos.html",
+    "dockerlabs/admin/dashboard.html",
+    "dockerlabs/admin/gestion_maquinas.html",
+    "dockerlabs/admin/gestion_usuarios.html",
+    "dockerlabs/admin/pending.html",
+    "dockerlabs/auth/login.html",
+    "dockerlabs/auth/recover.html",
+    "dockerlabs/auth/register.html",
+    "dockerlabs/auth/reset_password.html",
+    "dockerlabs/auth/user-pending.html",
+    "dockerlabs/auth/verify_email.html",
+    "dockerlabs/base.html",
+    "dockerlabs/equipo.html",
+    "dockerlabs/errors/404.html",
+    "dockerlabs/home.html",
+    "dockerlabs/info/add-maquina.html",
+    "dockerlabs/info/agradecimientos.html",
+    "dockerlabs/info/como_se_crea_una_maquina.html",
+    "dockerlabs/info/descargar.html",
+    "dockerlabs/info/enviar_maquina.html",
+    "dockerlabs/info/instrucciones_uso.html",
+    "dockerlabs/info/soporte.html",
+    "dockerlabs/info/terminos-condiciones.html",
+    "dockerlabs/perfil_publico.html",
+    "dockerlabs/user/certificados.html",
+    "dockerlabs/user/estadisticas.html",
+    "dockerlabs/user/maquinas_hechas.html",
+    "dockerlabs/user/writeups_analisis.html",
+    "dockerlabs/user/writeups_publicados.html",
+    "dockerlabs/user/writeups_recibidos.html",
+    "politicas/condiciones_uso.html",
+    "politicas/politica_cookies.html",
+    "politicas/politica_privacidad.html"
+  ],
+  "rutas": [
+    {
+      "methods": [
+        "GET"
+      ],
+      "name": "(openapi)",
+      "path": "/"
+    },
+    {
+      "methods": [
+        "GET"
+      ],
+      "name": "index_page",
+      "path": "/"
+    },
+    {
+      "methods": [
+        "GET"
+      ],
+      "name": "(openapi)",
+      "path": "/add-maquina"
+    },
+    {
+      "methods": [
+        "GET"
+      ],
+      "name": "add_maquina_page_get",
+      "path": "/add-maquina"
+    },
+    {
+      "methods": [
+        "GET"
+      ],
+      "name": "(openapi)",
+      "path": "/agradecimientos"
+    },
+    {
+      "methods": [
+        "GET"
+      ],
+      "name": "agradecimientos_page",
+      "path": "/agradecimientos"
+    },
+    {
+      "methods": [
+        "GET"
+      ],
+      "name": "(openapi)",
+      "path": "/api"
+    },
+    {
+      "methods": [
+        "GET"
+      ],
+      "name": "api_summary",
+      "path": "/api"
+    },
+    {
+      "methods": [
+        "POST"
+      ],
+      "name": "(openapi)",
+      "path": "/api/add-maquina"
+    },
+    {
+      "methods": [
+        "POST"
+      ],
+      "name": "api_add_maquina",
+      "path": "/api/add-maquina"
+    },
+    {
+      "methods": [
+        "POST"
+      ],
+      "name": "(openapi)",
+      "path": "/api/admin/delete_user/{user_id}"
+    },
+    {
+      "methods": [
+        "POST"
+      ],
+      "name": "api_delete_user",
+      "path": "/api/admin/delete_user/{user_id}"
+    },
+    {
+      "methods": [
+        "POST"
+      ],
+      "name": "(openapi)",
+      "path": "/api/admin/pending-machines/{machine_id}/approve"
+    },
+    {
+      "methods": [
+        "POST"
+      ],
+      "name": "api_approve_pending_machine",
+      "path": "/api/admin/pending-machines/{machine_id}/approve"
+    },
+    {
+      "methods": [
+        "POST"
+      ],
+      "name": "(openapi)",
+      "path": "/api/admin/pending-machines/{machine_id}/reject"
+    },
+    {
+      "methods": [
+        "POST"
+      ],
+      "name": "api_reject_pending_machine",
+      "path": "/api/admin/pending-machines/{machine_id}/reject"
+    },
+    {
+      "methods": [
+        "GET"
+      ],
+      "name": "(openapi)",
+      "path": "/api/admin/tokens"
+    },
+    {
+      "methods": [
+        "GET"
+      ],
+      "name": "list_api_tokens",
+      "path": "/api/admin/tokens"
+    },
+    {
+      "methods": [
+        "POST"
+      ],
+      "name": "(openapi)",
+      "path": "/api/admin/tokens"
+    },
+    {
+      "methods": [
+        "POST"
+      ],
+      "name": "create_api_token",
+      "path": "/api/admin/tokens"
+    },
+    {
+      "methods": [
+        "POST"
+      ],
+      "name": "(openapi)",
+      "path": "/api/admin/tokens/{token_id}/revoke"
+    },
+    {
+      "methods": [
+        "POST"
+      ],
+      "name": "revoke_api_token",
+      "path": "/api/admin/tokens/{token_id}/revoke"
+    },
+    {
+      "methods": [
+        "POST"
+      ],
+      "name": "(openapi)",
+      "path": "/api/admin/update_user_role/{user_id}"
+    },
+    {
+      "methods": [
+        "POST"
+      ],
+      "name": "api_update_user_role",
+      "path": "/api/admin/update_user_role/{user_id}"
+    },
+    {
+      "methods": [
+        "GET"
+      ],
+      "name": "(openapi)",
+      "path": "/api/admin/writeup_reports"
+    },
+    {
+      "methods": [
+        "GET"
+      ],
+      "name": "api_get_reports",
+      "path": "/api/admin/writeup_reports"
+    },
+    {
+      "methods": [
+        "POST"
+      ],
+      "name": "(openapi)",
+      "path": "/api/auth/forgot-password"
+    },
+    {
+      "methods": [
+        "POST"
+      ],
+      "name": "api_auth_forgot_password",
+      "path": "/api/auth/forgot-password"
+    },
+    {
+      "methods": [
+        "POST"
+      ],
+      "name": "(openapi)",
+      "path": "/api/auth/login"
+    },
+    {
+      "methods": [
+        "POST"
+      ],
+      "name": "api_auth_login",
+      "path": "/api/auth/login"
+    },
+    {
+      "methods": [
+        "POST"
+      ],
+      "name": "(openapi)",
+      "path": "/api/auth/register"
+    },
+    {
+      "methods": [
+        "POST"
+      ],
+      "name": "api_auth_register",
+      "path": "/api/auth/register"
+    },
+    {
+      "methods": [
+        "POST"
+      ],
+      "name": "(openapi)",
+      "path": "/api/auth/reset-password"
+    },
+    {
+      "methods": [
+        "POST"
+      ],
+      "name": "api_auth_reset_password",
+      "path": "/api/auth/reset-password"
+    },
+    {
+      "methods": [
+        "GET"
+      ],
+      "name": "(openapi)",
+      "path": "/api/author_profile"
+    },
+    {
+      "methods": [
+        "GET"
+      ],
+      "name": "api_author_profile",
+      "path": "/api/author_profile"
+    },
+    {
+      "methods": [
+        "DELETE"
+      ],
+      "name": "(openapi)",
+      "path": "/api/bunker/logs/{token_id}"
+    },
+    {
+      "methods": [
+        "DELETE"
+      ],
+      "name": "api_delete_bunker_access_logs",
+      "path": "/api/bunker/logs/{token_id}"
+    },
+    {
+      "methods": [
+        "GET"
+      ],
+      "name": "(openapi)",
+      "path": "/api/bunker/logs/{token_id}"
+    },
+    {
+      "methods": [
+        "GET"
+      ],
+      "name": "api_get_bunker_access_logs",
+      "path": "/api/bunker/logs/{token_id}"
+    },
+    {
+      "methods": [
+        "GET"
+      ],
+      "name": "(openapi)",
+      "path": "/api/certificado/imagen/{cert_id}"
+    },
+    {
+      "methods": [
+        "GET"
+      ],
+      "name": "api_certificado_imagen",
+      "path": "/api/certificado/imagen/{cert_id}"
+    },
+    {
+      "methods": [
+        "GET"
+      ],
+      "name": "(openapi)",
+      "path": "/api/certificado/pdf/{cert_id}"
+    },
+    {
+      "methods": [
+        "GET"
+      ],
+      "name": "api_certificado_pdf",
+      "path": "/api/certificado/pdf/{cert_id}"
+    },
+    {
+      "methods": [
+        "GET"
+      ],
+      "name": "(openapi)",
+      "path": "/api/certificado/verificar/{cert_id}"
+    },
+    {
+      "methods": [
+        "GET"
+      ],
+      "name": "api_verificar_certificado",
+      "path": "/api/certificado/verificar/{cert_id}"
+    },
+    {
+      "methods": [
+        "GET"
+      ],
+      "name": "(openapi)",
+      "path": "/api/certificado/{machine_name}"
+    },
+    {
+      "methods": [
+        "GET"
+      ],
+      "name": "api_generar_certificado",
+      "path": "/api/certificado/{machine_name}"
+    },
+    {
+      "methods": [
+        "GET"
+      ],
+      "name": "(openapi)",
+      "path": "/api/certificado/{machine_name}/disponible"
+    },
+    {
+      "methods": [
+        "GET"
+      ],
+      "name": "api_certificado_disponible",
+      "path": "/api/certificado/{machine_name}/disponible"
+    },
+    {
+      "methods": [
+        "GET"
+      ],
+      "name": "(openapi)",
+      "path": "/api/certificados/mis-certificados"
+    },
+    {
+      "methods": [
+        "GET"
+      ],
+      "name": "api_mis_certificados",
+      "path": "/api/certificados/mis-certificados"
+    },
+    {
+      "methods": [
+        "POST"
+      ],
+      "name": "(openapi)",
+      "path": "/api/change_password"
+    },
+    {
+      "methods": [
+        "POST"
+      ],
+      "name": "api_change_password",
+      "path": "/api/change_password"
+    },
+    {
+      "methods": [
+        "GET"
+      ],
+      "name": "(openapi)",
+      "path": "/api/completed_machines/{machine_name}"
+    },
+    {
+      "methods": [
+        "GET"
+      ],
+      "name": "api_get_completed_machines",
+      "path": "/api/completed_machines/{machine_name}"
+    },
+    {
+      "methods": [
+        "POST"
+      ],
+      "name": "(openapi)",
+      "path": "/api/gestion-maquinas/actualizar"
+    },
+    {
+      "methods": [
+        "POST"
+      ],
+      "name": "api_actualizar_maquina",
+      "path": "/api/gestion-maquinas/actualizar"
+    },
+    {
+      "methods": [
+        "POST"
+      ],
+      "name": "(openapi)",
+      "path": "/api/gestion-maquinas/eliminar"
+    },
+    {
+      "methods": [
+        "POST"
+      ],
+      "name": "api_eliminar_maquina",
+      "path": "/api/gestion-maquinas/eliminar"
+    },
+    {
+      "methods": [
+        "POST"
+      ],
+      "name": "(openapi)",
+      "path": "/api/gestion-maquinas/toggle-guest-access"
+    },
+    {
+      "methods": [
+        "POST"
+      ],
+      "name": "api_toggle_guest_access",
+      "path": "/api/gestion-maquinas/toggle-guest-access"
+    },
+    {
+      "methods": [
+        "POST"
+      ],
+      "name": "(openapi)",
+      "path": "/api/gestion-maquinas/upload-logo"
+    },
+    {
+      "methods": [
+        "POST"
+      ],
+      "name": "api_upload_machine_logo",
+      "path": "/api/gestion-maquinas/upload-logo"
+    },
+    {
+      "methods": [
+        "GET"
+      ],
+      "name": "(openapi)",
+      "path": "/api/get_machine_rating/{maquina_nombre}"
+    },
+    {
+      "methods": [
+        "GET"
+      ],
+      "name": "api_get_machine_rating",
+      "path": "/api/get_machine_rating/{maquina_nombre}"
+    },
+    {
+      "methods": [
+        "GET"
+      ],
+      "name": "(openapi)",
+      "path": "/api/get_users"
+    },
+    {
+      "methods": [
+        "GET"
+      ],
+      "name": "api_get_users",
+      "path": "/api/get_users"
+    },
+    {
+      "methods": [
+        "GET"
+      ],
+      "name": "(openapi)",
+      "path": "/api/notifications"
+    },
+    {
+      "methods": [
+        "GET"
+      ],
+      "name": "api_get_notifications",
+      "path": "/api/notifications"
+    },
+    {
+      "methods": [
+        "POST"
+      ],
+      "name": "(openapi)",
+      "path": "/api/notifications/send"
+    },
+    {
+      "methods": [
+        "POST"
+      ],
+      "name": "api_send_notification",
+      "path": "/api/notifications/send"
+    },
+    {
+      "methods": [
+        "DELETE"
+      ],
+      "name": "(openapi)",
+      "path": "/api/notifications/{notification_id}"
+    },
+    {
+      "methods": [
+        "DELETE"
+      ],
+      "name": "api_delete_notification",
+      "path": "/api/notifications/{notification_id}"
+    },
+    {
+      "methods": [
+        "POST"
+      ],
+      "name": "(openapi)",
+      "path": "/api/notifications/{notification_id}/react"
+    },
+    {
+      "methods": [
+        "POST"
+      ],
+      "name": "api_react_notification",
+      "path": "/api/notifications/{notification_id}/react"
+    },
+    {
+      "methods": [
+        "POST"
+      ],
+      "name": "(openapi)",
+      "path": "/api/notifications/{notification_id}/read"
+    },
+    {
+      "methods": [
+        "POST"
+      ],
+      "name": "api_mark_notification_read",
+      "path": "/api/notifications/{notification_id}/read"
+    },
+    {
+      "methods": [
+        "POST"
+      ],
+      "name": "api_cambiar_visibilidad",
+      "path": "/api/perfil/visibilidad"
+    },
+    {
+      "methods": [
+        "GET"
+      ],
+      "name": "(openapi)",
+      "path": "/api/ranking_autores"
+    },
+    {
+      "methods": [
+        "GET"
+      ],
+      "name": "api_ranking_autores",
+      "path": "/api/ranking_autores"
+    },
+    {
+      "methods": [
+        "GET"
+      ],
+      "name": "(openapi)",
+      "path": "/api/ranking_writeups"
+    },
+    {
+      "methods": [
+        "GET"
+      ],
+      "name": "api_ranking_writeups",
+      "path": "/api/ranking_writeups"
+    },
+    {
+      "methods": [
+        "POST"
+      ],
+      "name": "(openapi)",
+      "path": "/api/rate_machine"
+    },
+    {
+      "methods": [
+        "POST"
+      ],
+      "name": "api_rate_machine",
+      "path": "/api/rate_machine"
+    },
+    {
+      "methods": [
+        "POST"
+      ],
+      "name": "(openapi)",
+      "path": "/api/submit-machine"
+    },
+    {
+      "methods": [
+        "POST"
+      ],
+      "name": "api_submit_machine",
+      "path": "/api/submit-machine"
+    },
+    {
+      "methods": [
+        "POST"
+      ],
+      "name": "(openapi)",
+      "path": "/api/submit_writeup"
+    },
+    {
+      "methods": [
+        "POST"
+      ],
+      "name": "api_submit_writeup",
+      "path": "/api/submit_writeup"
+    },
+    {
+      "methods": [
+        "POST"
+      ],
+      "name": "(openapi)",
+      "path": "/api/toggle_completed_machine"
+    },
+    {
+      "methods": [
+        "POST"
+      ],
+      "name": "api_toggle_completed_machine",
+      "path": "/api/toggle_completed_machine"
+    },
+    {
+      "methods": [
+        "POST"
+      ],
+      "name": "(openapi)",
+      "path": "/api/update_profile"
+    },
+    {
+      "methods": [
+        "POST"
+      ],
+      "name": "api_update_profile",
+      "path": "/api/update_profile"
+    },
+    {
+      "methods": [
+        "POST"
+      ],
+      "name": "(openapi)",
+      "path": "/api/update_social_links"
+    },
+    {
+      "methods": [
+        "POST"
+      ],
+      "name": "api_update_social_links",
+      "path": "/api/update_social_links"
+    },
+    {
+      "methods": [
+        "POST"
+      ],
+      "name": "(openapi)",
+      "path": "/api/upload-profile-photo"
+    },
+    {
+      "methods": [
+        "POST"
+      ],
+      "name": "api_upload_profile_photo",
+      "path": "/api/upload-profile-photo"
+    },
+    {
+      "methods": [
+        "GET"
+      ],
+      "name": "(openapi)",
+      "path": "/api/writeups-analisis"
+    },
+    {
+      "methods": [
+        "GET"
+      ],
+      "name": "api_analisis_writeups",
+      "path": "/api/writeups-analisis"
+    },
+    {
+      "methods": [
+        "POST"
+      ],
+      "name": "(openapi)",
+      "path": "/api/writeups-analisis/delete-batch"
+    },
+    {
+      "methods": [
+        "POST"
+      ],
+      "name": "api_delete_writeups_batch",
+      "path": "/api/writeups-analisis/delete-batch"
+    },
+    {
+      "methods": [
+        "POST"
+      ],
+      "name": "(openapi)",
+      "path": "/api/writeups-analisis/dismiss/{writeup_id}"
+    },
+    {
+      "methods": [
+        "POST"
+      ],
+      "name": "api_analisis_dismiss",
+      "path": "/api/writeups-analisis/dismiss/{writeup_id}"
+    },
+    {
+      "methods": [
+        "GET"
+      ],
+      "name": "(openapi)",
+      "path": "/api/writeups-analisis/results"
+    },
+    {
+      "methods": [
+        "GET"
+      ],
+      "name": "api_analisis_results_saved",
+      "path": "/api/writeups-analisis/results"
+    },
+    {
+      "methods": [
+        "POST"
+      ],
+      "name": "(openapi)",
+      "path": "/api/writeups/recibidos/aprobar-todos"
+    },
+    {
+      "methods": [
+        "POST"
+      ],
+      "name": "api_approve_all_writeups_recibidos",
+      "path": "/api/writeups/recibidos/aprobar-todos"
+    },
+    {
+      "methods": [
+        "GET"
+      ],
+      "name": "(openapi)",
+      "path": "/api/writeups/recibidos/list"
+    },
+    {
+      "methods": [
+        "GET"
+      ],
+      "name": "api_list_writeups_recibidos",
+      "path": "/api/writeups/recibidos/list"
+    },
+    {
+      "methods": [
+        "DELETE"
+      ],
+      "name": "(openapi)",
+      "path": "/api/writeups/recibidos/{writeup_id}"
+    },
+    {
+      "methods": [
+        "DELETE"
+      ],
+      "name": "api_delete_writeup_recibido_delete",
+      "path": "/api/writeups/recibidos/{writeup_id}"
+    },
+    {
+      "methods": [
+        "POST"
+      ],
+      "name": "(openapi)",
+      "path": "/api/writeups/recibidos/{writeup_id}/aprobar"
+    },
+    {
+      "methods": [
+        "POST"
+      ],
+      "name": "api_approve_writeup_recibido",
+      "path": "/api/writeups/recibidos/{writeup_id}/aprobar"
+    },
+    {
+      "methods": [
+        "POST"
+      ],
+      "name": "(openapi)",
+      "path": "/api/writeups/recibidos/{writeup_id}/delete"
+    },
+    {
+      "methods": [
+        "POST"
+      ],
+      "name": "api_delete_writeup_recibido",
+      "path": "/api/writeups/recibidos/{writeup_id}/delete"
+    },
+    {
+      "methods": [
+        "POST"
+      ],
+      "name": "(openapi)",
+      "path": "/api/writeups/recibidos/{writeup_id}/update"
+    },
+    {
+      "methods": [
+        "POST"
+      ],
+      "name": "api_update_writeup_recibido",
+      "path": "/api/writeups/recibidos/{writeup_id}/update"
+    },
+    {
+      "methods": [
+        "POST"
+      ],
+      "name": "(openapi)",
+      "path": "/api/writeups/reports/{report_id}/ignore"
+    },
+    {
+      "methods": [
+        "POST"
+      ],
+      "name": "api_ignore_report",
+      "path": "/api/writeups/reports/{report_id}/ignore"
+    },
+    {
+      "methods": [
+        "POST"
+      ],
+      "name": "(openapi)",
+      "path": "/api/writeups/subidos/{writeup_id}/delete"
+    },
+    {
+      "methods": [
+        "POST"
+      ],
+      "name": "api_delete_writeup_subido",
+      "path": "/api/writeups/subidos/{writeup_id}/delete"
+    },
+    {
+      "methods": [
+        "POST"
+      ],
+      "name": "(openapi)",
+      "path": "/api/writeups/subidos/{writeup_id}/update"
+    },
+    {
+      "methods": [
+        "POST"
+      ],
+      "name": "api_update_writeup_subido",
+      "path": "/api/writeups/subidos/{writeup_id}/update"
+    },
+    {
+      "methods": [
+        "GET"
+      ],
+      "name": "(openapi)",
+      "path": "/api/writeups/{maquina_nombre}"
+    },
+    {
+      "methods": [
+        "GET"
+      ],
+      "name": "api_writeups_maquina",
+      "path": "/api/writeups/{maquina_nombre}"
+    },
+    {
+      "methods": [
+        "POST"
+      ],
+      "name": "(openapi)",
+      "path": "/api/writeups/{writeup_id}/report"
+    },
+    {
+      "methods": [
+        "POST"
+      ],
+      "name": "api_report_writeup",
+      "path": "/api/writeups/{writeup_id}/report"
+    },
+    {
+      "methods": [
+        "GET"
+      ],
+      "name": "(openapi)",
+      "path": "/api/writeups_subidos"
+    },
+    {
+      "methods": [
+        "GET"
+      ],
+      "name": "api_list_writeups_subidos",
+      "path": "/api/writeups_subidos"
+    },
+    {
+      "methods": [
+        "GET"
+      ],
+      "name": "(openapi)",
+      "path": "/api/writeups_subidos/maquinas"
+    },
+    {
+      "methods": [
+        "GET"
+      ],
+      "name": "api_list_maquinas_writeups_subidos",
+      "path": "/api/writeups_subidos/maquinas"
+    },
+    {
+      "methods": [
+        "DELETE"
+      ],
+      "name": "(openapi)",
+      "path": "/api/writeups_subidos/{writeup_id}"
+    },
+    {
+      "methods": [
+        "DELETE"
+      ],
+      "name": "api_delete_writeup_subido_delete",
+      "path": "/api/writeups_subidos/{writeup_id}"
+    },
+    {
+      "methods": [
+        "GET"
+      ],
+      "name": "(openapi)",
+      "path": "/bug-bounty"
+    },
+    {
+      "methods": [
+        "GET"
+      ],
+      "name": "bug_bounty_page",
+      "path": "/bug-bounty"
+    },
+    {
+      "methods": [
+        "GET"
+      ],
+      "name": "(openapi)",
+      "path": "/bunkerlabs"
+    },
+    {
+      "methods": [
+        "GET"
+      ],
+      "name": "bunkerlabs_home",
+      "path": "/bunkerlabs"
+    },
+    {
+      "methods": [
+        "GET"
+      ],
+      "name": "(openapi)",
+      "path": "/bunkerlabs/"
+    },
+    {
+      "methods": [
+        "GET"
+      ],
+      "name": "bunkerlabs_home",
+      "path": "/bunkerlabs/"
+    },
+    {
+      "methods": [
+        "GET"
+      ],
+      "name": "(openapi)",
+      "path": "/bunkerlabs/accesos"
+    },
+    {
+      "methods": [
+        "GET"
+      ],
+      "name": "accesos_bunkerlabs_redirect",
+      "path": "/bunkerlabs/accesos"
+    },
+    {
+      "methods": [
+        "POST"
+      ],
+      "name": "(openapi)",
+      "path": "/bunkerlabs/admin/recursos/add"
+    },
+    {
+      "methods": [
+        "POST"
+      ],
+      "name": "add_bunker_recurso",
+      "path": "/bunkerlabs/admin/recursos/add"
+    },
+    {
+      "methods": [
+        "POST"
+      ],
+      "name": "(openapi)",
+      "path": "/bunkerlabs/admin/recursos/delete/{recurso_id}"
+    },
+    {
+      "methods": [
+        "POST"
+      ],
+      "name": "delete_bunker_recurso",
+      "path": "/bunkerlabs/admin/recursos/delete/{recurso_id}"
+    },
+    {
+      "methods": [
+        "POST"
+      ],
+      "name": "(openapi)",
+      "path": "/bunkerlabs/admin/recursos/edit/{recurso_id}"
+    },
+    {
+      "methods": [
+        "POST"
+      ],
+      "name": "edit_bunker_recurso",
+      "path": "/bunkerlabs/admin/recursos/edit/{recurso_id}"
+    },
+    {
+      "methods": [
+        "GET"
+      ],
+      "name": "(openapi)",
+      "path": "/bunkerlabs/gestion"
+    },
+    {
+      "methods": [
+        "GET"
+      ],
+      "name": "gestion_bunkerlabs",
+      "path": "/bunkerlabs/gestion"
+    },
+    {
+      "methods": [
+        "POST"
+      ],
+      "name": "(openapi)",
+      "path": "/bunkerlabs/gestion"
+    },
+    {
+      "methods": [
+        "POST"
+      ],
+      "name": "gestion_bunkerlabs",
+      "path": "/bunkerlabs/gestion"
+    },
+    {
+      "methods": [
+        "POST"
+      ],
+      "name": "(openapi)",
+      "path": "/bunkerlabs/gestion/{token_id}/delete"
+    },
+    {
+      "methods": [
+        "POST"
+      ],
+      "name": "delete_bunker_token",
+      "path": "/bunkerlabs/gestion/{token_id}/delete"
+    },
+    {
+      "methods": [
+        "GET"
+      ],
+      "name": "(openapi)",
+      "path": "/bunkerlabs/guest"
+    },
+    {
+      "methods": [
+        "GET"
+      ],
+      "name": "bunkerlabs_guest",
+      "path": "/bunkerlabs/guest"
+    },
+    {
+      "methods": [
+        "GET"
+      ],
+      "name": "(openapi)",
+      "path": "/bunkerlabs/login"
+    },
+    {
+      "methods": [
+        "GET"
+      ],
+      "name": "bunkerlabs_login_page",
+      "path": "/bunkerlabs/login"
+    },
+    {
+      "methods": [
+        "POST"
+      ],
+      "name": "(openapi)",
+      "path": "/bunkerlabs/login"
+    },
+    {
+      "methods": [
+        "POST"
+      ],
+      "name": "bunkerlabs_login_page",
+      "path": "/bunkerlabs/login"
+    },
+    {
+      "methods": [
+        "GET"
+      ],
+      "name": "(openapi)",
+      "path": "/bunkerlabs/logout"
+    },
+    {
+      "methods": [
+        "GET"
+      ],
+      "name": "bunkerlabs_logout",
+      "path": "/bunkerlabs/logout"
+    },
+    {
+      "methods": [
+        "GET"
+      ],
+      "name": "(openapi)",
+      "path": "/bunkerlabs/recursos"
+    },
+    {
+      "methods": [
+        "GET"
+      ],
+      "name": "bunkerlabs_recursos",
+      "path": "/bunkerlabs/recursos"
+    },
+    {
+      "methods": [
+        "GET"
+      ],
+      "name": "(openapi)",
+      "path": "/certificados"
+    },
+    {
+      "methods": [
+        "GET"
+      ],
+      "name": "certificados_page",
+      "path": "/certificados"
+    },
+    {
+      "methods": [
+        "GET"
+      ],
+      "name": "(openapi)",
+      "path": "/como-se-crea-una-maquina"
+    },
+    {
+      "methods": [
+        "GET"
+      ],
+      "name": "como_se_crea_page",
+      "path": "/como-se-crea-una-maquina"
+    },
+    {
+      "methods": [
+        "GET"
+      ],
+      "name": "(openapi)",
+      "path": "/condiciones-uso"
+    },
+    {
+      "methods": [
+        "GET"
+      ],
+      "name": "condiciones_uso_page",
+      "path": "/condiciones-uso"
+    },
+    {
+      "methods": [
+        "GET"
+      ],
+      "name": "(openapi)",
+      "path": "/dashboard"
+    },
+    {
+      "methods": [
+        "GET"
+      ],
+      "name": "dashboard_page",
+      "path": "/dashboard"
+    },
+    {
+      "methods": [
+        "GET",
+        "HEAD"
+      ],
+      "name": "swagger_ui_redirect",
+      "path": "/docs/oauth2-redirect"
+    },
+    {
+      "methods": [
+        "GET"
+      ],
+      "name": "(openapi)",
+      "path": "/enviar-maquina"
+    },
+    {
+      "methods": [
+        "GET"
+      ],
+      "name": "enviar_maquina_page",
+      "path": "/enviar-maquina"
+    },
+    {
+      "methods": [
+        "GET"
+      ],
+      "name": "(openapi)",
+      "path": "/equipo"
+    },
+    {
+      "methods": [
+        "GET"
+      ],
+      "name": "equipo_page",
+      "path": "/equipo"
+    },
+    {
+      "methods": [
+        "GET"
+      ],
+      "name": "(openapi)",
+      "path": "/estadisticas"
+    },
+    {
+      "methods": [
+        "GET"
+      ],
+      "name": "estadisticas_page",
+      "path": "/estadisticas"
+    },
+    {
+      "methods": [
+        "GET",
+        "HEAD"
+      ],
+      "name": "swagger_ui_html",
+      "path": "/fastapi-docs"
+    },
+    {
+      "methods": [
+        "GET",
+        "HEAD"
+      ],
+      "name": "openapi",
+      "path": "/fastapi-openapi.json"
+    },
+    {
+      "methods": [
+        "GET"
+      ],
+      "name": "(openapi)",
+      "path": "/fastapi-status"
+    },
+    {
+      "methods": [
+        "GET"
+      ],
+      "name": "get_status",
+      "path": "/fastapi-status"
+    },
+    {
+      "methods": [
+        "GET"
+      ],
+      "name": "favicon",
+      "path": "/favicon.ico"
+    },
+    {
+      "methods": [
+        "GET"
+      ],
+      "name": "(openapi)",
+      "path": "/gestion-maquinas"
+    },
+    {
+      "methods": [
+        "GET"
+      ],
+      "name": "gestion_maquinas_page",
+      "path": "/gestion-maquinas"
+    },
+    {
+      "methods": [
+        "GET"
+      ],
+      "name": "(openapi)",
+      "path": "/gestion-usuarios"
+    },
+    {
+      "methods": [
+        "GET"
+      ],
+      "name": "gestion_usuarios_page",
+      "path": "/gestion-usuarios"
+    },
+    {
+      "methods": [
+        "GET"
+      ],
+      "name": "(openapi)",
+      "path": "/img/maquina/{machine_id}"
+    },
+    {
+      "methods": [
+        "GET"
+      ],
+      "name": "serve_machine_logo",
+      "path": "/img/maquina/{machine_id}"
+    },
+    {
+      "methods": [
+        "GET"
+      ],
+      "name": "(openapi)",
+      "path": "/img/perfil/{user_id}"
+    },
+    {
+      "methods": [
+        "GET"
+      ],
+      "name": "serve_profile_image",
+      "path": "/img/perfil/{user_id}"
+    },
+    {
+      "methods": [
+        "GET"
+      ],
+      "name": "(openapi)",
+      "path": "/instrucciones-uso"
+    },
+    {
+      "methods": [
+        "GET"
+      ],
+      "name": "instrucciones_uso_page",
+      "path": "/instrucciones-uso"
+    },
+    {
+      "methods": [
+        "GET"
+      ],
+      "name": "(openapi)",
+      "path": "/login"
+    },
+    {
+      "methods": [
+        "GET"
+      ],
+      "name": "login_page",
+      "path": "/login"
+    },
+    {
+      "methods": [
+        "GET"
+      ],
+      "name": "(openapi)",
+      "path": "/logout"
+    },
+    {
+      "methods": [
+        "GET"
+      ],
+      "name": "logout_page",
+      "path": "/logout"
+    },
+    {
+      "methods": [
+        "GET"
+      ],
+      "name": "(openapi)",
+      "path": "/maquinas-hechas"
+    },
+    {
+      "methods": [
+        "GET"
+      ],
+      "name": "maquinas_hechas_page",
+      "path": "/maquinas-hechas"
+    },
+    {
+      "methods": [
+        "GET"
+      ],
+      "name": "(openapi)",
+      "path": "/maquinas/{machine_id}/descargar"
+    },
+    {
+      "methods": [
+        "GET"
+      ],
+      "name": "descargar_maquina_page",
+      "path": "/maquinas/{machine_id}/descargar"
+    },
+    {
+      "methods": [
+        "GET"
+      ],
+      "name": "(openapi)",
+      "path": "/pending-machines"
+    },
+    {
+      "methods": [
+        "GET"
+      ],
+      "name": "pending_machines_page",
+      "path": "/pending-machines"
+    },
+    {
+      "methods": [
+        "GET"
+      ],
+      "name": "(openapi)",
+      "path": "/perfil/{slug}"
+    },
+    {
+      "methods": [
+        "GET"
+      ],
+      "name": "pagina_perfil_publico",
+      "path": "/perfil/{slug}"
+    },
+    {
+      "methods": [
+        "GET"
+      ],
+      "name": "(openapi)",
+      "path": "/politica-cookies"
+    },
+    {
+      "methods": [
+        "GET"
+      ],
+      "name": "politica_cookies_page",
+      "path": "/politica-cookies"
+    },
+    {
+      "methods": [
+        "GET"
+      ],
+      "name": "(openapi)",
+      "path": "/politica-privacidad"
+    },
+    {
+      "methods": [
+        "GET"
+      ],
+      "name": "politica_privacidad_page",
+      "path": "/politica-privacidad"
+    },
+    {
+      "methods": [
+        "GET"
+      ],
+      "name": "(openapi)",
+      "path": "/recover"
+    },
+    {
+      "methods": [
+        "GET"
+      ],
+      "name": "recover_page",
+      "path": "/recover"
+    },
+    {
+      "methods": [
+        "GET",
+        "HEAD"
+      ],
+      "name": "redoc_html",
+      "path": "/redoc"
+    },
+    {
+      "methods": [
+        "GET"
+      ],
+      "name": "(openapi)",
+      "path": "/register"
+    },
+    {
+      "methods": [
+        "GET"
+      ],
+      "name": "register_page",
+      "path": "/register"
+    },
+    {
+      "methods": [
+        "GET"
+      ],
+      "name": "(openapi)",
+      "path": "/reset-password"
+    },
+    {
+      "methods": [
+        "GET"
+      ],
+      "name": "reset_password_page",
+      "path": "/reset-password"
+    },
+    {
+      "methods": [
+        "GET"
+      ],
+      "name": "robots",
+      "path": "/robots.txt"
+    },
+    {
+      "methods": [
+        "GET"
+      ],
+      "name": "sitemap",
+      "path": "/sitemap.xml"
+    },
+    {
+      "methods": [
+        "GET"
+      ],
+      "name": "(openapi)",
+      "path": "/soporte"
+    },
+    {
+      "methods": [
+        "GET"
+      ],
+      "name": "soporte_page",
+      "path": "/soporte"
+    },
+    {
+      "methods": [
+        "GET"
+      ],
+      "name": "(openapi)",
+      "path": "/terminos-condiciones"
+    },
+    {
+      "methods": [
+        "GET"
+      ],
+      "name": "terminos_condiciones_page",
+      "path": "/terminos-condiciones"
+    },
+    {
+      "methods": [
+        "GET"
+      ],
+      "name": "(openapi)",
+      "path": "/u/{slug}"
+    },
+    {
+      "methods": [
+        "GET"
+      ],
+      "name": "api_public_profile",
+      "path": "/u/{slug}"
+    },
+    {
+      "methods": [
+        "GET"
+      ],
+      "name": "(openapi)",
+      "path": "/user-pending"
+    },
+    {
+      "methods": [
+        "GET"
+      ],
+      "name": "user_pending_page",
+      "path": "/user-pending"
+    },
+    {
+      "methods": [
+        "GET"
+      ],
+      "name": "(openapi)",
+      "path": "/verify-email"
+    },
+    {
+      "methods": [
+        "GET"
+      ],
+      "name": "verify_email_page",
+      "path": "/verify-email"
+    },
+    {
+      "methods": [
+        "GET"
+      ],
+      "name": "(openapi)",
+      "path": "/writeups-analisis"
+    },
+    {
+      "methods": [
+        "GET"
+      ],
+      "name": "writeups_analisis_page",
+      "path": "/writeups-analisis"
+    },
+    {
+      "methods": [
+        "GET"
+      ],
+      "name": "(openapi)",
+      "path": "/writeups-publicados"
+    },
+    {
+      "methods": [
+        "GET"
+      ],
+      "name": "writeups_publicados_page",
+      "path": "/writeups-publicados"
+    },
+    {
+      "methods": [
+        "GET"
+      ],
+      "name": "(openapi)",
+      "path": "/writeups-recibidos"
+    },
+    {
+      "methods": [
+        "GET"
+      ],
+      "name": "writeups_recibidos_page",
+      "path": "/writeups-recibidos"
+    }
+  ]
+}

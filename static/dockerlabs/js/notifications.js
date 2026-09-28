@@ -3,6 +3,30 @@ let notifications = [];
 let unreadCount = 0;
 let showReadNotifications = false;
 
+// Id del sondeo periodico. Si la sesion caduca (401/403) se detiene: una
+// pestana abierta durante dias llegaba a pedir /api/notifications cada 30 s
+// indefinidamente contra un 401.
+let notificacionesIntervalo = null;
+let sesionCaducada = false;
+
+function detenerSondeoNotificaciones() {
+    sesionCaducada = true;
+    if (notificacionesIntervalo !== null) {
+        clearInterval(notificacionesIntervalo);
+        notificacionesIntervalo = null;
+    }
+}
+
+// Devuelve el JSON, o null si la sesion ya no vale (y entonces corta el sondeo).
+async function pedirNotificaciones() {
+    const response = await fetch('/api/notifications');
+    if (response.status === 401 || response.status === 403) {
+        detenerSondeoNotificaciones();
+        return null;
+    }
+    return await response.json();
+}
+
 // Cargar notificaciones al abrir el modal
 function openNotificationsModal() {
     document.getElementById('notificationsModal').classList.add('visible');
@@ -16,9 +40,10 @@ function closeNotificationsModal() {
 
 // Cargar notificaciones desde la API
 async function loadNotifications() {
+    if (sesionCaducada) return;
     try {
-        const response = await fetch('/api/notifications');
-        const data = await response.json();
+        const data = await pedirNotificaciones();
+        if (!data) return;   // sesion caducada: se corta sin pintar un error
 
         if (data.success) {
             notifications = data.notifications;
@@ -28,7 +53,9 @@ async function loadNotifications() {
         }
     } catch (error) {
         console.error('Error al cargar notificaciones:', error);
-        document.getElementById('notificationsList').innerHTML = `
+        const lista = document.getElementById('notificationsList');
+        if (!lista) return;
+        lista.innerHTML = `
             <div style="padding: 2rem; text-align: center; color: #ef4444;">
                 <i class="bi bi-exclamation-triangle" style="font-size: 3rem; margin-bottom: 1rem;"></i>
                 <p>Error al cargar notificaciones</p>
@@ -344,405 +371,60 @@ function formatDate(dateString) {
     });
 }
 
-// Escapar HTML para prevenir XSS
-function escapeHtml(text) {
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
-}
+// escapeHtml() vive en utils.js (escapa tambien comillas, necesario al
+// interpolar dentro de atributos HTML). No la redefinas aqui.
 
 // Cargar notificaciones periódicamente (cada 30 segundos)
-setInterval(() => {
-    if (document.getElementById('notificationsModal').classList.contains('visible')) {
+notificacionesIntervalo = setInterval(() => {
+    if (sesionCaducada) return;
+
+    const modal = document.getElementById('notificationsModal');
+    if (modal && modal.classList.contains('visible')) {
         loadNotifications();
-    } else {
-        // Solo actualizar el badge si el modal está cerrado
-        fetch('/api/notifications')
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    unreadCount = data.unread_count;
-                    updateBadge();
-                }
-            })
-            .catch(error => console.error('Error al actualizar badge:', error));
+        return;
     }
+
+    // Modal cerrado: basta con refrescar el contador
+    pedirNotificaciones()
+        .then(data => {
+            if (data && data.success) {
+                unreadCount = data.unread_count;
+                updateBadge();
+            }
+        })
+        .catch(error => console.error('Error al actualizar badge:', error));
 }, 30000);
 
-// ==================== INVITACIONES TAB ====================
+// ==================== PESTANAS DEL MODAL ====================
 
 let currentNotificationsTab = 'notificaciones';
 
 function switchNotificationsTab(tab) {
     currentNotificationsTab = tab;
 
-    const tabBtns = ['notificaciones', 'invitaciones', 'solicitudes'];
-    const tabContents = ['notificaciones', 'invitaciones', 'solicitudes'];
+    const btn = document.getElementById(`tab-btn-${tab}`);
+    if (btn) btn.classList.add('active');
 
-    tabBtns.forEach(t => {
-        const btn = document.getElementById(`tab-btn-${t}`);
-        if (btn) btn.classList.toggle('active', t === tab);
-    });
-
-    tabContents.forEach(t => {
-        const el = document.getElementById(`tab-${t}`);
-        if (el) el.style.display = t === tab ? 'flex' : 'none';
-        if (t === tab && el) el.style.flexDirection = 'column';
-    });
+    const el = document.getElementById(`tab-${tab}`);
+    if (el) {
+        el.style.display = 'flex';
+        el.style.flexDirection = 'column';
+    }
 
     if (tab === 'notificaciones') loadNotifications();
-    else if (tab === 'invitaciones') loadInvitaciones();
-    else if (tab === 'solicitudes') loadSolicitudes();
 }
-
-async function loadInvitaciones() {
-    const container = document.getElementById('invitacionesList');
-    if (!container) return;
-
-    container.innerHTML = `
-        <div style="padding: 3rem 2rem; text-align: center; color: #64748b;">
-            <div style="background: rgba(139, 92, 246, 0.1); padding: 2rem; border-radius: 20px; display: inline-block; margin-bottom: 1.5rem;">
-                <i class="bi bi-arrow-repeat" style="font-size: 4rem; color: #8b5cf6; animation: spin 1s linear infinite;"></i>
-            </div>
-            <p style="font-size: 1.2rem; margin-bottom: 0.5rem; color: #94a3b8;">Cargando invitaciones...</p>
-        </div>
-    `;
-
-    try {
-        const response = await fetch('/api/equipos/invitaciones/mis-invitaciones');
-        const data = await response.json();
-
-        if (data.success) {
-            updateInvitacionesBadge(data.invitaciones.length);
-
-            if (data.invitaciones.length === 0) {
-                container.innerHTML = `
-                    <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 300px; padding: 3rem 2rem; text-align: center; color: #64748b;">
-                        <div style="background: linear-gradient(135deg, rgba(139, 92, 246, 0.15), rgba(59, 130, 246, 0.15)); padding: 3rem; border-radius: 50%; margin-bottom: 2rem; backdrop-filter: blur(10px); box-shadow: 0 8px 32px rgba(139, 92, 246, 0.2);">
-                            <i class="bi bi-envelope-slash" style="font-size: 5rem; color: #8b5cf6; opacity: 0.7;"></i>
-                        </div>
-                        <p style="font-size: 1.5rem; margin-bottom: 0.75rem; color: #f8fafc; font-weight: 700;">No tienes invitaciones</p>
-                        <p style="font-size: 1rem; opacity: 0.7; max-width: 450px; line-height: 1.6; color: #94a3b8;">Las invitaciones a equipos aparecerán aquí cuando alguien te invite.</p>
-                    </div>
-                `;
-                return;
-            }
-
-            container.innerHTML = data.invitaciones.map(inv => `
-                <div class="notification-item" data-invitation-id="${inv.id}" style="border-left: 3px solid #8b5cf6;">
-                    <div class="notification-header">
-                        <div class="notification-title" style="color: #8b5cf6;">
-                            <i class="bi bi-people-fill"></i>
-                            Invitación a equipo
-                        </div>
-                        <div class="notification-meta">
-                            <span class="notification-date">
-                                <i class="bi bi-clock"></i> ${formatDate(inv.created_at)}
-                            </span>
-                        </div>
-                    </div>
-                    <div class="notification-content">
-                        <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem;">
-                            ${inv.team.imagen_url ? `
-                                <img src="${inv.team.imagen_url}" style="width: 48px; height: 48px; border-radius: 12px; object-fit: cover; border: 2px solid #8b5cf6;">
-                            ` : `
-                                <div style="width: 48px; height: 48px; border-radius: 12px; background: linear-gradient(135deg, #3b82f6, #8b5cf6); display: flex; align-items: center; justify-content: center;">
-                                    <i class="bi bi-people-fill" style="font-size: 1.5rem; color: white;"></i>
-                                </div>
-                            `}
-                            <div>
-                                <div style="font-weight: 600; color: #f1f5f9; font-size: 1.1rem;">${escapeHtml(inv.team.nombre)}</div>
-                                <div style="font-size: 0.85rem; color: #64748b;">
-                                    ${inv.team.member_count}/${inv.team.max_members} miembros
-                                </div>
-                            </div>
-                        </div>
-                        <p style="color: #94a3b8; margin: 0;">
-                            <i class="bi bi-person"></i> Invitado por <strong style="color: #f1f5f9;">${escapeHtml(inv.invited_by)}</strong>
-                        </p>
-                    </div>
-                    <div class="notification-actions" style="display: flex; gap: 0.5rem; margin-top: 0.75rem;">
-                        <button class="notification-mark-read-btn" onclick="responderInvitacionNotif(${inv.id}, true)" style="background: #8b5cf6; color: white;">
-                            <i class="bi bi-check-lg"></i> Aceptar
-                        </button>
-                        <button class="notification-delete-btn" onclick="responderInvitacionNotif(${inv.id}, false)" style="background: transparent; color: #64748b; border: 1px solid #334155;">
-                            <i class="bi bi-x-lg"></i> Rechazar
-                        </button>
-                    </div>
-                </div>
-            `).join('');
-        } else {
-            container.innerHTML = `
-                <div style="padding: 2rem; text-align: center; color: #ef4444;">
-                    <i class="bi bi-exclamation-triangle" style="font-size: 3rem; margin-bottom: 1rem;"></i>
-                    <p>Error al cargar invitaciones</p>
-                </div>
-            `;
-        }
-    } catch (error) {
-        console.error('Error al cargar invitaciones:', error);
-        container.innerHTML = `
-            <div style="padding: 2rem; text-align: center; color: #ef4444;">
-                <i class="bi bi-exclamation-triangle" style="font-size: 3rem; margin-bottom: 1rem;"></i>
-                <p>Error al cargar invitaciones</p>
-            </div>
-        `;
-    }
-}
-
-async function responderInvitacionNotif(invitationId, accept) {
-    try {
-        const response = await fetch('/api/equipos/invitaciones/responder', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRFToken': getCsrfToken()
-            },
-            body: JSON.stringify({
-                invitation_id: invitationId,
-                accept: accept
-            })
-        });
-
-        const data = await response.json();
-
-        if (data.success) {
-            alert(data.message);
-            // Reload invitaciones
-            loadInvitaciones();
-        } else {
-            alert('Error: ' + data.message);
-        }
-    } catch (error) {
-        console.error('Error:', error);
-        alert('Error al procesar la invitación');
-    }
-}
-
-function updateInvitacionesBadge(count) {
-    const badge = document.getElementById('invitaciones-badge');
-    if (badge) {
-        badge.textContent = count;
-        badge.style.display = count > 0 ? 'inline' : 'none';
-    }
-}
-
-async function loadSolicitudes() {
-    const container = document.getElementById('solicitudesList');
-    if (!container) return;
-
-    container.innerHTML = `
-        <div style="padding: 3rem 2rem; text-align: center; color: #64748b;">
-            <div style="background: rgba(34, 197, 94, 0.1); padding: 2rem; border-radius: 20px; display: inline-block; margin-bottom: 1.5rem;">
-                <i class="bi bi-arrow-repeat" style="font-size: 4rem; color: #22c55e; animation: spin 1s linear infinite;"></i>
-            </div>
-            <p style="font-size: 1.2rem; margin-bottom: 0.5rem; color: #94a3b8;">Cargando solicitudes...</p>
-        </div>
-    `;
-
-    try {
-        // First get user's team
-        const teamResponse = await fetch('/api/equipos/mi-equipo/info');
-        const teamData = await teamResponse.json();
-
-        if (!teamData.success || !teamData.tiene_equipo) {
-            container.innerHTML = `
-                <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 300px; padding: 3rem 2rem; text-align: center; color: #64748b;">
-                    <div style="background: linear-gradient(135deg, rgba(34, 197, 94, 0.15), rgba(59, 130, 246, 0.15)); padding: 3rem; border-radius: 50%; margin-bottom: 2rem; backdrop-filter: blur(10px); box-shadow: 0 8px 32px rgba(34, 197, 94, 0.2);">
-                        <i class="bi bi-people" style="font-size: 5rem; color: #22c55e; opacity: 0.7;"></i>
-                    </div>
-                    <p style="font-size: 1.5rem; margin-bottom: 0.75rem; color: #f8fafc; font-weight: 700;">No tienes equipo</p>
-                    <p style="font-size: 1rem; opacity: 0.7; max-width: 450px; line-height: 1.6; color: #94a3b8;">Las solicitudes para unirse a tu equipo aparecerán aquí cuando seas miembro de uno.</p>
-                </div>
-            `;
-            return;
-        }
-
-        const teamId = teamData.team.id;
-
-        // Get join requests for the team
-        const response = await fetch(`/api/equipos/${teamId}/solicitudes`);
-        const data = await response.json();
-
-        if (data.success) {
-            updateSolicitudesBadge(data.solicitudes.length);
-
-            if (data.solicitudes.length === 0) {
-                container.innerHTML = `
-                    <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 300px; padding: 3rem 2rem; text-align: center; color: #64748b;">
-                        <div style="background: linear-gradient(135deg, rgba(34, 197, 94, 0.15), rgba(59, 130, 246, 0.15)); padding: 3rem; border-radius: 50%; margin-bottom: 2rem; backdrop-filter: blur(10px); box-shadow: 0 8px 32px rgba(34, 197, 94, 0.2);">
-                            <i class="bi bi-inbox" style="font-size: 5rem; color: #22c55e; opacity: 0.7;"></i>
-                        </div>
-                        <p style="font-size: 1.5rem; margin-bottom: 0.75rem; color: #f8fafc; font-weight: 700;">No hay solicitudes</p>
-                        <p style="font-size: 1rem; opacity: 0.7; max-width: 450px; line-height: 1.6; color: #94a3b8;">Las solicitudes para unirse a tu equipo aparecerán aquí.</p>
-                    </div>
-                `;
-                return;
-            }
-
-            container.innerHTML = data.solicitudes.map(req => `
-                <div class="notification-item" data-request-id="${req.id}" style="border-left: 3px solid #22c55e;">
-                    <div class="notification-header">
-                        <div class="notification-title" style="color: #22c55e;">
-                            <i class="bi bi-person-plus-fill"></i>
-                            Solicitud para unirse
-                        </div>
-                        <div class="notification-meta">
-                            <span class="notification-date">
-                                <i class="bi bi-clock"></i> ${formatDate(req.created_at)}
-                            </span>
-                        </div>
-                    </div>
-                    <div class="notification-content">
-                        <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem;">
-                            <img src="${req.user.profile_image_url}" style="width: 48px; height: 48px; border-radius: 50%; object-fit: cover; border: 2px solid #22c55e;">
-                            <div>
-                                <div style="font-weight: 600; color: #f1f5f9; font-size: 1.1rem;">${escapeHtml(req.user.username)}</div>
-                                <div style="font-size: 0.85rem; color: #64748b;">
-                                    ${req.user.puntos} pts
-                                </div>
-                            </div>
-                        </div>
-                        <p style="color: #94a3b8; margin: 0;">
-                            Quiere unirse a tu equipo
-                        </p>
-                    </div>
-                    <div class="notification-actions" style="display: flex; gap: 0.5rem; margin-top: 0.75rem;">
-                        <button class="notification-mark-read-btn" onclick="responderSolicitudNotif(${req.id}, true)" style="background: #22c55e; color: white;">
-                            <i class="bi bi-check-lg"></i> Aceptar
-                        </button>
-                        <button class="notification-delete-btn" onclick="responderSolicitudNotif(${req.id}, false)" style="background: transparent; color: #64748b; border: 1px solid #334155;">
-                            <i class="bi bi-x-lg"></i> Rechazar
-                        </button>
-                    </div>
-                </div>
-            `).join('');
-        } else {
-            container.innerHTML = `
-                <div style="padding: 2rem; text-align: center; color: #ef4444;">
-                    <i class="bi bi-exclamation-triangle" style="font-size: 3rem; margin-bottom: 1rem;"></i>
-                    <p>Error al cargar solicitudes</p>
-                </div>
-            `;
-        }
-    } catch (error) {
-        console.error('Error al cargar solicitudes:', error);
-        container.innerHTML = `
-            <div style="padding: 2rem; text-align: center; color: #ef4444;">
-                <i class="bi bi-exclamation-triangle" style="font-size: 3rem; margin-bottom: 1rem;"></i>
-                <p>Error al cargar solicitudes</p>
-            </div>
-        `;
-    }
-}
-
-async function responderSolicitudNotif(requestId, accept) {
-    try {
-        const response = await fetch('/api/equipos/solicitudes/responder', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRFToken': getCsrfToken()
-            },
-            body: JSON.stringify({
-                request_id: requestId,
-                accept: accept
-            })
-        });
-
-        const data = await response.json();
-
-        if (data.success) {
-            alert(data.message);
-            loadSolicitudes();
-        } else {
-            alert('Error: ' + data.message);
-        }
-    } catch (error) {
-        console.error('Error:', error);
-        alert('Error al procesar la solicitud');
-    }
-}
-
-function updateSolicitudesBadge(count) {
-    const badge = document.getElementById('solicitudes-badge');
-    if (badge) {
-        badge.textContent = count;
-        badge.style.display = count > 0 ? 'inline' : 'none';
-    }
-}
-
-// Update original loadNotifications to also update badges
-const originalLoadNotifications = loadNotifications;
-loadNotifications = async function() {
-    await originalLoadNotifications();
-    // Also load invitaciones count for badge
-    try {
-        const response = await fetch('/api/equipos/invitaciones/mis-invitaciones');
-        const data = await response.json();
-        if (data.success) {
-            updateInvitacionesBadge(data.invitaciones.length);
-        }
-    } catch (e) {
-        // Silent fail for badge update
-    }
-    // Load solicitudes count for badge
-    try {
-        const teamResponse = await fetch('/api/equipos/mi-equipo/info');
-        const teamData = await teamResponse.json();
-        if (teamData.success && teamData.tiene_equipo) {
-            const teamId = teamData.team.id;
-            const solicResponse = await fetch(`/api/equipos/${teamId}/solicitudes`);
-            const solicData = await solicResponse.json();
-            if (solicData.success) {
-                updateSolicitudesBadge(solicData.solicitudes.length);
-            }
-        }
-    } catch (e) {
-        // Silent fail for badge update
-    }
-};
 
 // Inicializar al cargar la página
 document.addEventListener('DOMContentLoaded', function() {
     // Cargar badge inicial
-    fetch('/api/notifications')
-        .then(response => response.json())
+    pedirNotificaciones()
         .then(data => {
-            if (data.success) {
+            if (data && data.success) {
                 unreadCount = data.unread_count;
                 updateBadge();
             }
         })
         .catch(error => console.error('Error al cargar badge inicial:', error));
-
-    // Cargar conteo de invitaciones
-    fetch('/api/equipos/invitaciones/mis-invitaciones')
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                updateInvitacionesBadge(data.invitaciones.length);
-            }
-        })
-        .catch(error => console.error('Error al cargar invitaciones inicial:', error));
-
-    // Cargar conteo de solicitudes
-    fetch('/api/equipos/mi-equipo/info')
-        .then(response => response.json())
-        .then(data => {
-            if (data.success && data.tiene_equipo) {
-                const teamId = data.team.id;
-                fetch(`/api/equipos/${teamId}/solicitudes`)
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.success) {
-                            updateSolicitudesBadge(data.solicitudes.length);
-                        }
-                    })
-                    .catch(error => console.error('Error al cargar solicitudes inicial:', error));
-            }
-        })
-        .catch(error => console.error('Error al cargar equipo inicial:', error));
 
     // Event listener para botón de toggle
     const toggleBtn = document.getElementById('toggleReadNotifications');

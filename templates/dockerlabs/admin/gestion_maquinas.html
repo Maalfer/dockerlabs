@@ -16,7 +16,7 @@
 <div class="gestion-maquinas-container">
 
     <!-- Header: Title & Switcher -->
-    <header class="page-header">
+    <div class="page-header">
         <h2 class="page-title">Gestión de Máquinas</h2>
 
         <div class="header-actions">
@@ -33,7 +33,7 @@
                 </button>
             </div>
         </div>
-    </header>
+    </div>
 
     <!-- PANEL DOCKER -->
     <div id="panel-docker" class="platform-panel">
@@ -45,27 +45,32 @@
         <div class="table-card">
             <div class="table-responsive">
                 <table class="custom-table" id="tablaDocker">
+                    <caption class="visually-hidden">Máquinas registradas en DockerLabs</caption>
                     <thead>
                         <tr>
-                            <th style="width: 50px;">ID</th>
-                            <th onclick="toggleFilters('tablaDocker')" style="cursor: pointer;">Nombre ▼</th>
-                            <th onclick="toggleFilters('tablaDocker')" style="cursor: pointer;">Dificultad ▼</th>
-                            <th onclick="toggleFilters('tablaDocker')" style="cursor: pointer;">Autor ▼</th>
-                            <th>Enlace Autor</th>
-                            <th onclick="toggleFilters('tablaDocker')" style="cursor: pointer;">Fecha ▼</th>
-                            <th>Imagen</th>
-                            <th>Descripción</th>
-                            <th>Link Descarga</th>
-                            <th>Categoría</th>
-                            <th style="width: 100px;">Acciones</th>
+                            <th scope="col">
+                                <button type="button" class="th-filter-toggle" onclick="toggleFilters('tablaDocker')"
+                                    aria-label="Mostrar/ocultar filtro por nombre">Nombre <i class="bi bi-caret-down-fill" aria-hidden="true"></i></button>
+                            </th>
+                            <th scope="col">
+                                <button type="button" class="th-filter-toggle" onclick="toggleFilters('tablaDocker')"
+                                    aria-label="Mostrar/ocultar filtro por dificultad">Dificultad <i class="bi bi-caret-down-fill" aria-hidden="true"></i></button>
+                            </th>
+                            <th scope="col">
+                                <button type="button" class="th-filter-toggle" onclick="toggleFilters('tablaDocker')"
+                                    aria-label="Mostrar/ocultar filtro por autor">Autor <i class="bi bi-caret-down-fill" aria-hidden="true"></i></button>
+                            </th>
+                            <th scope="col">Imagen</th>
+                            <th scope="col">Categoría</th>
+                            <th scope="col" style="width: 130px;">Acciones</th>
                         </tr>
                         <!-- Filter Row -->
                         <tr class="filter-row" style="display: none;">
-                            <th></th>
-                            <th><input type="text" class="filter-input column-filter" data-column="nombre"
+                            <th><label class="visually-hidden" for="filterNombreDocker">Filtrar por nombre</label>
+                                <input type="text" id="filterNombreDocker" class="filter-input column-filter" data-column="nombre"
                                     data-table="tablaDocker" placeholder="Buscar..."></th>
-                            <th>
-                                <select class="filter-input column-filter" data-column="dificultad"
+                            <th><label class="visually-hidden" for="filterDificultadDocker">Filtrar por dificultad</label>
+                                <select id="filterDificultadDocker" class="filter-input column-filter" data-column="dificultad"
                                     data-table="tablaDocker">
                                     <option value="">Todas</option>
                                     <option value="muy fácil">Muy Fácil</option>
@@ -74,27 +79,34 @@
                                     <option value="difícil">Difícil</option>
                                 </select>
                             </th>
-                            <th><input type="text" class="filter-input column-filter" data-column="autor"
+                            <th><label class="visually-hidden" for="filterAutorDocker">Filtrar por autor</label>
+                                <input type="text" id="filterAutorDocker" class="filter-input column-filter" data-column="autor"
                                     data-table="tablaDocker" placeholder="Autor..."></th>
-                            <th></th>
-                            <th><input type="text" class="filter-input column-filter" data-column="fecha"
-                                    data-table="tablaDocker" placeholder="Fecha..."></th>
-                            <th colspan="5"></th>
+                            <th colspan="3"></th>
                         </tr>
                     </thead>
                     <tbody>
                         {% for m in maquinas_docker %}
                         <tr>
-                            <td>{{ m.id }}</td>
                             <td>
                                 <form method="post" action="{{ url_for('maquinas.actualizar_maquina') }}"
                                     class="d-contents">
                                     <input type="hidden" name="csrf_token" value="{{ csrf_token_value }}">
                                     <input type="hidden" name="origen" value="docker">
                                     <input type="hidden" name="id" value="{{ m.id }}">
+                                    <input type="hidden" name="fecha" value="{{ m.fecha }}">
+                                    <input type="hidden" name="enlace_autor" value="{{ m.enlace_autor }}">
+                                    <textarea name="descripcion" class="d-none">{{ m.descripcion }}</textarea>
+                                    <input type="hidden" name="link_descarga" value="{{ m.link_descarga }}">
 
+                                    <button type="button" class="machine-name-link"
+                                        data-machine-id="{{ m.id }}" data-machine-name="{{ m.nombre }}"
+                                        aria-haspopup="dialog" title="Ver estadísticas de esta máquina">
+                                        <i class="bi bi-bar-chart-line-fill" aria-hidden="true"></i>
+                                        <span>{{ m.nombre }}</span>
+                                    </button>
                                     <input type="text" name="nombre" value="{{ m.nombre }}" class="input-minimal"
-                                        placeholder="Nombre">
+                                        placeholder="Nombre" aria-label="Editar nombre de {{ m.nombre }}">
                             </td>
                             <td>
                                 <select name="dificultad" class="select-minimal">
@@ -112,14 +124,6 @@
                                 <input type="text" name="autor" value="{{ m.autor }}" class="input-minimal" readonly
                                     style="opacity: 0.7; cursor: not-allowed;">
                             </td>
-                            <td>
-                                <input type="text" name="enlace_autor" value="{{ m.enlace_autor }}"
-                                    class="input-minimal" placeholder="https://...">
-                            </td>
-                            <td>
-                                <input type="text" name="fecha" value="{{ m.fecha }}" class="input-minimal"
-                                    placeholder="DD-MM-YYYY">
-                            </td>
                             <td style="min-width: 180px;">
                                 <input type="hidden" name="imagen" value="{{ m.imagen }}"
                                     class="imagen-field-{{ m.id }}">
@@ -136,20 +140,13 @@
                                     {% endif %}
 
                                     <label class="btn-upload-icon" title="Subir logo">
-                                        <i class="bi bi-upload"></i>
+                                        <i class="bi bi-upload" aria-hidden="true"></i>
+                                        <span class="visually-hidden">Subir logo de {{ m.nombre }}</span>
                                         <input type="file" id="logo-input-docker-{{ m.id }}" class="d-none"
                                             accept="image/*" onchange="uploadMachineLogo({{ m.id }}, 'docker')">
                                     </label>
                                     <small class="text-muted d-none" id="filename-docker-{{ m.id }}"></small>
                                 </div>
-                            </td>
-                            <td style="min-width: 250px;">
-                                <textarea name="descripcion" rows="1" class="input-minimal"
-                                    style="resize: vertical; min-height: 2.5rem;">{{ m.descripcion }}</textarea>
-                            </td>
-                            <td>
-                                <input type="text" name="link_descarga" value="{{ m.link_descarga }}"
-                                    class="input-minimal">
                             </td>
                             <td>
                                 <select name="categoria" class="select-minimal">
@@ -169,8 +166,14 @@
                             </td>
                             <td>
                                 <div class="d-flex gap-2">
-                                    <button type="submit" class="btn-action save" title="Guardar cambios">
-                                        <i class="bi bi-check-lg"></i>
+                                    <button type="button" class="btn-action details" title="Ver/editar detalles"
+                                        aria-label="Ver y editar detalles de {{ m.nombre }}" aria-haspopup="dialog"
+                                        onclick="openMachineDetailsModal(this)">
+                                        <i class="bi bi-card-text" aria-hidden="true"></i>
+                                    </button>
+                                    <button type="submit" class="btn-action save" title="Guardar cambios"
+                                        aria-label="Guardar cambios de {{ m.nombre }}">
+                                        <i class="bi bi-check-lg" aria-hidden="true"></i>
                                     </button>
                                     </form>
                                     <form method="post" action="{{ url_for('maquinas.eliminar_maquina') }}"
@@ -179,8 +182,9 @@
                                         <input type="hidden" name="csrf_token" value="{{ csrf_token_value }}">
                                         <input type="hidden" name="origen" value="docker">
                                         <input type="hidden" name="id" value="{{ m.id }}">
-                                        <button type="submit" class="btn-action delete" title="Eliminar máquina">
-                                            <i class="bi bi-trash"></i>
+                                        <button type="submit" class="btn-action delete" title="Eliminar máquina"
+                                            aria-label="Eliminar {{ m.nombre }}">
+                                            <i class="bi bi-trash" aria-hidden="true"></i>
                                         </button>
                                     </form>
                                 </div>
@@ -228,27 +232,32 @@
         <div class="table-card">
             <div class="table-responsive">
                 <table class="custom-table" id="tablaBunker">
+                    <caption class="visually-hidden">Máquinas registradas en BunkerLabs</caption>
                     <thead>
                         <tr>
-                            <th style="width: 50px;">ID</th>
-                            <th onclick="toggleFilters('tablaBunker')" style="cursor: pointer;">Nombre ▼</th>
-                            <th onclick="toggleFilters('tablaBunker')" style="cursor: pointer;">Dificultad ▼</th>
-                            <th onclick="toggleFilters('tablaBunker')" style="cursor: pointer;">Autor ▼</th>
-                            <th>Enlace Autor</th>
-                            <th onclick="toggleFilters('tablaBunker')" style="cursor: pointer;">Fecha ▼</th>
-                            <th>Imagen</th>
-                            <th>Descripción</th>
-                            <th>Link Descarga</th>
-                            <th style="width: 50px;">Guest</th>
-                            <th style="width: 100px;">Acciones</th>
+                            <th scope="col">
+                                <button type="button" class="th-filter-toggle" onclick="toggleFilters('tablaBunker')"
+                                    aria-label="Mostrar/ocultar filtro por nombre">Nombre <i class="bi bi-caret-down-fill" aria-hidden="true"></i></button>
+                            </th>
+                            <th scope="col">
+                                <button type="button" class="th-filter-toggle" onclick="toggleFilters('tablaBunker')"
+                                    aria-label="Mostrar/ocultar filtro por dificultad">Dificultad <i class="bi bi-caret-down-fill" aria-hidden="true"></i></button>
+                            </th>
+                            <th scope="col">
+                                <button type="button" class="th-filter-toggle" onclick="toggleFilters('tablaBunker')"
+                                    aria-label="Mostrar/ocultar filtro por autor">Autor <i class="bi bi-caret-down-fill" aria-hidden="true"></i></button>
+                            </th>
+                            <th scope="col">Imagen</th>
+                            <th scope="col" style="width: 50px;">Guest</th>
+                            <th scope="col" style="width: 130px;">Acciones</th>
                         </tr>
                         <!-- Filter Row -->
                         <tr class="filter-row" style="display: none;">
-                            <th></th>
-                            <th><input type="text" class="filter-input column-filter" data-column="nombre"
+                            <th><label class="visually-hidden" for="filterNombreBunker">Filtrar por nombre</label>
+                                <input type="text" id="filterNombreBunker" class="filter-input column-filter" data-column="nombre"
                                     data-table="tablaBunker" placeholder="Buscar..."></th>
-                            <th>
-                                <select class="filter-input column-filter" data-column="dificultad"
+                            <th><label class="visually-hidden" for="filterDificultadBunker">Filtrar por dificultad</label>
+                                <select id="filterDificultadBunker" class="filter-input column-filter" data-column="dificultad"
                                     data-table="tablaBunker">
                                     <option value="">Todas</option>
                                     <option value="muy fácil">Muy Fácil</option>
@@ -257,27 +266,34 @@
                                     <option value="difícil">Difícil</option>
                                 </select>
                             </th>
-                            <th><input type="text" class="filter-input column-filter" data-column="autor"
+                            <th><label class="visually-hidden" for="filterAutorBunker">Filtrar por autor</label>
+                                <input type="text" id="filterAutorBunker" class="filter-input column-filter" data-column="autor"
                                     data-table="tablaBunker" placeholder="Autor..."></th>
-                            <th></th>
-                            <th><input type="text" class="filter-input column-filter" data-column="fecha"
-                                    data-table="tablaBunker" placeholder="Fecha..."></th>
-                            <th colspan="4"></th>
+                            <th colspan="3"></th>
                         </tr>
                     </thead>
                     <tbody>
                         {% for m in maquinas_bunker %}
                         <tr>
-                            <td>{{ m.id }}</td>
                             <td>
                                 <form method="post" action="{{ url_for('maquinas.actualizar_maquina') }}"
                                     class="d-contents">
                                     <input type="hidden" name="csrf_token" value="{{ csrf_token_value }}">
                                     <input type="hidden" name="origen" value="bunker">
                                     <input type="hidden" name="id" value="{{ m.id }}">
+                                    <input type="hidden" name="fecha" value="{{ m.fecha }}">
+                                    <input type="hidden" name="enlace_autor" value="{{ m.enlace_autor }}">
+                                    <textarea name="descripcion" class="d-none">{{ m.descripcion }}</textarea>
+                                    <input type="hidden" name="link_descarga" value="{{ m.link_descarga }}">
 
+                                    <button type="button" class="machine-name-link"
+                                        data-machine-id="{{ m.id }}" data-machine-name="{{ m.nombre }}"
+                                        aria-haspopup="dialog" title="Ver estadísticas de esta máquina">
+                                        <i class="bi bi-bar-chart-line-fill" aria-hidden="true"></i>
+                                        <span>{{ m.nombre }}</span>
+                                    </button>
                                     <input type="text" name="nombre" value="{{ m.nombre }}" class="input-minimal"
-                                        placeholder="Nombre">
+                                        placeholder="Nombre" aria-label="Editar nombre de {{ m.nombre }}">
                             </td>
                             <td>
                                 <select name="dificultad" class="select-minimal">
@@ -295,14 +311,6 @@
                                 <input type="text" name="autor" value="{{ m.autor }}" class="input-minimal" readonly
                                     style="opacity: 0.7; cursor: not-allowed;">
                             </td>
-                            <td>
-                                <input type="text" name="enlace_autor" value="{{ m.enlace_autor }}"
-                                    class="input-minimal" placeholder="https://...">
-                            </td>
-                            <td>
-                                <input type="text" name="fecha" value="{{ m.fecha }}" class="input-minimal"
-                                    placeholder="DD-MM-YYYY">
-                            </td>
                             <td style="min-width: 180px;">
                                 <input type="hidden" name="imagen" value="{{ m.imagen }}"
                                     class="imagen-field-{{ m.id }}">
@@ -319,37 +327,37 @@
                                     {% endif %}
 
                                     <label class="btn-upload-icon" title="Subir logo">
-                                        <i class="bi bi-upload"></i>
+                                        <i class="bi bi-upload" aria-hidden="true"></i>
+                                        <span class="visually-hidden">Subir logo de {{ m.nombre }}</span>
                                         <input type="file" id="logo-input-bunker-{{ m.id }}" class="d-none"
                                             accept="image/*" onchange="uploadMachineLogo({{ m.id }}, 'bunker')">
                                     </label>
                                     <small class="text-muted d-none" id="filename-bunker-{{ m.id }}"></small>
                                 </div>
                             </td>
-                            <td style="min-width: 250px;">
-                                <textarea name="descripcion" rows="1" class="input-minimal"
-                                    style="resize: vertical; min-height: 2.5rem;">{{ m.descripcion }}</textarea>
-                            </td>
-                            <td>
-                                <input type="text" name="link_descarga" value="{{ m.link_descarga }}"
-                                    class="input-minimal">
-                            </td>
                             <td class="text-center">
                                 <button type="button" class="btn-action guest-toggle"
                                     onclick="toggleGuestAccess({{ m.id }}, this)"
                                     data-active="{{ 'true' if m.guest_access else 'false' }}"
-                                    title="{{ 'Acceso permitido a invitados' if m.guest_access else 'Acceso bloqueado a invitados' }}">
+                                    title="{{ 'Acceso permitido a invitados' if m.guest_access else 'Acceso bloqueado a invitados' }}"
+                                    aria-label="{{ 'Acceso permitido a invitados para ' + m.nombre if m.guest_access else 'Acceso bloqueado a invitados para ' + m.nombre }}">
                                     {% if m.guest_access %}
-                                    <i class="bi bi-unlock-fill text-success"></i>
+                                    <i class="bi bi-unlock-fill text-success" aria-hidden="true"></i>
                                     {% else %}
-                                    <i class="bi bi-lock-fill text-danger"></i>
+                                    <i class="bi bi-lock-fill text-danger" aria-hidden="true"></i>
                                     {% endif %}
                                 </button>
                             </td>
                             <td>
                                 <div class="d-flex gap-2">
-                                    <button type="submit" class="btn-action save" title="Guardar cambios">
-                                        <i class="bi bi-check-lg"></i>
+                                    <button type="button" class="btn-action details" title="Ver/editar detalles"
+                                        aria-label="Ver y editar detalles de {{ m.nombre }}" aria-haspopup="dialog"
+                                        onclick="openMachineDetailsModal(this)">
+                                        <i class="bi bi-card-text" aria-hidden="true"></i>
+                                    </button>
+                                    <button type="submit" class="btn-action save" title="Guardar cambios"
+                                        aria-label="Guardar cambios de {{ m.nombre }}">
+                                        <i class="bi bi-check-lg" aria-hidden="true"></i>
                                     </button>
                                     </form>
                                     <form method="post" action="{{ url_for('maquinas.eliminar_maquina') }}"
@@ -358,8 +366,9 @@
                                         <input type="hidden" name="csrf_token" value="{{ csrf_token_value }}">
                                         <input type="hidden" name="origen" value="bunker">
                                         <input type="hidden" name="id" value="{{ m.id }}">
-                                        <button type="submit" class="btn-action delete" title="Eliminar máquina">
-                                            <i class="bi bi-trash"></i>
+                                        <button type="submit" class="btn-action delete" title="Eliminar máquina"
+                                            aria-label="Eliminar {{ m.nombre }}">
+                                            <i class="bi bi-trash" aria-hidden="true"></i>
                                         </button>
                                     </form>
                                 </div>
@@ -395,6 +404,51 @@
         </div>
         {% endif %}
         {% endif %}
+    </div>
+</div>
+
+<!-- Modal: estadisticas de maquina (writeups, descargas, valoracion) -->
+<div id="machineStatsModal" class="overlay" role="dialog" aria-modal="true" aria-labelledby="machineStatsModalTitle">
+    <div class="popup" style="width: min(420px, 92vw);">
+        <button class="modal-close-button" type="button" onclick="closeModal('machineStatsModal')"
+            aria-label="Cerrar estadísticas">&times;</button>
+        <div class="modal-header">
+            <h2 class="modal-title" id="machineStatsModalTitle">Estadísticas</h2>
+            <div class="modal-subtitle" id="machineStatsModalSubtitle"></div>
+        </div>
+        <div id="machineStatsModalBody" class="machine-stats-body" aria-live="polite">
+            <div class="machine-stats-loading">Cargando...</div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: detalles largos de la maquina (enlace autor, descripcion, link
+     descarga). Estos campos siguen viviendo como inputs ocultos dentro del
+     form de la fila (ver arriba); este modal solo los edita y, al guardar,
+     dispara el submit normal de esa misma fila. -->
+<div id="machineDetailsModal" class="overlay" role="dialog" aria-modal="true" aria-labelledby="machineDetailsModalTitle">
+    <div class="popup" style="width: min(560px, 92vw);">
+        <button class="modal-close-button" type="button" onclick="closeMachineDetailsModal()"
+            aria-label="Cerrar sin guardar">&times;</button>
+        <div class="modal-header">
+            <h2 class="modal-title" id="machineDetailsModalTitle">Detalles</h2>
+            <div class="modal-subtitle" id="machineDetailsModalSubtitle"></div>
+        </div>
+        <div class="machine-details-body">
+            <label for="detailsEnlaceAutor">Enlace del autor</label>
+            <input type="text" id="detailsEnlaceAutor" class="input-minimal" placeholder="https://...">
+
+            <label for="detailsDescripcion">Descripción</label>
+            <textarea id="detailsDescripcion" class="input-minimal" rows="6"></textarea>
+
+            <label for="detailsLinkDescarga">Link de descarga</label>
+            <input type="text" id="detailsLinkDescarga" class="input-minimal" placeholder="https://...">
+
+            <div class="machine-details-actions">
+                <button type="button" class="btn-secondary" onclick="closeMachineDetailsModal()">Cancelar</button>
+                <button type="button" class="btn-primary" onclick="saveMachineDetailsModal()">Guardar y aplicar</button>
+            </div>
+        </div>
     </div>
 </div>
 {% endblock %}

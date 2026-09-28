@@ -1,7 +1,7 @@
 /* Estilos para página de estadísticas */
 .stats-container {
-    padding: 80px 20px 40px;
-    max-width: 1200px;
+    padding: 80px 24px 40px;
+    max-width: 1440px;
     margin: 0 auto;
 }
 
@@ -23,7 +23,7 @@
 
 .charts-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(440px, 1fr));
     gap: 2rem;
 }
 
@@ -55,4 +55,312 @@
     position: relative;
     height: 300px;
     width: 100%;
+}
+
+.section-title {
+    color: #f8fafc;
+    font-size: 1.4rem;
+    font-weight: 700;
+    margin: 3rem 0 1.5rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid #334155;
+}
+
+.section-title:first-of-type {
+    margin-top: 0;
+}
+
+.stat-tiles {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.25rem;
+    margin-bottom: 1rem;
+}
+
+.stat-tile {
+    background: #1e293b;
+    border: 1px solid #334155;
+    border-radius: 12px;
+    padding: 1.25rem;
+    text-align: center;
+}
+
+.stat-tile-icon {
+    font-size: 1.4rem;
+    margin-bottom: 0.5rem;
+}
+
+.stat-tile-value {
+    color: #f8fafc;
+    font-size: 1.8rem;
+    font-weight: 700;
+    font-family: 'Fira Code', monospace;
+    line-height: 1.2;
+}
+
+.stat-tile-label {
+    color: #94a3b8;
+    font-size: 0.8rem;
+    margin-top: 0.25rem;
+}
+
+/* Filtro de período de actividad */
+.stats-filter {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: 1rem;
+    background: #1e293b;
+    border: 1px solid #334155;
+    border-radius: 12px;
+    padding: 1rem 1.25rem;
+    margin-bottom: 1.5rem;
+}
+
+.stats-filter-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+}
+
+.stats-filter-group label {
+    color: #94a3b8;
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.stats-filter-select,
+.stats-filter-dates input[type="date"] {
+    background: #0f172a;
+    color: #f8fafc;
+    border: 1px solid #334155;
+    border-radius: 8px;
+    padding: 0.55rem 0.75rem;
+    font-family: 'Fira Code', monospace;
+    font-size: 0.9rem;
+}
+
+.stats-filter-select {
+    min-width: 220px;
+}
+
+.chart-title-select {
+    min-width: 0;
+    margin-left: auto;
+    font-size: 0.85rem;
+    font-weight: 500;
+}
+
+.stats-filter-select:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+}
+
+.stats-filter-dates {
+    flex-direction: row;
+    align-items: flex-end;
+    gap: 0.8rem;
+    flex-wrap: wrap;
+}
+
+.stats-filter-dates .stats-filter-date {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+}
+
+.stats-filter-dates .stats-filter-date label {
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.stats-filter-dates input[type="date"] {
+    color-scheme: dark;
+}
+
+.stats-filter-btn {
+    background: #8b5cf6;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: 0.55rem 1.25rem;
+    font-weight: 600;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.stats-filter-btn:hover {
+    background: #7c3aed;
+}
+
+.stats-filter-hint {
+    color: #64748b;
+    font-size: 0.8rem;
+    align-self: center;
+    margin-left: auto;
+}
+
+.stats-filter-empty {
+    background: #451a03;
+    border: 1px solid #b45309;
+    color: #fcd34d;
+    border-radius: 12px;
+    padding: 1rem 1.25rem;
+    margin-bottom: 1.5rem;
+    font-size: 0.9rem;
+}
+
+/* Tooltip personalizado para todas las gráficas */
+.chart-tooltip {
+    --tooltip-accent: #8b5cf6;
+    position: absolute;
+    z-index: 50;
+    pointer-events: none;
+    min-width: 190px;
+    padding: 0.75rem 1rem;
+    border-radius: 12px;
+    background: linear-gradient(160deg, #1e293b 0%, #0f172a 100%);
+    border: 1px solid var(--tooltip-accent);
+    box-shadow: 0 10px 30px -6px rgba(0, 0, 0, 0.6),
+                0 0 0 1px color-mix(in srgb, var(--tooltip-accent) 25%, transparent),
+                0 0 24px color-mix(in srgb, var(--tooltip-accent) 15%, transparent);
+    opacity: 0;
+    visibility: hidden;
+    transform: translate(-50%, calc(-100% - 18px));
+    transition: opacity 0.15s ease, transform 0.15s ease, visibility 0.15s;
+    font-family: 'Fira Code', monospace;
+    will-change: transform;
+}
+
+.chart-tooltip::after {
+    content: '';
+    position: absolute;
+    left: 50%;
+    bottom: -7px;
+    width: 12px;
+    height: 12px;
+    background: inherit;
+    border-right: 1px solid var(--tooltip-accent);
+    border-bottom: 1px solid var(--tooltip-accent);
+    border-radius: 2px;
+    transform: translateX(-50%) rotate(45deg);
+}
+
+.chart-tooltip.below {
+    transform: translate(-50%, 18px);
+}
+
+.chart-tooltip.below::after {
+    top: -7px;
+    bottom: auto;
+    border-top: 1px solid var(--tooltip-accent);
+    border-left: 1px solid var(--tooltip-accent);
+    border-right: none;
+    border-bottom: none;
+}
+
+.chart-tooltip.visible {
+    opacity: 1;
+    visibility: visible;
+}
+
+.chart-tooltip__top {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+}
+
+.chart-tooltip__dot {
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    background: var(--tooltip-accent);
+    box-shadow: 0 0 8px var(--tooltip-accent);
+    flex-shrink: 0;
+}
+
+.chart-tooltip__weekday {
+    color: color-mix(in srgb, var(--tooltip-accent) 55%, #f8fafc);
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+}
+
+.chart-tooltip__date {
+    color: #f8fafc;
+    font-size: 1rem;
+    font-weight: 700;
+    margin-top: 0.15rem;
+}
+
+.chart-tooltip__divider {
+    height: 1px;
+    background: linear-gradient(90deg, var(--tooltip-accent) 0%, #334155 60%, transparent 100%);
+    margin: 0.6rem 0;
+}
+
+.chart-tooltip__row {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+}
+
+.chart-tooltip__icon {
+    color: var(--tooltip-accent);
+    font-size: 1.2rem;
+    line-height: 1;
+}
+
+.chart-tooltip__value {
+    color: var(--tooltip-accent);
+    font-size: 1.7rem;
+    font-weight: 700;
+    line-height: 1;
+}
+
+.chart-tooltip__label {
+    color: #94a3b8;
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+}
+
+@media (max-width: 640px) {
+    .stats-container {
+        padding: 80px 14px 32px;
+    }
+    .charts-grid,
+    .stat-tiles {
+        grid-template-columns: 1fr;
+    }
+    .chart-container {
+        height: 260px;
+    }
+    .stats-filter {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    .stats-filter-select {
+        min-width: 0;
+        width: 100%;
+    }
+    .stats-filter-dates {
+        width: 100%;
+    }
+    .stats-filter-dates .stats-filter-date {
+        flex: 1;
+    }
+    .stats-filter-dates input[type="date"] {
+        width: 100%;
+    }
+    .stats-filter-btn {
+        width: 100%;
+    }
+    .stats-filter-hint {
+        margin-left: 0;
+    }
 }

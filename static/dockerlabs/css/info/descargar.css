@@ -1,0 +1,459 @@
+/* Estilos para la página intermedia de descarga de máquina */
+.descargar-container {
+    padding: 110px 20px 60px;
+    max-width: 1100px;
+    margin: 0 auto;
+    width: 100%;
+    min-width: 0;
+}
+
+.descargar-header {
+    text-align: center;
+    margin-bottom: 2.5rem;
+}
+
+.descargar-header h1 {
+    font-size: 2.2rem;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+    color: var(--text-primary);
+    margin-bottom: 0.6rem;
+}
+
+.descargar-header .maquina-nombre {
+    color: var(--accent-cyan);
+}
+
+.descargar-header p {
+    color: var(--text-muted);
+    font-size: 1rem;
+}
+
+.emoji {
+    display: inline-block;
+    animation: subirBajar 2.5s ease-in-out infinite;
+}
+
+@keyframes subirBajar {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-8px); }
+}
+
+.descargar-card {
+    background: var(--surface-dark);
+    border: 1px solid var(--border-strong);
+    border-radius: 18px;
+    padding: 2.5rem;
+    backdrop-filter: blur(18px);
+    box-shadow: 0 20px 40px rgba(0,0,0,0.6);
+}
+
+.descargar-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+}
+
+.descargar-grid > * {
+    min-width: 0;
+}
+
+.section-title {
+    font-size: 1.3rem;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    margin-bottom: 1.2rem;
+}
+
+.pasos {
+    color: var(--text-secondary);
+    line-height: 1.7;
+    padding-left: 1.3rem;
+    margin: 0;
+}
+
+.pasos li {
+    margin-bottom: 1.1rem;
+}
+
+.pasos li:last-child {
+    margin-bottom: 0;
+}
+
+.pasos code {
+    background: rgba(15, 23, 42, 0.6);
+    border: 1px solid var(--border-subtle);
+    border-radius: 6px;
+    padding: 0.15rem 0.4rem;
+    font-family: "Fira Code", ui-monospace, monospace;
+    font-size: 0.9em;
+    color: var(--accent-cyan);
+}
+
+.comando-box {
+    background: rgba(15, 23, 42, 0.75);
+    border: 1px solid var(--border-subtle);
+    border-radius: 10px;
+    padding: 0.8rem 1rem;
+    margin-top: 0.6rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.8rem;
+}
+
+.comando-box code {
+    background: none;
+    border: none;
+    padding: 0;
+    font-size: 0.95rem;
+    white-space: nowrap;
+    overflow-x: auto;
+    min-width: 0;
+    flex: 1 1 auto;
+}
+
+.copy-btn {
+    flex-shrink: 0;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid var(--border-subtle);
+    color: var(--text-secondary);
+    border-radius: 8px;
+    padding: 0.4rem 0.6rem;
+    cursor: pointer;
+    font-size: 0.95rem;
+    line-height: 1;
+    transition: all 0.2s ease;
+}
+
+.copy-btn:hover {
+    color: var(--accent-cyan);
+    border-color: var(--accent-cyan);
+}
+
+.copy-btn.copied {
+    color: #3ecf6e;
+    border-color: #3ecf6e;
+}
+
+.descargar-info {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    margin-top: 1.5rem;
+}
+
+.descargar-info kbd {
+    background: rgba(15, 23, 42, 0.7);
+    border: 1px solid var(--border-subtle);
+    border-radius: 5px;
+    padding: 0.1rem 0.4rem;
+    font-size: 0.85em;
+}
+
+.captura-box {
+    background: rgba(15, 23, 42, 0.6);
+    border: 1px solid var(--border-subtle);
+    border-radius: 14px;
+    padding: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.captura-box img {
+    width: 100%;
+    height: auto;
+    border-radius: 8px;
+    display: block;
+    cursor: zoom-in;
+    transition: transform 0.2s ease;
+}
+
+.captura-box img:hover {
+    transform: scale(1.015);
+}
+
+.lightbox-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(4, 8, 16, 0.92);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10000;
+    padding: 40px;
+    cursor: zoom-out;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease;
+}
+
+.lightbox-overlay.open {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.lightbox-overlay img {
+    max-width: 100%;
+    max-height: 100%;
+    border-radius: 10px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.7);
+}
+
+.lightbox-close {
+    position: fixed;
+    top: 24px;
+    right: 32px;
+    color: var(--text-primary);
+    font-size: 2rem;
+    line-height: 1;
+    cursor: pointer;
+    z-index: 10001;
+}
+
+.descargar-cta {
+    text-align: center;
+}
+
+.descargar-btn {
+    background: var(--accent-cyan);
+    color: #05131c;
+    padding: 1rem 2.2rem;
+    border-radius: 12px;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6rem;
+    text-decoration: none;
+    font-weight: 700;
+    font-size: 1.05rem;
+    transition: all 0.3s ease;
+}
+
+.descargar-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(34, 211, 238, 0.4);
+}
+
+.formacion-nota {
+    margin: 1.4rem 0 0;
+    color: var(--text-muted);
+    font-size: 0.88rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.formacion-nota i {
+    color: var(--accent-cyan);
+}
+
+.formacion-nota a {
+    color: var(--accent-cyan);
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.formacion-nota a:hover {
+    text-decoration: underline;
+}
+
+/* ============================================================
+   Responsive: tablet pequeña (<=768px) y móvil (<=480px)
+   Breakpoints coherentes con el resto del sitio (base.css/styles.css)
+   ============================================================ */
+@media (max-width: 768px) {
+    .descargar-container {
+        padding: 90px 16px 40px;
+    }
+
+    .descargar-header {
+        margin-bottom: 1.8rem;
+    }
+
+    .descargar-header h1 {
+        font-size: 1.6rem;
+        overflow-wrap: break-word;
+        word-break: break-word;
+    }
+
+    .descargar-header p {
+        font-size: 0.92rem;
+    }
+
+    .descargar-card {
+        padding: 1.5rem 1.15rem;
+        border-radius: 14px;
+    }
+
+    .descargar-grid {
+        gap: 1.6rem;
+    }
+
+    .section-title {
+        font-size: 1.1rem;
+        margin-bottom: 1rem;
+    }
+
+    .pasos {
+        font-size: 0.95rem;
+        padding-left: 1.1rem;
+    }
+
+    .comando-box {
+        padding: 0.7rem 0.8rem;
+        gap: 0.5rem;
+    }
+
+    .comando-box code {
+        font-size: 0.85rem;
+    }
+
+    .copy-btn {
+        min-width: 44px;
+        min-height: 44px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0.5rem;
+    }
+
+    .descargar-info {
+        font-size: 0.85rem;
+    }
+
+    .captura-box {
+        padding: 0.7rem;
+    }
+
+    .descargar-btn {
+        width: 100%;
+        max-width: 360px;
+        justify-content: center;
+        padding: 0.95rem 1.5rem;
+        font-size: 1rem;
+        min-height: 48px;
+        text-align: center;
+    }
+
+    .formacion-nota {
+        font-size: 0.85rem;
+        text-align: center;
+    }
+
+    .lightbox-overlay {
+        padding: 20px;
+    }
+
+    .lightbox-close {
+        top: 14px;
+        right: 16px;
+        font-size: 2rem;
+        min-width: 44px;
+        min-height: 44px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+}
+
+@media (max-width: 480px) {
+    .descargar-container {
+        padding: 80px 12px 32px;
+    }
+
+    .descargar-header {
+        margin-bottom: 1.4rem;
+    }
+
+    .descargar-header h1 {
+        font-size: 1.35rem;
+    }
+
+    .descargar-header p {
+        font-size: 0.85rem;
+    }
+
+    .descargar-card {
+        padding: 1.25rem 0.9rem;
+        border-radius: 12px;
+    }
+
+    .descargar-grid {
+        gap: 1.3rem;
+    }
+
+    .section-title {
+        font-size: 1rem;
+        gap: 0.45rem;
+        margin-bottom: 0.85rem;
+    }
+
+    .pasos {
+        font-size: 0.9rem;
+        line-height: 1.6;
+        padding-left: 1rem;
+    }
+
+    .pasos li {
+        margin-bottom: 0.9rem;
+    }
+
+    .pasos code {
+        font-size: 0.85em;
+        word-break: break-word;
+    }
+
+    .comando-box {
+        padding: 0.6rem 0.65rem;
+        border-radius: 8px;
+        gap: 0.4rem;
+    }
+
+    .comando-box code {
+        font-size: 0.78rem;
+    }
+
+    .copy-btn {
+        min-width: 44px;
+        min-height: 44px;
+        padding: 0.5rem;
+    }
+
+    .descargar-info {
+        font-size: 0.8rem;
+        margin-top: 1.2rem;
+    }
+
+    .captura-box {
+        padding: 0.6rem;
+        border-radius: 12px;
+    }
+
+    .descargar-btn {
+        width: 100%;
+        max-width: 100%;
+        font-size: 0.95rem;
+        padding: 0.9rem 1rem;
+    }
+
+    .formacion-nota {
+        font-size: 0.8rem;
+        gap: 0.4rem;
+        margin-top: 1.1rem;
+    }
+
+    .lightbox-overlay {
+        padding: 12px;
+    }
+
+    .lightbox-close {
+        top: 8px;
+        right: 8px;
+        font-size: 1.8rem;
+    }
+}

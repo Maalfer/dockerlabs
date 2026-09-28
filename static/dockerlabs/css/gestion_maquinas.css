@@ -109,7 +109,7 @@
 
 /* Page Container */
 .gestion-maquinas-container {
-    padding: 120px 20px 40px;
+    padding: 32px 20px 40px;
     max-width: 95%;
     margin: 0 auto;
 }
@@ -364,6 +364,78 @@
     box-shadow: 0 0 10px rgba(239, 68, 68, 0.3);
 }
 
+.btn-action.details {
+    color: var(--primary-color);
+    background: rgba(59, 130, 246, 0.1);
+}
+
+.btn-action.details:hover {
+    background: var(--primary-color);
+    color: white;
+    box-shadow: 0 0 10px rgba(59, 130, 246, 0.3);
+}
+
+/* Details modal (enlace autor / descripcion / link descarga) */
+.machine-details-body {
+    display: flex;
+    flex-direction: column;
+}
+
+.machine-details-body label {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    margin: 0.9rem 0 0.35rem;
+    font-weight: 600;
+}
+
+.machine-details-body label:first-child {
+    margin-top: 0;
+}
+
+.machine-details-body textarea.input-minimal {
+    resize: vertical;
+    min-height: 120px;
+    width: 100%;
+    font-family: inherit;
+}
+
+.machine-details-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.75rem;
+    margin-top: 1.5rem;
+}
+
+.btn-primary,
+.btn-secondary {
+    padding: 9px 18px;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    cursor: pointer;
+    border: 1px solid transparent;
+    transition: all 0.2s ease;
+}
+
+.btn-primary {
+    background: var(--primary-color);
+    color: white;
+}
+
+.btn-primary:hover {
+    background: #2563eb;
+}
+
+.btn-secondary {
+    background: transparent;
+    border-color: var(--border-color);
+    color: var(--text-main);
+}
+
+.btn-secondary:hover {
+    background: rgba(255, 255, 255, 0.05);
+}
+
 /* Filters */
 .filter-row th {
     background: rgba(15, 23, 42, 0.6);
@@ -388,10 +460,169 @@
     outline: none;
 }
 
+/* Sort/filter toggle buttons in table headers (keyboard-accessible
+   replacement for the old onclick-on-<th> pattern: a real <button>,
+   focusable and operable with Enter/Space, announced correctly by
+   screen readers). */
+.th-filter-toggle {
+    background: none;
+    border: none;
+    padding: 0;
+    margin: 0;
+    color: inherit;
+    font: inherit;
+    text-transform: inherit;
+    letter-spacing: inherit;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+.th-filter-toggle:hover,
+.th-filter-toggle:focus-visible {
+    color: var(--text-main);
+}
+
+.th-filter-toggle:focus-visible {
+    outline: 2px solid var(--primary-color);
+    outline-offset: 2px;
+    border-radius: 4px;
+}
+
+.th-filter-toggle i {
+    font-size: 0.7em;
+}
+
+/* Clickable machine name -> opens the stats modal. Sits above the
+   inline-edit input so editing (click into the input) keeps working
+   exactly as before. */
+.machine-name-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    background: none;
+    border: none;
+    padding: 4px 2px;
+    margin-bottom: 4px;
+    color: #93c5fd;
+    font-weight: 600;
+    font-size: 0.9rem;
+    cursor: pointer;
+    text-align: left;
+    border-radius: 4px;
+    transition: color 0.15s ease;
+}
+
+.machine-name-link:hover,
+.machine-name-link:focus-visible {
+    color: #bfdbfe;
+    text-decoration: underline;
+}
+
+.machine-name-link:focus-visible {
+    outline: 2px solid var(--primary-color);
+    outline-offset: 2px;
+}
+
+.machine-name-link i {
+    font-size: 0.85em;
+}
+
+/* Stats modal content */
+.machine-stats-body {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.machine-stats-loading,
+.machine-stats-error {
+    text-align: center;
+    padding: 1.5rem 0;
+    color: var(--text-muted);
+}
+
+.machine-stats-error {
+    color: #f87171;
+}
+
+.machine-stat-card {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 0.9rem 1.1rem;
+}
+
+.machine-stat-icon {
+    font-size: 1.4rem;
+    color: var(--primary-color);
+    width: 2rem;
+    text-align: center;
+    flex-shrink: 0;
+}
+
+.machine-stat-value {
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: #ffffff;
+    line-height: 1.2;
+}
+
+.machine-stat-label {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+}
+
 /* Responsive adjustments */
 @media (max-width: 1200px) {
     .custom-table {
-        min-width: 1000px;
+        min-width: 560px;
+    }
+}
+
+@media (max-width: 860px) {
+    .gestion-maquinas-container {
+        padding: 20px 12px 32px;
+    }
+
+    .page-header {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 1rem;
+    }
+
+    .header-actions {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.75rem;
+    }
+
+    .search-box {
+        width: 100%;
+    }
+
+    .search-box input {
+        width: 100%;
+    }
+
+    .platform-switcher {
+        justify-content: center;
+    }
+
+    .table-card {
+        padding: 0.75rem;
+        border-radius: 12px;
+    }
+
+    .pagination-container {
+        flex-direction: column;
+        gap: 0.75rem;
+        text-align: center;
+        padding: 1rem;
     }
 }
 

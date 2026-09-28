@@ -20,7 +20,7 @@ seguir siendo así: son de solo lectura y no exponen datos privados (nunca
 
 BunkerLabs es de acceso cerrado y **no tiene certificados ni se expone aquí**.
 El candado está en el código (`certificados.py: machine_certificable()` y
-`CERT_ORIGENES = ('docker', 'empezar')`) **y** en el filtrado de
+`CERT_ORIGENES = ('docker',)`) **y** en el filtrado de
 `public_profile.py`. No emitas diplomas ni publiques datos de máquinas cuyo
 `origen == 'bunker'`.
 

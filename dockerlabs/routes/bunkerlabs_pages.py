@@ -1,17 +1,15 @@
-import os
 from datetime import datetime
 from typing import Optional
 from urllib.parse import quote
 
 import secrets
-from fastapi import Depends, HTTPException, Request
-from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, RedirectResponse
-from werkzeug.utils import secure_filename
+from fastapi import Depends, Request
+from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
 
 from sqlalchemy.exc import IntegrityError
 
-from bunkerlabs.models import BunkerAccessLog, BunkerAccessToken, BunkerResource
-from dockerlabs.models import Machine
+from bunkerlabs.models import BunkerAccessLog, BunkerAccessToken
+from dockerlabs.models import Machine, MachineDownloadLog
 
 
 def register_bunkerlabs_pages_routes(
@@ -205,57 +203,6 @@ def register_bunkerlabs_pages_routes(
             },
         )
 
-    @pages_router.get("/bunkerlabs/empezar", response_class=HTMLResponse)
-    async def bunkerlabs_empezar(request: Request, session: dict = Depends(get_session)):
-        """Sección 'Empezar de 0': labs de iniciación que se descargan como .py.
-        Mismo gate de acceso que el resto de /bunkerlabs (PIN/login)."""
-        if "bunkerlabs_nombre" not in session or not session.get("bunkerlabs_ok"):
-            return RedirectResponse(url="/bunkerlabs/login", status_code=302)
-
-        maquinas = Machine.query.filter_by(origen="empezar").order_by(Machine.id.asc()).all()
-
-        current_user_role = session.get("role", "")
-        csrf_token = session.get("csrf_token")
-        if not csrf_token:
-            csrf_token = secrets.token_urlsafe(32)
-            session["csrf_token"] = csrf_token
-        return templates.TemplateResponse(
-            request,
-            "bunkerlabs/empezar.html",
-            {
-                "maquinas": maquinas,
-                "is_guest": session.get("bunkerlabs_guest", False),
-                "session": session,
-                "url_for": url_for,
-                "current_user_role": current_user_role,
-                "csrf_token_value": csrf_token,
-                "g": {"csp_nonce": secrets.token_urlsafe(32)},
-            },
-        )
-
-    @pages_router.get("/bunkerlabs/empezar/descargar/{machine_id}")
-    def descargar_empezar(machine_id: int, request: Request, session: dict = Depends(get_session)):
-        """Descarga directa del .py de un lab de iniciación (gated como /bunkerlabs)."""
-        if "bunkerlabs_nombre" not in session or not session.get("bunkerlabs_ok"):
-            return RedirectResponse(url="/bunkerlabs/login", status_code=302)
-
-        lab = Machine.query.filter_by(id=machine_id, origen="empezar").first()
-        if not lab or not lab.script_path:
-            raise HTTPException(status_code=404, detail="Script no encontrado")
-
-        base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
-        full_path = os.path.join(base_dir, lab.script_path)
-        if not os.path.exists(full_path):
-            raise HTTPException(status_code=404, detail="Script no encontrado")
-
-        safe = secure_filename(lab.nombre) or "lab"
-        return FileResponse(
-            full_path,
-            media_type="text/x-python",
-            filename=f"{safe}.py",
-            headers={"Content-Disposition": f'attachment; filename="{safe}.py"'},
-        )
-
     @pages_router.get("/bunkerlabs/accesos")
     def accesos_bunkerlabs_redirect():
         return RedirectResponse(url="/bunkerlabs/gestion", status_code=301)
@@ -293,7 +240,6 @@ def register_bunkerlabs_pages_routes(
         tokens = BunkerAccessToken.query.order_by(BunkerAccessToken.created_at.desc()).all()
         real_machines = Machine.query.filter_by(origen="bunker", clase="real").order_by(Machine.nombre.asc()).all()
         bunker_machines = Machine.query.filter_by(origen="bunker").order_by(Machine.nombre.asc()).all()
-        recursos = BunkerResource.query.order_by(BunkerResource.created_at.desc()).all()
 
         csrf_token = session.get("csrf_token")
         if not csrf_token:
@@ -306,7 +252,6 @@ def register_bunkerlabs_pages_routes(
             "success": success,
             "real_machines": real_machines,
             "bunker_machines": bunker_machines,
-            "recursos": recursos,
             "session": session,
             "csrf_token_value": csrf_token,
             "g": {"csp_nonce": secrets.token_urlsafe(32)},
@@ -332,124 +277,36 @@ def register_bunkerlabs_pages_routes(
             db.session.commit()
         return RedirectResponse(url="/bunkerlabs/gestion", status_code=302)
 
-    @pages_router.get("/bunkerlabs/recursos", response_class=HTMLResponse)
-    async def bunkerlabs_recursos(
-        request: Request,
-        session: dict = Depends(get_session),
-    ):
+    @pages_router.get("/bunkerlabs/maquinas/{machine_id}/descargar", response_class=HTMLResponse)
+    def bunkerlabs_descargar_page(machine_id: int, request: Request, session: dict = Depends(get_session)):
+        if not session.get("bunkerlabs_ok"):
+            return RedirectResponse(url="/bunkerlabs/login", status_code=302)
 
-        recursos = BunkerResource.query.order_by(BunkerResource.created_at.desc()).all()
-        current_user_role = session.get("role", "")
+        maquina = Machine.query.filter_by(id=machine_id, origen="bunker").first()
+        if not maquina:
+            return RedirectResponse(url="/bunkerlabs", status_code=302)
+
+        # Mismo criterio que la home: el invitado solo descarga las marcadas con guest_access
+        if session.get("bunkerlabs_guest") and not maquina.guest_access:
+            return RedirectResponse(url="/bunkerlabs?maquina=" + quote(maquina.nombre, safe=""), status_code=302)
+
+        maquina.descargas = (maquina.descargas or 0) + 1
+        db.session.add(MachineDownloadLog(machine_id=maquina.id))
+        db.session.commit()
+
         csrf_token = session.get("csrf_token")
         if not csrf_token:
             csrf_token = secrets.token_urlsafe(32)
             session["csrf_token"] = csrf_token
-
         return templates.TemplateResponse(
             request,
-            "bunkerlabs/recursos.html",
+            "bunkerlabs/descargar.html",
             {
-                "recursos": recursos,
+                "maquina": maquina,
                 "session": session,
-                "current_user_role": current_user_role,
-                "csrf_token_value": csrf_token,
                 "url_for": url_for,
+                "current_user_role": session.get("role", ""),
+                "csrf_token_value": csrf_token,
                 "g": {"csp_nonce": secrets.token_urlsafe(32)},
             },
         )
-
-    @pages_router.post("/bunkerlabs/admin/recursos/add")
-    async def add_bunker_recurso(
-        request: Request,
-        session: dict = Depends(get_session),
-        csrf_ok: bool = Depends(verify_csrf_token),
-    ):
-        ok, redir = require_auth_and_role(session, ["admin"])
-        if not ok:
-            return JSONResponse(status_code=403, content={"error": "Acceso denegado"})
-
-        form = await request.form()
-        titulo = (form.get("titulo") or "").strip()
-        descripcion = (form.get("descripcion") or "").strip() or None
-        url_val = (form.get("url") or "").strip()
-
-        if not titulo or not url_val:
-            session["_flashes"] = [("error", "El título y la URL son obligatorios.")]
-        else:
-            try:
-                db.session.add(BunkerResource(titulo=titulo, descripcion=descripcion, url=url_val))
-                db.session.commit()
-                session["_flashes"] = [("success", f"Recurso '{titulo}' añadido correctamente.")]
-            except Exception as e:
-                db.session.rollback()
-                session["_flashes"] = [("error", f"Error al añadir recurso: {str(e)}")]
-
-        cookie = encode_session_cookie(session)
-        resp = RedirectResponse(url="/bunkerlabs/gestion", status_code=302)
-        resp.set_cookie("session", cookie, httponly=True, secure=True, path="/", samesite="lax")
-        return resp
-
-    @pages_router.post("/bunkerlabs/admin/recursos/delete/{recurso_id}")
-    def delete_bunker_recurso(
-        recurso_id: int,
-        session: dict = Depends(get_session),
-        csrf_ok: bool = Depends(verify_csrf_token),
-    ):
-        ok, redir = require_auth_and_role(session, ["admin"])
-        if not ok:
-            return JSONResponse(status_code=403, content={"error": "Acceso denegado"})
-
-        recurso = BunkerResource.query.get(recurso_id)
-        if recurso:
-            try:
-                db.session.delete(recurso)
-                db.session.commit()
-                session["_flashes"] = [("success", "Recurso eliminado correctamente.")]
-            except Exception as e:
-                db.session.rollback()
-                session["_flashes"] = [("error", f"Error al eliminar recurso: {str(e)}")]
-        else:
-            session["_flashes"] = [("error", "Recurso no encontrado.")]
-
-        cookie = encode_session_cookie(session)
-        resp = RedirectResponse(url="/bunkerlabs/gestion", status_code=302)
-        resp.set_cookie("session", cookie, httponly=True, secure=True, path="/", samesite="lax")
-        return resp
-
-    @pages_router.post("/bunkerlabs/admin/recursos/edit/{recurso_id}")
-    async def edit_bunker_recurso(
-        recurso_id: int,
-        request: Request,
-        session: dict = Depends(get_session),
-        csrf_ok: bool = Depends(verify_csrf_token),
-    ):
-        ok, redir = require_auth_and_role(session, ["admin"])
-        if not ok:
-            return JSONResponse(status_code=403, content={"error": "Acceso denegado"})
-
-        form = await request.form()
-        titulo = (form.get("titulo") or "").strip()
-        descripcion = (form.get("descripcion") or "").strip() or None
-        url_val = (form.get("url") or "").strip()
-
-        recurso = BunkerResource.query.get(recurso_id)
-        if not recurso:
-            session["_flashes"] = [("error", "Recurso no encontrado.")]
-        elif not titulo or not url_val:
-            session["_flashes"] = [("error", "El título y la URL son obligatorios.")]
-        else:
-            try:
-                recurso.titulo = titulo
-                recurso.descripcion = descripcion
-                recurso.url = url_val
-                db.session.commit()
-                session["_flashes"] = [("success", "Recurso actualizado correctamente.")]
-            except Exception as e:
-                db.session.rollback()
-                session["_flashes"] = [("error", f"Error al actualizar recurso: {str(e)}")]
-
-        cookie = encode_session_cookie(session)
-        resp = RedirectResponse(url="/bunkerlabs/gestion", status_code=302)
-        resp.set_cookie("session", cookie, httponly=True, secure=True, path="/", samesite="lax")
-        return resp
-

@@ -46,13 +46,6 @@
     font-weight: 600;
 }
 
-.quick-stats {
-    display: flex;
-    justify-content: center;
-    gap: 2rem;
-    flex-wrap: wrap;
-}
-
 .stat-card {
     background: rgba(30, 41, 59, 0.6);
     border: 1px solid var(--border-strong);
@@ -72,23 +65,6 @@
     border-color: var(--primary-blue-light);
     /* Replaced #60a5fa */
     box-shadow: 0 8px 25px rgba(96, 165, 250, 0.15);
-}
-
-.stat-icon {
-    width: 50px;
-    height: 50px;
-    background: linear-gradient(135deg, var(--primary-blue) 0%, var(--primary-blue-dark) 100%);
-    border-radius: 10px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.5rem;
-    color: white;
-}
-
-.stat-info {
-    display: flex;
-    flex-direction: column;
 }
 
 .stat-number {
@@ -113,52 +89,15 @@
     gap: 3rem;
 }
 
-.claims-section {
-    background: rgba(15, 23, 42, 0.5);
-    border: 1px solid #1e293b;
-    padding: 2rem;
-    border-radius: 12px;
-}
 
-.claim-card {
-    background: rgba(2, 6, 23, 0.8);
-    border: 1px solid #1e293b;
-    border-radius: 12px;
-    padding: 1.5rem;
-    transition: all 0.2s ease;
-}
 
-.claim-card:hover {
-    border-color: var(--primary-blue);
-    /* Replaced #3b82f6 */
-    transform: translateY(-3px);
-}
 
 .section-header h2 {
     margin-bottom: 0.75rem;
 }
 
-.section-subtitle {
-    color: var(--text-muted);
-    /* Replaced #94a3b8 */
-    font-size: 0.95rem;
-}
 
-.claim-details {
-    list-style: none;
-    padding-left: 0;
-    margin: 0;
-}
 
-.claim-details li {
-    padding: 0.15rem 0;
-    color: var(--text-secondary);
-    /* Replaced #cbd5e1 */
-}
-
-.claim-actions .btn {
-    min-width: 110px;
-}
 
 
 .section-header {
@@ -293,12 +232,6 @@
     width: 16px;
 }
 
-.input-group {
-    position: relative;
-    display: flex;
-    align-items: center;
-}
-
 .form-control {
     background: #1e293b;
     border: 1px solid #334155;
@@ -334,33 +267,14 @@
     align-items: center;
 }
 
-
-.btn-edit {
-    background: #334155;
-    border: none;
-    border-radius: 6px;
-    color: #cbd5e1;
-    padding: 0.5rem;
-    margin-left: 0.5rem;
-    cursor: pointer;
-    transition: all 0.3s ease;
-}
-
-.btn-edit:hover {
-    background: #475569;
-    color: #60a5fa;
-}
-
 /* Botones de Acci�n */
 .form-actions {
     display: flex;
     gap: 1rem;
     margin-top: 1rem;
 }
-
 .btn-save,
-.btn-cancel,
-.btn-change-password {
+.btn-cancel {
     padding: 0.75rem 1.5rem;
     border: none;
     border-radius: 8px;
@@ -390,19 +304,6 @@
 .btn-cancel:hover {
     background: #64748b;
     transform: translateY(-2px);
-}
-
-.btn-change-password {
-    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
-    color: white;
-    width: 100%;
-    justify-content: center;
-    margin-top: 1rem;
-}
-
-.btn-change-password:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 5px 15px rgba(245, 158, 11, 0.3);
 }
 
 /* Secci�n de Seguridad */
@@ -467,85 +368,7 @@
     font-size: 0.7rem;
 }
 
-/* Secci�n de Actividad */
-.activity-section {
-    background: rgba(30, 41, 59, 0.6);
-    border: 1px solid #334155;
-    border-radius: 15px;
-    padding: 2rem;
-    backdrop-filter: blur(10px);
-}
-
-.activity-list {
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
-}
-
-.activity-item {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    padding: 1rem;
-    background: rgba(30, 41, 59, 0.8);
-    border: 1px solid #334155;
-    border-radius: 8px;
-    transition: all 0.3s ease;
-}
-
-.activity-item:hover {
-    border-color: #60a5fa;
-    transform: translateX(5px);
-}
-
-.activity-icon {
-    width: 40px;
-    height: 40px;
-    border-radius: 8px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.1rem;
-}
-
-.activity-icon.success {
-    background: rgba(16, 185, 129, 0.2);
-    color: #10b981;
-}
-
-.activity-icon.primary {
-    background: rgba(59, 130, 246, 0.2);
-    color: #3b82f6;
-}
-
-.activity-icon.warning {
-    background: rgba(245, 158, 11, 0.2);
-    color: #f59e0b;
-}
-
-.activity-icon.info {
-    background: rgba(139, 92, 246, 0.2);
-    color: #8b5cf6;
-}
-
-.activity-content {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-}
-
-.activity-text {
-    color: #e2e8f0;
-    font-size: 0.9rem;
-}
-
-.activity-time {
-    color: #94a3b8;
-    font-size: 0.8rem;
-    margin-top: 0.25rem;
-}
-
-/* Modal de reclamación de máquinas */
+/* Modal genérico (notificaciones) */
 .claim-modal {
     position: fixed;
     inset: 0;
@@ -570,30 +393,8 @@
     border: 1px solid #1e293b;
 }
 
-.btn-claim-machine {
-    border: none;
-    padding: 0.6rem 1.1rem;
-    border-radius: 999px;
-    background: linear-gradient(135deg, #38bdf8, #6366f1);
-    color: #e5f4ff;
-    font-weight: 600;
-    display: inline-flex;
-    align-items: center;
-    gap: 0.4rem;
-    cursor: pointer;
-    box-shadow: 0 10px 25px rgba(56, 189, 248, 0.35);
-    transition: transform 0.12s ease, box-shadow 0.12s ease, opacity 0.12s ease;
-}
 
-.btn-claim-machine:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 16px 32px rgba(56, 189, 248, 0.45);
-    opacity: 0.95;
-}
 
-.btn-claim-machine i {
-    font-size: 1.1rem;
-}
 
 .claim-modal-dialog h2 {
     margin-bottom: 0.75rem;
@@ -605,32 +406,10 @@
     font-size: 0.95rem;
 }
 
-.claim-proof {
-    white-space: pre-wrap;
-}
 
-.claim-card {
-    background: #020617;
-    border-radius: 0.75rem;
-    padding: 1rem 1.25rem;
-    border: 1px solid #1f2937;
-    margin-bottom: 0.75rem;
-}
 
-.claim-machine {
-    font-weight: 600;
-}
 
-.claim-date {
-    color: #6b7280;
-    margin-top: 0.4rem;
-}
 
-.claim-card p,
-.claim-card .text-muted,
-.claims-section .text-muted {
-    color: #ffffff !important;
-}
 
 
 /* Markdown Preview Styles */
@@ -845,10 +624,8 @@
     .welcome-section h1 {
         font-size: 2rem;
     }
-
-    .profile-section,
-    .security-section,
-    .activity-section {
+.profile-section,
+.security-section {
         padding: 1.5rem;
     }
 

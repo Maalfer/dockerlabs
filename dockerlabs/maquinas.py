@@ -13,7 +13,7 @@ def recalcular_ranking_creadores():
 
     results = db.session.query(
         Machine.autor, func.count(Machine.id)
-    ).filter(Machine.origen != 'empezar').group_by(Machine.autor).all()
+    ).group_by(Machine.autor).all()
 
     try:
         CreatorRanking.query.delete()

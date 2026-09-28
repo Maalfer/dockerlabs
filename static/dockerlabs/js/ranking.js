@@ -38,12 +38,37 @@ function injectRankingStyles() {
                 z-index: 10001;
                 padding: 2rem;
                 width: min(520px, 92vw);
+                max-width: 100%;
+                box-sizing: border-box;
                 max-height: 85vh;
                 overflow-y: auto;
+                overflow-x: hidden;
                 opacity: 0;
                 pointer-events: none; /* Block interactions when hidden */
                 font-family: 'Fira Code', monospace;
                 transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+                scrollbar-width: thin;
+                scrollbar-color: rgba(59, 130, 246, 0.35) transparent;
+            }
+
+            .popup::-webkit-scrollbar {
+                width: 8px;
+            }
+
+            .popup::-webkit-scrollbar-track {
+                background: transparent;
+            }
+
+            .popup::-webkit-scrollbar-thumb {
+                background: rgba(59, 130, 246, 0.3);
+                border-radius: 10px;
+                border: 2px solid transparent;
+                background-clip: padding-box;
+            }
+
+            .popup::-webkit-scrollbar-thumb:hover {
+                background: rgba(59, 130, 246, 0.55);
+                background-clip: padding-box;
             }
 
             .popup.visible {
@@ -115,6 +140,8 @@ function injectRankingStyles() {
                 border-radius: 999px;
                 padding: 0.35rem 1rem;
                 flex: 1;
+                min-width: 0;
+                box-sizing: border-box;
                 transition: border-color 0.2s;
             }
 
@@ -161,6 +188,12 @@ function injectRankingStyles() {
                 border-radius: 12px;
                 transition: all 0.2s ease;
                 cursor: pointer;
+                min-width: 0;
+                box-sizing: border-box;
+            }
+
+            .ranking-item > img {
+                flex-shrink: 0;
             }
 
             .ranking-item:hover {
@@ -181,6 +214,7 @@ function injectRankingStyles() {
                 font-weight: 700;
                 font-size: 0.875rem;
                 margin-right: 1rem;
+                flex-shrink: 0;
             }
 
             .rank-1 { color: #facc15; background: rgba(250, 204, 21, 0.1); border: 1px solid rgba(250, 204, 21, 0.2); }
@@ -191,18 +225,24 @@ function injectRankingStyles() {
                 flex: 1;
                 display: flex;
                 flex-direction: column;
+                min-width: 0;
             }
 
             .user-name {
                 font-weight: 600;
                 color: #f1f5f9;
                 font-size: 0.95rem;
+                overflow-wrap: anywhere;
+                word-break: break-word;
             }
 
             .user-points {
                 font-weight: 700;
                 color: #60a5fa;
                 font-size: 0.9rem;
+                flex-shrink: 0;
+                white-space: nowrap;
+                margin-left: 0.75rem;
             }
 
             /* Author Profile Specific */
@@ -221,15 +261,23 @@ function injectRankingStyles() {
                 object-fit: cover;
                 cursor: pointer;
                 transition: transform 0.2s;
+                flex-shrink: 0;
             }
             .profile-avatar:hover { transform: scale(1.05); }
+
+            .profile-details {
+                flex: 1;
+                min-width: 0;
+            }
 
             .profile-details h2 {
                 margin: 0;
                 font-size: 1.25rem;
                 font-weight: 700;
                 color: #f8fafc;
-                cursor: pointer; 
+                cursor: pointer;
+                overflow-wrap: anywhere;
+                word-break: break-word;
             }
             .profile-details h2:hover { color: #60a5fa; }
 
@@ -270,17 +318,31 @@ function injectRankingStyles() {
                 border: 1px solid transparent;
                 border-radius: 8px;
                 margin-bottom: 0.5rem;
+                min-width: 0;
+                box-sizing: border-box;
             }
-            
+
             .mini-list-item:hover {
                 border-color: #334155;
             }
-            
+
+            .mini-list-item > div {
+                min-width: 0;
+                overflow-wrap: anywhere;
+                word-break: break-word;
+            }
+
+            .mini-list-item > a {
+                flex-shrink: 0;
+                white-space: nowrap;
+            }
+
             .mini-img {
                 width: 32px;
                 height: 32px;
                 border-radius: 6px;
                 object-fit: cover;
+                flex-shrink: 0;
             }
         `;
         document.head.appendChild(style);
@@ -327,11 +389,14 @@ function openBiographyModal(authorName, biography, profileImageUrl) {
                 border-radius: 8px;
                 border: 1px solid #334155;
                 width: 100%;
+                box-sizing: border-box;
                 text-align: left;
                 font-size: 0.9rem;
                 line-height: 1.6;
                 color: #cbd5e1;
                 white-space: pre-wrap;
+                overflow-wrap: anywhere;
+                word-break: break-word;
             ">
                 ${escapeHtml(bioText)}
             </div>

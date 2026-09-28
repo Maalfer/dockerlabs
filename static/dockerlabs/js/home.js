@@ -278,13 +278,13 @@ function sortByDate(order) {
             return new Date(0);
         };
 
-        const dateA = getDate(a);
-        const dateB = getDate(b);
+        // A igualdad de dia, el id (orden de subida) desempata
+        const diff = (getDate(a) - getDate(b)) || ((Number(a.dataset.id) || 0) - (Number(b.dataset.id) || 0));
 
         if (order === 'recent') {
-            return dateB - dateA;
+            return -diff;
         } else if (order === 'oldest') {
-            return dateA - dateB;
+            return diff;
         } else {
             return 0;
         }

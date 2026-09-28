@@ -1,6 +1,7 @@
 /* Inter e Fira Code se cargan de forma no bloqueante desde base.html */
 
 :root {
+    color-scheme: dark;
     --primary-blue: #3b82f6;
     --primary-blue-dark: #1d4ed8;
     --primary-blue-light: #60a5fa;
@@ -27,6 +28,38 @@
 *::before,
 *::after {
     box-sizing: border-box;
+}
+
+/* Scrollbar global: fina, translucida en azul, coherente en toda la web
+   (mismo estilo que ya usaban los modales de ranking/notificaciones). */
+* {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(59, 130, 246, 0.35) transparent;
+}
+
+*::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+*::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+*::-webkit-scrollbar-thumb {
+    background: rgba(59, 130, 246, 0.3);
+    border-radius: 10px;
+    border: 2px solid transparent;
+    background-clip: padding-box;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+    background: rgba(59, 130, 246, 0.55);
+    background-clip: padding-box;
+}
+
+*::-webkit-scrollbar-corner {
+    background: transparent;
 }
 
 body {
@@ -875,22 +908,6 @@ header h1 a:hover {
     background: rgba(192, 192, 192, 0.5);
 }
 
-/* Badge ¡2ª! para la segunda máquina más reciente */
-.etiqueta-segunda {
-    display: inline-block;
-    background: linear-gradient(135deg, #A8A8A8, #D3D3D3);
-    color: #000;
-    font-size: 0.65rem;
-    font-weight: 700;
-    padding: 3px 8px;
-    border-radius: 4px;
-    margin-left: 8px;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    box-shadow: 0 2px 8px rgba(192, 192, 192, 0.5);
-    animation: pulse-silver 2s ease-in-out infinite;
-}
-
 @keyframes pulse-silver {
 
     0%,
@@ -1041,79 +1058,6 @@ footer {
 #dashboardModal.visible,
 #menuModal.visible {
     display: flex;
-}
-
-.gestion-writeups-popup {
-    background: rgba(15, 23, 42, 0.98);
-    border: 1px solid rgba(59, 130, 246, 0.9);
-    border-radius: 14px;
-    padding: 22px 24px;
-    max-width: 90%;
-    width: 320px;
-    text-align: center;
-    position: relative;
-    box-shadow: 0 18px 40px rgba(0, 0, 0, 0.75);
-}
-
-.gestion-writeups-popup h2 {
-    margin-top: 0;
-    margin-bottom: 16px;
-    color: var(--primary-blue-light);
-    letter-spacing: 0.08em;
-    font-size: 0.95rem;
-}
-
-.gestion-writeups-popup ul {
-    list-style: none;
-    margin: 0;
-    padding: 0;
-}
-
-.gestion-writeups-popup li {
-    margin: 8px 0;
-}
-
-.gestion-writeups-popup a {
-    color: #ffffff;
-    text-decoration: none;
-    font-weight: 500;
-    padding: 8px 12px;
-    display: block;
-    border-radius: 10px;
-    background: rgba(30, 64, 175, 0.35);
-    border: 1px solid rgba(59, 130, 246, 0.85);
-    font-size: 0.85rem;
-    transition: background 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
-}
-
-.gestion-writeups-popup a:hover {
-    background: var(--primary-blue);
-    transform: translateX(3px);
-    box-shadow: 0 10px 22px rgba(59, 130, 246, 0.6);
-}
-
-.boton-cerrar-modal {
-    display: block;
-    width: 26px;
-    height: 26px;
-    position: absolute;
-    top: 10px;
-    right: 10px;
-    background-color: rgba(239, 68, 68, 0.12);
-    border: 1px solid var(--accent-red);
-    color: #ffffff;
-    font-size: 18px;
-    font-weight: bold;
-    line-height: 0;
-    cursor: pointer;
-    border-radius: 999px;
-    transition: background-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
-}
-
-.boton-cerrar-modal:hover {
-    background-color: var(--accent-red);
-    transform: scale(1.05);
-    box-shadow: 0 8px 18px rgba(239, 68, 68, 0.6);
 }
 
 
@@ -1528,12 +1472,6 @@ footer {
         margin-right: 0.2rem;
     }
 
-    .gestion-writeups-popup {
-        padding: 18px 20px;
-        width: 95%;
-        margin: 1rem;
-    }
-
     footer {
         padding: 0.75rem 0;
         min-height: 70px;
@@ -1717,9 +1655,7 @@ footer {
     .wave {
         animation: none;
     }
-
-    .etiqueta-nueva,
-    .etiqueta-plata {
+.etiqueta-nueva {
         animation: none;
         will-change: auto;
     }
@@ -2396,40 +2332,6 @@ footer {
     gap: 0.6rem;
     padding: 0.5rem;
     justify-content: flex-start;
-}
-
-.colaborador-mini {
-    display: block;
-    width: 52px;
-    height: 52px;
-    border-radius: 999px;
-    overflow: hidden;
-    border: 2px solid rgba(51, 65, 85, 0.5);
-    transition: opacity 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease, transform 0.25s ease;
-    will-change: transform, opacity;
-    opacity: 0.7;
-    flex-shrink: 0;
-}
-
-.colaborador-mini img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    display: block;
-    filter: grayscale(20%);
-    transition: filter 0.25s ease;
-}
-
-.colaborador-mini:hover {
-    opacity: 1;
-    border-color: #ffffff;
-    box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.15),
-                0 0 12px rgba(255, 255, 255, 0.2);
-    transform: scale(1.12);
-}
-
-.colaborador-mini:hover img {
-    filter: grayscale(0%);
 }
 
 

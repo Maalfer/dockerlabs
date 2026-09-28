@@ -20,7 +20,7 @@ body {
 
 /* Page Container */
 .writeups-container {
-    padding: 120px 20px 40px;
+    padding: 32px 20px 40px;
     max-width: 95% !important;
     width: 95% !important;
     margin: 0 auto;
@@ -129,16 +129,6 @@ body {
 .select-minimal option {
     background: var(--bg-card);
     color: var(--text-main);
-}
-
-/* Badges */
-.badge-id {
-    display: inline-block;
-    padding: 2px 8px;
-    background: rgba(255, 255, 255, 0.1);
-    border-radius: 4px;
-    font-family: monospace;
-    font-size: 0.9em;
 }
 
 /* Action Buttons */

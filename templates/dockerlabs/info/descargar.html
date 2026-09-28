@@ -1,0 +1,126 @@
+{% extends 'dockerlabs/base.html' %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ static_v('dockerlabs/css/info/descargar.css') }}"
+      media="print" onload="this.media='all'">
+<noscript><link rel="stylesheet" href="{{ static_v('dockerlabs/css/info/descargar.css') }}"></noscript>
+{% endblock %}
+
+{% block title %}Descargar {{ maquina.nombre }} - DockerLabs{% endblock %}
+
+{% block extra_head %}
+{% endblock %}
+
+{% block content %}
+<div class="descargar-container">
+
+    <div class="descargar-header">
+        <h1>Descargar <span class="maquina-nombre">{{ maquina.nombre }}</span></h1>
+        <p>Antes de descargar, así se despliega la máquina en tu Kali Linux.</p>
+    </div>
+
+    <div class="descargar-card">
+
+        <div class="descargar-grid">
+
+            <div class="instrucciones-box">
+                <div class="section-title">
+                    🧭 Cómo desplegar la máquina
+                </div>
+
+                <ol class="pasos">
+                    <li>
+                        La máquina se descarga en formato <code>.zip</code>. Extrae su contenido
+                        desde tu Kali Linux.
+                    </li>
+                    <li>
+                        Abre una terminal en la carpeta donde has extraído el <code>.zip</code> y
+                        ejecuta:
+                        <div class="comando-box">
+                            <code id="deploy-cmd">sudo bash auto_deploy.sh nombre_maquina.tar</code>
+                            <button type="button" id="copy-cmd-btn" class="copy-btn" aria-label="Copiar comando">
+                                <i class="bi bi-clipboard"></i>
+                            </button>
+                        </div>
+                    </li>
+                    <li>
+                        En unos segundos el script te dará la <strong>IP de la máquina</strong>.
+                        ¡Ya puedes empezar a hackearla!
+                    </li>
+                </ol>
+
+                <p class="descargar-info">
+                    Para eliminar la máquina cuando termines, pulsa <kbd>Ctrl</kbd>+<kbd>C</kbd> en
+                    esa misma terminal.
+                </p>
+            </div>
+
+            <div class="descargar-cta">
+                <a class="descargar-btn" href="{{ maquina.link_descarga }}" target="_blank" rel="noopener noreferrer">
+                    <i class="bi bi-cloud-arrow-down-fill"></i> Descargar {{ maquina.nombre }}
+                </a>
+
+                <p class="formacion-nota">
+                    <i class="bi bi-mortarboard-fill"></i>
+                    ¿Quieres aprender hacking desde cero? En
+                    <a href="https://elrincondelhacker.es" target="_blank" rel="noopener noreferrer">elrincondelhacker.es</a>
+                    los cursos están hechos para que adquieras las bases del hacking de la forma más eficaz posible.
+                </p>
+            </div>
+
+            <div class="captura-box">
+                <img id="captura-img" src="{{ static_v('dockerlabs/images/descargar/desplegar.png') }}"
+                     alt="Ejemplo de despliegue con auto_deploy.sh mostrando la IP asignada"
+                     loading="lazy">
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<div id="lightbox-overlay" class="lightbox-overlay">
+    <span class="lightbox-close">&times;</span>
+    <img id="lightbox-img" src="" alt="Ejemplo de despliegue ampliado">
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script nonce="{{ csp_nonce }}">
+(function () {
+    var img = document.getElementById('captura-img');
+    var overlay = document.getElementById('lightbox-overlay');
+    var overlayImg = document.getElementById('lightbox-img');
+
+    function openLightbox() {
+        overlayImg.src = img.src;
+        overlay.classList.add('open');
+    }
+    function closeLightbox() {
+        overlay.classList.remove('open');
+    }
+
+    if (img) img.addEventListener('click', openLightbox);
+    if (overlay) overlay.addEventListener('click', closeLightbox);
+    document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape') closeLightbox();
+    });
+
+    var copyBtn = document.getElementById('copy-cmd-btn');
+    var cmdEl = document.getElementById('deploy-cmd');
+    if (copyBtn && cmdEl) {
+        copyBtn.addEventListener('click', function () {
+            navigator.clipboard.writeText(cmdEl.textContent.trim()).then(function () {
+                copyBtn.innerHTML = '<i class="bi bi-check2"></i>';
+                copyBtn.classList.add('copied');
+                setTimeout(function () {
+                    copyBtn.innerHTML = '<i class="bi bi-clipboard"></i>';
+                    copyBtn.classList.remove('copied');
+                }, 1500);
+            });
+        });
+    }
+})();
+</script>
+{% endblock %}

@@ -17,7 +17,7 @@ load_dotenv('/var/www/dockerlabs/.env')
 
 from sqlalchemy import func
 
-from dockerlabs.database import db_session, _request_scope_id
+from dockerlabs.database import _request_scope_id
 _request_scope_id.set(object())
 
 from dockerlabs.extensions import db

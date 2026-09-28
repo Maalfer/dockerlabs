@@ -16,9 +16,131 @@
 <div class="stats-container">
     <div class="stats-header">
         <h1>Estadísticas de la Plataforma</h1>
-        <p>Crecimiento y métricas anuales de DockerLabs</p>
+        <p>Actividad, crecimiento y métricas de todas las features de DockerLabs</p>
     </div>
 
+    <div class="stat-tiles">
+        <div class="stat-tile">
+            <div class="stat-tile-icon"><i class="bi bi-cloud-download" style="color:#8b5cf6;"></i></div>
+            <div class="stat-tile-value">{{ download_stats.total }}</div>
+            <div class="stat-tile-label">Descargas totales</div>
+        </div>
+        <div class="stat-tile">
+            <div class="stat-tile-icon"><i class="bi bi-patch-check-fill" style="color:#06b6d4;"></i></div>
+            <div class="stat-tile-value">{{ certificate_stats.total }}</div>
+            <div class="stat-tile-label">Certificados emitidos</div>
+        </div>
+        <div class="stat-tile">
+            <div class="stat-tile-icon"><i class="bi bi-check-circle" style="color:#ec4899;"></i></div>
+            <div class="stat-tile-value">{{ completed_stats.total }}</div>
+            <div class="stat-tile-label">Máquinas completadas</div>
+        </div>
+        <div class="stat-tile">
+            <div class="stat-tile-icon"><i class="bi bi-star-fill" style="color:#f59e0b;"></i></div>
+            <div class="stat-tile-value">{{ rating_stats.total }}</div>
+            <div class="stat-tile-label">Valoraciones enviadas</div>
+        </div>
+        <div class="stat-tile">
+            <div class="stat-tile-icon"><i class="bi bi-hdd-stack" style="color:#ef4444;"></i></div>
+            <div class="stat-tile-value">{{ pending_stats.total }}</div>
+            <div class="stat-tile-label">Máquinas pendientes</div>
+        </div>
+    </div>
+
+    <h2 class="section-title">Actividad diaria</h2>
+    <form class="stats-filter" method="get" action="{{ url_for('main.estadisticas') }}">
+        <div class="stats-filter-group">
+            <label for="rango-select">Período</label>
+            <select id="rango-select" name="rango" class="stats-filter-select">
+                {% for preset in filtro.presets %}
+                <option value="{{ preset.key }}"
+                        {% if preset.key == filtro.active %}selected{% endif %}
+                        {% if preset.disabled %}disabled{% endif %}>
+                    {{ preset.label }}{% if preset.disabled %} (sin datos aún){% endif %}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="stats-filter-group stats-filter-dates" id="stats-dates-group"
+             {% if filtro.active != 'personalizado' %}style="display:none;"{% endif %}>
+            <div class="stats-filter-date">
+                <label for="desde-input">Desde</label>
+                <input type="date" id="desde-input" name="desde" value="{{ filtro.desde }}">
+            </div>
+            <div class="stats-filter-date">
+                <label for="hasta-input">Hasta</label>
+                <input type="date" id="hasta-input" name="hasta" value="{{ filtro.hasta }}">
+            </div>
+        </div>
+        <button type="submit" class="stats-filter-btn">Aplicar</button>
+        {% if filtro.visible_since %}
+        <span class="stats-filter-hint">Registro histórico disponible desde el {{ filtro.visible_since }}</span>
+        {% endif %}
+    </form>
+    {% if filtro.empty %}
+    <div class="stats-filter-empty">No hay datos de descargas/certificados en el período seleccionado.</div>
+    {% endif %}
+    <div class="charts-grid">
+        <div class="chart-card" style="grid-column: 1 / -1;">
+            <div class="chart-title">
+                <i class="bi bi-eye" style="color: #22c55e;"></i>
+                Visitas{% if filtro.granularity == 'week' %} por Semana{% elif filtro.granularity == 'month' %} por Mes{% else %} por Día{% endif %}
+                ({{ visit_stats.total_en_rango }} {{ filtro.label }} · hoy: {{ visit_stats.hoy }} páginas vistas, {{ visit_stats.unicos_hoy }} visitantes únicos)
+            </div>
+            {% if visit_stats.since %}<div style="font-size:.8rem;opacity:.7;margin:0 0 .5rem 0;">Registrando desde el {{ visit_stats.since }} · sin bots · visitante único = IP+navegador por día</div>{% endif %}
+            <div class="chart-container">
+                <canvas id="visitsDailyChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <div class="charts-grid">
+        <div class="chart-card" style="grid-column: 1 / -1;">
+            <div class="chart-title">
+                <i class="bi bi-box-arrow-up-right" style="color: #ec4899;"></i>
+                Clics hacia elrincondelhacker.es{% if filtro.granularity == 'week' %} por Semana{% elif filtro.granularity == 'month' %} por Mes{% else %} por Día{% endif %}
+                ({{ outbound_stats.newsletter }} Newsletter · {{ outbound_stats.academia }} Academia · {{ outbound_stats.unicos_en_rango }} visitantes únicos {{ filtro.label }})
+            </div>
+            {% if outbound_stats.since %}<div style="font-size:.8rem;opacity:.7;margin:0 0 .5rem 0;">Registrando desde el {{ outbound_stats.since }} · sin bots · los que se suscriben quedan en MailerUp con origen «dockerlabs»</div>{% else %}<div style="font-size:.8rem;opacity:.7;margin:0 0 .5rem 0;">Aún sin clics registrados.</div>{% endif %}
+            <div class="chart-container">
+                <canvas id="outboundDailyChart"></canvas>
+            </div>
+            {% if outbound_stats.por_origen %}
+            <table style="width:100%;margin-top:1rem;font-size:.85rem;border-collapse:collapse;">
+                <thead><tr style="text-align:left;opacity:.7;"><th>Botón</th><th>Ubicación</th><th>Clics</th><th>Únicos</th></tr></thead>
+                <tbody>
+                {% for r in outbound_stats.por_origen %}
+                <tr><td>{{ r.destino|capitalize }}</td><td>{{ r.origen }}</td><td>{{ r.clics }}</td><td>{{ r.unicos }}</td></tr>
+                {% endfor %}
+                </tbody>
+            </table>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="charts-grid">
+        <div class="chart-card">
+            <div class="chart-title">
+                <i class="bi bi-cloud-download" style="color: #8b5cf6;"></i>
+                Descargas{% if filtro.granularity == 'week' %} por Semana{% elif filtro.granularity == 'month' %} por Mes{% else %} por Día{% endif %}  ({{ download_stats.total_en_rango }} {{ filtro.label }})
+            </div>
+            <div class="chart-container">
+                <canvas id="downloadsDailyChart"></canvas>
+            </div>
+        </div>
+
+        <div class="chart-card">
+            <div class="chart-title">
+                <i class="bi bi-patch-check-fill" style="color: #06b6d4;"></i>
+                Certificados Solicitados{% if filtro.granularity == 'week' %} por Semana{% elif filtro.granularity == 'month' %} por Mes{% else %} por Día{% endif %}  ({{ certificate_stats.solicitudes_en_rango }} {{ filtro.label }})
+            </div>
+            <div class="chart-container">
+                <canvas id="certRequestsDailyChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <h2 class="section-title">Crecimiento anual</h2>
     <div class="charts-grid">
         <!-- Máquinas -->
         <div class="chart-card">
@@ -50,6 +172,82 @@
             </div>
             <div class="chart-container">
                 <canvas id="usersChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Certificados emitidos -->
+        <div class="chart-card">
+            <div class="chart-title">
+                <i class="bi bi-patch-check-fill" style="color: #06b6d4;"></i>
+                Certificados Emitidos
+            </div>
+            <div class="chart-container">
+                <canvas id="certificatesChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Máquinas completadas -->
+        <div class="chart-card">
+            <div class="chart-title">
+                <i class="bi bi-check-circle" style="color: #ec4899;"></i>
+                Máquinas Completadas
+            </div>
+            <div class="chart-container">
+                <canvas id="completedChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Máquinas enviadas (pendientes) -->
+        <div class="chart-card">
+            <div class="chart-title">
+                <i class="bi bi-hdd-stack" style="color: #ef4444;"></i>
+                Máquinas Enviadas a Revisión
+            </div>
+            <div class="chart-container">
+                <canvas id="pendingChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <h2 class="section-title">Detalle por feature</h2>
+    <div class="charts-grid">
+        <div class="chart-card">
+            <div class="chart-title">
+                <i class="bi bi-trophy" style="color: #8b5cf6;"></i>
+                <span id="top-machines-title">Top 5 Máquinas más Descargadas</span>
+                <select id="top-machines-filter" class="stats-filter-select chart-title-select"
+                        aria-label="Ordenar máquinas por descargas">
+                    <option value="top">Más descargadas</option>
+                    <option value="bottom">Menos descargadas</option>
+                </select>
+            </div>
+            <div class="chart-container">
+                <canvas id="topMachinesChart"></canvas>
+            </div>
+        </div>
+
+        <div class="chart-card">
+            <div class="chart-title">
+                <i class="bi bi-file-earmark-text" style="color: #10b981;"></i>
+                <span id="top-writeups-title">Top 5 Máquinas con más Writeups</span>
+                <select id="top-writeups-filter" class="stats-filter-select chart-title-select"
+                        aria-label="Ordenar máquinas por writeups">
+                    <option value="top">Con más writeups</option>
+                    <option value="bottom">Con menos writeups</option>
+                </select>
+            </div>
+            <div class="chart-container">
+                <canvas id="topWriteupsChart"></canvas>
+            </div>
+        </div>
+
+        <div class="chart-card">
+            <div class="chart-title">
+                <i class="bi bi-star-fill" style="color: #f59e0b;"></i>
+                Valoración Media por Categoría
+            </div>
+            <div class="chart-container">
+                <canvas id="ratingsChart"></canvas>
             </div>
         </div>
     </div>
@@ -99,14 +297,366 @@
         }
     };
 
+    const dailyOptions = {
+        ...commonOptions,
+        plugins: {
+            ...commonOptions.plugins,
+            tooltip: {
+                ...commonOptions.plugins.tooltip,
+                callbacks: {
+                    title: (items) => {
+                        const raw = items[0] && items[0].label;
+                        return fmtLabel(raw);
+                    }
+                }
+            }
+        },
+        scales: {
+            ...commonOptions.scales,
+            x: {
+                ...commonOptions.scales.x,
+                ticks: {
+                    maxRotation: 0,
+                    autoSkip: true,
+                    maxTicksLimit: 15,
+                    callback: function (value, index) {
+                        const ctx = this;
+                        const labels = (ctx.chart && ctx.chart.data && ctx.chart.data.labels) || [];
+                        const raw = labels[index] != null ? labels[index] : value;
+                        return fmtLabel(raw);
+                    }
+                }
+            }
+        }
+    };
+
+    // --- Tooltip personalizado (genérico) para todas las gráficas ---
+    // `cfg`: { chartId, icon, accent, label, describe, decimals }
+    function makeCustomTooltip(cfg) {
+        const card = document.getElementById(cfg.chartId);
+        const container = card ? card.closest('.chart-container') : null;
+        const el = document.createElement('div');
+        el.className = 'chart-tooltip';
+        if (cfg.accent) el.style.setProperty('--tooltip-accent', cfg.accent);
+        el.innerHTML =
+            '<div class="chart-tooltip__top">' +
+            '   <span class="chart-tooltip__dot"></span>' +
+            '   <span class="chart-tooltip__weekday"></span>' +
+            '</div>' +
+            '<div class="chart-tooltip__date"></div>' +
+            '<div class="chart-tooltip__divider"></div>' +
+            '<div class="chart-tooltip__row">' +
+            '   <i class="bi ' + cfg.icon + ' chart-tooltip__icon"></i>' +
+            '   <span class="chart-tooltip__value"></span>' +
+            '   <span class="chart-tooltip__label">' + cfg.label + '</span>' +
+            '</div>';
+        if (container) container.appendChild(el);
+
+        return (ctx) => {
+            const { chart, tooltip } = ctx;
+            if (tooltip.opacity === 0 || !tooltip.dataPoints || !tooltip.dataPoints.length) {
+                el.classList.remove('visible');
+                return;
+            }
+            const point = tooltip.dataPoints[0];
+            const info = cfg.describe ? cfg.describe(point.label) : { weekday: '', date: String(point.label) };
+            // En barras horizontales (indexAxis 'y') el valor está en parsed.x;
+            // parsed.y sería el índice de la categoría.
+            const valueAxis = chart.options.indexAxis === 'y' ? 'x' : 'y';
+            const parsedValue = point.parsed && point.parsed[valueAxis] != null ? point.parsed[valueAxis] : null;
+            const rawValue = parsedValue != null ? parsedValue : (point.raw != null ? point.raw : 0);
+            const value = cfg.decimals != null
+                ? Number(rawValue).toLocaleString('es-ES', {
+                    minimumFractionDigits: cfg.decimals,
+                    maximumFractionDigits: cfg.decimals
+                })
+                : Number(rawValue).toLocaleString('es-ES');
+
+            el.querySelector('.chart-tooltip__weekday').textContent = info.weekday;
+            el.querySelector('.chart-tooltip__date').textContent = info.date;
+            el.querySelector('.chart-tooltip__value').textContent = value;
+
+            const caretLeft = tooltip.caretX || 0;
+            const caretTop = tooltip.caretY || 0;
+            const cw = chart.canvas.clientWidth || 0;
+            const w = el.offsetWidth || 200;
+            const left = Math.max(w / 2 + 8, Math.min(cw - w / 2 - 8, caretLeft));
+            el.classList.toggle('below', caretTop < 90);
+            el.style.left = left + 'px';
+            el.style.top = caretTop + 'px';
+            el.classList.add('visible');
+        };
+    }
+
+    function withCustomTooltip(baseOptions, external, extra) {
+        return Object.assign({}, baseOptions, {
+            plugins: Object.assign({}, baseOptions.plugins, {
+                tooltip: Object.assign({}, baseOptions.plugins.tooltip, {
+                    enabled: false,
+                    position: 'nearest',
+                    external: external
+                })
+            })
+        }, extra || {});
+    }
+
+    // Descriptores de la cabecera del tooltip según el tipo de dato
+    const describeDay = (raw) => {
+        const s = String(raw);
+        if (/^\d{4}-\d{2}-\d{2}$/.test(s)) {
+            const [y, mo, d] = s.split('-').map(Number);
+            const date = new Date(y, mo - 1, d);
+            const weekday = date.toLocaleDateString('es-ES', { weekday: 'long' });
+            const dayN = date.toLocaleDateString('es-ES', { day: 'numeric' });
+            const month = date.toLocaleDateString('es-ES', { month: 'long' });
+            return { weekday: weekday, date: dayN + ' de ' + month + ' de ' + y };
+        }
+        if (/^\d{4}-W\d{2}$/.test(s)) {
+            const [, y, w] = s.split('-W');
+            return { weekday: 'Semana', date: 'S' + parseInt(w, 10) + ' · ' + y };
+        }
+        if (/^\d{4}-\d{2}$/.test(s)) {
+            const [y, mo] = s.split('-').map(Number);
+            const meses = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio',
+                'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
+            return { weekday: meses[(mo - 1) % 12], date: String(y) };
+        }
+        return { weekday: s, date: '' };
+    };
+
+    const describeYear = (raw) => ({ weekday: 'Año', date: String(raw) });
+
+    // Para rótulos libres (máquinas, estados, categorías…)
+    const describeName = (kw) => (raw) => {
+        const s = String(raw);
+        return { weekday: kw, date: s.length > 42 ? s.slice(0, 40) + '…' : s };
+    };
+
+    // Opciones específicas por gráfica, todas con el tooltip personalizado
+    const downloadsDailyOptions = withCustomTooltip(dailyOptions, makeCustomTooltip({
+        chartId: 'downloadsDailyChart',
+        icon: 'bi-cloud-download',
+        accent: '#8b5cf6',
+        label: 'descargas',
+        describe: describeDay
+    }), { interaction: { mode: 'index', intersect: false } });
+
+    const certDailyOptions = withCustomTooltip(dailyOptions, makeCustomTooltip({
+        chartId: 'certRequestsDailyChart',
+        icon: 'bi-patch-check-fill',
+        accent: '#06b6d4',
+        label: 'certificados',
+        describe: describeDay
+    }), { interaction: { mode: 'index', intersect: false } });
+
+    const machinesOptions = withCustomTooltip(commonOptions, makeCustomTooltip({
+        chartId: 'machinesChart',
+        icon: 'bi-pc-display-horizontal',
+        accent: '#3b82f6',
+        label: 'máquinas',
+        describe: describeYear
+    }), { interaction: { mode: 'index', intersect: false } });
+
+    const writeupsOptions = withCustomTooltip(commonOptions, makeCustomTooltip({
+        chartId: 'writeupsChart',
+        icon: 'bi-file-text',
+        accent: '#10b981',
+        label: 'writeups',
+        describe: describeYear
+    }), { interaction: { mode: 'index', intersect: false } });
+
+    const usersOptions = withCustomTooltip(commonOptions, makeCustomTooltip({
+        chartId: 'usersChart',
+        icon: 'bi-people',
+        accent: '#f59e0b',
+        label: 'usuarios',
+        describe: describeYear
+    }), { interaction: { mode: 'index', intersect: false } });
+
+    const certificatesOptions = withCustomTooltip(commonOptions, makeCustomTooltip({
+        chartId: 'certificatesChart',
+        icon: 'bi-patch-check-fill',
+        accent: '#06b6d4',
+        label: 'certificados',
+        describe: describeYear
+    }), { interaction: { mode: 'index', intersect: false } });
+
+    const completedOptions = withCustomTooltip(commonOptions, makeCustomTooltip({
+        chartId: 'completedChart',
+        icon: 'bi-check-circle',
+        accent: '#ec4899',
+        label: 'completadas',
+        describe: describeYear
+    }), { interaction: { mode: 'index', intersect: false } });
+
+    const pendingOptions = withCustomTooltip(commonOptions, makeCustomTooltip({
+        chartId: 'pendingChart',
+        icon: 'bi-hdd-stack',
+        accent: '#ef4444',
+        label: 'enviadas',
+        describe: describeYear
+    }), { interaction: { mode: 'index', intersect: false } });
+
+    const topMachinesOptions = withCustomTooltip(
+        Object.assign({}, commonOptions, { indexAxis: 'y' }),
+        makeCustomTooltip({
+            chartId: 'topMachinesChart',
+            icon: 'bi-trophy',
+            accent: '#8b5cf6',
+            label: 'descargas',
+            describe: describeName('Máquina')
+        }),
+        { interaction: { mode: 'index', axis: 'y', intersect: false } }
+    );
+
+    const topWriteupsOptions = withCustomTooltip(
+        Object.assign({}, commonOptions, { indexAxis: 'y' }),
+        makeCustomTooltip({
+            chartId: 'topWriteupsChart',
+            icon: 'bi-file-earmark-text',
+            accent: '#10b981',
+            label: 'writeups',
+            describe: describeName('Máquina')
+        }),
+        { interaction: { mode: 'index', axis: 'y', intersect: false } }
+    );
+
+    const ratingsOptions = withCustomTooltip(commonOptions, makeCustomTooltip({
+        chartId: 'ratingsChart',
+        icon: 'bi-star-fill',
+        accent: '#f59e0b',
+        label: 'puntuación',
+        describe: describeName('Categoría'),
+        decimals: 2
+    }), { interaction: { mode: 'index', intersect: false } });
+
     // Data from Backend
     const machineStats = {{ machine_stats | tojson }};
     const writeupStats = {{ writeup_stats | tojson }};
     const userStats = {{ user_stats | tojson }};
+    const downloadStats = {{ download_stats | tojson }};
+    const certificateStats = {{ certificate_stats | tojson }};
+    const completedStats = {{ completed_stats | tojson }};
+    const ratingStats = {{ rating_stats | tojson }};
+    const pendingStats = {{ pending_stats | tojson }};
+    const filtroData = {{ filtro | tojson }};
+    const GRANULARITY = (filtroData && filtroData.granularity) || 'day';
+
+    // Formatea una clave temporal según la granularidad del rango
+    const fmtLabel = (raw) => {
+        const s = String(raw);
+        if (GRANULARITY === 'week' && /^(\d{4})-W(\d{2})$/.test(s)) {
+            const [, y, w] = s.split('-W');
+            return `S${parseInt(w, 10)}/${y}`;
+        }
+        if (GRANULARITY === 'month' && /^(\d{4})-(\d{2})$/.test(s)) {
+            const [, y, m] = s.split('-');
+            const meses = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+            return `${meses[parseInt(m, 10) - 1]}/${y}`;
+        }
+        if (/^\d{4}-\d{2}-\d{2}$/.test(s)) {
+            const [, m, d] = s.split('-');
+            return `${d}/${m}`;
+        }
+        return s;
+    };
 
     // Helper to extract keys and values
     const getLabels = (stats) => Object.keys(stats);
     const getData = (stats) => Object.values(stats);
+
+    // --- Visitas por día (período seleccionado) ---
+    const visitStats = {{ visit_stats | tojson }};
+    new Chart(document.getElementById('visitsDailyChart'), {
+        type: 'line',
+        data: {
+            labels: getLabels(visitStats.by_day || {}).map(fmtLabel),
+            datasets: [
+                {
+                    label: 'Páginas vistas',
+                    data: getData(visitStats.by_day || {}),
+                    borderColor: '#22c55e',
+                    backgroundColor: 'rgba(34, 197, 94, 0.15)',
+                    fill: true, tension: 0.3, pointRadius: 2, pointHoverRadius: 6
+                },
+                {
+                    label: 'Visitantes únicos',
+                    data: getData(visitStats.unique_by_day || {}),
+                    borderColor: '#f59e0b',
+                    backgroundColor: 'rgba(245, 158, 11, 0.1)',
+                    fill: false, tension: 0.3, pointRadius: 2, pointHoverRadius: 6
+                }
+            ]
+        },
+        options: {
+            responsive: true, maintainAspectRatio: false,
+            interaction: { mode: 'index', intersect: false },
+            plugins: { legend: { labels: { color: '#cbd5e1' } } },
+            scales: {
+                x: { ticks: { color: '#94a3b8' }, grid: { color: 'rgba(148,163,184,.1)' } },
+                y: { beginAtZero: true, ticks: { color: '#94a3b8', precision: 0 }, grid: { color: 'rgba(148,163,184,.1)' } }
+            }
+        }
+    });
+
+    // --- Clics salientes (Newsletter / Academia) ---
+    const outboundStats = {{ outbound_stats | tojson }};
+    new Chart(document.getElementById('outboundDailyChart'), {
+        type: 'line',
+        data: {
+            labels: getLabels(outboundStats.newsletter_by_day || {}).map(fmtLabel),
+            datasets: [
+                { label: 'Newsletter', data: getData(outboundStats.newsletter_by_day || {}), borderColor: '#ec4899', backgroundColor: 'rgba(236,72,153,0.15)', fill: true, tension: 0.3, pointRadius: 2, pointHoverRadius: 6 },
+                { label: 'Academia', data: getData(outboundStats.academia_by_day || {}), borderColor: '#3b82f6', backgroundColor: 'rgba(59,130,246,0.1)', fill: false, tension: 0.3, pointRadius: 2, pointHoverRadius: 6 }
+            ]
+        },
+        options: {
+            responsive: true, maintainAspectRatio: false,
+            interaction: { mode: 'index', intersect: false },
+            plugins: { legend: { labels: { color: '#cbd5e1' } } },
+            scales: {
+                x: { ticks: { color: '#94a3b8' }, grid: { color: 'rgba(148,163,184,.1)' } },
+                y: { beginAtZero: true, ticks: { color: '#94a3b8', precision: 0 }, grid: { color: 'rgba(148,163,184,.1)' } }
+            }
+        }
+    });
+
+    // --- Descargas por día (período seleccionado) ---
+    new Chart(document.getElementById('downloadsDailyChart'), {
+        type: 'line',
+        data: {
+            labels: getLabels(downloadStats.by_day || {}),
+            datasets: [{
+                label: 'Descargas',
+                data: getData(downloadStats.by_day || {}),
+                borderColor: '#8b5cf6',
+                backgroundColor: 'rgba(139, 92, 246, 0.15)',
+                fill: true,
+                tension: 0.3,
+                pointRadius: 2,
+                pointHoverRadius: 6
+            }]
+        },
+        options: downloadsDailyOptions
+    });
+
+    // --- Certificados solicitados por día (período seleccionado) ---
+    new Chart(document.getElementById('certRequestsDailyChart'), {
+        type: 'line',
+        data: {
+            labels: getLabels(certificateStats.solicitudes_by_day || {}),
+            datasets: [{
+                label: 'Certificados solicitados',
+                data: getData(certificateStats.solicitudes_by_day || {}),
+                borderColor: '#06b6d4',
+                backgroundColor: 'rgba(6, 182, 212, 0.15)',
+                fill: true,
+                tension: 0.3,
+                pointRadius: 2
+            }]
+        },
+        options: certDailyOptions
+    });
 
     // --- Machines Chart (by year) ---
     new Chart(document.getElementById('machinesChart'), {
@@ -122,7 +672,7 @@
                 borderRadius: 4
             }]
         },
-        options: commonOptions
+        options: machinesOptions
     });
 
     // --- Writeups Chart (by year) ---
@@ -139,7 +689,7 @@
                 borderRadius: 4
             }]
         },
-        options: commonOptions
+        options: writeupsOptions
     });
 
     // --- Users Chart (by year) ---
@@ -156,7 +706,159 @@
                 borderRadius: 4
             }]
         },
-        options: commonOptions
+        options: usersOptions
     });
+
+    // --- Certificates Chart (by year) ---
+    new Chart(document.getElementById('certificatesChart'), {
+        type: 'bar',
+        data: {
+            labels: getLabels(certificateStats.by_year || {}),
+            datasets: [{
+                label: 'Certificados',
+                data: getData(certificateStats.by_year || {}),
+                backgroundColor: 'rgba(6, 182, 212, 0.5)', // Cyan
+                borderColor: '#06b6d4',
+                borderWidth: 1,
+                borderRadius: 4
+            }]
+        },
+        options: certificatesOptions
+    });
+
+    // --- Completed Machines Chart (by year) ---
+    new Chart(document.getElementById('completedChart'), {
+        type: 'bar',
+        data: {
+            labels: getLabels(completedStats.by_year || {}),
+            datasets: [{
+                label: 'Máquinas completadas',
+                data: getData(completedStats.by_year || {}),
+                backgroundColor: 'rgba(236, 72, 153, 0.5)', // Pink
+                borderColor: '#ec4899',
+                borderWidth: 1,
+                borderRadius: 4
+            }]
+        },
+        options: completedOptions
+    });
+
+    // --- Pending Submissions Chart (by year) ---
+    new Chart(document.getElementById('pendingChart'), {
+        type: 'bar',
+        data: {
+            labels: getLabels(pendingStats.by_year || {}),
+            datasets: [{
+                label: 'Máquinas enviadas',
+                data: getData(pendingStats.by_year || {}),
+                backgroundColor: 'rgba(239, 68, 68, 0.5)', // Red
+                borderColor: '#ef4444',
+                borderWidth: 1,
+                borderRadius: 4
+            }]
+        },
+        options: pendingOptions
+    });
+
+    // --- Top 5 Máquinas más descargadas ---
+    const topMachinesSets = {
+        top:    { stats: downloadStats.top_machines || {},    title: 'Top 5 Máquinas más Descargadas' },
+        bottom: { stats: downloadStats.bottom_machines || {}, title: 'Top 5 Máquinas menos Descargadas' }
+    };
+    const topMachinesChart = new Chart(document.getElementById('topMachinesChart'), {
+        type: 'bar',
+        data: {
+            labels: topMachinesSets.top.stats.labels || [],
+            datasets: [{
+                label: 'Descargas',
+                data: topMachinesSets.top.stats.values || [],
+                backgroundColor: 'rgba(139, 92, 246, 0.5)', // Purple
+                borderColor: '#8b5cf6',
+                borderWidth: 1,
+                borderRadius: 4
+            }]
+        },
+        options: topMachinesOptions
+    });
+
+    (function () {
+        const select = document.getElementById('top-machines-filter');
+        const title = document.getElementById('top-machines-title');
+        if (!select) return;
+        select.addEventListener('change', () => {
+            const set = topMachinesSets[select.value] || topMachinesSets.top;
+            topMachinesChart.data.labels = set.stats.labels || [];
+            topMachinesChart.data.datasets[0].data = set.stats.values || [];
+            if (title) title.textContent = set.title;
+            topMachinesChart.update();
+        });
+    })();
+
+    // --- Top 5 Máquinas con más / menos writeups ---
+    const topWriteupsSets = {
+        top:    { stats: writeupStats.top_machines || {},    title: 'Top 5 Máquinas con más Writeups' },
+        bottom: { stats: writeupStats.bottom_machines || {}, title: 'Top 5 Máquinas con menos Writeups' }
+    };
+    const topWriteupsChart = new Chart(document.getElementById('topWriteupsChart'), {
+        type: 'bar',
+        data: {
+            labels: topWriteupsSets.top.stats.labels || [],
+            datasets: [{
+                label: 'Writeups',
+                data: topWriteupsSets.top.stats.values || [],
+                backgroundColor: 'rgba(16, 185, 129, 0.5)', // Green
+                borderColor: '#10b981',
+                borderWidth: 1,
+                borderRadius: 4
+            }]
+        },
+        options: topWriteupsOptions
+    });
+    (function () {
+        const select = document.getElementById('top-writeups-filter');
+        const title = document.getElementById('top-writeups-title');
+        if (!select) return;
+        select.addEventListener('change', () => {
+            const set = topWriteupsSets[select.value] || topWriteupsSets.top;
+            topWriteupsChart.data.labels = set.stats.labels || [];
+            topWriteupsChart.data.datasets[0].data = set.stats.values || [];
+            if (title) title.textContent = set.title;
+            topWriteupsChart.update();
+        });
+    })();
+
+    // --- Valoración media por categoría ---
+    new Chart(document.getElementById('ratingsChart'), {
+        type: 'bar',
+        data: {
+            labels: ['Dificultad', 'Aprendizaje', 'Recomendaría', 'Diversión'],
+            datasets: [{
+                label: 'Puntuación media',
+                data: [
+                    ratingStats.avg_dificultad,
+                    ratingStats.avg_aprendizaje,
+                    ratingStats.avg_recomendaria,
+                    ratingStats.avg_diversion
+                ],
+                backgroundColor: 'rgba(245, 158, 11, 0.5)',
+                borderColor: '#f59e0b',
+                borderWidth: 1,
+                borderRadius: 4
+            }]
+        },
+        options: ratingsOptions
+    });
+
+    // --- Filtro de período: mostrar/ocultar fechas al elegir "personalizado" ---
+    (function () {
+        const select = document.getElementById('rango-select');
+        const datesGroup = document.getElementById('stats-dates-group');
+        if (!select || !datesGroup) return;
+        const sync = () => {
+            datesGroup.style.display = (select.value === 'personalizado') ? 'flex' : 'none';
+        };
+        select.addEventListener('change', sync);
+        sync();
+    })();
 </script>
 {% endblock %}

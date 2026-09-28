@@ -1,3 +1,4 @@
+import json
 import logging
 from datetime import datetime
 from typing import List, Optional
@@ -8,7 +9,8 @@ from pydantic import BaseModel
 from sqlalchemy import func
 
 from dockerlabs import validators
-from dockerlabs.models import Machine, PendingWriteup, User, Writeup, WriteupAnalysisResult, WriteupEditRequest, WriteupReport
+from dockerlabs.discord_notify import notify_writeups_batch
+from dockerlabs.models import Machine, PendingWriteup, User, Writeup, WriteupAnalysisResult, WriteupReport
 
 _logger = logging.getLogger(__name__)
 
@@ -117,6 +119,7 @@ def register_writeup_routes(api_router, get_session, verify_csrf_token, db):
 
             aprobados = 0
             seen = set()  # deduplicate within this batch
+            nuevos = []  # objetos Writeup recien creados en este batch, para verificar tras el flush
             for pending in pending_list:
                 autor_real = pending.autor
                 usuario = User.query.filter(func.lower(User.username) == func.lower(autor_real)).first()
@@ -126,11 +129,26 @@ def register_writeup_routes(api_router, get_session, verify_csrf_token, db):
                 key = (pending.maquina, autor_real, pending.url)
                 already_published = Writeup.query.filter_by(maquina=pending.maquina, autor=autor_real, url=pending.url).first()
                 if not already_published and key not in seen:
-                    db.session.add(Writeup(maquina=pending.maquina, autor=autor_real, url=pending.url, tipo=pending.tipo))
+                    nuevo = Writeup(maquina=pending.maquina, autor=autor_real, url=pending.url, tipo=pending.tipo)
+                    db.session.add(nuevo)
+                    nuevos.append(nuevo)
                     seen.add(key)
 
                 db.session.delete(pending)
                 aprobados += 1
+
+            # Verificación pre-commit: si algún INSERT no obtiene id al hacer
+            # flush (fallo silencioso de la sesión), abortamos toda la
+            # transacción -incluidos los DELETE de los pendientes- en vez de
+            # comprometer un "aprobado" que en realidad no publicó nada. Así
+            # el writeup se queda en la cola en vez de perderse.
+            db.session.flush()
+            sin_id = [n for n in nuevos if n.id is None]
+            if sin_id:
+                raise RuntimeError(
+                    f"{len(sin_id)} writeup(s) nuevos no obtuvieron id tras flush(); "
+                    "abortando aprobación masiva para no perder los pendientes"
+                )
 
             db.session.commit()
 
@@ -141,6 +159,12 @@ def register_writeup_routes(api_router, get_session, verify_csrf_token, db):
             from dockerlabs.routes.certificados import ensure_certificate_safe
             for maquina, autor, _ in seen:
                 ensure_certificate_safe(autor, maquina)
+
+            # Solo se notifica a Discord si la aprobación masiva junta más de
+            # 10 writeups de golpe; aprobaciones sueltas o lotes pequeños no
+            # generan ruido en el canal.
+            if len(nuevos) > 10:
+                await notify_writeups_batch(nuevos)
 
             return {"message": f"{aprobados} writeup(s) aprobado(s) correctamente.", "aprobados": aprobados}
         except Exception as e:
@@ -170,12 +194,28 @@ def register_writeup_routes(api_router, get_session, verify_csrf_token, db):
             if usuario:
                 autor_real = usuario.username
 
+            new_writeup = None
             if not Writeup.query.filter_by(maquina=pending.maquina, autor=autor_real, url=pending.url).first():
                 new_writeup = Writeup(maquina=pending.maquina, autor=autor_real, url=pending.url, tipo=pending.tipo)
                 db.session.add(new_writeup)
 
             maquina_aprobada = pending.maquina
             db.session.delete(pending)
+
+            # Verificación pre-commit: si el nuevo Writeup no obtiene id al
+            # hacer flush (fallo silencioso de la sesión), abortamos toda la
+            # transacción -incluido el DELETE del pendiente- en vez de
+            # comprometer un "aprobado" que en realidad no publicó nada. Así
+            # el writeup se queda en la cola en vez de perderse sin dejar
+            # rastro (causa raíz del caso hannah_coffee: la API devolvió 200
+            # "aprobado" pero writeups_subidos nunca recibió la fila nueva).
+            db.session.flush()
+            if new_writeup is not None and new_writeup.id is None:
+                raise RuntimeError(
+                    "El nuevo Writeup no obtuvo id tras flush(); abortando aprobación "
+                    "para no perder el pendiente"
+                )
+
             db.session.commit()
 
             from dockerlabs.writeups import recalcular_ranking_writeups
@@ -186,87 +226,14 @@ def register_writeup_routes(api_router, get_session, verify_csrf_token, db):
             from dockerlabs.routes.certificados import ensure_certificate_safe
             ensure_certificate_safe(autor_real, maquina_aprobada)
 
+            # Notificación a Discord desactivada para aprobaciones individuales
+            # (solo se avisa cuando se aprueban más de 10 writeups de golpe,
+            # vía /writeups/recibidos/aprobar-todos).
+
             return {"message": "Writeup aprobado y movido a publicados."}
         except Exception as e:
             db.session.rollback()
             return JSONResponse(status_code=500, content={"error": f"Error al aprobar: {str(e)}"})
-
-    @api_router.post("/writeups/edit-requests/{request_id}/approve")
-    async def api_approve_writeup_edit(
-        request: Request,
-        request_id: int,
-        session: dict = Depends(get_session),
-        csrf_ok: bool = Depends(verify_csrf_token),
-    ):
-        caller_role = session.get("role", "")
-        if caller_role not in ("admin", "moderador"):
-            return JSONResponse(status_code=403, content={"error": "Acceso denegado"})
-
-        req = WriteupEditRequest.query.get(request_id)
-        if not req or req.estado != "pendiente":
-            return JSONResponse(status_code=404, content={"error": "Petición no encontrada o ya procesada"})
-
-        writeup = Writeup.query.get(req.writeup_id)
-        if not writeup:
-            return JSONResponse(status_code=404, content={"error": "Writeup original no encontrado"})
-
-        try:
-            writeup.maquina = req.maquina_nueva or writeup.maquina
-            writeup.autor = req.autor_nuevo or writeup.autor
-            writeup.url = req.url_nueva or writeup.url
-            writeup.tipo = req.tipo_nuevo or writeup.tipo
-            req.estado = "aprobada"
-            db.session.commit()
-        except Exception as e:
-            db.session.rollback()
-            return JSONResponse(status_code=500, content={"error": f"Error al aprobar edición: {str(e)}"})
-
-        from dockerlabs.writeups import recalcular_ranking_writeups
-
-        recalcular_ranking_writeups()
-        return {"message": "Petición de edición aprobada.", "success": True}
-
-    @api_router.post("/writeups/edit-requests/{request_id}/reject")
-    async def api_reject_writeup_edit(
-        request: Request,
-        request_id: int,
-        session: dict = Depends(get_session),
-        csrf_ok: bool = Depends(verify_csrf_token),
-    ):
-        caller_role = session.get("role", "")
-        if caller_role not in ("admin", "moderador"):
-            return JSONResponse(status_code=403, content={"error": "Acceso denegado"})
-
-        req = WriteupEditRequest.query.get(request_id)
-        if req:
-            try:
-                req.estado = "rechazada"
-                db.session.commit()
-            except Exception as e:
-                db.session.rollback()
-                return JSONResponse(status_code=500, content={"error": f"Error al rechazar: {str(e)}"})
-        return {"message": "Petición rechazada.", "success": True}
-
-    @api_router.post("/writeups/edit-requests/{request_id}/revert")
-    async def api_revert_writeup_edit(
-        request: Request,
-        request_id: int,
-        session: dict = Depends(get_session),
-        csrf_ok: bool = Depends(verify_csrf_token),
-    ):
-        caller_role = session.get("role", "")
-        if caller_role not in ("admin", "moderador"):
-            return JSONResponse(status_code=403, content={"error": "Acceso denegado"})
-
-        req = WriteupEditRequest.query.get(request_id)
-        if req:
-            try:
-                req.estado = "pendiente"
-                db.session.commit()
-            except Exception as e:
-                db.session.rollback()
-                return JSONResponse(status_code=500, content={"error": f"Error al revertir: {str(e)}"})
-        return {"message": "Petición revertida a pendiente.", "success": True}
 
     @api_router.post("/writeups/subidos/{writeup_id}/update")
     async def api_update_writeup_subido(
@@ -295,42 +262,20 @@ def register_writeup_routes(api_router, get_session, verify_csrf_token, db):
         if not writeup:
             return JSONResponse(status_code=404, content={"error": "Writeup no encontrado"})
 
-        maquina_db = (writeup.maquina or "").strip()
         autor_db = (writeup.autor or "").strip()
 
-        if caller_role in ("admin", "moderador"):
-            try:
-                writeup.url = data.url
-                writeup.tipo = data.tipo
-                db.session.commit()
-                from dockerlabs.writeups import recalcular_ranking_writeups
-
-                recalcular_ranking_writeups()
-                return {"message": "Writeup actualizado correctamente"}
-            except Exception as e:
-                db.session.rollback()
-                return JSONResponse(status_code=500, content={"error": str(e)})
-
-        if not username or username.lower() != autor_db.lower():
-            return JSONResponse(status_code=403, content={"error": "No tienes permiso para modificar este writeup."})
+        if caller_role not in ("admin", "moderador"):
+            if not username or username.lower() != autor_db.lower():
+                return JSONResponse(status_code=403, content={"error": "No tienes permiso para modificar este writeup."})
 
         try:
-            edit_request = WriteupEditRequest(
-                writeup_id=writeup.id,
-                user_id=user_id,
-                username=username,
-                maquina_original=maquina_db,
-                autor_original=autor_db,
-                url_original=writeup.url,
-                tipo_original=writeup.tipo,
-                maquina_nueva=maquina_db,
-                autor_nuevo=autor_db,
-                url_nueva=data.url,
-                tipo_nuevo=data.tipo,
-            )
-            db.session.add(edit_request)
+            writeup.url = data.url
+            writeup.tipo = data.tipo
             db.session.commit()
-            return {"message": "Tu petición de cambio ha sido enviada para revisión."}
+            from dockerlabs.writeups import recalcular_ranking_writeups
+
+            recalcular_ranking_writeups()
+            return {"message": "Writeup actualizado correctamente"}
         except Exception as e:
             db.session.rollback()
             return JSONResponse(status_code=500, content={"error": str(e)})

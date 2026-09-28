@@ -129,7 +129,7 @@
 
                     <!-- Academia Button -->
                     <button id="academia" class="btn-academia"
-                        onclick="window.open('https://elrincondelhacker.es', '_blank')">
+                        onclick="window.open('/go/academia?o=home-boton', '_blank')">
                         <i class="bi bi-mortarboard-fill"></i>
                         <span>Academia</span>
                     </button>
@@ -157,6 +157,7 @@
         {% for maquina in maquinas %}
         <div onclick="presentacion({{ maquina.nombre | tojson | forceescape }}, {{ maquina.dificultad | tojson | forceescape }}, {{ maquina.color | tojson | forceescape }}, {{ maquina.autor | tojson | forceescape }}, {{ maquina.enlace_autor | tojson | forceescape }}, {{ maquina.fecha | tojson | forceescape }}, {{ maquina.imagen_url | tojson | forceescape }}, {{ categorias_map.get(maquina.id, '') | tojson | forceescape }})"
             class="item {{ maquina.clase }} {% if machine_ranks.get(maquina.id) == 1 %}most-recent{% elif machine_ranks.get(maquina.id) == 2 %}second-recent{% endif %} {% if maquina.nombre.strip() in completed_machines %}completed{% endif %}"
+            data-id="{{ maquina.id }}"
             data-category="{{ categorias_map.get(maquina.id, '') }}">
             <span><strong>{{ maquina.nombre }}</strong>
                 {% if machine_ranks.get(maquina.id) == 1 %}<span class="new-badge">¡Nueva!</span>
@@ -171,7 +172,7 @@
             </div>
             <div class="actions icon-container">
                 <button class="download" style="font-size: 1.2em;"
-                    onclick="window.open('{{ maquina.link_descarga }}', '_blank'); event.stopPropagation();">
+                    onclick="window.open('/maquinas/{{ maquina.id }}/descargar', '_blank'); event.stopPropagation();">
                     <svg class="ic-accion ic-down" aria-hidden="true"><use href="#ic-download"/></svg>
                 </button>
                 <button class="upload" style="font-size: 1.2em;"
@@ -192,6 +193,7 @@
         {% for maquina in maquinas %}
         <div onclick="presentacion({{ maquina.nombre | tojson | forceescape }}, {{ maquina.dificultad | tojson | forceescape }}, {{ maquina.color | tojson | forceescape }}, {{ maquina.autor | tojson | forceescape }}, {{ maquina.enlace_autor | tojson | forceescape }}, {{ maquina.fecha | tojson | forceescape }}, {{ maquina.imagen_url | tojson | forceescape }}, {{ categorias_map.get(maquina.id, '') | tojson | forceescape }})"
             class="maquina-item {{ maquina.clase }} {% if machine_ranks.get(maquina.id) == 1 %}mas-reciente{% elif machine_ranks.get(maquina.id) == 2 %}second-recent{% endif %} {% if maquina.nombre.strip() in completed_machines %}completada{% endif %}"
+            data-id="{{ maquina.id }}"
             data-category="{{ categorias_map.get(maquina.id, '') }}">
             <span><strong>{{ maquina.nombre }}</strong>
                 {% if machine_ranks.get(maquina.id) == 1 %}<span class="etiqueta-nueva">¡Nueva!</span>
@@ -206,7 +208,7 @@
             </div>
             <div class="acciones">
                 <button class="subir" style="font-size: 1.2em;"
-                    onclick="window.open('{{ maquina.link_descarga }}', '_blank'); event.stopPropagation();"
+                    onclick="window.open('/maquinas/{{ maquina.id }}/descargar', '_blank'); event.stopPropagation();"
                     title="Descargar máquina">
                     <svg class="ic-accion ic-down" aria-hidden="true"><use href="#ic-download"/></svg>
                 </button>
