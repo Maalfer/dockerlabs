@@ -193,8 +193,8 @@ El `cert_id` (`DL-XXXXXX`) son 24 bits de `sha256("<username>:<maquina>")` y es
 ÚNICO en la tabla. Como 24 bits colisionan de verdad con miles de certificados,
 `allocate_cert_id()` elige el primer candidato libre del digest (ventanas de 6
 hex) y mantiene estable el ID de los ya emitidos. No uses `certificate_id()`
-para leer el ID definitivo: lee `Certificate.cert_id`. `fix_cert_id_collisions.py`
-repara duplicados heredados. La fecha impresa es la del writeup, no la de
+para leer el ID definitivo: lee `Certificate.cert_id`. Las colisiones heredadas
+ya se repararon (script puntual, retirado del repo). La fecha impresa es la del writeup, no la de
 renderizado, para que regenerar un diploma no lo cambie.
 
 Como el `cert_id` depende del nombre de usuario y el diploma lleva impreso el

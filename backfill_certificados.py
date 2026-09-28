@@ -10,10 +10,10 @@ por un usuario registrado. Idempotente: los diplomas ya archivados se saltan.
 import sys
 import time
 
-sys.path.insert(0, '/var/www/dockerlabs')
+sys.path.insert(0, '/opt/dockerlabs')
 
 from dotenv import load_dotenv
-load_dotenv('/var/www/dockerlabs/.env')
+load_dotenv('/opt/dockerlabs/.env')
 
 from sqlalchemy import func
 
