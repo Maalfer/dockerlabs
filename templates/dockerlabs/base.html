@@ -383,15 +383,13 @@
     <footer class="{% if no_default_styles %}custom-footer{% endif %}">
         <div class="footer-content">
             <p class="copyright">
-                <i class="bi bi-c-circle"></i> Copyright DockerLabs {{ current_year() }} ·
+                <i class="bi bi-c-circle"></i> Copyright DockerLabs {{ current_year() }}
+                <a href="https://github.com/Maalfer/dockerlabs/blob/main/CHANGELOG.md" class="footer-link dockerlabs-version" target="_blank" rel="noopener noreferrer">v{{ dockerlabs_version }}</a> ·
                 <a href="{{ url_for('main.equipo') }}" class="footer-link nowrap">Equipo de DockerLabs</a> ·
                 <a href="/go/newsletter?o=footer" class="footer-link" target="_blank" rel="noopener nofollow">Newsletter</a> ·
                 <a href="{{ url_for('main.politica_privacidad') }}" class="footer-link">Política de Privacidad</a> ·
                 <a href="{{ url_for('main.politica_cookies') }}" class="footer-link">Cookies</a> ·
                 <a href="{{ url_for('main.condiciones_uso') }}" class="footer-link">Condiciones de Uso</a>
-            </p>
-            <p class="copyright dockerlabs-version">
-                <a href="https://github.com/Maalfer/dockerlabs/blob/main/CHANGELOG.md" class="footer-link" target="_blank" rel="noopener noreferrer">DockerLabs v{{ dockerlabs_version }}</a>
             </p>
 
             <div class="footer-icons">
