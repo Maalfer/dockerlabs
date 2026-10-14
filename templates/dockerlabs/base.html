@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>{% block title %}DockerLabs - Plataforma de Ciberseguridad y Hacking Ético{% endblock %}</title>
 
     <!-- SEO Meta Tags -->
@@ -73,6 +73,16 @@
     {% block extra_css %}{% endblock %}
 
     <link rel="icon" href="{{ url_for('static', filename='dockerlabs/images/logos/logo_120.png') }}" type="image/png">
+
+    <!-- PWA (Android + iOS) -->
+    <link rel="manifest" href="/manifest.webmanifest">
+    <meta name="theme-color" content="#020617">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="DockerLabs">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="apple-touch-icon" href="{{ static_v('dockerlabs/images/pwa/apple-touch-icon.png') }}">
+    <link rel="stylesheet" href="{{ static_v('dockerlabs/pwa/pwa.css') }}">
 
     <script nonce="{{ csp_nonce }}">
         window.dataLayer = window.dataLayer || [];
@@ -452,6 +462,7 @@
     </script>
 
     <script src="{{ static_v('dockerlabs/js/utils.js') }}" defer></script>
+    <script src="{{ static_v('dockerlabs/pwa/pwa.js') }}" defer></script>
     {% if session.get('user_id') %}
     <script src="{{ static_v('dockerlabs/js/notifications.js') }}" defer></script>
     {% endif %}

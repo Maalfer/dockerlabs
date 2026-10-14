@@ -20,6 +20,8 @@ _FAVICON = os.path.join(_BASE_DIR, "static", "dockerlabs", "images", "logos", "f
 
 SITIO = "https://dockerlabs.es"
 
+_PWA_DIR = os.path.join(_BASE_DIR, "static", "dockerlabs", "pwa")
+
 # Paginas publicas indexables. Se excluyen a proposito los flujos de
 # autenticacion (login, registro, recuperacion) por ser contenido sin valor
 # de busqueda, y todo lo que exige sesion.
@@ -103,6 +105,26 @@ def register_seo_routes(pages_router):
             media_type="image/x-icon",
             headers={"Cache-Control": "public, max-age=604800"},   # 7 dias
         )
+
+    def _pwa_file(nombre, media_type, cache):
+        ruta = os.path.join(_PWA_DIR, nombre)
+        if not os.path.isfile(ruta):
+            return Response(status_code=404)
+        return FileResponse(ruta, media_type=media_type, headers={"Cache-Control": cache})
+
+    # El service worker debe servirse desde la raiz para controlar todo el
+    # sitio, y sin cache para que las actualizaciones se detecten al instante.
+    @pages_router.get("/sw.js", include_in_schema=False)
+    def service_worker():
+        return _pwa_file("sw.js", "application/javascript", "no-cache")
+
+    @pages_router.get("/manifest.webmanifest", include_in_schema=False)
+    def manifest():
+        return _pwa_file("manifest.webmanifest", "application/manifest+json", "public, max-age=86400")
+
+    @pages_router.get("/offline", include_in_schema=False)
+    def offline():
+        return _pwa_file("offline.html", "text/html; charset=utf-8", "no-cache")
 
     @pages_router.get("/robots.txt", include_in_schema=False)
     def robots():
