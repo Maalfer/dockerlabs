@@ -5,6 +5,7 @@
   
   **La Plataforma Definitiva para Entrenar tus Habilidades de Hacking Ético**
 
+  [![Version](https://img.shields.io/github/v/tag/Maalfer/dockerlabs?style=for-the-badge&label=version&color=blue)](CHANGELOG.md)
   [![GitHub Stars](https://img.shields.io/github/stars/Maalfer/dockerlabs?style=for-the-badge&color=yellow)](https://github.com/Maalfer/dockerlabs/stargazers)
   [![GitHub Forks](https://img.shields.io/github/forks/Maalfer/dockerlabs?style=for-the-badge&color=orange)](https://github.com/Maalfer/dockerlabs/network/members)
   [![Python](https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
@@ -57,6 +58,26 @@ Un stack robusto y moderno para garantizar rendimiento y escalabilidad.
   <img src="https://img.shields.io/badge/CSS3-1572B6?style=for-the-badge&logo=css3&logoColor=white" alt="CSS3">
   <img src="https://img.shields.io/badge/JavaScript-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black" alt="Javascript">
 </div>
+
+---
+
+## 🔖 Versionado
+
+DockerLabs sigue [Versionado Semántico](https://semver.org/lang/es/)
+(`MAJOR.MINOR.PATCH`) a partir de la `v2.0.0`. Cada release queda
+etiquetada en git y documentada en [`CHANGELOG.md`](CHANGELOG.md).
+
+La versión desplegada se puede consultar en tres sitios, siempre
+consistentes entre sí porque leen del mismo fichero [`VERSION`](VERSION):
+
+- El pie de página de https://dockerlabs.es
+- La etiqueta `<meta name="application-version">` del `<head>`
+- El endpoint público `GET /api/version` → `{"version": "2.0.0"}`
+
+Este versionado permite, además, referenciar rangos de versiones
+afectadas/corregidas en los avisos de seguridad (ver
+[`SECURITY.md`](SECURITY.md)) y solicitar identificadores **CVE** para
+vulnerabilidades confirmadas.
 
 ---
 

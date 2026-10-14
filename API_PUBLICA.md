@@ -79,6 +79,15 @@ del diploma archivado, o `404`. Público, `Cache-Control: 86400`.
 imagen_url}`. Si no: `{valid: false, message}`. Es O(1) (consulta indexada);
 no reintroduzcas escaneos de tabla aquí.
 
+## `GET /api/version` — versión desplegada
+
+Responde `200` con `{"version": "2.0.0"}` (SemVer, sin prefijo `v`).
+Cabecera `Cache-Control: public, max-age=60`. Pensado para que herramientas
+externas (escáneres, advisories de seguridad) comprueben qué versión corre
+en producción sin parsear HTML. La fuente de verdad es el fichero `VERSION`
+en la raíz del repo (ver `dockerlabs/__init__.py`); coincide siempre con el
+footer de la web.
+
 ## `GET /img/maquina/<id>` y `GET /img/perfil/<id>` — imágenes públicas
 
 Sirven logo de máquina y avatar. Son las URLs que devuelven los JSON de arriba;

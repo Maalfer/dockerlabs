@@ -9,6 +9,7 @@ import os
 import logging
 
 
+from dockerlabs import __version__ as DOCKERLABS_VERSION
 from dockerlabs.models import User, SessionConfig, ApiToken
 from dockerlabs.extensions import db
 from dockerlabs.token_auth import verify_api_token
@@ -102,6 +103,11 @@ def get_current_year():
     return datetime.now().year
 
 templates.env.globals['current_year'] = get_current_year
+
+# Version de la app (fuente unica: fichero VERSION en la raiz del repo, ver
+# dockerlabs/__init__.py). Se usa en el footer de las plantillas y coincide
+# siempre con lo que devuelve GET /api/version.
+templates.env.globals['dockerlabs_version'] = DOCKERLABS_VERSION
 
 # Modelos de petición/respuesta
 

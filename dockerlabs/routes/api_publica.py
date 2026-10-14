@@ -8,6 +8,7 @@ from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 from sqlalchemy import func
 
+from dockerlabs import __version__ as DOCKERLABS_VERSION
 from dockerlabs.extensions import db
 from dockerlabs.models import (
     User,
@@ -97,9 +98,23 @@ class SubmitMachineResponse(BaseModel):
     message: Optional[str] = None
     error: Optional[str] = None
 
+class VersionResponse(BaseModel):
+    version: str
+
 
 def register_api_publica_routes(api_router, get_session, verify_csrf_token, get_fastapi_profile_image_url):
     """Registra las rutas de este modulo en el router recibido."""
+
+    @api_router.get("/version", response_model=VersionResponse)
+    def api_version():
+        """Version desplegada de DockerLabs (SemVer). Publico, sin auth,
+        pensado para que herramientas externas (scanners, advisories de
+        seguridad) puedan verificar que version esta corriendo en produccion
+        sin tener que parsear el HTML."""
+        return JSONResponse(
+            content={"version": DOCKERLABS_VERSION},
+            headers={"Cache-Control": "public, max-age=60"},
+        )
 
     def resolver_usuarios_por_nombre(nombres):
         """Mapa nombre-en-minusculas -> User, resuelto de forma determinista.

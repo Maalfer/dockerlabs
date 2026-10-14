@@ -9,6 +9,7 @@
         - [Activar servicio de memcached](#activar-servicio-de-memcached)
         - [Desplegar DockerLabs](#desplegar-dockerlabs)
 - [¿Qué ocurre después de abrir una Pull Request?](#qué-ocurre-después-de-abrir-una-pull-request)
+- [Versionado y cómo publicar un release](#versionado-y-cómo-publicar-un-release)
 - [Reportar vulnerabilidades (VDP)](#reportar-vulnerabilidades-vdp)
 
 # Antes de empezar
@@ -75,6 +76,36 @@ Si quiere relleno en la plataforma *(máquinas,usuarios,writeups...)* puede empl
 El equipo de desarrollo de DockerLabs revisará detalladamente todos los cambios propuestos. Aquellos cambios que se consideren innecesarios o que puedan generar problemas serán rechazados.
 
 Valoramos y agradecemos todas las contribuciones. Sin embargo, te pedimos que revises cuidadosamente tus cambios para evitar introducir vulnerabilidades de seguridad o conflictos en el código.
+
+# Versionado y cómo publicar un release
+
+DockerLabs sigue [Versionado Semántico](https://semver.org/lang/es/)
+(`MAJOR.MINOR.PATCH`) desde la `v2.0.0`. La fuente única de verdad es el
+fichero [`VERSION`](VERSION) en la raíz: todo lo demás (footer, meta tag,
+`GET /api/version`, badge del README) lo lee de ahí, así que nunca hay que
+tocar nada más que ese fichero y el `CHANGELOG.md`.
+
+Para publicar una nueva versión:
+
+1. Decide el número según el impacto del cambio:
+   - **PATCH** (`2.0.1`): corrección de bug o de seguridad, sin romper nada.
+   - **MINOR** (`2.1.0`): funcionalidad nueva, compatible con lo anterior.
+   - **MAJOR** (`3.0.0`): rompe la API pública (`API_PUBLICA.md`) o cambia
+     el comportamiento de autenticación/sesión de forma incompatible.
+2. Actualiza el fichero `VERSION` con el número nuevo (sin prefijo `v`).
+3. Añade una entrada en `CHANGELOG.md` bajo `## [X.Y.Z] - AAAA-MM-DD`,
+   describiendo los cambios (`Added`/`Changed`/`Fixed`/`Security`). Si la
+   entrada corrige una vulnerabilidad con advisory público, referencia su
+   GHSA/CVE.
+4. Haz commit de ambos ficheros y etiqueta el commit:
+   ```bash
+   git tag -a vX.Y.Z -m vX.Y.Z
+   git push origin main --tags
+   ```
+5. (Opcional) Crea el [Release en GitHub](https://github.com/Maalfer/dockerlabs/releases/new)
+   a partir del tag, pegando la entrada correspondiente del `CHANGELOG.md`.
+6. Despliega el código nuevo en el VPS y reinicia `dockerlabs.service`; la
+   web, el footer y `/api/version` reflejan la nueva versión de inmediato.
 
 # Reportar vulnerabilidades (VDP)
 

@@ -10,6 +10,7 @@
     <meta name="description" content="DockerLabs es una plataforma de ciberseguridad y hacking ético del Pinguino de Mario. Aprende hacking con CTF, laboratorios vulnerables y desafíos prácticos. Mejora tus habilidades en seguridad informática.">
     <meta name="keywords" content="ciberseguridad, hacking ético, CTF, laboratorios vulnerables, seguridad informática, pentesting, DockerLabs, Pinguino de Mario, aprender hacking, desafíos de seguridad">
     <meta name="author" content="El Pinguino de Mario">
+    <meta name="application-version" content="{{ dockerlabs_version }}">
     <meta name="robots" content="index, follow">
     <link rel="canonical" href="https://dockerlabs.es{% block canonical_path %}{% endblock %}">
 
@@ -388,6 +389,9 @@
                 <a href="{{ url_for('main.politica_privacidad') }}" class="footer-link">Política de Privacidad</a> ·
                 <a href="{{ url_for('main.politica_cookies') }}" class="footer-link">Cookies</a> ·
                 <a href="{{ url_for('main.condiciones_uso') }}" class="footer-link">Condiciones de Uso</a>
+            </p>
+            <p class="copyright dockerlabs-version">
+                <a href="https://github.com/Maalfer/dockerlabs/blob/main/CHANGELOG.md" class="footer-link" target="_blank" rel="noopener noreferrer">DockerLabs v{{ dockerlabs_version }}</a>
             </p>
 
             <div class="footer-icons">
