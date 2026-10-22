@@ -42,17 +42,24 @@ dockerlabs/
   image_utils.py         # Conversión a WebP
   email.py               # Envío de correos (Postfix local)
   routes/
-    machines.py          # CRUD máquinas, claims, machine-edit-requests
-    pages_core.py        # Páginas públicas principales
-    pages_admin.py       # Panel de administración
-    writeups.py          # Gestión de writeups y ranking
-    notifications.py     # Sistema de notificaciones
-    bunkerlabs_pages.py  # Páginas de BunkerLabs
-    bunker_api.py        # API endpoints de BunkerLabs
-    images.py            # Servicio de imágenes (perfil, logos)
-    certificados.py      # Certificados de usuario (render PNG + archivado del PDF)
-    public_profile.py    # API pública JSON del perfil: GET /u/<slug>
-    pending_admin.py     # Revisión de envíos pendientes
+    machines.py           # CRUD máquinas, claims, machine-edit-requests
+    maquinas_api.py       # API de máquinas: acceso invitado, logo, valoraciones y completadas
+    pages_core.py         # Páginas públicas principales
+    pages_admin.py        # Panel de administración
+    admin_usuarios.py     # Administración de usuarios: cambio de rol y borrado
+    writeups.py           # Gestión de writeups y ranking
+    notifications.py      # Sistema de notificaciones
+    bunkerlabs_pages.py   # Páginas de BunkerLabs
+    bunker_api.py         # API endpoints de BunkerLabs
+    images.py             # Servicio de imágenes (perfil, logos)
+    certificados.py       # Certificados de usuario (render PNG + archivado del PDF)
+    public_profile.py     # API pública JSON del perfil: GET /u/<slug>
+    api_publica.py        # API pública: resumen, rankings y envío de máquinas
+    api_tokens.py         # Tokens de API de administrador (sección "Tokens de API" en /dashboard)
+    auth.py               # Autenticación: alta, acceso y recuperación de contraseña
+    perfil.py             # Perfil del usuario: contraseña, datos, redes sociales y foto
+    seo.py                # Recursos de raíz: favicon, robots.txt y sitemap.xml
+    pending_admin.py      # Revisión de envíos pendientes
 bunkerlabs/              # Módulos propios de BunkerLabs
 static/                  # Assets estáticos (JS, CSS, imágenes)
 templates/               # Plantillas Jinja2
@@ -232,7 +239,7 @@ idempotente (`--force` re-renderiza, `--dry-run` solo cuenta).
 4. Imágenes verificadas con PIL antes de guardar
 5. Límites: 5 MB perfiles, 2 MB logos
 6. Scripts inline en templates requieren `nonce="{{ g.csp_nonce }}"`
-7. Rate limit: 300 req/min por IP en el middleware ASGI (excluye `/static/`, `/img/`, `/database/`). Los diccionarios de rate-limit se purgan al superar 10.000 claves, para que rotar la IP de origen no agote la memoria del worker.
+7. Rate limit: 300 req/min por IP en el middleware ASGI (excluye `/static/`, `/img/`). Los diccionarios de rate-limit se purgan al superar 10.000 claves, para que rotar la IP de origen no agote la memoria del worker.
 8. El `rol` viaja firmado en la cookie (30 días, sin almacén de sesiones). `get_session` lo revalida contra la BD cuando la cookie afirma `admin`/`moderador`, de modo que degradar o borrar a un privilegiado surte efecto al instante.
 9. Las respuestas `/img/` llevan una CSP `sandbox` en vigor: un SVG subido como logo no ejecuta scripts al abrirlo como documento.
 

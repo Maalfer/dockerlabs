@@ -52,7 +52,7 @@ async def rate_limit_middleware(request: Request, call_next):
     current_time = time.time()
     path = request.url.path
 
-    if path.startswith("/static/") or path.startswith("/img/") or path.startswith("/database/"):
+    if path.startswith("/static/") or path.startswith("/img/"):
         response = await call_next(request)
         return response
 
@@ -81,7 +81,7 @@ async def rate_limit_middleware(request: Request, call_next):
     response = await call_next(request)
     return response
 
-_VISIT_SKIP_PREFIXES = ("/static/", "/img/", "/database/", "/api/", "/fastapi-", "/u/")
+_VISIT_SKIP_PREFIXES = ("/static/", "/img/", "/api/", "/fastapi-", "/u/")
 _BOT_MARKERS = ("bot", "crawl", "spider", "slurp", "curl", "wget", "python-requests",
                 "httpx", "monitor", "uptime", "headless", "facebookexternalhit")
 _VISIT_SALT = os.environ.get("SECRET_KEY", "dockerlabs")
