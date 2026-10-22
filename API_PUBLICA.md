@@ -81,7 +81,7 @@ no reintroduzcas escaneos de tabla aquí.
 
 ## `GET /api/version` — versión desplegada
 
-Responde `200` con `{"version": "2.0.0"}` (SemVer, sin prefijo `v`).
+Responde `200` con `{"version": "2.0.1"}` (SemVer, sin prefijo `v`).
 Cabecera `Cache-Control: public, max-age=60`. Pensado para que herramientas
 externas (escáneres, advisories de seguridad) comprueben qué versión corre
 en producción sin parsear HTML. La fuente de verdad es el fichero `VERSION`
