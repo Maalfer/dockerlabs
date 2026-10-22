@@ -1,10 +1,11 @@
 # DockerLabs – Guía de desarrollo
 
-> ## ⚠️ Despliegue: el VPS es la FUENTE DE VERDAD
-> Desde **2026-06-16** se abandonó el push-deploy de GitHub Actions. El código en
-> producción se edita **directamente en el VPS** (`/var/www/dockerlabs/`) y se aplica
-> con `sudo systemctl restart dockerlabs`. **No** despliegues con `git pull`: GitHub
-> `main` está desactualizado. Detalles completos en **`DEPLOYMENT.md`**.
+> ## ⚠️ Despliegue: el código se edita en el VPS, el repo vuelve a estar vivo
+> El código en producción se edita **directamente en el VPS** (`/opt/dockerlabs/`)
+> y se aplica con `sudo systemctl restart dockerlabs`. Pero desde octubre de 2026
+> el repo de GitHub volvió a ser la fuente de verdad del código (tags `v2.0.0+`):
+> cada cambio se sincroniza a mano a un clon aparte y se comitea/pushea. **No**
+> asumas que `main` está desactualizado. Detalles completos en **`DEPLOYMENT.md`**.
 
 > ## 🔒 API pública estable — NO romper
 > `GET /u/<slug>`, `GET /api/certificado/{pdf,imagen,verificar}/<CERT_ID>` y
@@ -17,7 +18,7 @@
 
 ## Stack
 
-- **Backend:** FastAPI + Uvicorn (4 workers), Python 3.11
+- **Backend:** FastAPI + Uvicorn (2 workers), Python 3.13
 - **Base de datos:** MariaDB via PyMySQL, ORM SQLAlchemy
 - **Templates:** Jinja2 (server-side rendering)
 - **Frontend:** Vanilla JS, Bootstrap 5, Fetch API

@@ -10,19 +10,19 @@ uploads/
 └── logos/       # docker_{machine_id}_{timestamp}.webp  |  bunker_{...}.webp
 ```
 
-El timestamp evita colisiones entre versiones. `.gitignore` excluye los archivos de imagen pero Git sí trackea las carpetas (via `.gitkeep`).
+El timestamp evita colisiones entre versiones. `.gitignore` excluye toda la carpeta `uploads/` (incluidos los `.gitkeep` que puede haber dentro en el VPS en vivo): las subcarpetas no están trackeadas en git, se crean solas con `os.makedirs(exist_ok=True)` la primera vez que algo se sube.
 
 Las columnas `profile_image_data` y `logo_data` (BLOB) están marcadas como `deferred` en los modelos y solo se acceden si `*_path` es NULL — compatibilidad con datos anteriores a la migración a disco.
 
 ## 2. Stack técnico
 
-- **FastAPI** + Uvicorn (4 workers en producción)
+- **FastAPI** + Uvicorn (2 workers en producción)
 - **MariaDB** via PyMySQL y SQLAlchemy
 - **Jinja2** para templates HTML
 - **itsdangerous** para firmado de cookies de sesión
 - **Werkzeug** para hashing de contraseñas (scrypt) y `secure_filename`
 - **PIL/Pillow** para procesamiento de imágenes (WebP)
-- **Apache** como reverse proxy con SSL/TLS (Let's Encrypt)
+- **nginx** como reverse proxy con TLS (certificado Cloudflare Origin)
 
 ## 3. Base de datos
 
@@ -57,7 +57,7 @@ BunkerLabs tiene un campo adicional `pin` y el modo `entorno_real` que omite el 
 
 ## 8. Rate limiting
 
-Middleware ASGI personalizado en `asgi.py`: 300 req/min por IP, ventana deslizante en memoria. Excluye `/static/`, `/img/` y `/database/`. Al ser en memoria, el límite efectivo con 4 workers es 300×4 por IP; suficiente para producción sin dependencias externas.
+Middleware ASGI personalizado en `asgi.py`: 300 req/min por IP, ventana deslizante en memoria. Excluye `/static/`, `/img/` y `/database/` (prefijo histórico; la carpeta `database/` ya no existe). Al ser en memoria, el límite efectivo con 2 workers es 300×2 por IP; suficiente para producción sin dependencias externas.
 
 ## 9. Seguridad en uploads
 
