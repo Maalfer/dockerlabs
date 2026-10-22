@@ -31,13 +31,18 @@ def register_pages_core_routes(
         "academia": "https://elrincondelhacker.es/",
     }
     _GO_BOTS = ("bot", "crawl", "spider", "curl", "wget", "python-requests", "headless", "preview", "monitor", "facebookexternalhit")
+    # Únicos valores que envían las plantillas propias (home.html, base.html). Cualquier otro
+    # valor de "o" es ruido de escáneres probando SQLi/XSS en el parámetro y se agrupa en "otro"
+    # para no ensuciar /estadisticas con una fila nueva por cada payload distinto.
+    _GO_ORIGENES_VALIDOS = {"footer", "home-boton"}
 
     @pages_router.get("/go/{destino}", include_in_schema=False)
     def go_externo(destino: str, request: Request, o: str = "footer"):
         base = _GO_DESTINOS.get(destino)
         if not base:
             raise HTTPException(status_code=404)
-        origen = re.sub(r"[^a-z0-9-]", "", (o or "").lower())[:30] or "footer"
+        origen_raw = re.sub(r"[^a-z0-9-]", "", (o or "").lower())[:30] or "footer"
+        origen = origen_raw if origen_raw in _GO_ORIGENES_VALIDOS else "otro"
         ua = request.headers.get("user-agent", "")
         if ua and not any(b in ua.lower() for b in _GO_BOTS):
             try:
