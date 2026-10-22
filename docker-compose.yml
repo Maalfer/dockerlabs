@@ -1,0 +1,44 @@
+services:
+  db:
+    image: mariadb:11
+    restart: unless-stopped
+    environment:
+      MARIADB_DATABASE: dockerlabs
+      MARIADB_USER: dockerlabs
+      MARIADB_PASSWORD: ${DB_PASSWORD}
+      MARIADB_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
+    volumes:
+      - db_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD-SHELL", "healthcheck.sh --connect --innodb_initialized"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+  app:
+    build: .
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: mysql+pymysql://dockerlabs:${DB_PASSWORD}@db/dockerlabs?charset=utf8mb4
+      SECRET_KEY: ${SECRET_KEY}
+      APP_URL: ${APP_URL:-http://localhost:8000}
+      SMTP_HOST: ${SMTP_HOST:-}
+      SMTP_PORT: ${SMTP_PORT:-25}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASS: ${SMTP_PASS:-}
+      SMTP_FROM_NAME: ${SMTP_FROM_NAME:-DockerLabs}
+      SMTP_FROM: ${SMTP_FROM:-}
+      DISCORD_WEBHOOK_URL: ${DISCORD_WEBHOOK_URL:-}
+      DISCORD_NEWS_ROLE_ID: ${DISCORD_NEWS_ROLE_ID:-}
+    volumes:
+      - uploads_data:/app/uploads
+    ports:
+      - "${APP_PORT:-8000}:8000"
+
+volumes:
+  db_data:
+  uploads_data:

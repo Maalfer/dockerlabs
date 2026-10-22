@@ -405,14 +405,43 @@ if __name__ == "__main__":
 
 </details>
 
-## 🐳 DESPLIEGUE EN DOCKER
+## 🐳 Despliegue con Docker Compose (recomendado)
 
-Para construir una imagen de Docker y lanzar la aplicación contenizada, ejecutaremos los siguientes comandos:
+La forma más rápida de levantar DockerLabs, en local o en tu propio
+servidor: un solo comando levanta la app y su base de datos MariaDB.
 
-```bash
-docker build -t dockerlabs .
-docker run -d -p 5000:5000 --name dockerlabs dockerlabs
-```
+1.  **Clona el repositorio y copia la configuración:**
+    ```bash
+    git clone https://github.com/Maalfer/dockerlabs.git
+    cd dockerlabs
+    cp .env.example .env
+    ```
+
+2.  **Edita `.env`**: como mínimo cambia `DB_PASSWORD`, `DB_ROOT_PASSWORD`
+    y `SECRET_KEY` (genera esta última con
+    `python3 -c "import secrets; print(secrets.token_hex(32))"`). El resto
+    (SMTP, Discord) es opcional — sin SMTP configurado el registro de
+    usuarios funciona igual, solo sin verificación por email.
+
+3.  **Levanta los contenedores:**
+    ```bash
+    docker compose up -d --build
+    ```
+    La primera vez crea el esquema de la base de datos automáticamente.
+    La app queda disponible en `http://localhost:8000` (o el puerto que
+    hayas puesto en `APP_PORT`).
+
+4.  **Conviértete en admin** (regístrate primero desde la web con tu
+    usuario, luego):
+    ```bash
+    docker compose exec db mariadb -u dockerlabs -p dockerlabs \
+      -e "UPDATE users SET role='admin' WHERE username='TU_USUARIO';"
+    ```
+    (pide la contraseña de `DB_PASSWORD` del `.env`).
+
+Los datos (imágenes subidas y base de datos) persisten en volúmenes
+Docker (`uploads_data`, `db_data`) entre reinicios. Para pararlo:
+`docker compose down` (añade `-v` solo si además quieres borrar los datos).
 
 ## 👷Como contribuir en DockerLabs
 En [CONTRIBUTING.md](/CONTRIBUTING.md) indicamos todos los detalles para poder contribuir en [DockerLabs](https://dockerlabs.es).

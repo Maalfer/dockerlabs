@@ -8,6 +8,7 @@ __pycache__/
 # Secretos / configuración local
 .env
 .env.*
+!.env.example
 *.env
 
 # Datos de runtime (subidas de usuarios, imágenes generadas)
