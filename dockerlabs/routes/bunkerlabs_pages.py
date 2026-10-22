@@ -113,7 +113,10 @@ def register_bunkerlabs_pages_routes(
 
     @pages_router.get("/bunkerlabs/logout")
     def bunkerlabs_logout(request: Request, session: dict = Depends(get_session)):
-        for key in ("bunkerlabs_ok", "bunkerlabs_guest", "bunkerlabs_nombre", "bunkerlabs_id"):
+        for key in (
+            "bunkerlabs_ok", "bunkerlabs_guest", "bunkerlabs_nombre", "bunkerlabs_id",
+            "bunkerlabs_anonymous", "bunkerlabs_unauthenticated",
+        ):
             session.pop(key, None)
         cookie = encode_session_cookie(session)
         resp = RedirectResponse(url="/bunkerlabs/login", status_code=302)
@@ -187,14 +190,30 @@ def register_bunkerlabs_pages_routes(
         if not csrf_token:
             csrf_token = secrets.token_urlsafe(32)
             session["csrf_token"] = csrf_token
+
+        # Los flags bunkerlabs_anonymous/bunkerlabs_unauthenticated se fijan una
+        # sola vez, en el momento en que se concede el acceso a BunkerLabs (vía
+        # enlace con ?token=, el login por PIN o el acceso de invitado). Si en
+        # ese momento el usuario no tenía sesión iniciada en DockerLabs quedan a
+        # True y se guardan tal cual en la cookie de sesión firmada. El
+        # problema: si el usuario luego inicia sesión en DockerLabs (lo cual solo
+        # actualiza user_id/username/role en la sesión, no estos dos flags), el
+        # aviso de "anónimo"/"invitado sin cuenta" se queda pegado para siempre
+        # aunque ahora sí esté identificado. Por eso aquí se combinan con el
+        # estado de login real en el momento de renderizar la página, que es la
+        # fuente de verdad (get_session() ya revalida user_id contra la BD en
+        # cada petición): si hay user_id, estos avisos nunca se muestran, sin
+        # necesidad de tocar cada punto donde se concede acceso a BunkerLabs.
+        docker_logged_in = bool(session.get("user_id"))
+
         return templates.TemplateResponse(
             request,
             "bunkerlabs/home.html",
             {
                 "maquinas": maquinas,
                 "is_guest": session.get("bunkerlabs_guest", False),
-                "is_anonymous": session.get("bunkerlabs_anonymous", False),
-                "is_unauthenticated_guest": session.get("bunkerlabs_unauthenticated", False),
+                "is_anonymous": session.get("bunkerlabs_anonymous", False) and not docker_logged_in,
+                "is_unauthenticated_guest": session.get("bunkerlabs_unauthenticated", False) and not docker_logged_in,
                 "session": session,
                 "url_for": url_for,
                 "current_user_role": current_user_role,

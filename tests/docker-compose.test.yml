@@ -1,0 +1,12 @@
+# Override de docker-compose.yml SOLO para tests: expone el puerto de MariaDB
+# al host y la apunta a un esquema "dockerlabs_test" separado del de
+# desarrollo/producción. No se toca el docker-compose.yml original.
+#
+# Uso: ver tests/README.md (lo hace conftest.py automáticamente si Docker
+# está disponible; si no, documenta cómo levantarlo a mano).
+services:
+  db:
+    environment:
+      MARIADB_DATABASE: dockerlabs_test
+    ports:
+      - "3307:3306"

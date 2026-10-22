@@ -1,0 +1,7 @@
+# Dependencias SOLO para correr el suite de tests. No se mezclan con
+# requirements.txt (ese es el que corre en producción, ver CONTRIBUTING.md).
+#
+#   pip install -r requirements.txt -r tests/requirements-test.txt
+pytest==9.1.1
+pytest-cov==7.1.0
+Faker==40.43.0
