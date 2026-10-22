@@ -6,15 +6,14 @@
 - [Desplegar DockerLabs en local](#desplegar-dockerlabs-en-local)
     - [Dependencias](#dependencias)
     - [Configurar y desplegar DockerLabs](#configurar-y-desplegar-dockerlabs)
-        - [Activar servicio de memcached](#activar-servicio-de-memcached)
         - [Desplegar DockerLabs](#desplegar-dockerlabs)
 - [¿Qué ocurre después de abrir una Pull Request?](#qué-ocurre-después-de-abrir-una-pull-request)
 - [Versionado y cómo publicar un release](#versionado-y-cómo-publicar-un-release)
 - [Reportar vulnerabilidades (VDP)](#reportar-vulnerabilidades-vdp)
 
 # Antes de empezar
-> [!WARNING]
-> **DockerLabs está migrando a FastAPI. Si encuentra un fallo reportalo en [Issues](https://github.com/Maalfer/dockerlabs/issues)**
+
+Si encuentras un fallo, repórtalo en [Issues](https://github.com/Maalfer/dockerlabs/issues).
 
 # Mejores prácticas y recomendaciones
 Para realizar cambios seguros y que no ocasionen problemas con la plataforma, recomendamos:
@@ -31,28 +30,31 @@ Para realizar cambios seguros y que no ocasionen problemas con la plataforma, re
 # Desplegar DockerLabs en local
 
 ## Dependencias
-Para desplegar DockerLabs requeriremos de las siguientes dependencias: `flask,flask_httpauth,flask-limiter,flask-sqlalchemy,flask-login,pillow,uvicorn,asgiref,gunicorn,fastapi`
+DockerLabs es FastAPI + Uvicorn sobre MariaDB. El repositorio deja un
+[requirements.txt](/requirements.txt) con todas las dependencias exactas que
+hacen funcionar la plataforma — no las dupliques aquí, instala directamente
+desde ese fichero para no tener dos listas que puedan divergir.
 
-# memcached eliminado - rate limiting configurado para Cloudflare
+El rate limiting no depende de memcached ni de ningún servicio externo: es un
+middleware ASGI en memoria (ver `agent.md`), pensado para funcionar detrás de
+Cloudflare.
 
-Para instalar las dependencias en Python, el repositorio de DockerLabs deja un [requeriments.txt](/requirements.txt) donde están indicadas todas las dependencias que hacen funcionar la plataforma. Para instalarlas:
 > [!WARNING]
 > Se recomienda hacerlo en un entorno virtual de Python. Para desplegar uno:
 > ```bash
 >python3 -m venv venv
 >```
 ```bash
-pip3 install -r requeriments.txt
+pip3 install -r requirements.txt
 ```
 
 ## Configurar y desplegar DockerLabs
 Ya tengamos las dependencias instaladas vamos a configurar correctamente la aplicación para poder desplegarla.
-### Activar servicio de memcached
-DockerLabs emplea `memcached` para el sistema de caché y rate limit. Así que requiere estar en marcha. Podemos emplear `service` o `systemctl`:
 
-```bash
-service start memcached
-```
+También necesitas una base de datos MariaDB/MySQL accesible y un fichero
+`.env` con al menos `DATABASE_URL` y `SECRET_KEY` (usa `.env.example` como
+plantilla). Si prefieres no instalar nada de esto a mano, usa directamente
+**Docker Compose** (ver `README.md`).
 
 ### Desplegar DockerLabs
 Una vez todo preparado podemos lanzar DockerLabs, para ello ejecutaremos el script [run.py](/run.py):
@@ -68,8 +70,6 @@ INFO:     Waiting for application startup.
 INFO:     ASGI 'lifespan' protocol appears unsupported.
 INFO:     Application startup complete.
 ```
-
-Si quiere relleno en la plataforma *(máquinas,usuarios,writeups...)* puede emplear el script [populate_datos.py](/populate_datos.py).
 
 # ¿Qué ocurre después de abrir una Pull Request?
 
