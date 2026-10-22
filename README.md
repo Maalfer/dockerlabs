@@ -45,9 +45,6 @@ Olvídate de descargas de 4GB. DockerLabs levanta máquinas en milisegundos.
 
 ## 🛠️ Tecnologías
 
-> [!WARNING]
-> **DockerLabs está migrando a FastAPI. Si encuentra un fallo reportalo en [Issues](https://github.com/Maalfer/dockerlabs/issues)**
-
 Un stack robusto y moderno para garantizar rendimiento y escalabilidad.
 
 <div align="center">
