@@ -344,6 +344,66 @@ function injectRankingStyles() {
                 object-fit: cover;
                 flex-shrink: 0;
             }
+
+            .author-pager {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                gap: 0.75rem;
+                margin-top: 0.75rem;
+            }
+
+            .author-pager:empty {
+                display: none;
+            }
+
+            .author-pager-btn {
+                background: rgba(30, 41, 59, 0.6);
+                border: 1px solid #334155;
+                color: #cbd5e1;
+                border-radius: 8px;
+                min-width: 2rem;
+                height: 2rem;
+                padding: 0 0.6rem;
+                cursor: pointer;
+                font-size: 0.95rem;
+                line-height: 1;
+                transition: all 0.15s ease;
+            }
+
+            .author-pager-btn:hover:not(:disabled) {
+                background: rgba(59, 130, 246, 0.15);
+                border-color: #3b82f6;
+                color: #f1f5f9;
+            }
+
+            .author-pager-btn:disabled {
+                opacity: 0.4;
+                cursor: default;
+            }
+
+            .author-pager-info {
+                font-size: 0.8rem;
+                color: #94a3b8;
+                font-weight: 600;
+                min-width: 3.5rem;
+                text-align: center;
+            }
+
+            /* Solo la lista del ranking hace scroll (queda acotada); así el
+               paginador siempre es visible justo debajo, sin que ningún ítem
+               asome por debajo de él. */
+            #ranking-ul {
+                max-height: max(140px, calc(85vh - 340px));
+                overflow-y: auto;
+                scrollbar-width: thin;
+                scrollbar-color: rgba(59, 130, 246, 0.35) transparent;
+            }
+
+            #ranking-pager {
+                padding-top: 0.75rem;
+                border-top: 1px solid rgba(148, 163, 184, 0.12);
+            }
         `;
         document.head.appendChild(style);
     }
@@ -472,12 +532,14 @@ function openAuthorProfileModal(authorName) {
 
             // --- Structure Content ---
 
-            // Machines List
-            let maquinasHtml = '<div style="margin-top: 1.5rem;">';
-            if (data.maquinas && data.maquinas.length > 0) {
-                maquinasHtml += '<div class="section-title">Máquinas Creadas</div>';
-                data.maquinas.forEach(m => {
-                    maquinasHtml += `
+            // Machines List (paginada: se listan por páginas para no volcar
+            // todas las máquinas de golpe cuando un autor tiene muchas).
+            const MACHINES_PAGE_SIZE = 8;
+            const authorMachines = Array.isArray(data.maquinas) ? data.maquinas : [];
+            let authorMachinesPage = 0;
+
+            function machineItemHtml(m) {
+                return `
                         <div class="mini-list-item">
                             ${m.imagen_url ? `<img src="${escapeHtml(m.imagen_url)}" class="mini-img">` : ''}
                             <div style="flex:1;">
@@ -486,18 +548,23 @@ function openAuthorProfileModal(authorName) {
                             </div>
                         </div>
                     `;
-                });
+            }
+
+            let maquinasHtml = '<div style="margin-top: 1.5rem;"><div class="section-title">Máquinas Creadas</div>';
+            if (authorMachines.length > 0) {
+                maquinasHtml += '<div id="author-machines-list"></div><div id="author-machines-pager" class="author-pager"></div>';
             } else {
-                maquinasHtml += '<div class="section-title">Máquinas Creadas</div><p style="font-size: 0.85rem; color: #64748b; font-style: italic;">Sin máquinas registradas.</p>';
+                maquinasHtml += '<p style="font-size: 0.85rem; color: #64748b; font-style: italic;">Sin máquinas registradas.</p>';
             }
             maquinasHtml += '</div>';
 
-            // Writeups List
-            let writeupsHtml = '<div style="margin-top: 1.5rem;">';
-            if (data.writeups && data.writeups.length > 0) {
-                writeupsHtml += '<div class="section-title">Writeups Enviados</div>';
-                data.writeups.forEach(w => {
-                    writeupsHtml += `
+            // Writeups List (paginada, igual que las máquinas)
+            const WRITEUPS_PAGE_SIZE = 8;
+            const authorWriteups = Array.isArray(data.writeups) ? data.writeups : [];
+            let authorWriteupsPage = 0;
+
+            function writeupItemHtml(w) {
+                return `
                         <div class="mini-list-item" style="justify-content: space-between;">
                             <div>
                                 <div style="font-weight: 600; font-size: 0.9rem; color: #f1f5f9;">${escapeHtml(w.maquina)}</div>
@@ -506,9 +573,13 @@ function openAuthorProfileModal(authorName) {
                             <a href="${escapeHtml(w.url)}" target="_blank" style="font-size: 0.8rem; color: #3b82f6; text-decoration: none;">Ver ↗</a>
                         </div>
                      `;
-                });
+            }
+
+            let writeupsHtml = '<div style="margin-top: 1.5rem;"><div class="section-title">Writeups Enviados</div>';
+            if (authorWriteups.length > 0) {
+                writeupsHtml += '<div id="author-writeups-list"></div><div id="author-writeups-pager" class="author-pager"></div>';
             } else {
-                writeupsHtml += '<div class="section-title">Writeups Enviados</div><p style="font-size: 0.85rem; color: #64748b; font-style: italic;">Sin writeups enviados.</p>';
+                writeupsHtml += '<p style="font-size: 0.85rem; color: #64748b; font-style: italic;">Sin writeups enviados.</p>';
             }
             writeupsHtml += '</div>';
 
@@ -535,6 +606,66 @@ function openAuthorProfileModal(authorName) {
             popupDiv.appendChild(closeButton);
             overlayDiv.appendChild(popupDiv);
             document.body.appendChild(overlayDiv);
+
+            // Render paginado de las máquinas creadas
+            function renderAuthorMachinesPage() {
+                const listEl = popupDiv.querySelector('#author-machines-list');
+                const pagerEl = popupDiv.querySelector('#author-machines-pager');
+                if (!listEl) return;
+                const total = authorMachines.length;
+                const pages = Math.max(1, Math.ceil(total / MACHINES_PAGE_SIZE));
+                if (authorMachinesPage < 0) authorMachinesPage = 0;
+                if (authorMachinesPage > pages - 1) authorMachinesPage = pages - 1;
+                const start = authorMachinesPage * MACHINES_PAGE_SIZE;
+                listEl.innerHTML = authorMachines
+                    .slice(start, start + MACHINES_PAGE_SIZE)
+                    .map(machineItemHtml)
+                    .join('');
+                if (!pagerEl) return;
+                if (pages > 1) {
+                    pagerEl.innerHTML =
+                        '<button class="author-pager-btn" data-dir="prev"' + (authorMachinesPage === 0 ? ' disabled' : '') + '>←</button>' +
+                        '<span class="author-pager-info">' + (authorMachinesPage + 1) + ' / ' + pages + '</span>' +
+                        '<button class="author-pager-btn" data-dir="next"' + (authorMachinesPage >= pages - 1 ? ' disabled' : '') + '>→</button>';
+                    const prevBtn = pagerEl.querySelector('[data-dir="prev"]');
+                    const nextBtn = pagerEl.querySelector('[data-dir="next"]');
+                    if (prevBtn) prevBtn.onclick = () => { authorMachinesPage--; renderAuthorMachinesPage(); };
+                    if (nextBtn) nextBtn.onclick = () => { authorMachinesPage++; renderAuthorMachinesPage(); };
+                } else {
+                    pagerEl.innerHTML = '';
+                }
+            }
+            renderAuthorMachinesPage();
+
+            // Render paginado de los writeups enviados
+            function renderAuthorWriteupsPage() {
+                const listEl = popupDiv.querySelector('#author-writeups-list');
+                const pagerEl = popupDiv.querySelector('#author-writeups-pager');
+                if (!listEl) return;
+                const total = authorWriteups.length;
+                const pages = Math.max(1, Math.ceil(total / WRITEUPS_PAGE_SIZE));
+                if (authorWriteupsPage < 0) authorWriteupsPage = 0;
+                if (authorWriteupsPage > pages - 1) authorWriteupsPage = pages - 1;
+                const start = authorWriteupsPage * WRITEUPS_PAGE_SIZE;
+                listEl.innerHTML = authorWriteups
+                    .slice(start, start + WRITEUPS_PAGE_SIZE)
+                    .map(writeupItemHtml)
+                    .join('');
+                if (!pagerEl) return;
+                if (pages > 1) {
+                    pagerEl.innerHTML =
+                        '<button class="author-pager-btn" data-dir="prev"' + (authorWriteupsPage === 0 ? ' disabled' : '') + '>←</button>' +
+                        '<span class="author-pager-info">' + (authorWriteupsPage + 1) + ' / ' + pages + '</span>' +
+                        '<button class="author-pager-btn" data-dir="next"' + (authorWriteupsPage >= pages - 1 ? ' disabled' : '') + '>→</button>';
+                    const prevBtn = pagerEl.querySelector('[data-dir="prev"]');
+                    const nextBtn = pagerEl.querySelector('[data-dir="next"]');
+                    if (prevBtn) prevBtn.onclick = () => { authorWriteupsPage--; renderAuthorWriteupsPage(); };
+                    if (nextBtn) nextBtn.onclick = () => { authorWriteupsPage++; renderAuthorWriteupsPage(); };
+                } else {
+                    pagerEl.innerHTML = '';
+                }
+            }
+            renderAuthorWriteupsPage();
 
             // Click triggers for bio
             const openBio = () => openBiographyModal(data.nombre, data.biography, data.profile_image_url);
@@ -602,47 +733,77 @@ function ranking() {
         })
         .then(data => {
             data.sort((a, b) => b.puntos - a.puntos);
+            // Posición global precalculada: no cambia al filtrar ni paginar.
+            data.forEach((item, i) => { item._rank = i + 1; });
+
+            const RANK_PAGE_SIZE = 10;
+            let rankPage = 0;
+            let rankTerm = '';
 
             const listContainer = popupDiv.querySelector('#ranking-list-container');
-            const ul = document.createElement('ul');
-            ul.className = 'ranking-list';
+            listContainer.innerHTML = '<ul class="ranking-list" id="ranking-ul"></ul><div id="ranking-pager" class="author-pager"></div>';
+            const ul = listContainer.querySelector('#ranking-ul');
+            const pagerEl = listContainer.querySelector('#ranking-pager');
 
-            data.forEach((item, index) => {
-                const li = document.createElement('li');
-                li.className = 'ranking-item';
-                li.dataset.nombre = (item.nombre || '').toLowerCase();
+            function badgeFor(rank) {
+                if (rank === 1) return { cls: 'rank-badge rank-1', icon: '🥇' };
+                if (rank === 2) return { cls: 'rank-badge rank-2', icon: '🥈' };
+                if (rank === 3) return { cls: 'rank-badge rank-3', icon: '🥉' };
+                return { cls: 'rank-badge', icon: '#' + rank };
+            }
 
-                let badgeClass = 'rank-badge';
-                let icon = '#' + (index + 1);
+            function render() {
+                const filtered = rankTerm
+                    ? data.filter(it => (it.nombre || '').toLowerCase().includes(rankTerm))
+                    : data;
+                const pages = Math.max(1, Math.ceil(filtered.length / RANK_PAGE_SIZE));
+                if (rankPage > pages - 1) rankPage = pages - 1;
+                if (rankPage < 0) rankPage = 0;
+                const start = rankPage * RANK_PAGE_SIZE;
+                const slice = filtered.slice(start, start + RANK_PAGE_SIZE);
 
-                if (index === 0) { badgeClass += ' rank-1'; icon = '🥇'; }
-                else if (index === 1) { badgeClass += ' rank-2'; icon = '🥈'; }
-                else if (index === 2) { badgeClass += ' rank-3'; icon = '🥉'; }
-
-                li.innerHTML = `
-                    <div class="${badgeClass}">${icon}</div>
+                ul.innerHTML = '';
+                if (slice.length === 0) {
+                    const li = document.createElement('li');
+                    li.style.cssText = 'justify-content:center; color:#64748b; cursor:default;';
+                    li.textContent = 'Sin resultados.';
+                    ul.appendChild(li);
+                } else {
+                    slice.forEach(item => {
+                        const b = badgeFor(item._rank);
+                        const li = document.createElement('li');
+                        li.className = 'ranking-item';
+                        li.innerHTML = `
+                    <div class="${b.cls}">${b.icon}</div>
                      ${item.imagen_url ? `<img src="${escapeHtml(item.imagen_url)}" style="width: 32px; height: 32px; border-radius: 50%; object-fit: cover; margin-right: 12px;">` : ''}
                     <div class="user-info">
                         <span class="user-name">${escapeHtml(item.nombre)}</span>
                     </div>
                     <div class="user-points">${item.puntos} pts</div>
                 `;
+                        li.onclick = () => openAuthorProfileModal(item.nombre);
+                        ul.appendChild(li);
+                    });
+                }
 
-                li.onclick = () => openAuthorProfileModal(item.nombre);
-                ul.appendChild(li);
-            });
-            listContainer.appendChild(ul);
+                if (pages > 1) {
+                    pagerEl.innerHTML =
+                        '<button class="author-pager-btn" data-dir="prev"' + (rankPage === 0 ? ' disabled' : '') + '>←</button>' +
+                        '<span class="author-pager-info">' + (rankPage + 1) + ' / ' + pages + '</span>' +
+                        '<button class="author-pager-btn" data-dir="next"' + (rankPage >= pages - 1 ? ' disabled' : '') + '>→</button>';
+                    const prevBtn = pagerEl.querySelector('[data-dir="prev"]');
+                    const nextBtn = pagerEl.querySelector('[data-dir="next"]');
+                    if (prevBtn) prevBtn.onclick = () => { rankPage--; render(); };
+                    if (nextBtn) nextBtn.onclick = () => { rankPage++; render(); };
+                } else {
+                    pagerEl.innerHTML = '';
+                }
+            }
 
-            // Search Logic
             const searchInput = popupDiv.querySelector('#rankingSearchInput');
-            const filterList = () => {
-                const term = searchInput.value.toLowerCase();
-                ul.querySelectorAll('li').forEach(li => {
-                    const name = li.dataset.nombre;
-                    li.style.display = name.includes(term) ? 'flex' : 'none';
-                });
-            };
-            searchInput.oninput = filterList;
+            searchInput.oninput = () => { rankTerm = searchInput.value.toLowerCase(); rankPage = 0; render(); };
+
+            render();
 
         })
         .catch(err => {
@@ -712,47 +873,77 @@ function rankingautores() {
         .then(data => {
             // Sort by machines count (descending)
             data.sort((a, b) => b.maquinas - a.maquinas);
+            // Posición global precalculada: no cambia al filtrar ni paginar.
+            data.forEach((item, i) => { item._rank = i + 1; });
+
+            const RANK_PAGE_SIZE = 10;
+            let rankPage = 0;
+            let rankTerm = '';
 
             const listContainer = popupDiv.querySelector('#ranking-list-container');
-            const ul = document.createElement('ul');
-            ul.className = 'ranking-list';
+            listContainer.innerHTML = '<ul class="ranking-list" id="ranking-ul"></ul><div id="ranking-pager" class="author-pager"></div>';
+            const ul = listContainer.querySelector('#ranking-ul');
+            const pagerEl = listContainer.querySelector('#ranking-pager');
 
-            data.forEach((item, index) => {
-                const li = document.createElement('li');
-                li.className = 'ranking-item';
-                li.dataset.nombre = (item.autor || '').toLowerCase();
+            function badgeFor(rank) {
+                if (rank === 1) return { cls: 'rank-badge rank-1', icon: '🥇' };
+                if (rank === 2) return { cls: 'rank-badge rank-2', icon: '🥈' };
+                if (rank === 3) return { cls: 'rank-badge rank-3', icon: '🥉' };
+                return { cls: 'rank-badge', icon: '#' + rank };
+            }
 
-                let badgeClass = 'rank-badge';
-                let icon = '#' + (index + 1);
+            function render() {
+                const filtered = rankTerm
+                    ? data.filter(it => (it.autor || '').toLowerCase().includes(rankTerm))
+                    : data;
+                const pages = Math.max(1, Math.ceil(filtered.length / RANK_PAGE_SIZE));
+                if (rankPage > pages - 1) rankPage = pages - 1;
+                if (rankPage < 0) rankPage = 0;
+                const start = rankPage * RANK_PAGE_SIZE;
+                const slice = filtered.slice(start, start + RANK_PAGE_SIZE);
 
-                if (index === 0) { badgeClass += ' rank-1'; icon = '🥇'; }
-                else if (index === 1) { badgeClass += ' rank-2'; icon = '🥈'; }
-                else if (index === 2) { badgeClass += ' rank-3'; icon = '🥉'; }
-
-                li.innerHTML = `
-                    <div class="${badgeClass}">${icon}</div>
+                ul.innerHTML = '';
+                if (slice.length === 0) {
+                    const li = document.createElement('li');
+                    li.style.cssText = 'justify-content:center; color:#64748b; cursor:default;';
+                    li.textContent = 'Sin resultados.';
+                    ul.appendChild(li);
+                } else {
+                    slice.forEach(item => {
+                        const b = badgeFor(item._rank);
+                        const li = document.createElement('li');
+                        li.className = 'ranking-item';
+                        li.innerHTML = `
+                    <div class="${b.cls}">${b.icon}</div>
                      ${item.imagen ? `<img src="${escapeHtml(item.imagen)}" style="width: 32px; height: 32px; border-radius: 50%; object-fit: cover; margin-right: 12px;">` : ''}
                     <div class="user-info">
                         <span class="user-name">${escapeHtml(item.autor)}</span>
                     </div>
                     <div class="user-points" style="color: #22d3ee;">${item.maquinas} máq.</div>
                 `;
+                        li.onclick = () => openAuthorProfileModal(item.autor);
+                        ul.appendChild(li);
+                    });
+                }
 
-                li.onclick = () => openAuthorProfileModal(item.autor);
-                ul.appendChild(li);
-            });
-            listContainer.appendChild(ul);
+                if (pages > 1) {
+                    pagerEl.innerHTML =
+                        '<button class="author-pager-btn" data-dir="prev"' + (rankPage === 0 ? ' disabled' : '') + '>←</button>' +
+                        '<span class="author-pager-info">' + (rankPage + 1) + ' / ' + pages + '</span>' +
+                        '<button class="author-pager-btn" data-dir="next"' + (rankPage >= pages - 1 ? ' disabled' : '') + '>→</button>';
+                    const prevBtn = pagerEl.querySelector('[data-dir="prev"]');
+                    const nextBtn = pagerEl.querySelector('[data-dir="next"]');
+                    if (prevBtn) prevBtn.onclick = () => { rankPage--; render(); };
+                    if (nextBtn) nextBtn.onclick = () => { rankPage++; render(); };
+                } else {
+                    pagerEl.innerHTML = '';
+                }
+            }
 
-            // Search Logic
             const searchInput = popupDiv.querySelector('#rankingAutoresSearchInput');
-            const filterList = () => {
-                const term = searchInput.value.toLowerCase();
-                ul.querySelectorAll('li').forEach(li => {
-                    const name = li.dataset.nombre;
-                    li.style.display = name.includes(term) ? 'flex' : 'none';
-                });
-            };
-            searchInput.oninput = filterList;
+            searchInput.oninput = () => { rankTerm = searchInput.value.toLowerCase(); rankPage = 0; render(); };
+
+            render();
 
         })
         .catch(err => {

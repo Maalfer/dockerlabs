@@ -206,7 +206,7 @@ function showEnlaces(machine) {
             return response.json();
         })
         .then(enlaces => {
-            let content = `
+            const header = `
                 <div class="popup-header">
                     <h2 class="popup-title">
                         <i class="bi bi-file-text" style="color: #3b82f6;"></i>
@@ -217,21 +217,26 @@ function showEnlaces(machine) {
             `;
 
             if (!enlaces || enlaces.length === 0) {
-                content += '<div class="no-writeups">No hay writeups disponibles.</div>';
-            } else {
-                content += "<ul>";
-                for (let i = 0; i < enlaces.length; i++) {
-                    const enlace = enlaces[i];
-                    const isVideo = enlace.type === 'video' || enlace.type === '🎥';
-                    // Use Bootstrap icons instead of emojis for cleaner look
-                    const icono = isVideo ? '<i class="bi bi-play-circle-fill"></i>' : '<i class="bi bi-file-earmark-text-fill"></i>';
-                    const clase = isVideo ? 'writeup-link video-link' : 'writeup-link';
-                    const nombre = escapeHtml(enlace.name || "Autor desconocido");
-                    const url = escapeHtml(enlace.url || "#");
+                createPopup(header + '<div class="no-writeups">No hay writeups disponibles.</div>');
+                return;
+            }
 
-                    const id = enlace.id;
+            // Lista paginada: si una máquina tiene muchos writeups no se vuelcan todos.
+            createPopup(header + '<div id="writeups-list-container"></div>');
 
-                    content += `
+            const WU_PAGE_SIZE = 8;
+            let wuPage = 0;
+            const container = document.getElementById('writeups-list-container');
+            if (!container) return;
+
+            function itemHtml(enlace) {
+                const isVideo = enlace.type === 'video' || enlace.type === '🎥';
+                const icono = isVideo ? '<i class="bi bi-play-circle-fill"></i>' : '<i class="bi bi-file-earmark-text-fill"></i>';
+                const clase = isVideo ? 'writeup-link video-link' : 'writeup-link';
+                const nombre = escapeHtml(enlace.name || "Autor desconocido");
+                const url = escapeHtml(enlace.url || "#");
+                const id = enlace.id;
+                return `
                         <li>
                             <div class="writeup-icon">${icono}</div>
                             <a class="${clase}" href="${url}" target="_blank" rel="noopener noreferrer">${nombre}</a>
@@ -240,11 +245,37 @@ function showEnlaces(machine) {
                             </button>
                         </li>
                     `;
-                }
-                content += "</ul>";
             }
 
-            createPopup(content);
+            function btnStyle(disabled) {
+                return 'background:rgba(30,41,59,0.6); border:1px solid #334155; color:#cbd5e1; border-radius:8px;'
+                    + ' min-width:2rem; height:2rem; padding:0 0.6rem; font-size:0.95rem; line-height:1;'
+                    + ' opacity:' + (disabled ? '0.4' : '1') + '; cursor:' + (disabled ? 'default' : 'pointer') + ';';
+            }
+
+            function render() {
+                const pages = Math.max(1, Math.ceil(enlaces.length / WU_PAGE_SIZE));
+                if (wuPage > pages - 1) wuPage = pages - 1;
+                if (wuPage < 0) wuPage = 0;
+                const start = wuPage * WU_PAGE_SIZE;
+                const slice = enlaces.slice(start, start + WU_PAGE_SIZE);
+
+                let html = '<ul style="max-height: max(140px, calc(85vh - 220px)); overflow-y:auto;">' + slice.map(itemHtml).join('') + '</ul>';
+                if (pages > 1) {
+                    html += '<div style="border-top:1px solid rgba(148,163,184,0.12); display:flex; align-items:center; justify-content:center; gap:0.75rem; margin-top:0.75rem; padding-top:0.75rem;">'
+                        + '<button data-dir="prev"' + (wuPage === 0 ? ' disabled' : '') + ' style="' + btnStyle(wuPage === 0) + '">←</button>'
+                        + '<span style="font-size:0.8rem; color:#94a3b8; font-weight:600; min-width:3.5rem; text-align:center;">' + (wuPage + 1) + ' / ' + pages + '</span>'
+                        + '<button data-dir="next"' + (wuPage >= pages - 1 ? ' disabled' : '') + ' style="' + btnStyle(wuPage >= pages - 1) + '">→</button>'
+                        + '</div>';
+                }
+                container.innerHTML = html;
+                const prevBtn = container.querySelector('[data-dir="prev"]');
+                const nextBtn = container.querySelector('[data-dir="next"]');
+                if (prevBtn) prevBtn.onclick = () => { wuPage--; render(); };
+                if (nextBtn) nextBtn.onclick = () => { wuPage++; render(); };
+            }
+
+            render();
         })
         .catch(error => {
             console.error('Error loading the links:', error);
