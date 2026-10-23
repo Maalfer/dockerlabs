@@ -13,7 +13,7 @@ def recalcular_ranking_creadores():
 
     results = db.session.query(
         Machine.autor, func.count(Machine.id)
-    ).group_by(Machine.autor).all()
+    ).filter(Machine.origen == 'docker').group_by(Machine.autor).all()
 
     try:
         CreatorRanking.query.delete()

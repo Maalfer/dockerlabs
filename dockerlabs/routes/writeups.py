@@ -537,7 +537,7 @@ def register_writeup_routes(api_router, get_session, verify_csrf_token, db):
 
         from dockerlabs.auth import get_profile_image_url
 
-        maquinas_orm = Machine.query.filter_by(autor=nombre).order_by(Machine.fecha.desc()).all()
+        maquinas_orm = Machine.query.filter_by(autor=nombre, origen='docker').order_by(Machine.fecha.desc()).all()
         maquinas = [{"nombre": m.nombre, "dificultad": m.dificultad, "imagen_url": f"/img/maquina/{m.id}"} for m in maquinas_orm]
 
         writeups_orm = Writeup.query.filter_by(autor=nombre).order_by(Writeup.created_at.desc()).all()
