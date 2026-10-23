@@ -14,17 +14,52 @@ function presentacion(nombre, dificultad, tamaño, clase, color, autor_nombre, a
     var overlayDiv = document.createElement('div');
     overlayDiv.className = 'bunker-modal-overlay';
 
-    // 2. Popup
+    // 2. Popup (grid: imagen | contenido, igual que el modal de DockerLabs)
     var popupDiv = document.createElement('div');
     popupDiv.className = 'bunker-modal-popup';
 
-    // 3. Botón cerrar
+    // 3. Columna izquierda: imagen
+    var imageContainer = document.createElement('div');
+    imageContainer.className = 'bunker-modal-image-container';
+
+    var imagenUrl;
+    if (!escapedImagen) {
+        imagenUrl = "/static/dockerlabs/images/logos/logo_120.png";
+    } else if (escapedImagen.includes('/img/')) {
+        imagenUrl = escapedImagen;
+    } else {
+        function sanitizeImagePath(path) {
+            path = path.replace(/\.\./g, '');
+            path = path.replace(/^\/+/, '');
+            path = path.replace(/[^a-zA-Z0-9\-_./]/g, '');
+            return path;
+        }
+        imagenUrl = "/static/" + sanitizeImagePath(escapedImagen);
+    }
+
+    var imagenElem = document.createElement('img');
+    imagenElem.className = 'bunker-modal-image';
+    imagenElem.src = imagenUrl;
+    imagenElem.alt = escapedNombre;
+    // Borde brillante dinámico basado en dificultad si existe
+    if (dificultad && escapedColor) {
+        imagenElem.style.borderColor = escapedColor;
+        imagenElem.style.boxShadow = `0 10px 30px rgba(0, 0, 0, 0.5), 0 0 24px ${escapedColor}40`; // 40 = 25% opacity hex
+    }
+
+    imageContainer.appendChild(imagenElem);
+
+    // 4. Columna derecha: contenido
+    var contentDiv = document.createElement('div');
+    contentDiv.className = 'bunker-modal-content';
+
+    // Botón cerrar
     var closeButton = document.createElement('button');
     closeButton.className = 'bunker-modal-close';
     closeButton.innerHTML = '&times;';
     closeButton.addEventListener('click', closePopup);
 
-    // 3.b Botón compartir (arriba a la izquierda)
+    // Botón compartir (arriba a la izquierda de la columna de contenido)
     var shareButton = document.createElement('button');
     shareButton.className = 'bunker-modal-share';
     shareButton.type = 'button';
@@ -75,16 +110,12 @@ function presentacion(nombre, dificultad, tamaño, clase, color, autor_nombre, a
         }
     }
 
-    // 4. Estructura interna
-    var contentDiv = document.createElement('div');
-    contentDiv.className = 'bunker-modal-content';
-
-    // 5. Título
+    // Título
     var titulo = document.createElement('h1');
     titulo.className = 'bunker-modal-title';
     titulo.textContent = escapedNombre;
 
-    // 6. Subtítulo
+    // Subtítulo
     var subtitulo = document.createElement('p');
     subtitulo.className = 'bunker-modal-subtitle';
     if (dificultad) {
@@ -94,41 +125,11 @@ function presentacion(nombre, dificultad, tamaño, clase, color, autor_nombre, a
         subtitulo.innerHTML = `MÁQUINA BUNKERLABS`;
     }
 
-    // 7. Separador
+    // Separador
     var separator = document.createElement('div');
     separator.className = 'bunker-modal-separator';
 
-    // 8. Cuerpo (Imagen + Info)
-    var bodyDiv = document.createElement('div');
-    bodyDiv.className = 'bunker-modal-body';
-
-    // Imagen
-    var imagenUrl;
-    if (!escapedImagen) {
-        imagenUrl = "/static/dockerlabs/images/logos/logo_120.png";
-    } else if (escapedImagen.includes('/img/')) {
-        imagenUrl = escapedImagen;
-    } else {
-        function sanitizeImagePath(path) {
-            path = path.replace(/\.\./g, '');
-            path = path.replace(/^\/+/, '');
-            path = path.replace(/[^a-zA-Z0-9\-_./]/g, '');
-            return path;
-        }
-        imagenUrl = "/static/" + sanitizeImagePath(escapedImagen);
-    }
-
-    var imagenElem = document.createElement('img');
-    imagenElem.className = 'bunker-modal-image';
-    imagenElem.src = imagenUrl;
-    imagenElem.alt = escapedNombre;
-    // Borde brillante dinámico basado en dificultad si existe
-    if (dificultad && escapedColor) {
-        imagenElem.style.borderColor = escapedColor;
-        imagenElem.style.boxShadow = `0 10px 30px ${escapedColor}40`; // 40 = 25% opacity hex
-    }
-
-    // Info Textual
+    // Info (Autor / Dificultad / Fecha)
     var infoDiv = document.createElement('div');
     infoDiv.className = 'bunker-modal-info';
 
@@ -164,39 +165,25 @@ function presentacion(nombre, dificultad, tamaño, clase, color, autor_nombre, a
         </div>
     `;
 
-    // Ensamblaje
-    bodyDiv.appendChild(imagenElem);
-    bodyDiv.appendChild(infoDiv);
-
-    // 9. Descripción (Nueva sección)
+    // Descripción
     var descDiv = document.createElement('div');
-    descDiv.style.width = '100%';
-    descDiv.style.marginTop = '1.5rem';
+    descDiv.className = 'bunker-modal-description';
     descDiv.innerHTML = `
-        <div class="bunker-modal-separator"></div>
-        <p class="bunker-modal-label" style="margin-bottom: 0.5rem; text-align: center;">Sobre esta máquina</p>
-        <p style="
-            font-size: 0.95rem; 
-            line-height: 1.6; 
-            color: #cbd5e1; 
-            text-align: justify; 
-            background: rgba(255, 255, 255, 0.03); 
-            padding: 1rem; 
-            border-radius: 8px; 
-            border: 1px solid rgba(255, 255, 255, 0.05);
-        ">
-            ${escapedDescripcion || 'Sin descripción disponible.'}
-        </p>
+        <p class="bunker-modal-description-label">Sobre esta máquina</p>
+        <p class="bunker-modal-description-text">${escapedDescripcion || 'Sin descripción disponible.'}</p>
     `;
 
+    // Ensamblaje columna derecha
+    contentDiv.appendChild(closeButton);
+    contentDiv.appendChild(shareButton);
     contentDiv.appendChild(titulo);
     contentDiv.appendChild(subtitulo);
     contentDiv.appendChild(separator);
-    contentDiv.appendChild(bodyDiv);
-    contentDiv.appendChild(descDiv); // Append description
+    contentDiv.appendChild(infoDiv);
+    contentDiv.appendChild(descDiv);
 
-    popupDiv.appendChild(shareButton);
-    popupDiv.appendChild(closeButton);
+    // Ensamblaje popup
+    popupDiv.appendChild(imageContainer);
     popupDiv.appendChild(contentDiv);
 
     document.body.appendChild(overlayDiv);

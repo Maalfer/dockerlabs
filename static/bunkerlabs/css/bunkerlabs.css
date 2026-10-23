@@ -1237,9 +1237,15 @@ footer {
     /* Force center */
     left: 50%;
     transform: translate(-50%, -50%);
-    width: min(550px, 92vw);
-    max-height: 85vh;
-    padding: 2rem;
+    width: min(900px, 95vw);
+    max-width: 95vw;
+    max-height: 90vh;
+    height: auto;
+
+    display: grid;
+    grid-template-columns: 1fr 1.1fr;
+    /* Imagen | Contenido, igual que DockerLabs */
+    overflow: hidden;
 
     /* Cyberpunk / Glassmorphism */
     background: linear-gradient(145deg, rgba(20, 18, 41, 0.98), rgba(13, 12, 28, 0.99));
@@ -1253,52 +1259,174 @@ footer {
         0 0 30px rgba(139, 92, 246, 0.15);
     /* Outer purple glow */
 
-    border-radius: 16px;
+    border-radius: 24px;
     z-index: 9999;
     font-family: 'Inter', sans-serif;
     /* Cleaner font */
     color: #e2e8f0;
+    margin: 0;
 
     animation: bunkerModalSlideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-    overflow-y: auto;
     transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+@media (max-width: 768px) {
+    .bunker-modal-popup {
+        grid-template-columns: 1fr;
+        grid-template-rows: auto 1fr;
+        width: 95vw;
+        max-width: 95vw;
+        max-height: 90vh;
+        overflow: hidden;
+        border-radius: 16px;
+    }
+
+    .bunker-modal-image-container {
+        padding: 1rem !important;
+        min-height: 180px;
+        max-height: 220px;
+        flex-shrink: 0;
+    }
+
+    .bunker-modal-image {
+        max-height: 200px;
+    }
+
+    .bunker-modal-content {
+        padding: 1.25rem 1rem 1.5rem !important;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .bunker-modal-title {
+        font-size: 1.5rem !important;
+        line-height: 1.25 !important;
+        word-break: break-word;
+        padding-right: 2.75rem !important;
+        margin-top: 3.25rem !important;
+    }
+
+    .bunker-modal-close {
+        width: 40px !important;
+        height: 40px !important;
+        top: 1rem !important;
+        right: 1rem !important;
+    }
+
+    .bunker-modal-share {
+        top: 1rem !important;
+        left: 1rem !important;
+    }
+}
+
+@media (max-width: 480px) {
+    .bunker-modal-popup {
+        width: 100vw;
+        max-width: 100vw;
+        max-height: 100dvh;
+        border-radius: 12px;
+    }
+
+    .bunker-modal-image-container {
+        padding: 0.75rem !important;
+        min-height: 150px;
+        max-height: 180px;
+    }
+
+    .bunker-modal-image {
+        max-height: 160px;
+    }
+
+    .bunker-modal-content {
+        padding: 1rem 0.75rem 1.25rem !important;
+    }
+
+    .bunker-modal-title {
+        font-size: 1.35rem !important;
+    }
+
+    .bunker-modal-close {
+        top: 0.75rem !important;
+        right: 0.75rem !important;
+        width: 44px !important;
+        height: 44px !important;
+    }
 }
 
 .bunker-modal-close {
     position: absolute;
-    top: 1rem;
-    right: 1.25rem;
-    background: transparent;
+    top: 1.5rem;
+    right: 1.5rem;
+    background: rgba(255, 255, 255, 0.05);
     border: none;
-    color: rgba(255, 255, 255, 0.4);
-    font-size: 1.5rem;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    line-height: 1;
-    padding: 0.25rem;
+    color: #94a3b8;
+    width: 32px;
+    height: 32px;
+    min-width: 32px;
+    min-height: 32px;
     border-radius: 50%;
+    font-size: 1.25rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background 0.2s ease, color 0.2s ease, transform 0.2s ease;
+    line-height: 1;
+    z-index: 10;
 }
 
 .bunker-modal-close:hover {
     color: #fff;
-    background: rgba(255, 255, 255, 0.1);
+    background: rgba(139, 92, 246, 0.25);
     transform: rotate(90deg);
 }
 
+/* Columna izquierda: imagen */
+.bunker-modal-image-container {
+    position: relative;
+    background: #0d0c1c;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+}
+
+.bunker-modal-image {
+    width: 100%;
+    height: auto;
+    max-height: 100%;
+    aspect-ratio: 1/1;
+    object-fit: cover;
+    border-radius: 16px;
+    border: 2px solid rgba(139, 92, 246, 0.25);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), 0 0 24px rgba(139, 92, 246, 0.15);
+    transition: transform 0.3s ease, border-color 0.3s ease;
+}
+
+.bunker-modal-image:hover {
+    transform: scale(1.02);
+    border-color: rgba(139, 92, 246, 0.6);
+}
+
+/* Columna derecha: contenido */
 .bunker-modal-content {
+    padding: 2.5rem;
     display: flex;
     flex-direction: column;
-    align-items: center;
-    width: 100%;
+    position: relative;
+    overflow-y: auto;
+    min-height: 0;
+    max-height: 90vh;
 }
 
 .bunker-modal-title {
-    font-size: 1.5rem;
+    font-size: 2.25rem;
     font-weight: 800;
-    margin-bottom: 0.25rem;
-    text-align: center;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
+    margin: 2.75rem 0 0.35rem 0;
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+    padding-right: 2.5rem;
 
     /* Gradient Text */
     background: linear-gradient(135deg, #fff 0%, #a78bfa 100%);
@@ -1308,19 +1436,19 @@ footer {
 }
 
 .bunker-modal-subtitle {
-    font-size: 0.85rem;
+    font-size: 0.8rem;
     color: #94a3b8;
     text-transform: uppercase;
     letter-spacing: 0.15em;
     margin-bottom: 1.5rem;
-    font-weight: 500;
+    font-weight: 600;
 }
 
 .bunker-modal-subtitle span {
-    color: #22d3ee;
-    /* Cyan accent */
+    color: #c4b5fd;
+    /* Lila claro, acento morado */
     font-weight: 700;
-    text-shadow: 0 0 10px rgba(34, 211, 238, 0.4);
+    text-shadow: 0 0 10px rgba(139, 92, 246, 0.5);
 }
 
 .bunker-modal-separator {
@@ -1328,45 +1456,17 @@ footer {
     height: 1px;
     background: linear-gradient(90deg, transparent, rgba(139, 92, 246, 0.5), transparent);
     border: none;
-    margin: 0.5rem 0 1.5rem 0;
-}
-
-.bunker-modal-body {
-    display: flex;
-    gap: 1.5rem;
-    width: 100%;
-    align-items: flex-start;
-}
-
-@media (max-width: 600px) {
-    .bunker-modal-body {
-        flex-direction: column;
-        align-items: center;
-        text-align: center;
-    }
-}
-
-.bunker-modal-image {
-    width: 140px;
-    height: 140px;
-    border-radius: 12px;
-    object-fit: cover;
-    border: 2px solid rgba(255, 255, 255, 0.1);
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-    transition: transform 0.3s ease;
-}
-
-.bunker-modal-image:hover {
-    transform: scale(1.03);
-    border-color: rgba(139, 92, 246, 0.5);
+    margin: 0 0 1.5rem 0;
 }
 
 .bunker-modal-info {
-    flex: 1;
+    background: rgba(139, 92, 246, 0.06);
+    border: 1px solid rgba(139, 92, 246, 0.15);
+    border-radius: 12px;
+    padding: 1.1rem 1.25rem;
     display: flex;
     flex-direction: column;
-    gap: 1rem;
-    justify-content: center;
+    gap: 0.9rem;
 }
 
 .bunker-modal-row {
@@ -1376,10 +1476,10 @@ footer {
 }
 
 .bunker-modal-label {
-    font-size: 0.75rem;
+    font-size: 0.72rem;
     text-transform: uppercase;
     letter-spacing: 0.1em;
-    color: #64748b;
+    color: #8b89a3;
     font-weight: 600;
 }
 
@@ -1390,30 +1490,82 @@ footer {
 }
 
 .bunker-modal-value a {
-    color: #818cf8;
+    color: #a78bfa;
     /* Indigo/Purple light */
     text-decoration: none;
     transition: color 0.2s;
 }
 
 .bunker-modal-value a:hover {
-    color: #a78bfa;
+    color: #c4b5fd;
     text-decoration: underline;
 }
 
 /* Difficulty Badge in Modal */
 .bunker-modal-badge {
     display: inline-flex;
-    padding: 0.25rem 0.75rem;
+    padding: 0.3rem 0.85rem;
     border-radius: 999px;
     font-size: 0.75rem;
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.05em;
-    margin-top: 0.25rem;
     color: #1a1a1a;
     box-shadow: 0 0 15px currentColor;
     /* Glow based on text color (inherited) */
+}
+
+.bunker-modal-description {
+    margin-top: 1.5rem;
+}
+
+.bunker-modal-description-label {
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: #8b89a3;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    text-align: center;
+}
+
+.bunker-modal-description-text {
+    font-size: 0.95rem;
+    line-height: 1.6;
+    color: #cbd5e1;
+    text-align: justify;
+    background: rgba(255, 255, 255, 0.03);
+    padding: 1rem;
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    margin: 0;
+    /* Si la descripción es muy larga, se desplaza dentro de la caja
+       en lugar de desbordar y cortarse el modal. */
+    max-height: 40vh;
+    overflow-y: auto;
+    overflow-wrap: anywhere;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(139, 92, 246, 0.5) transparent;
+}
+
+.bunker-modal-description-text::-webkit-scrollbar {
+    width: 8px;
+}
+
+.bunker-modal-description-text::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.bunker-modal-description-text::-webkit-scrollbar-thumb {
+    background: rgba(139, 92, 246, 0.45);
+    border-radius: 10px;
+    border: 2px solid transparent;
+    background-clip: padding-box;
+}
+
+.bunker-modal-description-text::-webkit-scrollbar-thumb:hover {
+    background: rgba(139, 92, 246, 0.7);
+    background-clip: padding-box;
 }
 
 /* Toolbar Styles */
@@ -1608,11 +1760,11 @@ footer {
    Compartir máquina + resaltado "fosforito" de la máquina compartida
    ========================================================================== */
 
-/* --- Botón "Compartir" (arriba a la izquierda del modal) --- */
+/* --- Botón "Compartir" (arriba a la izquierda de la columna de contenido) --- */
 .bunker-modal-share {
     position: absolute;
-    top: 1rem;
-    left: 1.25rem;
+    top: 1.5rem;
+    left: 1.5rem;
     display: inline-flex;
     align-items: center;
     gap: 0.45rem;
