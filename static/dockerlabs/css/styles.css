@@ -353,7 +353,6 @@ header h1 a:hover {
     background: rgba(15, 23, 42, 0.8);
     border-radius: 20px;
     padding: 3px 8px;
-    border: 1px solid rgba(51, 65, 85, 0.4);
     z-index: 20;
 }
 
@@ -574,11 +573,14 @@ header h1 a:hover {
     align-content: start;
 }
 
-/* Center the last visible machine when there's an odd number */
-.lista .maquina-item.last-visible-odd {
-    grid-column: 1 / -1;
-    width: calc(50% - 0.5rem);
-    justify-self: center;
+/* Center the last visible machine when there's an odd number.
+   Solo con la cuadrícula de 2 columnas: en móvil (1 columna) la tarjeta ocupa todo el ancho. */
+@media (min-width: 769px) {
+    .lista .maquina-item.last-visible-odd {
+        grid-column: 1 / -1;
+        width: calc(50% - 0.5rem);
+        justify-self: center;
+    }
 }
 
 /* Pagination */
@@ -1164,8 +1166,8 @@ footer {
     #buscador {
         min-width: auto;
         width: 100%;
-        max-width: 300px;
-        margin: 0 auto;
+        max-width: 100%;
+        margin: 0;
     }
 
     #filtro-dificultad {

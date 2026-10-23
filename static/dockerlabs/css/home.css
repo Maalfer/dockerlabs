@@ -36,29 +36,41 @@
     z-index: 2;
 }
 
-/* Botones individuales de categoría y filtro */
+/* Botones individuales de categoría y filtro.
+   Sin fondo ni borde propios: la píldora del grupo (styles.css) ya hace de contenedor,
+   y solo se tiñe el botón al pasar el ratón o con el menú abierto. */
 .search-buttons-group .btn-category,
 .search-buttons-group .btn-filter {
-    background: rgba(30, 41, 59, 0.8);
-    border: 1px solid rgba(148, 163, 184, 0.2);
+    background: transparent;
+    border: none;
     color: #94a3b8;
     padding: 4px 8px;
-    border-radius: 4px;
+    border-radius: 12px;
     font-size: 0.85rem;
-    transition: all 0.2s ease;
-    backdrop-filter: blur(4px);
+    transition: color 0.2s ease, background 0.2s ease;
+    backdrop-filter: none;
 }
 
 .search-buttons-group .btn-category:hover,
-.search-buttons-group .btn-filter:hover {
-    background: rgba(59, 130, 246, 0.2);
-    border-color: #3b82f6;
-    color: #f1f5f9;
+.search-buttons-group .btn-filter:hover,
+.search-buttons-group .btn-category.show,
+.search-buttons-group .btn-filter.show,
+.search-buttons-group .btn-category:active,
+.search-buttons-group .btn-filter:active {
+    background: rgba(34, 211, 238, 0.12);
+    border: none;
+    color: var(--accent-cyan, #22d3ee);
 }
 
 .search-buttons-group .btn-category:focus,
 .search-buttons-group .btn-filter:focus {
     box-shadow: none;
+}
+
+.search-buttons-group .btn-category:focus-visible,
+.search-buttons-group .btn-filter:focus-visible {
+    outline: 2px solid rgba(34, 211, 238, 0.6);
+    outline-offset: -2px;
 }
 
 /* Dropdown menus de los botones de filtro */
