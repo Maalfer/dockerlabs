@@ -57,16 +57,6 @@
                 {% else %}
                 <ol class="pasos">
                     <li>
-                        La máquina se descarga en el archivo <code>{{ maquina.nombre }}.zip</code>.
-                        Extrae su contenido desde tu Kali Linux con el comando:
-                        <div class="comando-box">
-                            <code>unzip {{ maquina.nombre }}.zip</code>
-                            <button type="button" class="copy-btn copy-cmd-btn" data-copy="unzip {{ maquina.nombre }}.zip" aria-label="Copiar comando">
-                                <i class="bi bi-clipboard"></i>
-                            </button>
-                        </div>
-                    </li>
-                    <li>
                         Abre una terminal en la carpeta donde has extraído el archivo
                         <code>{{ maquina.nombre }}.zip</code> y ejecuta:
                         <div class="comando-box">
