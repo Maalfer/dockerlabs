@@ -176,6 +176,35 @@
     transform: scale(1.015);
 }
 
+/* Máquinas Windows: dos capturas (extraer .ova / importar en VirtualBox)
+   en vez de una sola, apiladas con su leyenda. */
+.captura-box-multi {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 1.2rem;
+}
+
+.captura-item {
+    margin: 0;
+}
+
+.captura-item figcaption {
+    margin-top: 0.5rem;
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 0.82rem;
+}
+
+.captura-item figcaption code {
+    background: rgba(15, 23, 42, 0.6);
+    border: 1px solid var(--border-subtle);
+    border-radius: 6px;
+    padding: 0.1rem 0.35rem;
+    font-family: "Fira Code", ui-monospace, monospace;
+    font-size: 0.95em;
+    color: var(--accent-cyan);
+}
+
 .lightbox-overlay {
     position: fixed;
     inset: 0;

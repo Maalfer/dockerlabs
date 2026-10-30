@@ -114,6 +114,9 @@ class Machine(db.Model):
     # Contador de descargas: se incrementa cada vez que se sirve la pagina
     # de descarga de la maquina (ver machines.py::descargar_maquina_page).
     descargas = db.Column(db.Integer, nullable=False, default=0)
+    # Plataforma de la maquina ('linux', 'windows' o 'movil'). Se fija al
+    # publicarla; de momento casi todas las de DockerLabs son Linux.
+    sistema_operativo = db.Column(db.String(20), nullable=False, default='linux')
 
     # Logo almacenado en archivo (nuevo sistema)
     logo_path = db.Column(db.String(255), nullable=True)

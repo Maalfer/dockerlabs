@@ -294,20 +294,6 @@ header h1 a:hover {
     }
 }
 
-.filters-divider {
-    width: 1px;
-    height: 24px;
-    background: rgba(51, 65, 85, 0.6);
-    margin: 0 0.15rem;
-    flex-shrink: 0;
-}
-
-@media (max-width: 575px) {
-    .filters-divider {
-        display: none;
-    }
-}
-
 #buscador {
     background: rgba(15, 23, 42, 0.96);
     border: 1px solid var(--border-strong);
@@ -331,88 +317,10 @@ header h1 a:hover {
     color: var(--text-muted);
 }
 
+/* Buscador y grupo de filtros: estilos propios en home.css (única plantilla
+   que usa estas clases). El grupo ya no va superpuesto sobre el input. */
 .busqueda-con-filtro {
-    position: relative;
     display: inline-block;
-}
-
-.busqueda-con-filtro .form-control {
-    padding-right: 70px;
-}
-
-/* Button group for filter and category icons inside search */
-.search-buttons-group {
-    position: absolute;
-    right: 6px;
-    top: 50%;
-    transform: translateY(-50%);
-    display: flex !important;
-    flex-direction: row !important;
-    align-items: center;
-    gap: 8px;
-    background: rgba(15, 23, 42, 0.8);
-    border-radius: 20px;
-    padding: 3px 8px;
-    z-index: 20;
-}
-
-.search-buttons-group .btn {
-    position: static !important;
-    padding: 5px 10px !important;
-    font-size: 0.9rem !important;
-    color: #6c757d;
-    background: transparent;
-    border: none !important;
-    border-radius: 12px !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    width: auto !important;
-    min-width: 28px;
-    height: 28px;
-    transition: color 0.2s ease, background 0.2s ease;
-}
-
-.search-buttons-group .btn:hover {
-    color: var(--accent-cyan);
-    background: rgba(34, 211, 238, 0.1);
-}
-
-.search-buttons-group .btn i {
-    font-size: 0.9rem;
-}
-
-.search-buttons-group .btn-category {
-    order: 1;
-}
-
-.search-buttons-group .btn-filter {
-    order: 2;
-}
-
-.busqueda-con-filtro > .btn {
-    position: absolute;
-    right: 0;
-    top: 0;
-    bottom: 0;
-    border: none;
-    background: transparent;
-    color: #6c757d;
-    z-index: 10;
-    padding: 0 10px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.busqueda-con-filtro > .btn:hover {
-    background: transparent;
-    color: var(--accent-yellow);
-}
-
-.busqueda-con-filtro .dropdown-menu {
-    font-size: 0.875rem;
-    z-index: 1100 !important;
 }
 
 #filtro-dificultad {
@@ -703,8 +611,8 @@ header h1 a:hover {
 
 .maquina-item:hover {
     transform: translateY(-2px);
-    border-color: rgba(255, 255, 255, 0.25);
-    box-shadow: 0 16px 36px rgba(0, 0, 0, 0.6);
+    border-color: var(--accent-cyan);
+    box-shadow: 0 16px 36px rgba(0, 0, 0, 0.6), 0 0 28px rgba(34, 211, 238, 0.45);
     background: #1e293b;
 }
 
@@ -1406,37 +1314,6 @@ footer {
         width: 100%;
     }
 
-    .busqueda-con-filtro {
-        position: relative;
-        display: inline-block;
-    }
-
-    .busqueda-con-filtro .form-control {
-        padding-right: 40px;
-    }
-
-    .busqueda-con-filtro .btn {
-        position: absolute;
-        right: 0;
-        top: 0;
-        bottom: 0;
-        border: none;
-        background: transparent;
-        color: #6c757d;
-        z-index: 10;
-        padding: 0 10px;
-    }
-
-    .busqueda-con-filtro .btn:hover {
-        background: transparent;
-        color: #495057;
-    }
-
-    .busqueda-con-filtro .dropdown-menu {
-        font-size: 0.875rem;
-        z-index: 1100 !important;
-    }
-
     #filtro-dificultad {
         flex-wrap: nowrap;
         gap: 3px;
@@ -1705,25 +1582,6 @@ footer {
     #buscador {
         width: 100% !important;
         font-size: 0.9rem !important;
-        padding-right: 65px !important;
-    }
-
-    /* Mobile: search buttons group more compact */
-    .search-buttons-group {
-        right: 4px;
-        padding: 2px 6px;
-        gap: 6px;
-    }
-
-    .search-buttons-group .btn {
-        padding: 4px 8px !important;
-        font-size: 0.85rem !important;
-        min-width: 26px;
-        height: 26px;
-    }
-
-    .search-buttons-group .btn i {
-        font-size: 0.85rem;
     }
 
     /* Category filter button */
@@ -1772,24 +1630,7 @@ footer {
 
     #buscador {
         font-size: 0.85rem !important;
-        padding: 0.45rem 55px 0.45rem 0.7rem !important;
-    }
-
-    .search-buttons-group {
-        right: 3px;
-        padding: 2px 5px;
-        gap: 4px;
-        background: rgba(15, 23, 42, 0.9);
-    }
-
-    .search-buttons-group .btn {
-        padding: 3px 6px !important;
-        min-width: 24px;
-        height: 24px;
-    }
-
-    .search-buttons-group .btn i {
-        font-size: 0.8rem;
+        padding: 0.45rem 0.7rem !important;
     }
 
     #filtro-dificultad button {

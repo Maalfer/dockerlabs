@@ -5,6 +5,91 @@
     font-weight: bold;
 }
 
+/* ── Header estilo terminal (mismo lenguaje que /pending y /politica-*) ── */
+.equipo-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    margin: 1rem 0 2.5rem;
+}
+
+.equipo-header .terminal-prompt {
+    color: var(--hack-green, #3cff00);
+    font-family: 'Fira Code', monospace;
+    font-size: 1.6rem;
+    font-weight: 600;
+    opacity: 0.85;
+    user-select: none;
+    line-height: 1.4;
+}
+
+.equipo-header h1 {
+    font-family: 'Fira Code', monospace;
+    font-size: 1.7rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin: 0 0 0.35rem;
+    letter-spacing: 0.02em;
+    text-align: left;
+}
+
+.equipo-cursor {
+    display: inline-block;
+    color: var(--accent-cyan);
+    animation: equipoBlink 1.1s step-end infinite;
+}
+
+@keyframes equipoBlink {
+    50% { opacity: 0; }
+}
+
+.equipo-header p {
+    color: var(--text-muted);
+    font-size: 0.95rem;
+    margin: 0;
+}
+
+/* ── Estado vacío de "Colaboradores" (sustituye a la tarjeta en blanco) ── */
+.colaboradores-empty {
+    text-align: center;
+    padding: 3rem 1.5rem;
+}
+
+.colaboradores-empty i {
+    font-size: 2.6rem;
+    color: var(--text-muted);
+    display: block;
+    margin-bottom: 1rem;
+    opacity: 0.7;
+}
+
+.colaboradores-empty p {
+    color: var(--text-secondary);
+    margin-bottom: 1.2rem;
+}
+
+.colaboradores-empty-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: rgba(34, 211, 238, 0.1);
+    border: 1px solid rgba(34, 211, 238, 0.35);
+    color: var(--accent-cyan);
+    padding: 0.65rem 1.4rem;
+    border-radius: 12px;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 0.9rem;
+    transition: all 0.25s ease;
+}
+
+.colaboradores-empty-link:hover {
+    background: rgba(34, 211, 238, 0.18);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(34, 211, 238, 0.25);
+    color: var(--accent-cyan);
+}
+
 /* ── Responsive ── */
 
 /* Tablet grande: 3 columnas */
@@ -78,6 +163,14 @@
 
     .colaboradores-card {
         padding: 1rem !important;
+    }
+
+    .equipo-header {
+        gap: 0.7rem;
+    }
+
+    .equipo-header h1 {
+        font-size: 1.4rem;
     }
 }
 

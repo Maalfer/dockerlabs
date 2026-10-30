@@ -35,11 +35,6 @@
   var deferred = null;
   window.addEventListener('beforeinstallprompt', function (e) {
     e.preventDefault(); deferred = e;
-    setTimeout(function () {
-      banner('Instala DockerLabs como app', 'Instalar', function () {
-        deferred.prompt(); deferred.userChoice.finally(function () { remember(); deferred = null; });
-      });
-    }, 20000);
   });
   window.addEventListener('appinstalled', function () { remember(); var b = document.getElementById('pwa-install'); if (b) b.remove(); });
 
@@ -47,7 +42,7 @@
   var ua = navigator.userAgent;
   var isIOS = /iPad|iPhone|iPod/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
   var isSafari = /Safari/.test(ua) && !/CriOS|FxiOS|EdgiOS|OPiOS/.test(ua);
-  if (isIOS && isSafari && !standalone) {
+  if (false && isIOS && isSafari && !standalone) {
     setTimeout(function () {
       banner('Instala DockerLabs: pulsa Compartir y luego «Añadir a pantalla de inicio»');
     }, 20000);

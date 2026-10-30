@@ -6,6 +6,7 @@ from typing import Optional
 from fastapi import Depends, Form, HTTPException, Request
 from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
 from pydantic import BaseModel
+from sqlalchemy import func
 
 from dockerlabs.discord_notify import notify_new_machine
 from dockerlabs.maquinas import recalcular_ranking_creadores
@@ -22,6 +23,7 @@ class AddMaquinaRequest(BaseModel):
     imagen: Optional[str] = ""
     destino: Optional[str] = "docker"
     categoria: Optional[str] = ""
+    sistema_operativo: Optional[str] = "linux"
 
 
 # Imagen de portada por defecto cuando no hay logo subido (logo_path)
@@ -51,6 +53,14 @@ def _sanitize_imagen(value: Optional[str]) -> str:
     if os.path.isfile(candidate):
         return v
     return _DEFAULT_IMAGEN
+
+
+_SISTEMAS_OPERATIVOS_VALIDOS = ("linux", "windows", "movil")
+
+
+def _sanitize_sistema_operativo(value: Optional[str]) -> str:
+    v = (value or "").strip().lower()
+    return v if v in _SISTEMAS_OPERATIVOS_VALIDOS else "linux"
 
 
 def _difficulty_to_color_clase(dificultad: str):
@@ -90,6 +100,7 @@ def register_machine_routes(
         descripcion: str = Form(...),
         link_descarga: str = Form(...),
         categoria: str = Form(""),
+        sistema_operativo: str = Form(""),
         session: dict = Depends(get_session),
         csrf_ok: bool = Depends(verify_csrf_token),
     ):
@@ -152,6 +163,8 @@ def register_machine_routes(
             maquina.imagen = _sanitize_imagen(imagen)
             maquina.descripcion = descripcion
             maquina.link_descarga = link_descarga
+            if sistema_operativo:
+                maquina.sistema_operativo = _sanitize_sistema_operativo(sistema_operativo)
             db.session.commit()
 
             cat_obj = Category.query.filter_by(machine_id=id, origen=origen).first()
@@ -241,6 +254,7 @@ def register_machine_routes(
         imagen = _sanitize_imagen(data.imagen)
 
         clase, dificultad_texto, color = _difficulty_to_color_clase(data.dificultad)
+        sistema_operativo = _sanitize_sistema_operativo(data.sistema_operativo)
 
         try:
             new_machine = Machine(
@@ -255,6 +269,7 @@ def register_machine_routes(
                 descripcion=data.descripcion,
                 link_descarga=data.link_descarga,
                 origen=data.destino or "docker",
+                sistema_operativo=sistema_operativo,
             )
             db.session.add(new_machine)
             db.session.commit()
@@ -344,7 +359,15 @@ def register_machine_routes(
         if maquina.origen != "docker":
             raise HTTPException(status_code=404)
 
-        maquina.descargas = (maquina.descargas or 0) + 1
+        # Incremento atomico en SQL (no leer-y-escribir en Python): con
+        # concurrencia alta en maquinas populares, leer el valor y volver a
+        # escribirlo chocaba con el snapshot isolation de MariaDB y lanzaba
+        # "Error 1020: Record has changed since last read", tirando la
+        # pagina de descarga con un 500.
+        db.session.query(Machine).filter(Machine.id == maquina.id).update(
+            {Machine.descargas: func.coalesce(Machine.descargas, 0) + 1},
+            synchronize_session=False,
+        )
         db.session.add(MachineDownloadLog(machine_id=maquina.id))
         db.session.commit()
 

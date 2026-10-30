@@ -6,11 +6,13 @@ from collections import defaultdict
 from dotenv import load_dotenv
 load_dotenv()
 from fastapi import FastAPI, Request
+from fastapi.exception_handlers import http_exception_handler as default_http_exception_handler
 from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 from starlette.concurrency import run_in_threadpool
+from starlette.exceptions import HTTPException as StarletteHTTPException
 from dockerlabs.database import db_session, init_db, _request_scope_id, engine
-from dockerlabs.routers import api_router, pages_router
+from dockerlabs.routers import api_router, get_session, pages_router, templates, url_for
 
 init_db()
 
@@ -169,6 +171,38 @@ fastapi_app.mount("/static", StaticFiles(directory="static"), name="static")
 
 fastapi_app.include_router(pages_router)
 fastapi_app.include_router(api_router)
+
+# Paginas de error 403/404 con el diseno del sitio en vez del JSON/texto por
+# defecto de FastAPI. Se excluyen /api/ e /img/: la primera es la API (sus
+# llamantes -fetch del propio frontend- esperan JSON, no HTML) y la segunda
+# sirve bytes de imagen (un 404 ahi solo se ve como el icono de imagen rota
+# del navegador, nunca como una pagina).
+_CUSTOM_ERROR_TEMPLATES = {
+    403: "dockerlabs/errors/403.html",
+    404: "dockerlabs/errors/404.html",
+}
+_CUSTOM_ERROR_EXCLUDED_PREFIXES = ("/api/", "/img/")
+
+
+@fastapi_app.exception_handler(StarletteHTTPException)
+async def custom_http_exception_handler(request: Request, exc: StarletteHTTPException):
+    template_name = _CUSTOM_ERROR_TEMPLATES.get(exc.status_code)
+    if not template_name or request.url.path.startswith(_CUSTOM_ERROR_EXCLUDED_PREFIXES):
+        return await default_http_exception_handler(request, exc)
+
+    session = get_session(request)
+    return templates.TemplateResponse(
+        request,
+        template_name,
+        {
+            "session": session,
+            "current_user_role": session.get("role", ""),
+            "url_for": url_for,
+            "g": {"csp_nonce": getattr(request.state, "csp_nonce", "")},
+        },
+        status_code=exc.status_code,
+    )
+
 
 @fastapi_app.get("/fastapi-status")
 def get_status():

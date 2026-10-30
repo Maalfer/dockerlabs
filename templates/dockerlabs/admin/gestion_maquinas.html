@@ -62,6 +62,7 @@
                             </th>
                             <th scope="col">Imagen</th>
                             <th scope="col">Categoría</th>
+                            <th scope="col">Plataforma</th>
                             <th scope="col" style="width: 130px;">Acciones</th>
                         </tr>
                         <!-- Filter Row -->
@@ -82,7 +83,7 @@
                             <th><label class="visually-hidden" for="filterAutorDocker">Filtrar por autor</label>
                                 <input type="text" id="filterAutorDocker" class="filter-input column-filter" data-column="autor"
                                     data-table="tablaDocker" placeholder="Autor..."></th>
-                            <th colspan="3"></th>
+                            <th colspan="4"></th>
                         </tr>
                     </thead>
                     <tbody>
@@ -165,6 +166,13 @@
                                 </select>
                             </td>
                             <td>
+                                <select name="sistema_operativo" class="select-minimal">
+                                    <option value="linux" {% if m.sistema_operativo=='linux' or not m.sistema_operativo %}selected{% endif %}>🐧 Linux</option>
+                                    <option value="windows" {% if m.sistema_operativo=='windows' %}selected{% endif %}>🪟 Windows</option>
+                                    <option value="movil" {% if m.sistema_operativo=='movil' %}selected{% endif %}>📱 Móvil</option>
+                                </select>
+                            </td>
+                            <td>
                                 <div class="d-flex gap-2">
                                     <button type="button" class="btn-action details" title="Ver/editar detalles"
                                         aria-label="Ver y editar detalles de {{ m.nombre }}" aria-haspopup="dialog"
@@ -195,7 +203,7 @@
                 </table>
             </div>
         </div>
-        
+
         <!-- Paginación Docker -->
         {% if docker_pages > 1 %}
         <div class="pagination-container">

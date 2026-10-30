@@ -6,6 +6,7 @@ import secrets
 from fastapi import Depends, Request
 from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
 
+from sqlalchemy import func
 from sqlalchemy.exc import IntegrityError
 
 from bunkerlabs.models import BunkerAccessLog, BunkerAccessToken
@@ -309,7 +310,15 @@ def register_bunkerlabs_pages_routes(
         if session.get("bunkerlabs_guest") and not maquina.guest_access:
             return RedirectResponse(url="/bunkerlabs?maquina=" + quote(maquina.nombre, safe=""), status_code=302)
 
-        maquina.descargas = (maquina.descargas or 0) + 1
+        # Incremento atomico en SQL (no leer-y-escribir en Python): con
+        # concurrencia alta en maquinas populares, leer el valor y volver a
+        # escribirlo chocaba con el snapshot isolation de MariaDB y lanzaba
+        # "Error 1020: Record has changed since last read", tirando la
+        # pagina de descarga con un 500.
+        db.session.query(Machine).filter(Machine.id == maquina.id).update(
+            {Machine.descargas: func.coalesce(Machine.descargas, 0) + 1},
+            synchronize_session=False,
+        )
         db.session.add(MachineDownloadLog(machine_id=maquina.id))
         db.session.commit()
 

@@ -16,7 +16,11 @@
 
     <div class="descargar-header">
         <h1>Descargar <span class="maquina-nombre">{{ maquina.nombre }}</span></h1>
+        {% if maquina.sistema_operativo == 'windows' %}
+        <p>Antes de descargar, así se despliega la máquina en VirtualBox.</p>
+        {% else %}
         <p>Antes de descargar, así se despliega la máquina en tu Kali Linux.</p>
+        {% endif %}
     </div>
 
     <div class="descargar-card">
@@ -28,6 +32,29 @@
                     🧭 Cómo desplegar la máquina
                 </div>
 
+                {% if maquina.sistema_operativo == 'windows' %}
+                <ol class="pasos">
+                    <li>
+                        La máquina se descarga en formato <code>.zip</code>. Extrae su contenido:
+                        dentro encontrarás el archivo <code>.ova</code> de la máquina.
+                    </li>
+                    <li>
+                        Abre <strong>VirtualBox</strong> y pulsa <strong>Open</strong> (o
+                        <em>Archivo → Importar servicio virtualizado</em>) para importar el
+                        <code>.ova</code> que acabas de extraer.
+                    </li>
+                    <li>
+                        Cuando termine de importarse, selecciónala en el listado de VirtualBox e
+                        iníciala. ¡Ya puedes empezar a hackearla!
+                    </li>
+                </ol>
+
+                <p class="descargar-info">
+                    Necesitas tener <strong>VirtualBox</strong> instalado. El disco de estas
+                    máquinas suele pesar varios GB, así que la importación puede tardar unos
+                    minutos.
+                </p>
+                {% else %}
                 <ol class="pasos">
                     <li>
                         La máquina se descarga en formato <code>.zip</code>. Extrae su contenido
@@ -53,6 +80,7 @@
                     Para eliminar la máquina cuando termines, pulsa <kbd>Ctrl</kbd>+<kbd>C</kbd> en
                     esa misma terminal.
                 </p>
+                {% endif %}
             </div>
 
             <div class="descargar-cta">
@@ -68,11 +96,28 @@
                 </p>
             </div>
 
+            {% if maquina.sistema_operativo == 'windows' %}
+            <div class="captura-box captura-box-multi">
+                <figure class="captura-item">
+                    <img class="captura-img" src="{{ static_v('dockerlabs/images/descargar/windows-extraer-ova.png') }}"
+                         alt="Carpeta con el archivo .ova extraído junto al .zip original, en el gestor de archivos"
+                         loading="lazy">
+                    <figcaption>1. Extrae el <code>.ova</code> del <code>.zip</code> descargado</figcaption>
+                </figure>
+                <figure class="captura-item">
+                    <img class="captura-img" src="{{ static_v('dockerlabs/images/descargar/windows-importar-virtualbox.png') }}"
+                         alt="Máquina Windows importada en VirtualBox, lista para iniciarse"
+                         loading="lazy">
+                    <figcaption>2. Impórtalo en VirtualBox y arráncala</figcaption>
+                </figure>
+            </div>
+            {% else %}
             <div class="captura-box">
-                <img id="captura-img" src="{{ static_v('dockerlabs/images/descargar/desplegar.png') }}"
+                <img class="captura-img" src="{{ static_v('dockerlabs/images/descargar/desplegar.png') }}"
                      alt="Ejemplo de despliegue con auto_deploy.sh mostrando la IP asignada"
                      loading="lazy">
             </div>
+            {% endif %}
 
         </div>
 
@@ -89,19 +134,22 @@
 {% block scripts %}
 <script nonce="{{ csp_nonce }}">
 (function () {
-    var img = document.getElementById('captura-img');
+    var imgs = document.querySelectorAll('.captura-img');
     var overlay = document.getElementById('lightbox-overlay');
     var overlayImg = document.getElementById('lightbox-img');
 
-    function openLightbox() {
-        overlayImg.src = img.src;
+    function openLightbox(e) {
+        overlayImg.src = e.currentTarget.src;
+        overlayImg.alt = e.currentTarget.alt;
         overlay.classList.add('open');
     }
     function closeLightbox() {
         overlay.classList.remove('open');
     }
 
-    if (img) img.addEventListener('click', openLightbox);
+    imgs.forEach(function (img) {
+        img.addEventListener('click', openLightbox);
+    });
     if (overlay) overlay.addEventListener('click', closeLightbox);
     document.addEventListener('keydown', function (e) {
         if (e.key === 'Escape') closeLightbox();

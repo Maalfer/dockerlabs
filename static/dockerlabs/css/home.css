@@ -1,18 +1,15 @@
 /* Estilos para página principal de DockerLabs */
 
-/* Buscador con botones de filtro */
+/* Buscador (ya no hace de contenedor posicionado: los filtros viven fuera, al lado) */
 .busqueda-con-filtro {
-    position: relative;
     display: inline-block;
     width: 100%;
 }
 
 .busqueda-con-filtro .form-control {
-    padding-right: 90px;
     background: rgba(15, 23, 42, 0.6);
     border: 1px solid #334155;
     color: #f1f5f9;
-    z-index: 1;
 }
 
 .busqueda-con-filtro .form-control::placeholder {
@@ -25,37 +22,48 @@
     box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
 }
 
-/* Grupo de botones de filtro - posicionados a la derecha del input */
+/* Grupo de botones de filtro: píldora independiente, al lado del buscador
+   (antes iba superpuesta encima del input con position:absolute, lo que
+   aplastaba los 3 iconos contra el placeholder). */
 .search-buttons-group {
-    position: absolute;
-    right: 4px;
-    top: 50%;
-    transform: translateY(-50%);
     display: flex;
+    align-items: center;
+    flex-shrink: 0;
     gap: 2px;
-    z-index: 2;
+    background: rgba(15, 23, 42, 0.96);
+    border: 1px solid #334155;
+    border-radius: 10px;
+    padding: 3px;
 }
 
-/* Botones individuales de categoría y filtro.
-   Sin fondo ni borde propios: la píldora del grupo (styles.css) ya hace de contenedor,
-   y solo se tiñe el botón al pasar el ratón o con el menú abierto. */
+/* Botones individuales de plataforma/categoría/fecha. Area de toque >= 36px
+   (recomendación WCAG 2.5.5 orientativa) en vez de los 4px/8px anteriores. */
 .search-buttons-group .btn-category,
+.search-buttons-group .btn-os,
 .search-buttons-group .btn-filter {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 36px;
+    min-height: 36px;
     background: transparent;
     border: none;
     color: #94a3b8;
-    padding: 4px 8px;
-    border-radius: 12px;
-    font-size: 0.85rem;
+    padding: 0.4rem 0.6rem;
+    border-radius: 7px;
+    font-size: 0.9rem;
     transition: color 0.2s ease, background 0.2s ease;
     backdrop-filter: none;
 }
 
 .search-buttons-group .btn-category:hover,
+.search-buttons-group .btn-os:hover,
 .search-buttons-group .btn-filter:hover,
 .search-buttons-group .btn-category.show,
+.search-buttons-group .btn-os.show,
 .search-buttons-group .btn-filter.show,
 .search-buttons-group .btn-category:active,
+.search-buttons-group .btn-os:active,
 .search-buttons-group .btn-filter:active {
     background: rgba(34, 211, 238, 0.12);
     border: none;
@@ -63,11 +71,13 @@
 }
 
 .search-buttons-group .btn-category:focus,
+.search-buttons-group .btn-os:focus,
 .search-buttons-group .btn-filter:focus {
     box-shadow: none;
 }
 
 .search-buttons-group .btn-category:focus-visible,
+.search-buttons-group .btn-os:focus-visible,
 .search-buttons-group .btn-filter:focus-visible {
     outline: 2px solid rgba(34, 211, 238, 0.6);
     outline-offset: -2px;
@@ -93,6 +103,18 @@
 .search-buttons-group .dropdown-item:hover {
     background: rgba(59, 130, 246, 0.2);
     color: #f1f5f9;
+}
+
+/* Contador de coincidencias junto a cada opción del filtro (categoría,
+   plataforma, resueltas/sin resolver). Mismo patrón que ya usaban los
+   botones de dificultad. */
+.search-buttons-group .dropdown-item .count {
+    color: #64748b;
+    font-size: 0.8em;
+}
+
+.search-buttons-group .dropdown-item:hover .count {
+    color: #94a3b8;
 }
 
 .search-buttons-group .dropdown-divider {

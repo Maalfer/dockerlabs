@@ -9,7 +9,14 @@
 {% block content %}
 
 <div class="container mt-5 equipo-page">
-    <h1 class="title">Equipo de DockerLabs</h1>
+
+    <div class="equipo-header">
+        <span class="terminal-prompt">$</span>
+        <div>
+            <h1>equipo<span class="equipo-cursor">_</span></h1>
+            <p>Las personas detrás de DockerLabs.</p>
+        </div>
+    </div>
 
     <!-- ADMINISTRADORES -->
     <div class="section-label">
@@ -91,10 +98,17 @@
     <div class="section-label">
         <span><i class="bi bi-people-fill"></i> Colaboradores</span>
     </div>
-    <p class="colaboradores-desc" style="text-align: center;">¿Quieres aparecer aquí? Para colaborar en DockerLabs puede consultar <a href="https://github.com/Maalfer/dockerlabs?tab=contributing-ov-file">AQUÍ</a></p>
     <div class="card p-4 mt-2 mb-5 colaboradores-card">
         <div class="colaboradores-mosaic">
             <!-- Los colaboradores se agregarán aquí -->
+        </div>
+        <div class="colaboradores-empty">
+            <i class="bi bi-people"></i>
+            <p>Todavía no hay colaboradores registrados en esta sección.</p>
+            <a href="https://github.com/Maalfer/dockerlabs?tab=contributing-ov-file" target="_blank"
+               class="colaboradores-empty-link">
+                <i class="bi bi-box-arrow-up-right"></i> Descubre cómo colaborar
+            </a>
         </div>
     </div>
 </div>

@@ -15,71 +15,84 @@
     <div class="header row align-items-center" style="position: relative; z-index: 1000;">
         <div class="col-12">
             <div class="header-filters-row">
-                <div class="busqueda-con-filtro" style="max-width: 250px;">
+                <div class="busqueda-con-filtro" style="max-width: 200px;">
                     <input type="text" id="buscador" class="form-control form-control-sm" placeholder="Busca algo.">
-                    <div class="search-buttons-group">
-                        <button class="btn btn-category dropdown-toggle" type="button" data-bs-toggle="dropdown"
-                            aria-expanded="false" title="Filtrar por categoría">
-                            <i class="bi bi-tags"></i>
-                        </button>
-                        <ul class="dropdown-menu dropdown-menu-end">
-                            <li><a class="dropdown-item" href="#" onclick="filterByCategory('', event); return false;">Todas las
-                                    categorías</a></li>
-                            <li>
-                                <hr class="dropdown-divider">
-                            </li>
-                            <li><a class="dropdown-item" href="#"
-                                    onclick="filterByCategory('Hacking Web', event); return false;">Hacking
-                                    Web</a></li>
-                            <li><a class="dropdown-item" href="#"
-                                    onclick="filterByCategory('Bug Bounty', event); return false;">Bug
-                                    Bounty</a></li>
-                            <li><a class="dropdown-item" href="#"
-                                    onclick="filterByCategory('Hacking CMS', event); return false;">Hacking
-                                    CMS</a></li>
-                            <li><a class="dropdown-item" href="#"
-                                    onclick="filterByCategory('Hacking Infraestructura', event); return false;">Hacking
-                                    Infraestructura</a>
-                            </li>
-                            <li><a class="dropdown-item" href="#"
-                                    onclick="filterByCategory('Pivoting', event); return false;">Pivoting</a>
-                            </li>
-                            <li><a class="dropdown-item" href="#"
-                                    onclick="filterByCategory('Blue Team', event); return false;">Blue
-                                    Team</a></li>
-                            <li><a class="dropdown-item" href="#"
-                                    onclick="filterByCategory('Hacking Móvil', event); return false;">Hacking
-                                    Móvil</a></li>
-                        </ul>
-
-                        <button class="btn btn-filter dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false"
-                            title="Ordenar por fecha">
-                            <i class="bi bi-funnel"></i>
-                        </button>
-                        <ul class="dropdown-menu dropdown-menu-end">
-                            <li><a class="dropdown-item" href="#" onclick="sortByDate('recent'); return false;">Fecha
-                                    Reciente</a></li>
-                            <li><a class="dropdown-item" href="#" onclick="sortByDate('oldest'); return false;">Fecha
-                                    Antiguos</a></li>
-                            <li><a class="dropdown-item" href="#" onclick="filterByCompleted(event); return false;">Máquinas
-                                    Resueltas</a></li>
-                            <li><a class="dropdown-item" href="#" onclick="filterByUncompleted(event); return false;">Máquinas
-                                    Sin Resolver</a></li>
-                            <li>
-                                <hr class="dropdown-divider">
-                            </li>
-                            <li><a class="dropdown-item" href="#" onclick="sortByDate('reset'); return false;">Sin
-                                    ordenar</a>
-                            </li>
-                        </ul>
-                    </div>
                 </div>
 
+                <div class="search-buttons-group">
+                    <button class="btn btn-category dropdown-toggle" type="button" data-bs-toggle="dropdown"
+                        aria-expanded="false" title="Filtrar por categoría">
+                        <i class="bi bi-tags"></i>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end">
+                        <li><a class="dropdown-item" id="cat-todas" href="#" onclick="filterByCategory('', event); return false;">Todas las
+                                categorías<span class="count"></span></a></li>
+                        <li>
+                            <hr class="dropdown-divider">
+                        </li>
+                        <li><a class="dropdown-item" id="cat-hacking-web" href="#"
+                                onclick="filterByCategory('Hacking Web', event); return false;">Hacking
+                                Web<span class="count"></span></a></li>
+                        <li><a class="dropdown-item" id="cat-bug-bounty" href="#"
+                                onclick="filterByCategory('Bug Bounty', event); return false;">Bug
+                                Bounty<span class="count"></span></a></li>
+                        <li><a class="dropdown-item" id="cat-hacking-cms" href="#"
+                                onclick="filterByCategory('Hacking CMS', event); return false;">Hacking
+                                CMS<span class="count"></span></a></li>
+                        <li><a class="dropdown-item" id="cat-hacking-infra" href="#"
+                                onclick="filterByCategory('Hacking Infraestructura', event); return false;">Hacking
+                                Infraestructura<span class="count"></span></a>
+                        </li>
+                        <li><a class="dropdown-item" id="cat-pivoting" href="#"
+                                onclick="filterByCategory('Pivoting', event); return false;">Pivoting<span class="count"></span></a>
+                        </li>
+                        <li><a class="dropdown-item" id="cat-blue-team" href="#"
+                                onclick="filterByCategory('Blue Team', event); return false;">Blue
+                                Team<span class="count"></span></a></li>
+                    </ul>
+
+                    <button class="btn btn-os dropdown-toggle" type="button" data-bs-toggle="dropdown"
+                        aria-expanded="false" title="Filtrar por plataforma">
+                        <i class="bi bi-pc-display-horizontal"></i>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end">
+                        <li><a class="dropdown-item" id="os-todas" href="#" onclick="filterByOS('', event); return false;">Todas las
+                                plataformas<span class="count"></span></a></li>
+                        <li>
+                            <hr class="dropdown-divider">
+                        </li>
+                        <li><a class="dropdown-item" id="os-linux" href="#"
+                                onclick="filterByOS('linux', event); return false;">🐧 Linux<span class="count"></span></a></li>
+                        <li><a class="dropdown-item" id="os-windows" href="#"
+                                onclick="filterByOS('windows', event); return false;">🪟 Windows<span class="count"></span></a></li>
+                        <li><a class="dropdown-item" id="os-movil" href="#"
+                                onclick="filterByOS('movil', event); return false;">📱 Móvil<span class="count"></span></a></li>
+                    </ul>
+
+                    <button class="btn btn-filter dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false"
+                        title="Ordenar por fecha">
+                        <i class="bi bi-funnel"></i>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end">
+                        <li><a class="dropdown-item" href="#" onclick="sortByDate('recent'); return false;">Fecha
+                                Reciente</a></li>
+                        <li><a class="dropdown-item" href="#" onclick="sortByDate('oldest'); return false;">Fecha
+                                Antiguos</a></li>
+                        <li><a class="dropdown-item" id="date-resueltas" href="#" onclick="filterByCompleted(event); return false;">Máquinas
+                                Resueltas<span class="count"></span></a></li>
+                        <li><a class="dropdown-item" id="date-sin-resolver" href="#" onclick="filterByUncompleted(event); return false;">Máquinas
+                                Sin Resolver<span class="count"></span></a></li>
+                        <li>
+                            <hr class="dropdown-divider">
+                        </li>
+                        <li><a class="dropdown-item" href="#" onclick="sortByDate('reset'); return false;">Sin
+                                ordenar</a>
+                        </li>
+                    </ul>
+                </div>
 
                 <button id="ranking" class="btn btn-sm" onclick="ranking()">Writeups</button>
                 <button id="autores" class="btn btn-sm" onclick="rankingautores()">Autores</button>
-                <span class="filters-divider" aria-hidden="true"></span>
-                <span class="filters-divider" aria-hidden="true"></span>
                 <div class="d-flex flex-wrap gap-2 ms-auto align-items-center">
                     <div class="dropdown">
                         <button class="btn btn-sm dropdown-toggle" id="filtro-dificultad-btn" type="button" 
@@ -164,7 +177,8 @@
         <div onclick="presentacion({{ maquina.nombre | tojson | forceescape }}, {{ maquina.dificultad | tojson | forceescape }}, {{ maquina.color | tojson | forceescape }}, {{ maquina.autor | tojson | forceescape }}, {{ maquina.enlace_autor | tojson | forceescape }}, {{ maquina.fecha | tojson | forceescape }}, {{ maquina.imagen_url | tojson | forceescape }}, {{ categorias_map.get(maquina.id, '') | tojson | forceescape }})"
             class="item {{ maquina.clase }} {% if machine_ranks.get(maquina.id) == 1 %}most-recent{% elif machine_ranks.get(maquina.id) == 2 %}second-recent{% endif %} {% if maquina.nombre.strip() in completed_machines %}completed{% endif %}"
             data-id="{{ maquina.id }}"
-            data-category="{{ categorias_map.get(maquina.id, '') }}">
+            data-category="{{ categorias_map.get(maquina.id, '') }}"
+            data-os="{{ maquina.sistema_operativo }}">
             <span><strong>{{ maquina.nombre }}</strong>
                 {% if machine_ranks.get(maquina.id) == 1 %}<span class="new-badge">¡Nueva!</span>
                 {% endif %}
@@ -200,7 +214,8 @@
         <div onclick="presentacion({{ maquina.nombre | tojson | forceescape }}, {{ maquina.dificultad | tojson | forceescape }}, {{ maquina.color | tojson | forceescape }}, {{ maquina.autor | tojson | forceescape }}, {{ maquina.enlace_autor | tojson | forceescape }}, {{ maquina.fecha | tojson | forceescape }}, {{ maquina.imagen_url | tojson | forceescape }}, {{ categorias_map.get(maquina.id, '') | tojson | forceescape }})"
             class="maquina-item {{ maquina.clase }} {% if machine_ranks.get(maquina.id) == 1 %}mas-reciente{% elif machine_ranks.get(maquina.id) == 2 %}second-recent{% endif %} {% if maquina.nombre.strip() in completed_machines %}completada{% endif %}"
             data-id="{{ maquina.id }}"
-            data-category="{{ categorias_map.get(maquina.id, '') }}">
+            data-category="{{ categorias_map.get(maquina.id, '') }}"
+            data-os="{{ maquina.sistema_operativo }}">
             <span><strong>{{ maquina.nombre }}</strong>
                 {% if machine_ranks.get(maquina.id) == 1 %}<span class="etiqueta-nueva">¡Nueva!</span>
                 {% endif %}

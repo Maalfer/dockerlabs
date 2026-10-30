@@ -83,6 +83,7 @@ def register_pages_core_routes(
                     "descripcion": m.descripcion,
                     "link_descarga": m.link_descarga,
                     "categoria": cat_name,
+                    "sistema_operativo": m.sistema_operativo,
                 }
             )
 

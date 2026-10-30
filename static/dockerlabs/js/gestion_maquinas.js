@@ -107,9 +107,10 @@ function uploadMachineLogo(machineId, origen) {
         });
 }
 
-function showToast(message) {
+function showToast(message, type = 'success') {
     const toast = document.createElement('div');
-    toast.style.cssText = 'position: fixed; bottom: 20px; right: 20px; background: #10b981; color: white; padding: 12px 24px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.2); z-index: 10010; animation: slideIn 0.3s forwards; font-weight: 500;';
+    const bg = type === 'error' ? '#dc3545' : '#10b981';
+    toast.style.cssText = `position: fixed; bottom: 20px; right: 20px; background: ${bg}; color: white; padding: 12px 24px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.2); z-index: 10010; animation: slideIn 0.3s forwards; font-weight: 500;`;
     toast.textContent = message;
 
     document.body.appendChild(toast);
@@ -411,6 +412,61 @@ function closeMachineDetailsModal() {
         currentDetailsRow.triggerBtn.focus();
     }
     currentDetailsRow = null;
+}
+
+// === Guardar/eliminar maquina via AJAX ===
+// Los <form> de "Guardar" y "Eliminar" de cada fila son <form method="post">
+// normales: sin esto, al enviarlos el navegador navega a la respuesta JSON
+// cruda de la API (`/api/gestion-maquinas/actualizar|eliminar`) y la pinta
+// como si fuera la pagina entera. Se interceptan por delegacion (una sola
+// vez, a nivel de tabla) para enviarlos con fetch y mostrar el resultado
+// como un toast, igual que ya se hace con el logo y el guest-access.
+document.addEventListener('DOMContentLoaded', function () {
+    ['tablaDocker', 'tablaBunker'].forEach(tableId => {
+        const table = document.getElementById(tableId);
+        if (table) table.addEventListener('submit', handleMachineFormSubmit);
+    });
+});
+
+function handleMachineFormSubmit(e) {
+    // Si el form es el de "Eliminar" y el usuario cancelo el confirm() de su
+    // onsubmit, el evento ya llega aqui con preventDefault() aplicado: no
+    // hacer nada, o se borraria la maquina pese a haber cancelado.
+    if (e.defaultPrevented) return;
+
+    const form = e.target;
+    if (!(form instanceof HTMLFormElement) || !form.classList.contains('d-contents')) return;
+
+    const isDelete = form.action.includes('/gestion-maquinas/eliminar');
+    const isUpdate = form.action.includes('/gestion-maquinas/actualizar');
+    if (!isDelete && !isUpdate) return;
+
+    e.preventDefault();
+
+    const submitBtn = form.querySelector('button[type="submit"]');
+    if (submitBtn) submitBtn.disabled = true;
+
+    fetch(form.action, { method: 'POST', body: new FormData(form) })
+        .then(response => response.json().then(data => ({ ok: response.ok, data })))
+        .then(({ ok, data }) => {
+            if (!ok || data.error) {
+                showToast(data.error || 'No se pudo completar la operación.', 'error');
+                return;
+            }
+
+            showToast(data.message || 'Operación realizada correctamente.');
+
+            if (isDelete) {
+                const row = form.closest('tr');
+                if (row) row.remove();
+            }
+        })
+        .catch(() => {
+            showToast('Error de red al comunicar con el servidor.', 'error');
+        })
+        .finally(() => {
+            if (submitBtn) submitBtn.disabled = false;
+        });
 }
 
 function saveMachineDetailsModal() {

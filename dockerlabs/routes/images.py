@@ -110,16 +110,16 @@ def register_image_routes(api_router, pages_router):
                     full_path = os.path.join(base_dir, machine.logo_path)
                     if os.path.exists(full_path):
                         mime = machine.logo_mime or "image/jpeg"
-                        return FileResponse(full_path, media_type=mime, headers={"Cache-Control": "public, max-age=0, must-revalidate"})
+                        return FileResponse(full_path, media_type=mime, headers={"Cache-Control": "no-cache"})
                 except Exception:
                     pass
-            
+
             # 2. Si no existe en nuevo sistema, buscar en BD antigua (compatibilidad)
             try:
                 logo_data = machine.logo_data
                 if logo_data:
                     mime = machine.logo_mime or "image/jpeg"
-                    return StreamingResponse(io.BytesIO(logo_data), media_type=mime, headers={"Cache-Control": "public, max-age=0, must-revalidate"})
+                    return StreamingResponse(io.BytesIO(logo_data), media_type=mime, headers={"Cache-Control": "no-cache"})
             except Exception:
                 pass
 
@@ -127,7 +127,7 @@ def register_image_routes(api_router, pages_router):
         if machine and machine.imagen:
             full_path = os.path.join(base_dir, "static", machine.imagen)
             if os.path.exists(full_path):
-                return FileResponse(full_path, headers={"Cache-Control": "public, max-age=0, must-revalidate"})
+                return FileResponse(full_path, headers={"Cache-Control": "no-cache"})
 
         # 4. Logo por defecto
         default_logo = os.path.join(base_dir, "static", "dockerlabs", "images", "logos", "logo.png")

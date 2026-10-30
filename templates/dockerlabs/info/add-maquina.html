@@ -74,7 +74,8 @@
     margin-bottom: 2rem;
 }
 
-.dest-tab {
+.dest-tab,
+.os-tab {
     flex: 1;
     padding: 0.9rem 1rem;
     border-radius: var(--radius);
@@ -92,12 +93,13 @@
     gap: 0.4rem;
 }
 
-.dest-tab .dest-icon { font-size: 1.4rem; }
-.dest-tab .dest-label { font-size: 0.78rem; letter-spacing: 0.04em; }
+.dest-tab .dest-icon, .os-tab .dest-icon { font-size: 1.4rem; }
+.dest-tab .dest-label, .os-tab .dest-label { font-size: 0.78rem; letter-spacing: 0.04em; }
 
-.dest-tab:hover { border-color: rgba(255,255,255,0.2); color: rgba(255,255,255,0.7); }
+.dest-tab:hover, .os-tab:hover { border-color: rgba(255,255,255,0.2); color: rgba(255,255,255,0.7); }
 
-.dest-tab.active {
+.dest-tab.active,
+.os-tab.active {
     border-color: var(--accent);
     background: var(--accent-dim);
     color: var(--accent);
@@ -399,6 +401,26 @@
                     </div>
                 </div>
 
+                <!-- Platform -->
+                <div class="form-section" id="sistema-operativo-section">
+                    <div class="form-section-title">Plataforma</div>
+                    <div class="dest-tabs">
+                        <button type="button" class="os-tab active" data-value="linux" onclick="setSistemaOperativo('linux', this)">
+                            <span class="dest-icon">🐧</span>
+                            <span class="dest-label">Linux</span>
+                        </button>
+                        <button type="button" class="os-tab" data-value="windows" onclick="setSistemaOperativo('windows', this)">
+                            <span class="dest-icon">🪟</span>
+                            <span class="dest-label">Windows</span>
+                        </button>
+                        <button type="button" class="os-tab" data-value="movil" onclick="setSistemaOperativo('movil', this)">
+                            <span class="dest-icon">📱</span>
+                            <span class="dest-label">Móvil</span>
+                        </button>
+                    </div>
+                    <input type="hidden" name="sistema_operativo" id="sistema_operativo" value="linux">
+                </div>
+
                 <!-- Content -->
                 <div class="form-section" id="content-section">
                     <div class="form-section-title">Contenido</div>
@@ -511,6 +533,11 @@ function setDificultad(val, btn) {
     });
 }
 
+function setSistemaOperativo(val, btn) {
+    document.getElementById('sistema_operativo').value = val;
+    document.querySelectorAll('.os-tab').forEach(t => t.classList.toggle('active', t === btn));
+}
+
 function previewImage(input) {
     const preview = document.getElementById('img-preview');
     const text = document.getElementById('upload-text');
@@ -538,6 +565,7 @@ async function submitForm() {
     const descripcion = document.getElementById('descripcion').value.trim();
     const link_descarga = document.getElementById('link_descarga').value.trim();
     const destino = document.getElementById('destino').value;
+    const sistema_operativo = document.getElementById('sistema_operativo').value;
 
     if (!nombre) { alert('El nombre de la máquina es obligatorio.'); return; }
     if (!dificultad) { alert('Selecciona una dificultad.'); return; }
@@ -556,7 +584,8 @@ async function submitForm() {
     const payload = {
         nombre, dificultad, autor, fecha, descripcion,
         link_descarga,
-        destino
+        destino,
+        sistema_operativo
     };
 
     try {

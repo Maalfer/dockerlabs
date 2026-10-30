@@ -1,6 +1,6 @@
 const ITEMS_PER_PAGE = 50;
 let currentPage = 1;
-let currentFilter = { difficulty: 'todos', category: '', completed: null }; // null = all, true = completed, false = uncompleted
+let currentFilter = { difficulty: 'todos', category: '', completed: null, os: '' }; // null = all, true = completed, false = uncompleted
 
 // Debounce: evita llamadas en ráfaga que provocan forced reflow
 function debounce(fn, delay) {
@@ -45,15 +45,17 @@ function getFilteredItems() {
     return Array.from(items).filter(item => {
         const itemName = item.querySelector('span')?.textContent?.toLowerCase() || '';
         const itemCategory = item.getAttribute('data-category') || '';
+        const itemOS = item.getAttribute('data-os') || '';
         const isCompleted = item.classList.contains('completada');
         const difficultyClass = ['muy-facil', 'facil', 'medio', 'dificil'].find(c => item.classList.contains(c)) || 'todos';
 
         const matchSearch = itemName.includes(searchTerm);
         const matchDifficulty = currentFilter.difficulty === 'todos' || difficultyClass === currentFilter.difficulty;
         const matchCategory = !currentFilter.category || itemCategory === currentFilter.category;
+        const matchOS = !currentFilter.os || itemOS === currentFilter.os;
         const matchCompleted = currentFilter.completed === null || (currentFilter.completed === true && isCompleted) || (currentFilter.completed === false && !isCompleted);
 
-        return matchSearch && matchDifficulty && matchCategory && matchCompleted;
+        return matchSearch && matchDifficulty && matchCategory && matchOS && matchCompleted;
     });
 }
 
@@ -212,38 +214,88 @@ function filterByUncompleted(event) {
     }
 }
 
-function updateAllButtonCounts() {
-    const buttons = [
-        { id: 'boton-muy-facil', class: 'muy-facil' },
-        { id: 'boton-facil', class: 'facil' },
-        { id: 'boton-medio', class: 'medio' },
-        { id: 'boton-dificil', class: 'dificil' },
-        { id: 'boton-todos', class: 'todos' }
-    ];
+const DIFFICULTY_COUNT_BUTTONS = [
+    { id: 'boton-muy-facil', class: 'muy-facil' },
+    { id: 'boton-facil', class: 'facil' },
+    { id: 'boton-medio', class: 'medio' },
+    { id: 'boton-dificil', class: 'dificil' },
+    { id: 'boton-todos', class: 'todos' }
+];
 
+const CATEGORY_COUNT_BUTTONS = [
+    { id: 'cat-todas', value: '' },
+    { id: 'cat-hacking-web', value: 'Hacking Web' },
+    { id: 'cat-bug-bounty', value: 'Bug Bounty' },
+    { id: 'cat-hacking-cms', value: 'Hacking CMS' },
+    { id: 'cat-hacking-infra', value: 'Hacking Infraestructura' },
+    { id: 'cat-pivoting', value: 'Pivoting' },
+    { id: 'cat-blue-team', value: 'Blue Team' }
+];
+
+const OS_COUNT_BUTTONS = [
+    { id: 'os-todas', value: '' },
+    { id: 'os-linux', value: 'linux' },
+    { id: 'os-windows', value: 'windows' },
+    { id: 'os-movil', value: 'movil' }
+];
+
+function updateAllButtonCounts() {
     const searchInput = document.getElementById('buscador');
+    const searchTerm = (searchInput?.value || '').toLowerCase();
     const items = document.querySelectorAll('.maquina-item');
 
-    buttons.forEach(btn => {
-        const button = document.getElementById(btn.id);
-        let itemCount = 0;
+    const setCount = (id, count) => {
+        const button = document.getElementById(id);
+        if (!button) return;
+        const countSpan = button.querySelector('.count');
+        if (countSpan) countSpan.textContent = ` (${count})`;
+    };
 
+    DIFFICULTY_COUNT_BUTTONS.forEach(btn => {
+        let itemCount = 0;
         items.forEach(item => {
             const itemName = item.querySelector('span').textContent.toLowerCase();
             const isVisible = item.classList.contains(btn.class) || btn.class === 'todos';
-
-            if (itemName.includes(searchInput.value.toLowerCase()) && isVisible) {
-                itemCount++;
-            }
+            if (itemName.includes(searchTerm) && isVisible) itemCount++;
         });
+        setCount(btn.id, itemCount);
+    });
 
-        if (button) {
-            const countSpan = button.querySelector('.count');
-            if (countSpan) {
-                countSpan.textContent = ` (${itemCount})`;
-            }
+    CATEGORY_COUNT_BUTTONS.forEach(btn => {
+        let itemCount = 0;
+        items.forEach(item => {
+            const itemName = item.querySelector('span').textContent.toLowerCase();
+            const itemCategory = item.getAttribute('data-category') || '';
+            const matches = btn.value === '' || itemCategory === btn.value;
+            if (itemName.includes(searchTerm) && matches) itemCount++;
+        });
+        setCount(btn.id, itemCount);
+    });
+
+    OS_COUNT_BUTTONS.forEach(btn => {
+        let itemCount = 0;
+        items.forEach(item => {
+            const itemName = item.querySelector('span').textContent.toLowerCase();
+            const itemOS = item.getAttribute('data-os') || '';
+            const matches = btn.value === '' || itemOS === btn.value;
+            if (itemName.includes(searchTerm) && matches) itemCount++;
+        });
+        setCount(btn.id, itemCount);
+    });
+
+    let resueltas = 0;
+    let sinResolver = 0;
+    items.forEach(item => {
+        const itemName = item.querySelector('span').textContent.toLowerCase();
+        if (!itemName.includes(searchTerm)) return;
+        if (item.classList.contains('completada')) {
+            resueltas++;
+        } else {
+            sinResolver++;
         }
     });
+    setCount('date-resueltas', resueltas);
+    setCount('date-sin-resolver', sinResolver);
 
     // Call updateGridLayout only once after all counts are updated
     updateGridLayout();
@@ -340,6 +392,25 @@ function filterByCategory(category, event) {
     
     // Cerrar dropdown de Bootstrap manualmente
     const dropdown = document.querySelector('.btn-category');
+    if (dropdown) {
+        const bsDropdown = bootstrap.Dropdown.getInstance(dropdown);
+        if (bsDropdown) bsDropdown.hide();
+    }
+}
+
+function filterByOS(os, event) {
+    if (event) {
+        event.preventDefault();
+        event.stopPropagation();
+    }
+
+    currentFilter.os = os;
+    currentPage = 1;
+
+    applyPagination();
+    updateAllButtonCounts();
+
+    const dropdown = document.querySelector('.btn-os');
     if (dropdown) {
         const bsDropdown = bootstrap.Dropdown.getInstance(dropdown);
         if (bsDropdown) bsDropdown.hide();
