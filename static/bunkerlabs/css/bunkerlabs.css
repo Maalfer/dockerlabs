@@ -1107,28 +1107,28 @@ footer {
     left: 50%;
     width: 200%;
     height: 80px;
-    background: linear-gradient(to right, rgba(94, 53, 177, 0.4), rgba(49, 46, 129, 0.4));
+    background: linear-gradient(to right, #24283B, #1A1B26);
     border-radius: 50%;
     transform: translateX(-50%);
     animation: wave 8s linear infinite;
-    opacity: 0.8;
+    opacity: 0.95;
     bottom: 0px;
 }
 
 .wave.wave1 {
     z-index: 10;
-    opacity: 0.7;
+    opacity: 0.9;
     animation-delay: 0s;
-    background: linear-gradient(to right, rgba(94, 53, 177, 0.3), rgba(69, 39, 160, 0.3));
+    background: linear-gradient(to right, #2A2E3F, #24283B);
 }
 
 .wave.wave2 {
     z-index: 9;
-    opacity: 0.5;
+    opacity: 0.6;
     animation: wave 12s linear infinite;
     height: 100px;
     bottom: 5px;
-    background: linear-gradient(to right, rgba(103, 58, 183, 0.2), rgba(81, 45, 168, 0.2));
+    background: linear-gradient(to right, #1A1B26, #1A1B26);
 }
 
 @keyframes wave {
