@@ -70,7 +70,7 @@ body {
     padding-top: 71px;
     padding-bottom: 90px;
     font-family: 'Fira Code', monospace;
-    background: radial-gradient(circle at top, #27354a 0%, var(--background-dark) 60%, var(--background-dark) 100%);
+    background: radial-gradient(circle at top, #2f3f58 0%, var(--background-dark) 60%, var(--background-dark) 100%);
     color: var(--text-primary);
 }
 
