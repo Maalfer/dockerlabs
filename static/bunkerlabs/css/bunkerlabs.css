@@ -61,6 +61,7 @@ body {
     min-height: 100vh;
     display: flex;
     flex-direction: column;
+    padding-bottom: 90px;
     font-family: 'Inter', sans-serif;
     color: var(--bunker-text);
     background:
@@ -625,47 +626,6 @@ button.btn-sm:hover {
     justify-content: center;
 }
 
-.footer-content {
-    max-width: 900px;
-    width: 100%;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 0.6rem;
-}
-
-.footer-icons {
-    display: flex;
-    justify-content: center;
-    gap: 0.8rem;
-    margin-bottom: 0.2rem;
-}
-
-.footer-icon {
-    width: 32px;
-    height: 32px;
-    border-radius: 8px;
-    background: rgba(126, 87, 194, 0.1);
-    color: var(--bunker-secondary);
-    font-size: 1rem;
-    transition: all 0.3s ease;
-}
-
-.footer-icon:hover {
-    color: var(--bunker-text);
-    background: rgba(126, 87, 194, 0.2);
-    transform: translateY(-2px);
-    box-shadow: var(--bunker-glow);
-}
-
-.footer-content p,
-.footer-content a {
-    margin: 0;
-    padding: 0;
-    color: var(--bunker-text-secondary);
-    font-size: 0.85rem;
-}
-
 
 /* =====================
    LOGIN BUNKERLABS (MINIMAL)
@@ -983,20 +943,35 @@ button.btn-sm:hover {
 
     /* Responsividad para el footer */
     .footer-content {
-        grid-template-columns: 1fr;
-        gap: 1rem;
+        width: 100%;
+        flex-direction: column;
+        gap: 0.5rem;
         text-align: center;
     }
 
-    .footer-content p:first-child,
-    .footer-content p:last-child,
-    .footer-icons {
-        justify-self: center;
+    .footer-content p.copyright {
+        display: block;
+        font-size: 0.75rem;
+        margin-bottom: 0.5rem;
     }
 
     .footer-icons {
-        order: -1;
-        /* Iconos arriba en móvil */
+        display: flex;
+        justify-content: center;
+        gap: 1.5rem;
+        margin-top: 0.5rem;
+        padding: 0.5rem 0;
+    }
+
+    .footer-icon {
+        padding: 0.5rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .footer-icon i {
+        font-size: 1.6rem;
     }
 }
 
@@ -1020,14 +995,22 @@ button.btn-sm:hover {
         font-size: 0.8rem;
     }
 
+    body {
+        padding-bottom: 100px;
+    }
+
     .footer-icons {
-        gap: 1rem;
+        gap: 1.2rem;
+        margin-top: 0.4rem;
+        padding: 0.3rem 0;
     }
 
     .footer-icon {
-        width: 40px;
-        height: 40px;
-        font-size: 1.1rem;
+        padding: 0.4rem;
+    }
+
+    .footer-icon i {
+        font-size: 1.5rem;
     }
 }
 
@@ -1041,63 +1024,35 @@ footer {
     display: flex;
     justify-content: center;
     align-items: center;
-    position: relative;
-    margin-top: auto;
+    position: fixed;
+    bottom: 0;
     width: 100%;
-    padding: 15px 0 80px 0;
+    padding: 12px 0;
     text-align: center;
     z-index: 2;
 }
 
 .footer-content {
-    display: flex !important;
-    flex-direction: row !important;
-    justify-content: space-between !important;
-    align-items: center !important;
-    max-width: 1400px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
     width: 100%;
-    padding-left: 30px;
-    padding-right: 30px;
+    padding-left: 15px;
+    padding-right: 15px;
     position: relative;
     z-index: 3;
-    gap: 1rem;
 }
 
-/* 1. Copyright y Links (Izquierda) */
 .footer-content p.copyright {
-    flex: 1;
-    justify-content: flex-start;
     margin: 0;
     font-size: 0.8rem;
     color: var(--bunker-text-muted);
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 0.5rem;
-    text-align: left;
 }
 
-/* 2. Iconos (Centro) - Ancho automático, se queda en el medio visual */
 .footer-icons {
-    flex: 0 0 auto;
-    /* No crecer, no encoger, ancho automático */
     display: flex;
-    justify-content: center;
     gap: 15px;
-    margin: 0 1rem;
-}
-
-/* 3. Créditos (Derecha) */
-.footer-content p:last-child:not(.copyright) {
-    flex: 1;
-    justify-content: flex-end;
-    margin: 0;
-    font-size: 0.75rem;
-    color: var(--bunker-text-secondary);
-    opacity: 0.8;
-    text-align: right;
-    display: flex;
-    align-items: center;
 }
 
 .footer-icon {
@@ -1137,11 +1092,11 @@ footer {
 
 /* WAVES ANIMATION (MORADO) */
 .wave-container {
-    position: absolute;
+    position: fixed;
     bottom: 0;
     left: 0;
     width: 100%;
-    height: 100px;
+    height: 70px;
     overflow: hidden;
     z-index: 1;
     pointer-events: none;
