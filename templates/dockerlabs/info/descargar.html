@@ -57,15 +57,21 @@
                 {% else %}
                 <ol class="pasos">
                     <li>
-                        La máquina se descarga en formato <code>.zip</code>. Extrae su contenido
-                        desde tu Kali Linux.
+                        La máquina se descarga en el archivo <code>{{ maquina.nombre }}.zip</code>.
+                        Extrae su contenido desde tu Kali Linux con el comando:
+                        <div class="comando-box">
+                            <code>unzip {{ maquina.nombre }}.zip</code>
+                            <button type="button" class="copy-btn copy-cmd-btn" data-copy="unzip {{ maquina.nombre }}.zip" aria-label="Copiar comando">
+                                <i class="bi bi-clipboard"></i>
+                            </button>
+                        </div>
                     </li>
                     <li>
-                        Abre una terminal en la carpeta donde has extraído el <code>.zip</code> y
-                        ejecuta:
+                        Abre una terminal en la carpeta donde has extraído el archivo
+                        <code>{{ maquina.nombre }}.zip</code> y ejecuta:
                         <div class="comando-box">
-                            <code id="deploy-cmd">sudo bash auto_deploy.sh nombre_maquina.tar</code>
-                            <button type="button" id="copy-cmd-btn" class="copy-btn" aria-label="Copiar comando">
+                            <code>sudo bash auto_deploy.sh {{ maquina.nombre }}.tar</code>
+                            <button type="button" class="copy-btn copy-cmd-btn" data-copy="sudo bash auto_deploy.sh {{ maquina.nombre }}.tar" aria-label="Copiar comando">
                                 <i class="bi bi-clipboard"></i>
                             </button>
                         </div>
@@ -155,20 +161,19 @@
         if (e.key === 'Escape') closeLightbox();
     });
 
-    var copyBtn = document.getElementById('copy-cmd-btn');
-    var cmdEl = document.getElementById('deploy-cmd');
-    if (copyBtn && cmdEl) {
-        copyBtn.addEventListener('click', function () {
-            navigator.clipboard.writeText(cmdEl.textContent.trim()).then(function () {
-                copyBtn.innerHTML = '<i class="bi bi-check2"></i>';
-                copyBtn.classList.add('copied');
+    document.querySelectorAll('.copy-cmd-btn').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            var text = btn.getAttribute('data-copy') || '';
+            navigator.clipboard.writeText(text).then(function () {
+                btn.innerHTML = '<i class="bi bi-check2"></i>';
+                btn.classList.add('copied');
                 setTimeout(function () {
-                    copyBtn.innerHTML = '<i class="bi bi-clipboard"></i>';
-                    copyBtn.classList.remove('copied');
+                    btn.innerHTML = '<i class="bi bi-clipboard"></i>';
+                    btn.classList.remove('copied');
                 }, 1500);
             });
         });
-    }
+    });
 })();
 </script>
 {% endblock %}
