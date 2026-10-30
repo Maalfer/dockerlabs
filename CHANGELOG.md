@@ -17,6 +17,12 @@ Las entradas de seguridad referencian su identificador de advisory
 
 ## [Sin publicar]
 
+### Fixed
+
+- Las instrucciones de descarga muestran el nombre real del fichero de la
+  máquina en el comando `auto_deploy.sh` en vez de un placeholder genérico
+  (idea original de [@ateto3](https://github.com/ateto3) en el PR #26).
+
 ## [2.0.1] - 2026-10-22
 
 ### Fixed
