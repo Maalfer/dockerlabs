@@ -632,8 +632,8 @@ button.btn-sm:hover {
    ===================== */
 
 .bunker-container {
-    min-height: calc(100vh - 120px);
-    padding: 2rem 1.5rem 3rem;
+    min-height: calc(100vh - 170px);
+    padding: 1.25rem 1.5rem 1.5rem;
     display: flex;
     align-items: center;
     justify-content: center;

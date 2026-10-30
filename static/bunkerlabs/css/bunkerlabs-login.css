@@ -2,7 +2,7 @@
 .bunker-box {
     max-width: 480px !important;
     padding: 0 !important;
-    margin: 2rem auto;
+    margin: 0 auto;
     overflow: hidden;
 }
 
@@ -12,7 +12,7 @@
     display: flex !important;
     flex-direction: row;
     align-items: stretch;
-    margin: 2rem auto;
+    margin: 0 auto;
     overflow: hidden;
 }
 
@@ -21,7 +21,7 @@
     display: flex;
     flex-direction: column;
     gap: 1.5rem;
-    padding: 3rem;
+    padding: 2.25rem 3rem;
     background: #1e293b;
     flex: 1;
     min-width: 300px;
@@ -31,7 +31,7 @@
 .bunker-info-panel {
     flex: 1.1;
     background: linear-gradient(145deg, #0f172a 0%, #0d1f35 60%, #0a1628 100%);
-    padding: 3rem 2.5rem;
+    padding: 2.25rem 2.5rem;
     display: flex;
     flex-direction: column;
     gap: 1.75rem;
