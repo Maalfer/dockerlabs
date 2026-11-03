@@ -53,7 +53,14 @@ def register_bunkerlabs_pages_routes(
                 if token_obj:
                     docker_username = session.get("username")
                     if docker_username:
-                        token_obj.nombre = docker_username
+                        # NO se toca `token_obj.nombre`: es la etiqueta que el
+                        # admin asignó al crear el token (p.ej. "Pepe"), fija
+                        # y compartida por TODO el que use este PIN — no "la
+                        # última persona que entró". Sobrescribirla aquí hacía
+                        # que el siguiente visitante anónimo con este mismo
+                        # PIN (rama `else` de abajo) heredara el username de
+                        # quien entró antes que él. Quién entró y cuándo ya
+                        # queda registrado, por evento, en `BunkerAccessLog`.
                         token_obj.last_accessed = datetime.utcnow()
                         db.session.add(
                             BunkerAccessLog(token_id=token_obj.id, user_nombre=docker_username, accessed_at=datetime.utcnow())
@@ -138,7 +145,9 @@ def register_bunkerlabs_pages_routes(
                 docker_username = session.get("username")
                 docker_user_id = session.get("user_id")
                 if docker_username and docker_user_id:
-                    token_obj.nombre = docker_username
+                    # Ver el comentario del mismo caso en /bunkerlabs/login:
+                    # no se toca `token_obj.nombre`, es la etiqueta fija del
+                    # token, compartida por todo el que lo use.
                     session["bunkerlabs_nombre"] = docker_username
                     session["bunkerlabs_anonymous"] = False
                 else:
