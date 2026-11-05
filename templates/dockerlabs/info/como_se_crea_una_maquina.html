@@ -1,6 +1,13 @@
 {% extends "dockerlabs/base.html" %}
 
+{% block extra_css %}
+<link rel="stylesheet" href="{{ static_v('dockerlabs/css/auth-ballena.css') }}">
+{% endblock %}
+
 {% block content %}
+<div class="dl-con-cody">
+{% with ballena_mensajes = {"idle": "¿Vas a crear tu primera máquina? Te resumo lo importante ↓", "fin": "¡Ya conoces las reglas! Ahora crea algo original."}, ballena_lectura = true %}{% include "dockerlabs/auth/_ballena.html" %}{% endwith %}
+<div class="dl-con-cody-pagina">
 <div class="container mt-5">
     <h1 class="title">Cómo se Crea una Máquina</h1>
 
@@ -11,7 +18,7 @@
     </p>
 
     <div class="como_se_crea_una_maquina-card p-4 mt-4">
-        <h2 class="subtitle" style="text-align: center;">Pasos generales</h2>
+        <h2 class="subtitle" style="text-align: center;" data-tldr="Diseña el flujo, configura lo vulnerable, documéntalo, pruébalo y empaquétalo en TAR o ZIP.">Pasos generales</h2>
         <ol class="mt-3">
             <li>Diseñar el flujo y la estructura de la máquina.</li>
             <li>Configurar los servicios vulnerables.</li>
@@ -27,7 +34,7 @@
     </div>
 
     <div class="como_se_crea_una_maquina-card p-4 mt-4">
-        <h2 class="subtitle" style="text-align: center;">Reglas para creadores</h2>
+        <h2 class="subtitle" style="text-align: center;" data-tldr="Exclusiva de DockerLabs, contraseñas entre las 5000 primeras de rockyou, historiales a /dev/null, dominio .dl y nada repetido.">Reglas para creadores</h2>
         <ul class="mt-3">
             <h4>1. EXCLUSIVIDAD CON LA PLATAFORMA</h4>
             <p>Las máquinas no podrán ser publicadas en otras plataformas.</p>
@@ -50,7 +57,7 @@
     </div>
 
     <div class="como_se_crea_una_maquina-card p-4 mt-5 mb-5">
-        <h2 class="subtitle" style="text-align: center;"><i class="bi bi-youtube" style="color:red"></i> Cómo crear una máquina para DockerLabs</h2>
+        <h2 class="subtitle" style="text-align: center;" data-tldr="En el vídeo lo tienes todo paso a paso."><i class="bi bi-youtube" style="color:red"></i> Cómo crear una máquina para DockerLabs</h2>
 
         <p class="mt-3">
             En el siguiente vídeo puedes ver de forma práctica y detallada todo el procedimiento
@@ -67,4 +74,7 @@
         </div>
     </div>
 </div>
+</div>
+</div>
+<script src="{{ static_v('dockerlabs/js/ballena.js') }}" defer></script>
 {% endblock %}

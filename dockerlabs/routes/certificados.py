@@ -506,17 +506,23 @@ def register_certificado_routes(api_router, get_session, db):
             for c in Certificate.query.filter_by(user_id=user_id).all()
         } if user_id else {}
 
+        # Todas las máquinas de esos writeups en una sola consulta. A igualdad
+        # de nombre gana la de menor id.
+        nombres = {wu.maquina.lower() for wu in writeups if wu.maquina}
+        maquinas = {}
+        if nombres:
+            for m in Machine.query.filter(func.lower(Machine.nombre).in_(nombres)).order_by(Machine.id):
+                maquinas.setdefault(m.nombre.lower(), m)
+
         result = []
         seen: set = set()
         for wu in writeups:
             if wu.maquina in seen:
                 continue
             seen.add(wu.maquina)
-            if not machine_certificable(wu.maquina):
+            machine = maquinas.get(wu.maquina.lower())
+            if machine is not None and machine.origen not in CERT_ORIGENES:
                 continue
-            machine = Machine.query.filter(
-                func.lower(Machine.nombre) == func.lower(wu.maquina)
-            ).first()
             emitido = emitidos.get(wu.maquina.lower())
             # El cert_id real es el de la fila: puede diferir del primer
             # candidato del hash si hubo colisión al emitirlo.

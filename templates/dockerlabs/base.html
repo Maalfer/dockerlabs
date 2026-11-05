@@ -32,7 +32,13 @@
           href="/static/dockerlabs/vendor/fonts/bootstrap-icons.woff2?dd67030699838ea613ee6dbda90effa6">
 
     <!-- Preload CSS propio — el preparser los descarga en paralelo con Bootstrap -->
-    <link rel="preload" href="{{ static_v('dockerlabs/css/styles.css') }}" as="style">
+    <link rel="preload" href="{{ static_v('dockerlabs/css/global/nucleo.css') }}" as="style">
+    <link rel="preload" href="{{ static_v('dockerlabs/css/global/botones.css') }}" as="style">
+    <link rel="preload" href="{{ static_v('dockerlabs/css/global/maquinas.css') }}" as="style">
+    <link rel="preload" href="{{ static_v('dockerlabs/css/global/footer.css') }}" as="style">
+    <link rel="preload" href="{{ static_v('dockerlabs/css/global/responsive.css') }}" as="style">
+    <link rel="preload" href="{{ static_v('dockerlabs/css/global/modales.css') }}" as="style">
+    <link rel="preload" href="{{ static_v('dockerlabs/css/global/componentes.css') }}" as="style">
     <link rel="preload" href="{{ static_v('dockerlabs/css/base.css') }}" as="style">
 
     <!-- Bootstrap CSS: síncrono — crítico para layout. Auto-alojado (mismo origen)
@@ -67,7 +73,14 @@
     </style>
 
     {% if not no_default_styles %}
-    <link rel="stylesheet" href="{{ static_v('dockerlabs/css/styles.css') }}">
+    {# Estilos globales, en este orden (ver static/dockerlabs/css/global/) #}
+    <link rel="stylesheet" href="{{ static_v('dockerlabs/css/global/nucleo.css') }}">
+    <link rel="stylesheet" href="{{ static_v('dockerlabs/css/global/botones.css') }}">
+    <link rel="stylesheet" href="{{ static_v('dockerlabs/css/global/maquinas.css') }}">
+    <link rel="stylesheet" href="{{ static_v('dockerlabs/css/global/footer.css') }}">
+    <link rel="stylesheet" href="{{ static_v('dockerlabs/css/global/responsive.css') }}">
+    <link rel="stylesheet" href="{{ static_v('dockerlabs/css/global/modales.css') }}">
+    <link rel="stylesheet" href="{{ static_v('dockerlabs/css/global/componentes.css') }}">
     {% endif %}
     <link rel="stylesheet" href="{{ static_v('dockerlabs/css/base.css') }}">
     <link rel="stylesheet" href="{{ static_v('dockerlabs/css/dl-sistema.css') }}">

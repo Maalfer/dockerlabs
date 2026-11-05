@@ -10,8 +10,10 @@
 {% endblock %}
 
 {% block content %}
-<div class="policy-container dl-lectura">
-    {% with ballena_mensajes = {"idle": "Soy Cody y estas son las reglas del juego. Te las resumo ↓", "fin": "¡Hecho! Ya conoces las reglas. Hackea con ética."}, ballena_lectura = true %}{% include "dockerlabs/auth/_ballena.html" %}{% endwith %}
+<div class="dl-con-cody">
+{% with ballena_mensajes = {"idle": "Soy Cody y estas son las reglas del juego. Te las resumo ↓", "fin": "¡Hecho! Ya conoces las reglas. Hackea con ética."}, ballena_lectura = true %}{% include "dockerlabs/auth/_ballena.html" %}{% endwith %}
+<div class="dl-con-cody-pagina">
+<div class="policy-container">
 
 
     <div class="policy-header">
@@ -87,6 +89,8 @@
             </a>
         </div>
     </div>
+</div>
+</div>
 </div>
 <script src="{{ static_v('dockerlabs/js/ballena.js') }}" defer></script>
 {% endblock %}

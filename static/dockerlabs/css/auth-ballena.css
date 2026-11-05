@@ -394,7 +394,9 @@
 @media (prefers-reduced-motion: reduce) { .dl-cursor { animation: none !important; } }
 
 /* ==========================================================================
-   Páginas legales: la ballena acompaña la lectura (TL;DR + % leído)
+   Cody en modo lectura: acompaña páginas largas, resume cada elemento con
+   data-tldr según se hace scroll y muestra el % leído en su portátil.
+   Envoltorio: <div class="dl-con-cody"> parcial de Cody + .dl-con-cody-pagina
    ========================================================================== */
 .ballena.leyendo .b-pt:not(.b-pt-pct) { opacity: 0; }
 .ballena.leyendo .b-pt-pct { opacity: 1; }
@@ -402,57 +404,60 @@
 .ballena.feliz .b-pt-pct { opacity: 0 !important; }
 .ballena.feliz .b-pt-ok { opacity: 1 !important; }
 
-.policy-container.dl-lectura {
-    display: grid;
-    grid-template-columns: minmax(0, 820px);
-    justify-content: center;
-    max-width: 1180px;
-}
-.dl-lectura > .policy-header { order: -1; }
-.dl-lectura .dl-bocadillo-autor { color: var(--hack-green); opacity: .7; }
+.dl-con-cody { width: 100%; }
+.dl-con-cody-pagina { min-width: 0; }
+.dl-con-cody .dl-bocadillo-autor { color: var(--hack-green); opacity: .7; }
 
-/* Escritorio ancho: columna lateral fija mientras lees */
+/* Escritorio ancho: columna lateral fija mientras se lee */
 @media (min-width: 1180px) {
-    .policy-container.dl-lectura { grid-template-columns: 270px minmax(0, 820px); column-gap: 44px; }
-    .dl-lectura > .policy-header { order: 0; grid-column: 2; grid-row: 1; }
-    .dl-lectura > .policy-card { grid-column: 2; grid-row: 2; }
-    .dl-lectura > .dl-ballena {
-        grid-column: 1; grid-row: 1 / span 2;
-        align-self: start; position: sticky; top: 100px;
-        width: 270px; margin-top: 4px;
+    .dl-con-cody {
+        display: grid;
+        grid-template-columns: 270px minmax(0, 1fr);
+        column-gap: 32px;
+        align-items: start;
+        max-width: 1480px;
+        margin: 0 auto;
+        padding: 0 24px;
     }
-    .dl-lectura .ballena { width: 240px; }
+    .dl-con-cody > .dl-ballena {
+        position: sticky; top: 100px;
+        width: 270px; margin-top: 40px;
+    }
+    .dl-con-cody .ballena { width: 240px; }
 }
 
 /* Tablet y móvil: barra compacta fija bajo el header */
 @media (max-width: 1179px) {
-    .dl-lectura > .dl-ballena {
+    .dl-con-cody > .dl-ballena {
         position: sticky; top: 80px; z-index: 5;
-        width: 100%; max-width: none;
+        width: auto; max-width: none;
         flex-direction: row-reverse; align-items: center; gap: 12px;
-        margin: 0 0 1.1rem; padding: 6px 12px 6px 8px;
+        margin: 12px 16px 0; padding: 6px 12px 6px 8px;
         background: rgba(var(--surface-overlay-rgb), .82);
         border: 1px solid rgba(255, 255, 255, .08); border-radius: 18px;
         box-shadow: 0 14px 30px -18px rgba(0, 0, 0, .8);
         backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
     }
-    .dl-lectura .ballena { width: 104px; flex: 0 0 auto; }
-    .dl-lectura .dl-bocadillo {
+    .dl-con-cody .ballena { width: 104px; flex: 0 0 auto; }
+    .dl-con-cody .dl-bocadillo {
         flex: 1; min-width: 0; margin: 0; padding: 8px 30px 8px 12px;
         border-radius: 14px; box-shadow: none; text-align: left;
     }
-    .dl-lectura .dl-bocadillo-txt { font-size: .82rem; line-height: 1.45; }
-    .dl-lectura .dl-bocadillo-autor { margin-top: 2px; font-size: .7rem; }
-    .dl-lectura .dl-bocadillo-cola { left: 0; top: 50%; bottom: auto; }
-    .dl-lectura .dl-bocadillo-cola i:nth-child(1) { width: 10px; height: 10px; left: -9px; top: -2px; }
-    .dl-lectura .dl-bocadillo-cola i:nth-child(2) { width: 6px; height: 6px; left: -15px; top: 7px; }
+    .dl-con-cody .dl-bocadillo-txt { font-size: .82rem; line-height: 1.45; }
+    .dl-con-cody .dl-bocadillo-autor { margin-top: 2px; font-size: .7rem; }
+    .dl-con-cody .dl-bocadillo-cola { left: 0; top: 50%; bottom: auto; }
+    .dl-con-cody .dl-bocadillo-cola i:nth-child(1) { width: 10px; height: 10px; left: -9px; top: -2px; }
+    .dl-con-cody .dl-bocadillo-cola i:nth-child(2) { width: 6px; height: 6px; left: -15px; top: 7px; }
 }
-@media (max-width: 880px) {
-    .dl-lectura > .dl-ballena { top: 52px; gap: 10px; padding: 5px 10px 5px 6px; border-radius: 16px; }
-    .dl-lectura .ballena { width: 78px; }
-    .dl-lectura .dl-bocadillo { padding: 6px 10px; }
-    .dl-lectura .dl-bocadillo-txt { font-size: .74rem; line-height: 1.4; }
-    .dl-lectura .dl-bocadillo-autor { font-size: .66rem; }
+@media (max-width: 768px) {
+    .dl-con-cody > .dl-ballena { top: 58px; gap: 10px; margin: 10px 12px 0; padding: 5px 10px 5px 6px; border-radius: 16px; }
+    .dl-con-cody .ballena { width: 78px; }
+    .dl-con-cody .dl-bocadillo { padding: 6px 10px; }
+    .dl-con-cody .dl-bocadillo-txt { font-size: .74rem; line-height: 1.4; }
+    .dl-con-cody .dl-bocadillo-autor { font-size: .66rem; }
+}
+@media (max-width: 480px) {
+    .dl-con-cody > .dl-ballena { top: 52px; }
 }
 
 /* Coherencia con la web: el botón ↻ es una acción (ámbar → verde hacker) */

@@ -170,7 +170,8 @@ Hojas globales (las carga `templates/dockerlabs/base.html` en este orden):
 
 | Fichero | Contenido |
 |---------|-----------|
-| `static/dockerlabs/css/styles.css`, `base.css` | Estilos base de la web |
+| `static/dockerlabs/css/global/*.css` | Estilos base por áreas, cargados en este orden: `nucleo` (variables, body, header), `botones`, `maquinas` (home), `footer`, `responsive` (todas las media queries), `modales`, `componentes`. El orden importa: es la cascada |
+| `static/dockerlabs/css/base.css` | Ajustes sobre los anteriores |
 | `static/dockerlabs/css/dl-sistema.css` | **Sistema visual**: botones `.dl-btn`, foco de formularios, paginación, espacio bajo el header, ajustes móviles y zona privada en móvil |
 | `static/dockerlabs/css/dl-footer.css` | Footer en móvil, compartido con BunkerLabs |
 

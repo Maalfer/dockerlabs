@@ -1,0 +1,646 @@
+/* Ajustes por ancho de pantalla y preferencias del sistema. */
+
+@media (max-width: 1024px) {
+    .container {
+        padding: 1.25rem;
+    }
+
+    .header {
+        padding: 1rem;
+        gap: 0.8rem;
+    }
+
+    .lista {
+        gap: 0.9rem;
+    }
+
+    .maquina-item {
+        padding: 0.65rem 0.9rem;
+    }
+
+    .footer-content {
+        width: 85%;
+    }
+}
+
+@media (max-width: 768px) {
+    body {
+        padding-top: 71px;
+        padding-bottom: 0;
+        /* Remove fixed footer space */
+    }
+
+    header {
+        padding: 6px 12px;
+        justify-content: space-between;
+        gap: 0.5rem;
+        position: absolute;
+        /* Scroll with page */
+    }
+
+    footer {
+        position: relative;
+        width: 100%;
+        padding: 1rem 0;
+        background: rgba(2, 6, 23, 0.95);
+        border-top: 1px solid rgba(51, 65, 85, 0.5);
+        margin-top: 2rem;
+        z-index: 10;
+        min-height: 80px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+    }
+
+    /* Hide wave animation in mobile */
+    footer .wave-container {
+        display: none;
+    }
+
+    .header-title {
+        display: none;
+    }
+
+    .raiola-container {
+        display: none;
+    }
+
+    .auth-buttons {
+        gap: 0.5rem;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+    }
+
+    .btn-hack,
+    .btn-auth,
+    .btn-logout {
+        padding: 0.4rem 0.8rem;
+        font-size: 0.75rem;
+        min-width: auto;
+    }
+
+    .container {
+        padding: 0.75rem;
+        padding-top: 0.5rem;
+    }
+
+    .header {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.5rem;
+        padding: 0.75rem;
+        margin-top: 0.75rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .header .col-md-6:first-child,
+    .header .col-md-6:last-child {
+        justify-content: center;
+        width: 100%;
+    }
+
+    #buscador {
+        min-width: auto;
+        max-width: 100%;
+        margin: 0;
+    }
+
+    /* Responsive for difficulty dropdown and academia button */
+    .header-filters-row .d-flex.flex-wrap.gap-2.ms-auto {
+        margin-left: 0 !important;
+        width: 100%;
+        justify-content: center;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.6rem;
+    }
+
+    .header-filters-row .dropdown {
+        flex: 0 0 auto;
+        order: 2;
+        width: 100%;
+        display: flex;
+        justify-content: center;
+    }
+
+    .btn-academia {
+        order: 1;
+        width: 100%;
+        justify-content: center;
+        padding: 0.45rem 0.8rem;
+        font-size: 0.7rem;
+        flex: 0 0 auto;
+    }
+
+    #filtro-dificultad-btn {
+        padding: 0.45rem 0.8rem;
+        font-size: 0.7rem;
+        white-space: nowrap;
+    }
+
+    .lista {
+        grid-template-columns: 1fr;
+        gap: 0.8rem;
+    }
+
+    .maquina-item {
+        padding: 0.35rem 0.5rem;
+        min-height: 30px;
+        gap: 0.4rem;
+        flex-wrap: nowrap;
+        display: flex;
+        align-items: center;
+    }
+
+    /* Hide the first actions div (Description) completely in mobile */
+    .maquina-item .acciones:nth-of-type(1) {
+        display: none;
+    }
+
+    /* Push the second actions div (Icons) to the right */
+    .maquina-item .acciones:nth-of-type(2) {
+        margin-left: auto;
+        gap: 0.2rem;
+        flex-shrink: 0;
+        /* Prevent icons from squashing */
+    }
+
+    .acciones button {
+        padding: 0.1rem 0.2rem;
+        font-size: 0.75rem;
+    }
+
+    .maquina-item .etiqueta {
+        padding: 0.15rem 0.35rem;
+        font-size: 0.52rem;
+        margin-left: 0;
+        width: 65px;
+        flex-shrink: 0;
+        line-height: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: fit-content;
+        transform: translateY(2px);
+        /* Robust visual correction */
+    }
+
+    .maquina-item span:first-child {
+        font-size: 0.75rem;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 120px;
+        flex: 0 1 auto;
+        line-height: 1;
+        margin: 0;
+        transform: translateY(2px);
+        /* Robust visual correction */
+    }
+
+    .maquina-item {
+        flex-direction: row !important;
+        /* Force row direction */
+    }
+
+    .footer-content {
+        width: 100%;
+        flex-direction: column;
+        gap: 0.5rem;
+        text-align: center;
+        position: relative;
+        z-index: 11;
+        padding: 0.5rem 1rem;
+    }
+
+    .footer-content p.copyright {
+        display: block;
+        font-size: 0.75rem;
+        margin-bottom: 0.5rem;
+        color: var(--text-muted);
+        line-height: 1.4;
+    }
+
+    /* Ensure footer icons are visible and prominent on mobile */
+    .footer-icons {
+        display: flex !important;
+        justify-content: center;
+        gap: 1.5rem;
+        margin-top: 0.5rem;
+        padding: 0.5rem 0;
+        position: relative;
+        z-index: 12;
+    }
+
+    .footer-icon {
+        padding: 0.5rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .footer-icon i {
+        font-size: 1.6rem;
+        color: #e5e7eb;
+    }
+
+    .footer-icon:active i {
+        color: var(--primary-blue-light);
+        transform: scale(0.95);
+    }
+
+    /* Header: delegado a base.css (logo + título + botones compactos) */
+
+    header h1 {
+        font-size: 1rem !important;
+        margin: 0 !important;
+    }
+    header h1 a {
+        font-size: 1rem !important;
+    }
+
+    /* Home page header (search and filters) */
+    .container .header {
+        flex-direction: column !important;
+        align-items: stretch !important;
+        gap: 0.5rem !important;
+        padding: 0.5rem !important;
+        margin-top: 0.5rem !important;
+        margin-bottom: 0.5rem !important;
+    }
+
+    .container .header .col-md-6 {
+        width: 100% !important;
+        max-width: 100% !important;
+        flex-direction: column !important;
+        gap: 0.75rem !important;
+    }
+
+    /* Search bar container */
+    .busqueda-con-filtro {
+        max-width: 100% !important;
+        width: 100% !important;
+    }
+
+    #buscador {
+        width: 100% !important;
+        font-size: 0.9rem !important;
+    }
+
+    /* Category filter button */
+    .container .header .btn-sm.dropdown-toggle {
+        width: 100%;
+        justify-content: center;
+    }
+
+    /* Academia, Writeups, Autores buttons */
+    #academia,
+    #ranking,
+    #autores {
+        width: 100% !important;
+        margin: 0 !important;
+        justify-content: center;
+    }
+}
+
+@media (max-width: 480px) {
+    body {
+        padding-top: 90px;
+        padding-bottom: 100px;
+    }
+
+    header {
+        padding: 4px 8px;
+        gap: 0.3rem;
+    }
+
+    .header-title {
+        display: none;
+    }
+
+    .raiola-container {
+        display: none;
+    }
+
+    .auth-buttons {
+    }
+
+    .btn-hack,
+    .btn-auth,
+    .btn-logout {
+        padding: 0.35rem 0.6rem;
+        font-size: 0.7rem;
+    }
+
+    .auth-buttons {
+        gap: 0.5rem;
+    }
+
+    .btn-hack,
+    .btn-auth,
+    .btn-logout,
+    #academia,
+    #ranking,
+    #autores {
+        padding: 0.4rem 0.8rem;
+        font-size: 0.75rem;
+    }
+
+    .container {
+        padding: 0.75rem;
+    }
+
+    .header {
+        padding: 0.8rem;
+        gap: 0.7rem;
+        border-radius: 12px;
+    }
+
+    .maquina-item {
+        flex-direction: column;
+        align-items: flex-start;
+        min-height: auto;
+    }
+
+    .acciones {
+        align-self: stretch;
+        justify-content: space-between;
+    }
+
+    .maquina-item span:first-child {
+        text-align: center;
+        width: 100%;
+    }
+
+    /* Extra small screens: difficulty and academia buttons */
+    .header-filters-row .d-flex.flex-wrap.gap-2.ms-auto {
+        gap: 0.3rem;
+    }
+
+    .btn-academia {
+        padding: 0.35rem 0.6rem;
+        font-size: 0.65rem;
+    }
+
+    .btn-academia i {
+        font-size: 0.75rem;
+    }
+
+    #filtro-dificultad-btn {
+        padding: 0.35rem 0.6rem;
+        font-size: 0.65rem;
+    }
+
+    #filtro-dificultad-btn i {
+        font-size: 0.75rem;
+        margin-right: 0.2rem;
+    }
+
+    footer {
+        padding: 0.75rem 0;
+        min-height: 70px;
+    }
+
+    .footer-content {
+        width: 100%;
+        padding: 0.5rem;
+    }
+
+    .footer-content p.copyright {
+        font-size: 0.7rem;
+        margin-bottom: 0.4rem;
+    }
+
+    /* Mobile footer icons - extra small screens */
+    .footer-icons {
+        display: flex !important;
+        gap: 1.2rem;
+        margin-top: 0.4rem;
+        padding: 0.3rem 0;
+    }
+
+    .footer-icon {
+        padding: 0.4rem;
+    }
+
+    .footer-icon i {
+        font-size: 1.5rem;
+    }
+}
+
+@media (max-width: 360px) {
+    body {
+        padding-top: 100px;
+        padding-bottom: 100px;
+    }
+
+    header {
+        padding: 4px 6px;
+    }
+
+    .header-title {
+        display: none;
+    }
+
+    .raiola-container {
+        display: none;
+    }
+
+    .btn-hack,
+    .btn-auth,
+    .btn-logout {
+        padding: 0.3rem 0.5rem;
+        font-size: 0.65rem;
+    }
+
+    .btn-hack,
+    .btn-auth,
+    .btn-logout,
+    #academia,
+    #ranking,
+    #autores {
+        padding: 0.35rem 0.7rem;
+        font-size: 0.7rem;
+    }
+
+    .container {
+        padding: 0.5rem;
+    }
+
+    .header {
+        padding: 0.7rem;
+    }
+
+    .maquina-item {
+        padding: 0.6rem;
+        gap: 0.5rem;
+    }
+
+    .acciones {
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 0.3rem;
+    }
+
+    .acciones button {
+        flex: 1;
+        min-width: 60px;
+        padding: 0.3rem 0.4rem;
+    }
+
+    .maquina-item span:first-child {
+        font-size: 0.8rem;
+    }
+
+    .maquina-item .etiqueta {
+        font-size: 0.6rem;
+        padding: 0.25rem 0.5rem;
+    }
+}
+
+@media (max-height: 500px) and (orientation: landscape) {
+    body {
+        padding-bottom: 60px;
+    }
+
+    .container {
+        padding: 0.75rem;
+    }
+
+    .lista {
+        grid-template-columns: 1fr 1fr;
+        gap: 0.6rem;
+    }
+
+    .maquina-item {
+        min-height: 40px;
+        padding: 0.5rem 0.8rem;
+    }
+
+    .header-title {
+        display: block;
+        font-size: 0.9rem;
+    }
+}
+
+@supports (padding: max(0px)) {
+    body {
+        padding-left: max(0.5rem, env(safe-area-inset-left));
+        padding-right: max(0.5rem, env(safe-area-inset-right));
+    }
+
+    header {
+        padding-left: max(8px, env(safe-area-inset-left));
+        padding-right: max(8px, env(safe-area-inset-right));
+    }
+
+    footer {
+        padding-bottom: max(12px, env(safe-area-inset-bottom));
+    }
+}
+
+@media (prefers-contrast: high) {
+    .maquina-item {
+        border-width: 2px;
+    }
+
+    #buscador {
+        border-width: 2px;
+    }
+
+    .btn-hack,
+    .btn-auth,
+    .btn-logout,
+    #academia,
+    #ranking,
+    #autores {
+        border-width: 2px;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+
+    .wave {
+        animation: none;
+    }
+.etiqueta-nueva {
+        animation: none;
+        will-change: auto;
+    }
+
+    .maquina-item {
+        animation: none;
+    }
+}
+
+/* Segundo bloque de ≤ 480 px: va después de los de 360 px y de pantallas
+   bajas a propósito; fusionarlo con el primero cambia qué regla gana. */
+@media (max-width: 480px) {
+
+    /* Smaller title on very small screens */
+    header h1 {
+        font-size: 0.9rem !important;
+    }
+
+    /* Home page adjustments for very small screens */
+    .container .header {
+        padding: 0.75rem 0.25rem !important;
+    }
+
+    #buscador {
+        font-size: 0.85rem !important;
+        padding: 0.45rem 0.7rem !important;
+    }
+
+    /* Fix machine item layout on mobile */
+    .maquina-item {
+        padding: 0.6rem 0.75rem !important;
+        gap: 0.5rem !important;
+    }
+
+    /* Reduce badge size */
+    .maquina-item .etiqueta {
+        padding: 0.15rem 0.5rem !important;
+        font-size: 0.6rem !important;
+        min-width: auto !important;
+        margin-left: auto !important;
+        /* Push to right but allow shrinking */
+        white-space: nowrap;
+    }
+
+    /* Optimize action buttons */
+    .acciones {
+        gap: 0.3rem !important;
+        margin-left: 0.3rem !important;
+    }
+
+    .acciones button {
+        padding: 0.2rem 0.3rem !important;
+        font-size: 0.8rem !important;
+    }
+
+    /* Machine name truncation if needed */
+    .maquina-item span:first-child {
+        font-size: 0.85rem !important;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 100px;
+        /* Force truncation on very small screens */
+    }
+
+    /* New/Medal badges smaller */
+    .etiqueta-nueva {
+        font-size: 0.55rem !important;
+        padding: 2px 5px !important;
+        margin-left: 4px !important;
+    }
+}

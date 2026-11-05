@@ -10,8 +10,10 @@
 {% endblock %}
 
 {% block content %}
-<div class="policy-container dl-lectura">
-    {% with ballena_mensajes = {"idle": "Soy Cody. ¿Cookies? Solo la imprescindible. Te lo resumo ↓", "fin": "¡Fin! Ni una cookie de rastreo, palabra de ballena."}, ballena_lectura = true %}{% include "dockerlabs/auth/_ballena.html" %}{% endwith %}
+<div class="dl-con-cody">
+{% with ballena_mensajes = {"idle": "Soy Cody. ¿Cookies? Solo la imprescindible. Te lo resumo ↓", "fin": "¡Fin! Ni una cookie de rastreo, palabra de ballena."}, ballena_lectura = true %}{% include "dockerlabs/auth/_ballena.html" %}{% endwith %}
+<div class="dl-con-cody-pagina">
+<div class="policy-container">
 
 
     <div class="policy-header">
@@ -61,6 +63,8 @@
             </a>
         </div>
     </div>
+</div>
+</div>
 </div>
 <script src="{{ static_v('dockerlabs/js/ballena.js') }}" defer></script>
 {% endblock %}

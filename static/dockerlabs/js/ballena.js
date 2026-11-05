@@ -19,7 +19,7 @@
     var reducir = window.matchMedia("(prefers-reduced-motion: reduce)");
     var M = {};
     try { M = JSON.parse(escena.getAttribute("data-mensajes") || "{}"); } catch (e) { M = {}; }
-    // Modo lectura (páginas legales): el bocadillo resume la sección que lees
+    // Modo lectura (páginas largas): el bocadillo resume la sección que lees
     // y la pantalla del portátil enseña el porcentaje leído.
     var lectura = escena.hasAttribute("data-lectura");
     var lecturaBase = { t: M.idle || "Te lo resumo mientras lees." };
@@ -299,7 +299,7 @@
 
     /* ---------- Modo lectura ---------- */
     if (lectura) {
-        var secciones = Array.prototype.slice.call(document.querySelectorAll(".policy-section[data-tldr]"));
+        var secciones = Array.prototype.slice.call(document.querySelectorAll("[data-tldr]"));
         var total = secciones.length, actual = -1, terminado = false, tLee = 0, rafL = 0;
         var pctEl = svg.querySelector(".b-pt-pct");
         var alScroll = function () {

@@ -274,7 +274,7 @@
 
 /* ============================================================
    Responsive: tablet pequeña (<=768px) y móvil (<=480px)
-   Breakpoints coherentes con el resto del sitio (base.css/styles.css)
+   Breakpoints coherentes con el resto del sitio (base.css y global/responsive.css)
    ============================================================ */
 @media (max-width: 768px) {
     .descargar-container {

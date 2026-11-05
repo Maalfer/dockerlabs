@@ -1,0 +1,97 @@
+/* Botones del header y de acción (estilo hacker: ámbar → verde). */
+
+/* Auth Buttons */
+.auth-buttons {
+    display: flex;
+    gap: 0.75rem;
+    align-items: center;
+}
+
+.btn-hack,
+.btn-auth,
+.btn-logout,
+#academia,
+#ranking,
+#autores {
+    font-family: "Fira Code", monospace;
+    padding: 0.5rem 1.2rem;
+    font-size: 0.85rem;
+    letter-spacing: 0.03em;
+    cursor: pointer;
+    border-radius: 4px;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    text-decoration: none;
+    white-space: nowrap;
+    background: transparent;
+    color: var(--accent-yellow);
+    /* Replaced #e6b400 */
+    border: 1px solid var(--accent-yellow);
+    /* Replaced #e6b400 */
+    box-shadow: none;
+    text-shadow: none;
+    transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+    position: relative;
+    font-weight: 500;
+}
+
+.btn-hack:active,
+.btn-auth:active,
+.btn-logout:active,
+#academia:active,
+#ranking:active,
+#autores:active {
+    transform: translateY(0);
+    background: rgba(230, 180, 0, 0.15);
+}
+
+.btn-auth i,
+.btn-logout i {
+    font-size: 0.95rem;
+}
+
+.btn-hack:hover,
+.btn-auth:hover,
+.btn-logout:hover,
+#academia:hover,
+#ranking:hover,
+#autores:hover {
+    background: #001a00;
+    color: #afffaf;
+    border-color: var(--hack-green);
+    box-shadow: 0 0 12px var(--hack-glow);
+    transform: translateY(-2px);
+}
+
+.btn-hack::after,
+.btn-auth::after,
+.btn-logout::after,
+#academia::after,
+#ranking::after,
+#autores::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: repeating-linear-gradient(to bottom,
+            rgba(0, 255, 0, 0.07) 0px,
+            rgba(0, 255, 0, 0.07) 2px,
+            transparent 2px,
+            transparent 4px);
+    pointer-events: none;
+}
+
+.btn-logout {
+    color: #ffb3b3 !important;
+    border-color: #7f1d1d !important;
+    box-shadow: 0 0 8px rgba(248, 113, 113, 0.6) !important;
+    text-shadow: 0 0 6px rgba(248, 113, 113, 0.8) !important;
+    background: #000 !important;
+}
+
+.btn-logout:hover {
+    background: #1a0000 !important;
+    color: #ffe2e2 !important;
+    border-color: var(--accent-red) !important;
+    box-shadow: 0 0 12px rgba(248, 113, 113, 0.9) !important;
+}

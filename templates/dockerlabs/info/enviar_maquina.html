@@ -1,12 +1,16 @@
 {% extends "dockerlabs/base.html" %}
 
 {% block extra_css %}
+<link rel="stylesheet" href="{{ static_v('dockerlabs/css/auth-ballena.css') }}">
 <link rel="stylesheet" href="{{ static_v('dockerlabs/css/info/enviar_maquina.css') }}"
       media="print" onload="this.media='all'">
 <noscript><link rel="stylesheet" href="{{ static_v('dockerlabs/css/info/enviar_maquina.css') }}"></noscript>
 {% endblock %}
 
 {% block content %}
+<div class="dl-con-cody">
+{% with ballena_mensajes = {"idle": "¿Tienes una máquina lista? Te cuento cómo enviarla ↓", "fin": "¡Todo claro! Pulsa «Proponer una máquina» cuando la tengas."}, ballena_lectura = true %}{% include "dockerlabs/auth/_ballena.html" %}{% endwith %}
+<div class="dl-con-cody-pagina">
 
 
 
@@ -24,7 +28,7 @@
 
     <div class="enviar_maquina-card p-4 mt-4">
 
-        <h2 class="subtitle text-center">
+        <h2 class="subtitle text-center" data-tldr="Avisa en el Discord, canal #dockerlabs, mencionando a los moderadores. Las máquinas se suben a mano, ten paciencia.">
             ¿Cómo avisar correctamente de que tienes una máquina lista?
         </h2>
 
@@ -52,7 +56,7 @@
 
     <div class="enviar_maquina-card p-4 mt-4">
 
-        <h2 class="subtitle text-center">
+        <h2 class="subtitle text-center" data-tldr="Original, con intrusión y escalada, writeup en PDF y un ZIP con auto_deploy.sh y el .tar. No hacen falta flags.">
             Requisitos
         </h2>
 
@@ -75,7 +79,7 @@
 
     <div class="enviar_maquina-card p-4 mt-4">
 
-        <h2 class="subtitle text-center">
+        <h2 class="subtitle text-center" data-tldr="Súbela a Drive o Mega, envía el enlace con el formulario y espera la revisión.">
             Proceso de Envío
         </h2>
 
@@ -211,5 +215,7 @@
 
 
 <script src="{{ static_v('dockerlabs/js/machine_submission.js') }}"></script>
-
+</div>
+</div>
+<script src="{{ static_v('dockerlabs/js/ballena.js') }}" defer></script>
 {% endblock %}

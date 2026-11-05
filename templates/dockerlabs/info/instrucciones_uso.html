@@ -1,10 +1,17 @@
 {% extends "dockerlabs/base.html" %}
 
+{% block extra_css %}
+<link rel="stylesheet" href="{{ static_v('dockerlabs/css/auth-ballena.css') }}">
+{% endblock %}
+
 {% block content %}
+<div class="dl-con-cody">
+{% with ballena_mensajes = {"idle": "Soy Cody. Te resumo cada apartado mientras lees ↓", "fin": "¡Listo! Ya sabes desplegar, borrar y arreglar laboratorios."}, ballena_lectura = true %}{% include "dockerlabs/auth/_ballena.html" %}{% endwith %}
+<div class="dl-con-cody-pagina">
 <div class="container mt-5">
     <h1>Instrucciones de uso</h1>
     <div class="intrucciones_de_uso-card p-4 mt-4">
-        <h2 class="subtitle" style="text-align: center;">REQUISITOS PREVIOS</h2>
+        <h2 class="subtitle" style="text-align: center;" data-tldr="Necesitas Docker. Si no lo tienes, auto_deploy.sh lo detecta y lo instala por ti.">REQUISITOS PREVIOS</h2>
         <p>Para que las máquinas de DockerLabs puedan funcionar, Docker debe estar instalado en tu sistema:</p>
         <ul>
             <li>Debian:
@@ -19,7 +26,7 @@
         </ul>
         <div class="alert-hint"><i class="bi bi-exclamation-circle-fill"></i> El <code>auto_deploy.sh</code> detecta si no tenemos Docker instalado y lo instalará automáticamente.</div>
 
-        <h2 class="subtitle" style="text-align: center; margin-top: 20px;">CÓMO EJECUTAR LAS MÁQUINAS</h2>
+        <h2 class="subtitle" style="text-align: center; margin-top: 20px;" data-tldr="Junto a cada .tar viene auto_deploy.sh: sudo bash auto_deploy.sh maquina.tar y listo.">CÓMO EJECUTAR LAS MÁQUINAS</h2>
 
         <p>Una vez hayamos descargado una máquina en formato <code>.tar</code>, veremos que hay un script llamado <code>auto_deploy.sh</code> junto con cada máquina,por lo que solamente tendremos que ejecutar ese script para desplegar o borrar el laboratorio</p>
 
@@ -32,7 +39,7 @@
         </div>
 
 
-        <h2 class="subtitle" style="text-align: center; margin-top: 20px;">CÓMO EJECUTAR LAS MÁQUINAS DE PIVOTING</h2>
+        <h2 class="subtitle" style="text-align: center; margin-top: 20px;" data-tldr="Pivoting: varias máquinas en orden. Pásale todos los .tar al script y él monta la red.">CÓMO EJECUTAR LAS MÁQUINAS DE PIVOTING</h2>
 
         <p>Una vez que hayamos descargado y descomprimido una máquina de pivoting veremos varios <code>.tar</code> que estarán etiquetadas en orden <code>máquina1.tar máquina2.tar máquina3.tar</code> y su respectivo script <code>auto_deploy.sh</code> que se encargará de montar la red pivoting automáticamente, vamos a iniciar la máquina:</p>
 
@@ -41,7 +48,7 @@
             <code>❯ sudo bash auto_deploy.sh máquina1.tar máquina2.tar máquina3.tar máquina4.tar</code>
         </div>
 
-        <h2 class="subtitle" style="text-align: center; margin-top: 20px;">CÓMO ELIMINAR LAS MÁQUINAS</h2>
+        <h2 class="subtitle" style="text-align: center; margin-top: 20px;" data-tldr="Ctrl + C y el laboratorio desaparece. En pivoting te pregunta si borra también las imágenes de Docker.">CÓMO ELIMINAR LAS MÁQUINAS</h2>
 
         <p>Una vez hayamos terminado con el laboratorio, simplemente pulsamos <code>control + C</code> y todo el laboratorio se habrá eliminado del sistema.</p>
 
@@ -58,7 +65,7 @@
 
             <i>(Ejemplo con la opción Sí)</i>
         </div>
-        <h2 class="subtitle" style="text-align: center; margin-top: 20px;">SOLUCIÓN DE ERRORES</h2>
+        <h2 class="subtitle" style="text-align: center; margin-top: 20px;" data-tldr="¿Algo falla? Reinicia Docker, para los contenedores y límpialos con estos tres comandos.">SOLUCIÓN DE ERRORES</h2>
 
         <p>Es posible que en algunos casos puntuales se pueda experimentar algún error. Es por ello que proporcionamos una serie de comandos para solucionar la mayoría de errores o problemas que se puedan experimentar:</p>
 
@@ -70,4 +77,7 @@
 
     </div>
 </div>
+</div>
+</div>
+<script src="{{ static_v('dockerlabs/js/ballena.js') }}" defer></script>
 {% endblock %}

@@ -1,0 +1,149 @@
+/* Variables de color, scrollbar, body y header fijo. */
+
+:root {
+    color-scheme: dark;
+    --primary-blue: #3b82f6;
+    --primary-blue-dark: #1d4ed8;
+    --primary-blue-light: #60a5fa;
+    --background-dark: #020617;
+    --surface-dark: #0b1220;
+    --surface-elevated: #020617;
+    --text-primary: #f9fafb;
+    --text-secondary: #cbd5e1;
+    --text-muted: #64748b;
+    --border-subtle: #1f2937;
+    --border-strong: #334155;
+    --accent-cyan: #22d3ee;
+    --accent-green: #10b981;
+    --accent-yellow: #f59e0b;
+    --accent-red: #ef4444;
+    --accent-purple: #8b5cf6;
+    --hack-green: #3cff00;
+    --hack-green-dark: #1f9900;
+    --hack-glow: rgba(60, 255, 0, 0.55);
+    --hack-border: #1a3f1a;
+    --surface-overlay-rgb: 15, 23, 42;
+    --card-overlay-rgb: 30, 41, 59;
+    --glass-border-default: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+}
+
+/* Scrollbar global: fina, translucida en azul, coherente en toda la web
+   (mismo estilo que ya usaban los modales de ranking/notificaciones). */
+* {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(59, 130, 246, 0.35) transparent;
+}
+
+*::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+*::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+*::-webkit-scrollbar-thumb {
+    background: rgba(59, 130, 246, 0.3);
+    border-radius: 10px;
+    border: 2px solid transparent;
+    background-clip: padding-box;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+    background: rgba(59, 130, 246, 0.55);
+    background-clip: padding-box;
+}
+
+*::-webkit-scrollbar-corner {
+    background: transparent;
+}
+
+body {
+    margin: 0;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    padding-top: 71px;
+    padding-bottom: 90px;
+    font-family: 'Fira Code', monospace;
+    background: radial-gradient(circle at top, #2f3f58 0%, var(--background-dark) 60%, var(--background-dark) 100%);
+    color: var(--text-primary);
+}
+
+header {
+    background: rgba(var(--surface-overlay-rgb), 0.96);
+    -webkit-backdrop-filter: blur(12px);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid rgba(51, 65, 85, 0.9);
+    padding: 8px 16px;
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: center;
+    box-shadow: 0 12px 30px rgba(var(--surface-overlay-rgb), 0.85);
+    position: fixed;
+    top: 0;
+    width: 100%;
+    z-index: 1000;
+    gap: 1rem;
+}
+
+.header-left,
+.header-right {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.logo-container,
+.raiola-container {
+    margin: 0;
+}
+
+.logo-container {
+    margin-right: 8px;
+}
+
+.raiola-container {
+    margin-left: 8px;
+    display: block;
+}
+
+.logo-container img {
+    transition: transform 0.25s ease, filter 0.25s ease;
+    filter: drop-shadow(0 0 4px rgba(59, 130, 246, 0.45));
+}
+
+.logo-container:hover img {
+    transform: scale(1.03);
+    filter: drop-shadow(0 0 8px rgba(59, 130, 246, 0.8));
+}
+
+.header-title {
+    flex: 1;
+    text-align: center;
+}
+
+header h1 {
+    font-size: 1.3rem;
+    margin: 0;
+    letter-spacing: 0.12em;
+}
+
+header h1 a {
+    color: #f8fafc;
+    text-decoration: none;
+    transition: opacity 0.3s ease, text-shadow 0.3s ease;
+    opacity: 0.9;
+}
+
+header h1 a:hover {
+    opacity: 1;
+    text-shadow: 0 0 15px rgba(255, 255, 255, 0.3);
+}

@@ -4,7 +4,7 @@ from datetime import datetime, timedelta
 import secrets
 from fastapi import Depends, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
-from sqlalchemy import or_
+from sqlalchemy import func, or_
 
 from dockerlabs.models import (Category, Certificate, CertificateRequestLog,
     CompletedMachine, Machine, MachineDownloadLog, PendingMachineSubmission,
@@ -58,10 +58,11 @@ def _bucket_granularity(start: datetime, end: datetime):
     return "month"
 
 
-def _bucketize(items, date_fn, start, end):
+def _bucketize(items, date_fn, start, end, peso_fn=None):
     """Agrupa `items` en buckets ordenados (con huecos rellenos a 0) usando la
     granularidad automática del rango. Claves: 'YYYY-MM-DD' (day),
-    'YYYY-Www' con inicio ISO (week) o 'YYYY-MM' (month)."""
+    'YYYY-Www' con inicio ISO (week) o 'YYYY-MM' (month). Con `peso_fn`, cada
+    elemento suma su peso (filas ya agregadas por día) en vez de 1."""
     granularity = _bucket_granularity(start, end)
 
     if granularity == "day":
@@ -97,7 +98,7 @@ def _bucketize(items, date_fn, start, end):
         else:
             key = d.strftime("%Y-%m")
         if key in counts:
-            counts[key] += 1
+            counts[key] += peso_fn(item) if peso_fn else 1
     return counts
 
 
@@ -468,49 +469,68 @@ def register_pages_admin_routes(
         now = utcnow()
         month_start = datetime(now.year, now.month, 1)
 
-        machines = Machine.query.all()
-        writeups = Writeup.query.all()
-        users = User.query.all()
-        certificates = Certificate.query.all()
-        completed = CompletedMachine.query.all()
-        ratings = Rating.query.all()
-        pending_submissions = PendingMachineSubmission.query.all()
+        # Solo las columnas que se usan; las helpers acceden por atributo y
+        # funcionan igual con estas filas que con objetos ORM completos.
+        q = db.session.query
+        machines = q(Machine.id, Machine.nombre, Machine.dificultad, Machine.origen, Machine.fecha, Machine.descargas).all()
+        writeups = q(Writeup.maquina, Writeup.tipo, Writeup.created_at).all()
+        users = q(User.role, User.created_at).all()
+        certificates = q(Certificate.created_at).all()
+        completed = q(CompletedMachine.completed_at).all()
+        ratings = q(Rating.dificultad_score, Rating.aprendizaje_score, Rating.recomendaria_score, Rating.diversion_score).all()
+        pending_submissions = q(PendingMachineSubmission.estado, PendingMachineSubmission.submitted_at).all()
 
-        downloads_all = MachineDownloadLog.query.all()
-        visits_all = PageVisitLog.query.all()
-        outbound_all = OutboundClickLog.query.all()
-        cert_requests_all = CertificateRequestLog.query.all()
+        # Las tablas de registro crecen sin límite (una fila por visita,
+        # descarga o clic): se agregan y filtran en SQL, nunca se cargan enteras.
+        def primera_fecha(columna):
+            return q(func.min(columna)).scalar()
 
-        # Primer dato visible (para que el filtro sea inteligente: solo se
-        # ofrecen presets que crucen datos reales). Si no hay registro temporal
-        # aún, visible_min es None y se ofrecen todos los presets.
-        dl_dates = [d.created_at for d in downloads_all if d.created_at]
-        cr_dates = [c.created_at for c in cert_requests_all if c.created_at]
-        vi_dates = [v.created_at for v in visits_all if v.created_at]
-        ob_dates = [o.created_at for o in outbound_all if o.created_at]
-        all_dates = dl_dates + cr_dates + vi_dates + ob_dates
-        visible_min = min(all_dates) if all_dates else None
+        dl_min = primera_fecha(MachineDownloadLog.created_at)
+        cr_min = primera_fecha(CertificateRequestLog.created_at)
+        vi_min = primera_fecha(PageVisitLog.created_at)
+        ob_min = primera_fecha(OutboundClickLog.created_at)
+        minimos = [f for f in (dl_min, cr_min, vi_min, ob_min) if f]
+        visible_min = min(minimos) if minimos else None
 
         resolved = _resolve_range(rango, desde, hasta, visible_min)
         start, end, active_rango = resolved["start"], resolved["end"], resolved["rango"]
         filtro_label = resolved["label"]
 
-        downloads_filtered = [d for d in downloads_all if d.created_at and start <= d.created_at <= end]
-        cert_requests_filtered = [c for c in cert_requests_all if c.created_at and start <= c.created_at <= end]
+        def en_rango(*columnas):
+            fecha = columnas[0]
+            return q(*columnas).filter(fecha.isnot(None), fecha >= start, fecha <= end).all()
 
-        visits_filtered = [v for v in visits_all if v.created_at and start <= v.created_at <= end]
-        today_str = now.strftime("%Y-%m-%d")
-        visits_today = [v for v in visits_all if v.created_at and v.created_at.strftime("%Y-%m-%d") == today_str]
+        def contar_desde(fecha, desde_cuando):
+            return q(func.count()).select_from(fecha.class_).filter(fecha >= desde_cuando).scalar()
+
+        def por_dia(fecha, *agregados):
+            """Una fila por día del rango: (dia, agregados...)."""
+            dia = func.date(fecha).label("dia")
+            filas = q(dia, *agregados).filter(fecha.isnot(None), fecha >= start, fecha <= end).group_by(dia).all()
+            return [(datetime(f.dia.year, f.dia.month, f.dia.day), *f[1:]) for f in filas]
+
+        descargas_dia = por_dia(MachineDownloadLog.created_at, func.count())
+        total_descargas = sum(n for _, n in descargas_dia)
+        cert_requests_filtered = en_rango(CertificateRequestLog.created_at)
+
+        visitas_dia = por_dia(PageVisitLog.created_at, func.count())
+        dia_v = func.date(PageVisitLog.created_at)
+        visitantes_dia = [(datetime(d.year, d.month, d.day), v) for d, v in
+                          q(dia_v, PageVisitLog.visitor).filter(PageVisitLog.created_at.isnot(None), PageVisitLog.created_at >= start,
+                                                               PageVisitLog.created_at <= end).distinct().all()]
+        hoy = datetime(now.year, now.month, now.day)
+        visitas_hoy, unicos_hoy = q(func.count(), func.count(func.distinct(PageVisitLog.visitor))).filter(
+            PageVisitLog.created_at >= hoy, PageVisitLog.created_at < hoy + timedelta(days=1)).one()
         visit_stats = {
-            "total_en_rango": len(visits_filtered),
-            "hoy": len(visits_today),
-            "unicos_hoy": len({v.visitor for v in visits_today}),
-            "by_day": _bucketize(visits_filtered, lambda v: v.created_at, start, end),
-            "unique_by_day": _bucketize_unique(visits_filtered, lambda v: v.created_at, lambda v: v.visitor, start, end),
-            "since": min(vi_dates).strftime("%d/%m/%Y") if vi_dates else None,
+            "total_en_rango": sum(n for _, n in visitas_dia),
+            "hoy": visitas_hoy,
+            "unicos_hoy": unicos_hoy,
+            "by_day": _bucketize(visitas_dia, lambda f: f[0], start, end, peso_fn=lambda f: f[1]),
+            "unique_by_day": _bucketize_unique(visitantes_dia, lambda f: f[0], lambda f: f[1], start, end),
+            "since": vi_min.strftime("%d/%m/%Y") if vi_min else None,
         }
 
-        ob_filtered = [o for o in outbound_all if o.created_at and start <= o.created_at <= end]
+        ob_filtered = en_rango(OutboundClickLog.created_at, OutboundClickLog.visitor, OutboundClickLog.destino, OutboundClickLog.origen)
         _by = {}
         for o in ob_filtered:
             _by.setdefault((o.destino, o.origen), []).append(o)
@@ -523,7 +543,7 @@ def register_pages_admin_routes(
             "academia_by_day": _bucketize([o for o in ob_filtered if o.destino == "academia"], lambda o: o.created_at, start, end),
             "por_origen": [{"destino": d, "origen": og, "clics": len(v), "unicos": len({x.visitor for x in v})}
                            for (d, og), v in sorted(_by.items(), key=lambda kv: -len(kv[1]))],
-            "since": min(ob_dates).strftime("%d/%m/%Y") if ob_dates else None,
+            "since": ob_min.strftime("%d/%m/%Y") if ob_min else None,
         }
 
         filtro = {
@@ -531,7 +551,7 @@ def register_pages_admin_routes(
             "desde": desde,
             "hasta": hasta,
             "label": filtro_label,
-            "total_descargas": len(downloads_filtered),
+            "total_descargas": total_descargas,
             "total_certificados": len(cert_requests_filtered),
             "presets": _smart_presets(visible_min, active_rango),
             "granularity": _bucket_granularity(start, end),
@@ -591,10 +611,10 @@ def register_pages_admin_routes(
         bottom_machines = sorted(machines, key=lambda m: (m.descargas or 0, -m.id))[:5]
         download_stats = {
             "total": sum(m.descargas or 0 for m in machines),
-            "mes_actual": len([d for d in downloads_all if d.created_at and d.created_at >= month_start]),
+            "mes_actual": contar_desde(MachineDownloadLog.created_at, month_start),
             "rango_label": filtro_label,
-            "total_en_rango": len(downloads_filtered),
-            "by_day": _bucketize(downloads_filtered, lambda d: d.created_at, start, end),
+            "total_en_rango": total_descargas,
+            "by_day": _bucketize(descargas_dia, lambda f: f[0], start, end, peso_fn=lambda f: f[1]),
             # Listas paralelas (no dict): tojson ordena las claves alfabéticamente
             # y rompería el orden del ranking.
             "top_machines": {
@@ -611,7 +631,7 @@ def register_pages_admin_routes(
             "total": len(certificates),
             "by_year": _distribution_by_year(certificates, lambda c: c.created_at),
             "by_month": _distribution_by_month(certificates, lambda c: c.created_at),
-            "solicitudes_mes_actual": len([c for c in cert_requests_all if c.created_at and c.created_at >= month_start]),
+            "solicitudes_mes_actual": contar_desde(CertificateRequestLog.created_at, month_start),
             "solicitudes_en_rango": len(cert_requests_filtered),
             "solicitudes_by_day": _bucketize(cert_requests_filtered, lambda r: r.created_at, start, end),
         }

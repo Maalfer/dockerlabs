@@ -1,6 +1,7 @@
 {% extends "dockerlabs/base.html" %}
 
 {% block extra_css %}
+<link rel="stylesheet" href="{{ static_v('dockerlabs/css/auth-ballena.css') }}">
 <link rel="stylesheet" href="{{ static_v('dockerlabs/css/dashboard.css') }}"
       media="print" onload="this.media='all'">
 <noscript><link rel="stylesheet" href="{{ static_v('dockerlabs/css/dashboard.css') }}"></noscript>
@@ -11,6 +12,9 @@
 {% block canonical_path %}/certificados{% endblock %}
 
 {% block content %}
+<div class="dl-con-cody">
+{% with ballena_mensajes = {"idle": "Aquí están tus diplomas. Te lo explico ↓", "fin": "¡A por el siguiente diploma!"}, ballena_lectura = true %}{% include "dockerlabs/auth/_ballena.html" %}{% endwith %}
+<div class="dl-con-cody-pagina">
 <div class="dashboard-container">
     <div class="dashboard-header">
         <div class="welcome-section">
@@ -31,7 +35,7 @@
     <div class="dashboard-content">
 
         <!-- ── Mis Certificados ────────────────────────────────────────── -->
-        <div class="security-section" id="certificados-section">
+        <div class="security-section" id="certificados-section" data-tldr="Cada writeup que publicas de una máquina te da un diploma con su ID (DL-XXXXXX), en imagen y en PDF.">
             <div class="section-header" style="display:flex;justify-content:space-between;align-items:center;">
                 <h2><i class="bi bi-patch-check-fill" style="color:#2dd4bf;"></i> Mis Certificados</h2>
                 <button type="button" onclick="loadCertificados()" id="btn-reload-certs"
@@ -51,7 +55,7 @@
         </div>
 
         <!-- ── Verificador de Certificados ────────────────────────────── -->
-        <div class="security-section" style="margin-top:2rem;">
+        <div class="security-section" style="margin-top:2rem;" data-tldr="Cualquiera puede comprobar si un diploma es auténtico escribiendo su ID.">
             <div class="section-header">
                 <h2><i class="bi bi-shield-check" style="color:#2dd4bf;"></i> Verificar Certificado</h2>
             </div>
@@ -86,6 +90,8 @@
         </div>
 
     </div>
+</div>
+</div>
 </div>
 {% endblock %}
 
@@ -262,4 +268,5 @@
 
     document.addEventListener('DOMContentLoaded', loadCertificados);
 </script>
+<script src="{{ static_v('dockerlabs/js/ballena.js') }}" defer></script>
 {% endblock %}

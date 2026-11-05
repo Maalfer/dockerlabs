@@ -1,6 +1,7 @@
 {% extends "dockerlabs/base.html" %}
 
 {% block extra_css %}
+<link rel="stylesheet" href="{{ static_v('dockerlabs/css/auth-ballena.css') }}">
 <link rel="stylesheet" href="{{ static_v('dockerlabs/css/dashboard.css') }}"
       media="print" onload="this.media='all'">
 <noscript><link rel="stylesheet" href="{{ static_v('dockerlabs/css/dashboard.css') }}"></noscript>
@@ -12,6 +13,9 @@
 {% endblock %}
 
 {% block content %}
+<div class="dl-con-cody">
+{% with ballena_mensajes = {"idle": "Este es tu centro de control. Te explico cada parte ↓", "fin": "¡Todo en orden! Vuelve cuando quieras cambiar algo."}, ballena_lectura = true %}{% include "dockerlabs/auth/_ballena.html" %}{% endwith %}
+<div class="dl-con-cody-pagina">
 <div class="dashboard-container">
     <div class="dashboard-header">
         <div class="welcome-section">
@@ -23,7 +27,7 @@
 
     <div class="dashboard-content">
 
-        <div class="profile-section">
+        <div class="profile-section" data-tldr="Tu foto, tus redes, tu bio y el nombre que saldrá en tus diplomas. Guarda al terminar.">
             <div class="section-header">
                 <h2><i class="bi bi-person-circle"></i> Perfil de Usuario</h2>
             </div>
@@ -113,7 +117,7 @@
             </div>
         </div>
 
-        <div class="security-section">
+        <div class="security-section" data-tldr="Cambia tu contraseña: 8 caracteres o más, con mayúscula, número y símbolo. Se cerrarán tus sesiones en otros dispositivos.">
             <div class="section-header">
                 <h2><i class="bi bi-shield-lock"></i> Seguridad</h2>
             </div>
@@ -168,7 +172,7 @@
         </div>
 
         {% if current_user_role in ['admin', 'moderador'] %}
-        <div class="security-section" style="margin-top: 2rem;">
+        <div class="security-section" style="margin-top: 2rem;" data-tldr="Envía un aviso que verán todos los usuarios en la campana del header.">
             <div class="section-header">
                 <h2><i class="bi bi-tools"></i> Herramientas de administración</h2>
             </div>
@@ -184,7 +188,7 @@
         </div>
         {% endif %}
 
-        <div class="security-section" style="margin-top: 2rem;">
+        <div class="security-section" style="margin-top: 2rem;" data-tldr="Tus diplomas: descárgalos o compártelos desde «Ver Mis Certificados».">
             <div class="section-header">
                 <h2><i class="bi bi-patch-check-fill" style="color:#2dd4bf;"></i> Mis Certificados</h2>
             </div>
@@ -199,7 +203,7 @@
         </div>
 
 
-        <div class="security-section" style="margin-top: 2rem;">
+        <div class="security-section" style="margin-top: 2rem;" data-tldr="Tu perfil tiene una dirección pública, en web y en JSON. Si prefieres que nadie lo vea, ponlo en privado.">
             <div class="section-header">
                 <h2><i class="bi bi-code-slash" style="color:#38bdf8;"></i> Tu perfil público</h2>
             </div>
@@ -406,7 +410,8 @@
         </form>
     </div>
 </div>
-
+</div>
+</div>
 {% endblock %}
 
 {% block scripts %}
@@ -626,4 +631,5 @@
     // escapeHtml() la aporta utils.js, cargado desde base.html.
 
 </script>
+<script src="{{ static_v('dockerlabs/js/ballena.js') }}" defer></script>
 {% endblock %}

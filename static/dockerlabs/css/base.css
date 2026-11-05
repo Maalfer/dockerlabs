@@ -932,8 +932,8 @@
     transform: scale(1.2);
 }
 
-/* === Header: layout simétrico (override de styles.css) ===
-   styles.css usa auto 1fr auto; aquí forzamos 1fr auto 1fr para centrado real */
+/* === Header: layout simétrico (override de global/nucleo.css) ===
+   global/nucleo.css usa auto 1fr auto; aquí forzamos 1fr auto 1fr para centrado real */
 header {
     grid-template-columns: 1fr auto 1fr;
     gap: 15px;

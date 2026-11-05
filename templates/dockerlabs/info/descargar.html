@@ -1,6 +1,7 @@
 {% extends 'dockerlabs/base.html' %}
 
 {% block extra_css %}
+<link rel="stylesheet" href="{{ static_v('dockerlabs/css/auth-ballena.css') }}">
 <link rel="stylesheet" href="{{ static_v('dockerlabs/css/info/descargar.css') }}"
       media="print" onload="this.media='all'">
 <noscript><link rel="stylesheet" href="{{ static_v('dockerlabs/css/info/descargar.css') }}"></noscript>
@@ -12,6 +13,9 @@
 {% endblock %}
 
 {% block content %}
+<div class="dl-con-cody">
+{% with ballena_mensajes = {"idle": "Soy Cody. Te explico cómo ponerla en marcha ↓", "fin": "¡A hackear! Si te atascas, mira sus writeups."}, ballena_lectura = true %}{% include "dockerlabs/auth/_ballena.html" %}{% endwith %}
+<div class="dl-con-cody-pagina">
 <div class="descargar-container">
 
     <div class="descargar-header">
@@ -27,7 +31,7 @@
 
         <div class="descargar-grid">
 
-            <div class="instrucciones-box">
+            <div class="instrucciones-box" data-tldr="{% if maquina.sistema_operativo == 'windows' %}Extrae el .ova del .zip, impórtalo en VirtualBox y arráncala.{% else %}Descomprime el .zip y ejecuta auto_deploy.sh: en segundos tendrás la IP. Ctrl + C la elimina.{% endif %}">
                 <div class="section-title">
                     🧭 Cómo desplegar la máquina
                 </div>
@@ -79,7 +83,7 @@
                 {% endif %}
             </div>
 
-            <div class="descargar-cta">
+            <div class="descargar-cta" data-tldr="Este botón te lleva a la descarga del .zip de {{ maquina.nombre }}.">
                 <a class="descargar-btn dl-btn dl-btn--grande" href="{{ maquina.link_descarga }}" target="_blank" rel="noopener noreferrer">
                     <i class="bi bi-cloud-arrow-down-fill"></i> Descargar {{ maquina.nombre }}
                 </a>
@@ -125,6 +129,8 @@
     <span class="lightbox-close">&times;</span>
     <img id="lightbox-img" src="" alt="Ejemplo de despliegue ampliado">
 </div>
+</div>
+</div>
 {% endblock %}
 
 {% block scripts %}
@@ -166,4 +172,5 @@
     });
 })();
 </script>
+<script src="{{ static_v('dockerlabs/js/ballena.js') }}" defer></script>
 {% endblock %}

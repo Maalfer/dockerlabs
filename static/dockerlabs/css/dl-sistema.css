@@ -1,6 +1,6 @@
 /* ==========================================================================
    Sistema visual DockerLabs (se carga en todas las páginas, después de
-   styles.css y base.css). Secciones:
+   global/*.css y base.css). Secciones:
      1. Botones            — un único lenguaje para todas las acciones
      2. Campos de formulario — mismo foco en toda la web
      3. Paginación
@@ -361,4 +361,62 @@ body > :is(.dashboard-container, .stats-container, .container, .pp-wrap, main) {
 @media (max-width: 480px) {
     .pp-hero { padding: 1.25rem !important; gap: 1.25rem !important; }
     .pp-ident { flex-basis: 100% !important; }
+}
+
+/* Writeups recibidos y gestión de máquinas: tablas → tarjetas en móvil.
+   Cada celda muestra su etiqueta (::before) y los campos siguen siendo
+   editables; los filtros por columna se ocultan (queda el buscador). */
+@media (max-width: 640px) {
+    :is(#tabla-writeups-recibidos, #tabla-reportes, #tablaDocker, #tablaBunker) { display: block; min-width: 0 !important; width: 100%; }
+    :is(#tabla-writeups-recibidos, #tabla-reportes, #tablaDocker, #tablaBunker) thead { display: none; }
+    :is(#tabla-writeups-recibidos, #tabla-reportes, #tablaDocker, #tablaBunker) tbody { display: block; }
+    :is(#tabla-writeups-recibidos, #tabla-reportes, #tablaDocker, #tablaBunker) tbody > tr {
+        display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: .65rem .75rem; align-items: end;
+        padding: .9rem .95rem; margin-bottom: .7rem;
+        background: rgba(15, 23, 42, .6); border: 1px solid var(--border-strong); border-radius: 12px;
+    }
+    :is(#tabla-writeups-recibidos, #tabla-reportes, #tablaDocker, #tablaBunker) tbody > tr > td {
+        display: block; min-width: 0 !important; width: auto !important; padding: 0 !important; border: 0 !important; background: none !important;
+    }
+    :is(#tabla-writeups-recibidos, #tabla-reportes, #tablaDocker, #tablaBunker) tbody > tr > td::before {
+        display: block; margin-bottom: .3rem;
+        color: #64748b; font-family: 'Fira Code', monospace; font-size: .68rem; font-weight: 600;
+        letter-spacing: .06em; text-transform: uppercase;
+    }
+    /* filas de carga o vacías: una sola celda a todo el ancho, sin etiqueta */
+    :is(#tabla-writeups-recibidos, #tabla-reportes, #tablaDocker, #tablaBunker) tbody > tr > td[colspan] { grid-column: 1 / -1; text-align: center; }
+    :is(#tabla-writeups-recibidos, #tabla-reportes, #tablaDocker, #tablaBunker) tbody > tr > td[colspan]::before { content: none; }
+    :is(#tabla-writeups-recibidos, #tabla-reportes, #tablaDocker, #tablaBunker) :is(input, select) { width: 100%; }
+    :is(#tabla-writeups-recibidos, #tabla-reportes, #tablaDocker, #tablaBunker) td:last-child { grid-column: 1 / -1; }
+    :is(#tabla-writeups-recibidos, #tabla-reportes, #tablaDocker, #tablaBunker) td:last-child > .d-flex { justify-content: flex-end; }
+
+    /* Writeups recibidos: logo y máquina arriba, autor debajo */
+    #tabla-writeups-recibidos tbody > tr { grid-template-columns: 44px minmax(0, 1fr) minmax(0, 1fr); }
+    #tabla-writeups-recibidos td:nth-child(1) { grid-row: 1 / span 2; align-self: start; }
+    #tabla-writeups-recibidos td:nth-child(2) { grid-column: 2 / -1; font-size: 1rem; }
+    #tabla-writeups-recibidos td:nth-child(3) { grid-column: 2 / -1; color: #94a3b8; }
+    #tabla-writeups-recibidos td:nth-child(3)::before { content: "Autor"; }
+    #tabla-writeups-recibidos td:nth-child(4) { grid-column: 1 / -1; }
+    #tabla-writeups-recibidos td:nth-child(4)::before { content: "URL del writeup"; }
+    #tabla-writeups-recibidos td:nth-child(5) { grid-column: 1 / 3; }
+    #tabla-writeups-recibidos td:nth-child(5)::before { content: "Tipo"; }
+    #tabla-writeups-recibidos td:nth-child(6)::before { content: "Recibido"; }
+
+    /* Reportes de writeups */
+    #tabla-reportes td:nth-child(1) { grid-column: 1 / -1; font-size: 1rem; }
+    #tabla-reportes td:nth-child(2)::before { content: "Writeup de"; }
+    #tabla-reportes td:nth-child(3)::before { content: "Reportado por"; }
+    #tabla-reportes td:nth-child(4) { grid-column: 1 / -1; }
+    #tabla-reportes td:nth-child(4)::before { content: "Motivo"; }
+    #tabla-reportes td:nth-child(5) { grid-column: 1 / -1; }
+    #tabla-reportes td:nth-child(5)::before { content: "Fecha"; }
+
+    /* Gestión de máquinas (Docker y Bunker) */
+    :is(#tablaDocker, #tablaBunker) td:nth-child(1) { grid-column: 1 / -1; }
+    :is(#tablaDocker, #tablaBunker) td:nth-child(2)::before { content: "Dificultad"; }
+    :is(#tablaDocker, #tablaBunker) td:nth-child(3)::before { content: "Autor"; }
+    :is(#tablaDocker, #tablaBunker) td:nth-child(4)::before { content: "Logo"; }
+    #tablaDocker td:nth-child(5)::before { content: "Categoría"; }
+    #tablaDocker td:nth-child(6)::before { content: "Plataforma"; }
+    #tablaBunker td:nth-child(5)::before { content: "Invitado"; }
 }
