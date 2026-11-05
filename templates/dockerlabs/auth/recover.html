@@ -1,46 +1,57 @@
 {% extends "dockerlabs/base.html" %}
 
+{% block extra_css %}
+<link rel="stylesheet" href="{{ static_v('dockerlabs/css/login.css') }}">
+<link rel="stylesheet" href="{{ static_v('dockerlabs/css/auth-ballena.css') }}">
+{% endblock %}
+
 {% block title %}Recuperar contraseña - DockerLabs{% endblock %}
 
 {% block content %}
-<div class="container" style="padding-top: 80px; max-width: 520px;">
-    <div style="text-align: center; margin-bottom: 32px;">
-        <h2 style="margin: 0 0 8px;">Recuperar contraseña</h2>
-        <p class="text-muted" style="margin: 0;">Introduce tu correo y te enviaremos un enlace para restablecer tu contraseña.</p>
-    </div>
-
-    <div class="alert alert-danger" id="recover-error" style="display: none;">
-        <i class="fas fa-exclamation-circle"></i>
-        <span id="recover-error-text"></span>
-    </div>
-
-    <div class="alert alert-success" id="recover-success" style="display: none;">
-        <i class="fas fa-envelope-open-text"></i>
-        <div>
-            <strong>Correo enviado</strong>
-            <p id="recover-success-text" style="margin: 6px 0 0; font-size: 0.93em;"></p>
-        </div>
-    </div>
-
-    <form id="recover-form">
-        <input type="hidden" name="csrf_token" value="{{ csrf_token_value }}">
-
-        <div class="mb-3">
-            <label for="email" class="form-label">Correo electrónico</label>
-            <input type="email" name="email" id="email" class="form-control"
-                   placeholder="tu@correo.com" required autocomplete="email" autofocus>
+<div class="login-container dl-auth dl-recover">
+    {% with ballena_mensajes = {"error": "Uy, algo ha fallado. ¿Revisas el correo?", "ok": "¡Enviado! Mira tu bandeja (y la carpeta de spam).", "envio": "Preparando el enlace…", "pass": "Tranquilo, no miro.", "ver": "Bueno… solo un poquito."} %}{% include "dockerlabs/auth/_ballena.html" %}{% endwith %}
+    <div class="login-box">
+        <div class="login-header">
+            <h2>Recuperar contraseña</h2>
+            <p>Introduce tu correo y te enviaremos un enlace para crear una nueva.</p>
         </div>
 
-        <button type="submit" class="btn btn-primary w-100" id="recover-btn">
-            <span class="btn-text"><i class="fas fa-paper-plane"></i> Enviar enlace de recuperación</span>
-            <span class="btn-loader" style="display: none;">Enviando…</span>
-        </button>
-    </form>
+        <div class="alert alert-danger" id="recover-error" style="display: none;">
+            <i class="fas fa-exclamation-circle"></i>
+            <span id="recover-error-text"></span>
+        </div>
 
-    <div style="text-align: center; margin-top: 24px;">
-        <a href="{{ url_for('auth.login') }}" class="text-muted" style="font-size: 0.9em;">
-            <i class="fas fa-arrow-left"></i> Volver al inicio de sesión
-        </a>
+        <div class="alert alert-success" id="recover-success" style="display: none;">
+            <i class="fas fa-envelope-open-text"></i>
+            <div>
+                <strong>Correo enviado</strong>
+                <p id="recover-success-text" style="margin: 6px 0 0; font-size: 0.93em;"></p>
+            </div>
+        </div>
+
+        <form id="recover-form" class="login-form">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token_value }}">
+
+            <div class="form-group">
+                <label for="email"><i class="fas fa-envelope"></i> Correo electrónico</label>
+                <input type="email" name="email" id="email" placeholder="tu@correo.com" required
+                       autocomplete="email" autofocus>
+            </div>
+
+            <button type="submit" class="btn-login" id="recover-btn">
+                <span class="btn-text"><i class="fas fa-paper-plane"></i> Enviar enlace de recuperación</span>
+                <span class="btn-loader" style="display: none;">Enviando…</span>
+            </button>
+        </form>
+
+        <div class="auth-footer-actions">
+            <a href="{{ url_for('auth.login') }}" class="footer-link">
+                <i class="fas fa-arrow-left"></i> Volver al inicio de sesión
+            </a>
+            <a href="{{ url_for('auth.register') }}" class="footer-link">
+                <i class="fas fa-user-plus"></i> Crear cuenta nueva
+            </a>
+        </div>
     </div>
 </div>
 
@@ -95,4 +106,5 @@ document.addEventListener("DOMContentLoaded", function () {
     });
 });
 </script>
+<script src="{{ static_v('dockerlabs/js/ballena.js') }}" defer></script>
 {% endblock %}

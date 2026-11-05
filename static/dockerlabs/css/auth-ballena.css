@@ -1,0 +1,394 @@
+/* ==========================================================================
+   Login / registro: escena con la ballena animada + formulario en una columna.
+   Se carga DESPUÉS de login.css / registro.css y solo en esas dos páginas.
+   ========================================================================== */
+
+/* ---- Escena: ocupa justo el hueco entre header y footer fijos ---- */
+.dl-auth.login-container,
+.dl-auth.register-container {
+    flex: 1 0 auto;
+    min-height: 0;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    gap: clamp(32px, 5vw, 72px);
+    padding: 16px;
+    overflow: visible;
+}
+
+/* ---- Tarjeta del formulario: una sola columna, más compacta ---- */
+.dl-auth .login-box,
+.dl-auth .register-box {
+    width: 100%;
+    max-width: 440px;
+    margin: 0;
+    padding: 1.9rem 2rem 1.4rem;
+}
+.dl-auth .login-header,
+.dl-auth .register-header { margin-bottom: 1.4rem; }
+.dl-auth .login-header h2,
+.dl-auth .register-header h2 { font-size: 1.75rem; margin-bottom: .4rem; }
+.dl-auth .login-form,
+.dl-auth .register-form { margin-top: 0; }
+.dl-auth .auth-grid { display: block; }
+.dl-auth .auth-column-left,
+.dl-auth .auth-column-right {
+    border: 0;
+    padding: 0;
+    gap: 0;
+}
+.dl-auth .logo-display { display: none; }
+.dl-auth .form-group { margin-bottom: 1.05rem; }
+.dl-auth .form-group label { margin-bottom: .45rem; }
+.dl-auth .form-group input { padding: .75rem 1rem; }
+.dl-auth .btn-login,
+.dl-auth .btn-register { margin: .35rem 0 0; padding: .85rem 1.25rem; }
+.dl-auth .terms-checkbox { margin: .2rem 0 1rem; padding: .7rem .9rem; }
+.dl-auth .auth-footer-actions { margin-top: 1.3rem; padding-top: 1rem; gap: .75rem; }
+.dl-auth .alert { margin-bottom: 1.1rem; }
+
+/* ---- Botón mostrar / ocultar contraseña ---- */
+.dl-campo-caja { position: relative; display: block; }
+.dl-campo-caja input { padding-right: 3rem !important; }
+.dl-ojo {
+    position: absolute; right: 6px; top: 50%; width: 36px; height: 36px; margin-top: -18px; padding: 0;
+    display: inline-flex; align-items: center; justify-content: center; line-height: 0;
+    background: none; border: 0; border-radius: 10px; color: var(--text-muted); cursor: pointer;
+    transition: color .15s ease, background-color .15s ease;
+}
+.dl-ojo:hover { color: var(--text-secondary); background: rgba(255, 255, 255, .06); }
+.dl-ojo[aria-pressed="true"] { color: var(--primary-blue-light); }
+.dl-ojo:focus-visible { outline: 2px solid var(--primary-blue-light); outline-offset: 1px; }
+.dl-ojo svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.dl-ojo .dl-tachado { display: none; }
+.dl-ojo[aria-pressed="true"] .dl-tachado { display: inline; }
+
+/* ---- Columna de la ballena ---- */
+.dl-ballena {
+    flex: 0 0 auto;
+    width: 300px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+    z-index: 1;
+    user-select: none;
+    -webkit-user-select: none;
+}
+.dl-ballena .ballena {
+    display: block;
+    width: 270px;
+    height: auto;
+    overflow: visible;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    --ox: 0px;
+    --oy: 0px;
+}
+
+/* Bocadillo */
+.dl-bocadillo {
+    position: relative;
+    width: 100%;
+    margin: 0 0 34px;
+    padding: 16px 20px;
+    text-align: center;
+    background: rgba(var(--surface-overlay-rgb), .7);
+    border: 1px solid rgba(255, 255, 255, .1);
+    border-radius: 22px;
+    box-shadow: 0 18px 40px -16px rgba(0, 0, 0, .6);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+}
+.dl-bocadillo-txt {
+    margin: 0;
+    min-height: 1.5em;
+    color: var(--text-secondary);
+    font-size: .95rem;
+    line-height: 1.5;
+    transition: opacity .18s ease, transform .18s ease;
+}
+.dl-bocadillo.cambia .dl-bocadillo-txt { opacity: 0; transform: translateY(3px); }
+.dl-bocadillo-cola { position: absolute; left: 58%; bottom: 0; width: 0; height: 0; }
+.dl-bocadillo-cola i {
+    position: absolute; display: block; border-radius: 50%;
+    background: rgba(var(--surface-overlay-rgb), .85); border: 1px solid rgba(255, 255, 255, .1);
+}
+.dl-bocadillo-cola i:nth-child(1) { width: 14px; height: 14px; left: -7px; top: 8px; }
+.dl-bocadillo-cola i:nth-child(2) { width: 8px; height: 8px; left: -2px; top: 25px; }
+
+/* ---- Ballena: partes y animaciones ---- */
+.ballena .b-flota { transform-origin: 140px 100px; animation: b-flota 4.6s ease-in-out infinite; }
+@keyframes b-flota {
+    0%, 100% { transform: translateY(0) rotate(-1deg); }
+    50%      { transform: translateY(-5px) rotate(1.4deg); }
+}
+.ballena .b-cola { transform-origin: 62px 104px; animation: b-cola 2.6s ease-in-out infinite; }
+@keyframes b-cola { 0%, 100% { transform: rotate(3deg); } 50% { transform: rotate(-9deg); } }
+
+.ballena .b-pupila { transform: translate(var(--ox), var(--oy)); transition: transform .12s ease-out, opacity .2s ease; }
+.ballena .b-parpado { transform-origin: 190px 82.6px; transform: scaleY(0); animation: b-parpadea 5.4s ease-in-out infinite; }
+@keyframes b-parpadea { 0%, 91%, 100% { transform: scaleY(0); } 94.5% { transform: scaleY(1); } }
+
+.ballena .b-ojo-normal, .ballena .b-ojo-feliz, .ballena .b-boca { transition: opacity .2s ease; }
+.ballena .b-ojo-feliz, .ballena .b-boca-triste { opacity: 0; }
+
+/* Aleta: nada suave; se sube a tapar el ojo con la contraseña */
+.ballena .b-aleta {
+    transform-origin: 165px 117px;
+    animation: b-aleta 2.6s ease-in-out infinite;
+    transition: transform .45s cubic-bezier(.3, 1.35, .5, 1);
+}
+@keyframes b-aleta { 0%, 100% { transform: rotate(-4deg); } 50% { transform: rotate(10deg); } }
+.ballena.tapa .b-aleta  { animation: none; transform: rotate(178deg); }
+.ballena.reojo .b-aleta { animation: none; transform: rotate(168deg); }
+.ballena.tapa .b-pupila { opacity: 0; }
+.ballena.reojo .b-pupila { transform: translate(2.6px, 2px); }
+
+/* Chorro */
+.ballena .b-chorro { transform-origin: 150px 44px; transform: scale(.3, 0); opacity: 0; }
+.ballena.sopla .b-chorro { animation: b-sopla 1.7s cubic-bezier(.2, .8, .3, 1); }
+@keyframes b-sopla {
+    0%   { transform: scale(.3, 0); opacity: 0; }
+    22%  { transform: scale(1, 1.08); opacity: 1; }
+    65%  { transform: scale(1.05, 1); opacity: .95; }
+    100% { transform: scale(1.15, .85) translateY(6px); opacity: 0; }
+}
+.ballena .b-gota { transform-box: fill-box; transform-origin: center; }
+.ballena.sopla .b-gota-1 { animation: b-gota-i 1.7s ease-out; }
+.ballena.sopla .b-gota-2 { animation: b-gota-d 1.7s ease-out; }
+@keyframes b-gota-i { 0%, 20% { transform: translate(0, 0); } 100% { transform: translate(-8px, 14px); } }
+@keyframes b-gota-d { 0%, 20% { transform: translate(0, 0); } 100% { transform: translate(8px, 14px); } }
+
+/* Contenta (clic / registro correcto) */
+.ballena.feliz .b-ojo-normal { opacity: 0; }
+.ballena.feliz .b-ojo-feliz { opacity: 1; }
+.ballena.feliz .b-flota { animation: b-salta .9s cubic-bezier(.3, 1.4, .5, 1); }
+@keyframes b-salta {
+    0%, 100% { transform: translateY(0) rotate(0); }
+    40%      { transform: translateY(-14px) rotate(-4deg); }
+}
+
+/* Triste (error al entrar / registrar) */
+.ballena.triste .b-boca-sonrie { opacity: 0; }
+.ballena.triste .b-boca-triste { opacity: 1; }
+.ballena.triste .b-mejilla { opacity: .2; }
+.ballena.triste .b-pupila { transform: translate(-1px, 2.4px); }
+.ballena.triste .b-sacude { transform-origin: 140px 100px; animation: b-sacude .55s ease-in-out; }
+@keyframes b-sacude {
+    0%, 100% { transform: translateX(0); }
+    20% { transform: translateX(-6px) rotate(-2deg); }
+    40% { transform: translateX(5px) rotate(2deg); }
+    60% { transform: translateX(-3px); }
+    80% { transform: translateX(2px); }
+}
+
+/* Olas */
+.ballena .b-ola-1 { animation: b-ola 3.2s linear infinite; }
+.ballena .b-ola-2 { animation: b-ola 4.8s linear infinite reverse; }
+@keyframes b-ola { from { transform: translateX(0); } to { transform: translateX(40px); } }
+
+/* ---- Escritorio bajo: compactar ---- */
+@media (min-width: 881px) and (max-height: 780px) {
+    .dl-auth .login-box, .dl-auth .register-box { padding: 1.4rem 1.8rem 1.1rem; }
+    .dl-auth .login-header, .dl-auth .register-header { margin-bottom: 1rem; }
+    .dl-auth .login-header h2, .dl-auth .register-header h2 { font-size: 1.5rem; margin-bottom: .25rem; }
+    .dl-auth .form-group { margin-bottom: .75rem; }
+    .dl-auth .form-group label { margin-bottom: .3rem; }
+    .dl-auth .form-group input { padding: .62rem .95rem; }
+    .dl-auth .terms-checkbox { margin-bottom: .75rem; padding: .55rem .8rem; }
+    .dl-auth .btn-login, .dl-auth .btn-register { padding: .72rem 1.2rem; }
+    .dl-auth .auth-footer-actions { margin-top: .9rem; padding-top: .75rem; }
+    .dl-auth #username-counter { margin-top: 2px !important; }
+}
+
+/* ---- Tablet / móvil: ballena pequeña al lado del bocadillo, encima del formulario ---- */
+@media (max-width: 880px) {
+    .dl-auth.login-container,
+    .dl-auth.register-container {
+        flex-direction: column;
+        justify-content: flex-start;
+        gap: 10px;
+        padding: 12px 14px;
+    }
+    .dl-ballena {
+        width: 100%;
+        max-width: 440px;
+        flex-direction: row-reverse;
+        align-items: center;
+        gap: 14px;
+    }
+    .dl-ballena .ballena { width: 118px; flex: 0 0 auto; }
+    .dl-bocadillo { flex: 1; min-width: 0; margin: 0; padding: 10px 14px; border-radius: 18px; text-align: left; }
+    .dl-bocadillo-txt { font-size: .85rem; line-height: 1.4; }
+    .dl-bocadillo-cola { left: 0; top: 50%; bottom: auto; }
+    .dl-bocadillo-cola i:nth-child(1) { width: 12px; height: 12px; left: -11px; top: -2px; }
+    .dl-bocadillo-cola i:nth-child(2) { width: 7px; height: 7px; left: -19px; top: 8px; }
+}
+@media (max-width: 640px) {
+    .dl-auth .login-box, .dl-auth .register-box { padding: 1.3rem 1.2rem 1rem; }
+    .dl-auth .login-header, .dl-auth .register-header { margin-bottom: 1rem; }
+    .dl-auth .login-header h2, .dl-auth .register-header h2 { font-size: 1.45rem; }
+    .dl-auth .login-header p, .dl-auth .register-header p { font-size: .85rem; }
+    .dl-auth .form-group { margin-bottom: .8rem; }
+    .dl-auth .form-group label { margin-bottom: .3rem; font-size: .85rem; }
+    .dl-auth .form-group input { padding: .65rem .9rem; font-size: .9rem; }
+    .dl-auth .terms-checkbox { margin-bottom: .8rem; padding: .55rem .75rem; font-size: .82rem; }
+    .dl-auth .auth-footer-actions { margin-top: .9rem; padding-top: .7rem; gap: .4rem; }
+    .dl-auth .footer-link { font-size: .82rem; }
+}
+
+/* ---- Accesibilidad ---- */
+@media (prefers-reduced-motion: reduce) {
+    .ballena *, .dl-bocadillo-txt, .dl-ojo { animation: none !important; transition: none !important; }
+}
+@media (forced-colors: active) {
+    .dl-bocadillo { border: 1px solid CanvasText; }
+}
+
+/* ---- Registro en escritorio: campos en 2 columnas para que quepa sin scroll ---- */
+@media (min-width: 881px) {
+    .dl-auth .register-box { max-width: 620px; }
+    .dl-auth .register-form .auth-column-left {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        column-gap: 1rem;
+        align-items: start;
+    }
+    .dl-auth .register-form .terms-checkbox { grid-column: 1 / -1; }
+    .dl-ballena { width: 280px; }
+    .dl-ballena .ballena { width: 250px; }
+}
+
+/* Enlaces bajo el formulario: en una línea limpia, sin separador que se quede colgado */
+.dl-auth .auth-footer-actions { flex-wrap: wrap; column-gap: 1.25rem; row-gap: .2rem; }
+.dl-auth .auth-footer-actions .auth-separator { display: none; }
+.dl-bocadillo-cola i { border-color: rgba(255, 255, 255, .18); }
+
+/* ---- Bocadillo con frases: autor y botón de otra frase ---- */
+.dl-bocadillo { padding-right: 24px; padding-left: 24px; }
+.dl-bocadillo-txt { font-style: italic; }
+.dl-bocadillo-autor {
+    margin: 6px 0 0; color: var(--primary-blue-light); font-size: .78rem; font-weight: 600;
+    letter-spacing: .04em; transition: opacity .18s ease;
+}
+.dl-bocadillo-autor::before { content: "— "; }
+.dl-bocadillo-autor[hidden] { display: none; }
+.dl-bocadillo.cambia .dl-bocadillo-autor { opacity: 0; }
+.dl-otra {
+    position: absolute; top: -11px; right: -9px; width: 32px; height: 32px; padding: 0;
+    display: inline-flex; align-items: center; justify-content: center; line-height: 0;
+    color: var(--text-muted); background: rgb(var(--surface-overlay-rgb));
+    border: 1px solid rgba(255, 255, 255, .14); border-radius: 50%; cursor: pointer;
+    transition: color .15s ease, border-color .15s ease;
+}
+.dl-otra[hidden] { display: none; }
+.dl-otra:hover { color: var(--accent-cyan); border-color: rgba(34, 211, 238, .45); }
+.dl-otra svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.dl-otra.gira svg { animation: dl-gira .5s ease-in-out; }
+@keyframes dl-gira { to { transform: rotate(360deg); } }
+@media (max-width: 880px) {
+    .dl-bocadillo { padding: 10px 26px 10px 14px; }
+    .dl-bocadillo-autor { margin-top: 3px; font-size: .72rem; }
+    .dl-otra { top: -10px; right: -6px; width: 28px; height: 28px; }
+}
+@media (prefers-reduced-motion: reduce) { .dl-otra, .dl-otra svg, .dl-bocadillo-autor { animation: none !important; transition: none !important; } }
+
+/* Recuperar contraseña: tarjeta algo más estrecha y botón con el texto en una línea */
+.dl-recover .login-box { max-width: 460px; }
+.dl-recover .btn-login { font-size: .92rem; }
+
+/* ==========================================================================
+   Ballena hacker: chorro binario, portátil con brillo y bocadillo de terminal
+   ========================================================================== */
+
+/* Aleta apoyada en el teclado */
+.ballena .b-aleta { transform-origin: 165px 117px; transform: rotate(-62deg); animation: b-aleta-reposo 3.2s ease-in-out infinite; }
+@keyframes b-aleta-reposo { 0%, 100% { transform: rotate(-62deg); } 50% { transform: rotate(-57deg); } }
+.ballena.teclea .b-aleta { animation: b-aleta-teclea .22s ease-in-out infinite alternate; }
+@keyframes b-aleta-teclea { from { transform: rotate(-62deg); } to { transform: rotate(-54deg); } }
+
+/* Chorro de unos y ceros */
+.ballena .b-chorro { transform: none; opacity: 1; }
+.ballena.sopla .b-chorro { animation: none; }
+.ballena .b-bit { opacity: 0; }
+.ballena.sopla .b-bit { animation: b-bit 1.3s ease-out both; }
+@keyframes b-bit {
+    0%   { opacity: 0; transform: translate(0, 4px) scale(.6); }
+    20%  { opacity: 1; }
+    100% { opacity: 0; transform: translate(var(--dx), var(--dy)) scale(1); }
+}
+.ballena .b-bit-1 { --dx: 0px;   --dy: -42px; }
+.ballena .b-bit-2 { --dx: -15px; --dy: -30px; animation-delay: .1s !important; }
+.ballena .b-bit-3 { --dx: 15px;  --dy: -30px; animation-delay: .15s !important; }
+.ballena .b-bit-4 { --dx: -4px;  --dy: -50px; animation-delay: .3s !important; }
+.ballena .b-bit-5 { --dx: -26px; --dy: -18px; animation-delay: .35s !important; }
+.ballena .b-bit-6 { --dx: 26px;  --dy: -18px; animation-delay: .4s !important; }
+.ballena .b-bit-7 { --dx: 7px;   --dy: -46px; animation-delay: .5s !important; }
+.ballena .b-bit-8 { --dx: -13px; --dy: -38px; animation-delay: .6s !important; }
+.ballena .b-bit-9 { --dx: 13px;  --dy: -36px; animation-delay: .65s !important; }
+
+/* Burbujas que suben despacio */
+.ballena .b-burbuja { animation: b-burbuja 5s ease-in infinite; opacity: 0; }
+.ballena .b-burbuja-2 { animation-delay: 1.8s; animation-duration: 6s; }
+.ballena .b-burbuja-3 { animation-delay: 3.4s; }
+@keyframes b-burbuja {
+    0%   { opacity: 0; transform: translateY(0); }
+    15%  { opacity: .8; }
+    100% { opacity: 0; transform: translateY(-46px); }
+}
+
+/* Luz de la pantalla sobre la cara */
+.ballena .b-luz { animation: b-luz 3.4s ease-in-out infinite; }
+@keyframes b-luz { 0%, 100% { opacity: .85; } 45% { opacity: 1; } 50% { opacity: .7; } 55% { opacity: 1; } }
+
+/* Pantalla del portátil: un estado visible cada vez */
+.ballena .b-pt { opacity: 0; transition: opacity .15s ease; }
+.ballena .b-pt-normal { opacity: 1; }
+.ballena .b-pt-cursor { animation: b-cursor 1s steps(1) infinite; }
+@keyframes b-cursor { 50% { opacity: 0; } }
+.ballena.teclea .b-pt-normal { opacity: 0; }
+.ballena.teclea .b-pt-code { opacity: 1; }
+.ballena.teclea .b-linea { animation: b-linea .5s ease-in-out infinite alternate; transform-box: fill-box; transform-origin: left center; }
+.ballena.teclea .b-linea-2 { animation-delay: .15s; }
+.ballena.teclea .b-linea-3 { animation-delay: .3s; }
+@keyframes b-linea { from { transform: scaleX(.35); } to { transform: scaleX(1); } }
+.ballena.tapa .b-pt:not(.b-pt-pw)  { opacity: 0; }
+.ballena.tapa .b-pt-pw { opacity: 1; }
+.ballena.reojo .b-pt:not(.b-pt-ver) { opacity: 0; }
+.ballena.reojo .b-pt-ver { opacity: 1; }
+.ballena.feliz .b-pt:not(.b-pt-ok) { opacity: 0; }
+.ballena.feliz .b-pt-ok { opacity: 1; }
+.ballena.triste .b-pt:not(.b-pt-err) { opacity: 0; }
+.ballena.triste .b-pt-err { opacity: 1; }
+.ballena.triste .b-luz { animation: none; opacity: .35; }
+
+/* ---- Bocadillo de terminal ---- */
+.dl-bocadillo {
+    text-align: left;
+    background: rgba(2, 8, 20, .82);
+    border-color: rgba(74, 222, 128, .22);
+    box-shadow: 0 18px 40px -16px rgba(0, 0, 0, .7), 0 0 0 1px rgba(74, 222, 128, .04) inset;
+}
+.dl-bocadillo-cola i { background: rgba(2, 8, 20, .9); border-color: rgba(74, 222, 128, .25); }
+.dl-bocadillo-txt {
+    font-family: 'Fira Code', ui-monospace, monospace;
+    font-style: normal;
+    font-size: .88rem;
+    color: #e2e8f0;
+}
+.dl-prompt { color: #4ade80; font-weight: 700; margin-right: .6ch; }
+.dl-resto { visibility: hidden; }
+.dl-cursor {
+    display: inline-block; width: .55em; height: 1.05em; margin-left: 1px;
+    vertical-align: -0.15em; background: #4ade80;
+    animation: dl-cursor 1s steps(1) infinite;
+}
+@keyframes dl-cursor { 50% { opacity: 0; } }
+.dl-bocadillo-autor { color: #64748b; font-family: 'Fira Code', ui-monospace, monospace; font-weight: 500; letter-spacing: 0; }
+.dl-bocadillo-autor::before { content: none; }
+.dl-bocadillo-autor.pendiente { visibility: hidden; }
+.dl-otra:hover { color: #4ade80; border-color: rgba(74, 222, 128, .45); }
+@media (max-width: 880px) { .dl-bocadillo-txt { font-size: .8rem; } }
+@media (prefers-reduced-motion: reduce) { .dl-cursor { animation: none !important; } }

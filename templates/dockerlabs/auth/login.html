@@ -2,6 +2,7 @@
 
 {% block extra_css %}
 <link rel="stylesheet" href="{{ static_v('dockerlabs/css/login.css') }}">
+<link rel="stylesheet" href="{{ static_v('dockerlabs/css/auth-ballena.css') }}">
 {% endblock %}
 
 {% block title %}Iniciar sesión - DockerLabs{% endblock %}
@@ -21,7 +22,8 @@
     <p class="loading-text">Iniciando sesión...</p>
 </div>
 
-<div class="login-container">
+<div class="login-container dl-auth">
+    {% with ballena_mensajes = {"idle": "¡Hola de nuevo! Te estaba esperando.", "user": "¿Quién anda por ahí?", "error": "Uy, eso no cuadra. ¿Probamos otra vez?", "envio": "Comprobando credenciales…", "pass": "Tranquilo, no miro.", "ver": "Bueno… solo un poquito.", "clic": "¡Splash!", "espera": "Respira hondo… y espera un poquito."} %}{% include "dockerlabs/auth/_ballena.html" %}{% endwith %}
     <div class="login-box">
         <div class="login-header">
             <h2>Iniciar Sesión</h2>
@@ -286,4 +288,5 @@ document.addEventListener("DOMContentLoaded", function() {
     });
 });
 </script>
+<script src="{{ static_v('dockerlabs/js/ballena.js') }}" defer></script>
 {% endblock %}

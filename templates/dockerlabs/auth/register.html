@@ -2,6 +2,7 @@
 
 {% block extra_css %}
 <link rel="stylesheet" href="{{ static_v('dockerlabs/css/registro.css') }}">
+<link rel="stylesheet" href="{{ static_v('dockerlabs/css/auth-ballena.css') }}">
 {% endblock %}
 
 {% block title %}Registro - DockerLabs{% endblock %}
@@ -21,7 +22,8 @@
     <p class="loading-text">Creando cuenta...</p>
 </div>
 
-<div class="register-container">
+<div class="register-container dl-auth">
+    {% with ballena_mensajes = {"idle": "¡Bienvenido a bordo! Vamos a crear tu cuenta.", "user": "Elige un nombre que dé miedo.", "email": "Ahí te mandaré el enlace para activar la cuenta.", "terms": "¡Ya casi está!", "error": "Algo no cuadra, revisa los datos.", "ok": "¡Hecho! Revisa tu correo.", "envio": "Creando tu cuenta…", "pass": "Tranquilo, no miro.", "ver": "Bueno… solo un poquito.", "clic": "¡Splash!", "espera": "Respira hondo… y espera un poquito."} %}{% include "dockerlabs/auth/_ballena.html" %}{% endwith %}
     <div class="register-box">
         <div class="register-header">
             <h2>Crear Cuenta</h2>
@@ -362,4 +364,5 @@ document.addEventListener("DOMContentLoaded", function() {
     });
 });
 </script>
+<script src="{{ static_v('dockerlabs/js/ballena.js') }}" defer></script>
 {% endblock %}
