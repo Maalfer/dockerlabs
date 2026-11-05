@@ -14,7 +14,7 @@ h2.text-center.mb-3 {
     color: var(--text-primary);
     letter-spacing: 0.03em;
     margin-bottom: 0.5rem !important;
-    background: linear-gradient(135deg, #60a5fa, #3b82f6);
+    background: linear-gradient(135deg, var(--primary-blue-light), var(--primary-blue));
     -webkit-background-clip: text;
     background-clip: text;
     -webkit-text-fill-color: transparent;
@@ -91,7 +91,7 @@ h2.text-center.mb-3 {
     left: 0;
     right: 0;
     height: 4px;
-    background: linear-gradient(90deg, #3b82f6, #60a5fa);
+    background: linear-gradient(90deg, var(--primary-blue), var(--primary-blue-light));
     opacity: 0;
     transition: opacity 0.3s ease;
 }
@@ -160,7 +160,7 @@ h2.text-center.mb-3 {
 }
 
 .error-message {
-    color: #ef4444;
+    color: var(--accent-red);
 }
 
 /* Machine Modal */
@@ -220,7 +220,7 @@ h2.text-center.mb-3 {
 
 .machine-modal-close:hover {
     background: rgba(239, 68, 68, 0.1);
-    color: #ef4444;
+    color: var(--accent-red);
 }
 
 .modal-machine-name {
@@ -229,7 +229,7 @@ h2.text-center.mb-3 {
     color: var(--text-primary);
     margin-bottom: 1.5rem;
     padding-right: 3rem;
-    background: linear-gradient(135deg, #60a5fa, #3b82f6);
+    background: linear-gradient(135deg, var(--primary-blue-light), var(--primary-blue));
     -webkit-background-clip: text;
     background-clip: text;
     -webkit-text-fill-color: transparent;
@@ -315,18 +315,18 @@ h2.text-center.mb-3 {
 }
 
 .btn-save {
-    background: linear-gradient(135deg, #3b82f6, #2563eb);
+    background: linear-gradient(135deg, var(--primary-blue), #2563eb);
     color: white;
 }
 
 .btn-save:hover {
-    background: linear-gradient(135deg, #2563eb, #1d4ed8);
+    background: linear-gradient(135deg, #2563eb, var(--primary-blue-dark));
     transform: translateY(-2px);
     box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
 }
 
 .btn-delete {
-    background: linear-gradient(135deg, #ef4444, #dc2626);
+    background: linear-gradient(135deg, var(--accent-red), #dc2626);
     color: white;
 }
 

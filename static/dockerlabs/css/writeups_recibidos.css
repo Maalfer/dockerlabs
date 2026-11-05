@@ -1,15 +1,15 @@
 /* Reusing variables and base styles from gestion_maquinas for consistency */
 :root {
-    --primary-color: #3b82f6;
+    --primary-color: var(--primary-blue);
     --primary-hover: #2563eb;
-    --secondary-color: #64748b;
-    --bg-dark: #0f172a;
-    --bg-card: #1e293b;
-    --text-main: #f8fafc;
+    --secondary-color: var(--text-muted);
+    --bg-dark: rgb(var(--surface-overlay-rgb));
+    --bg-card: rgb(var(--card-overlay-rgb));
+    --text-main: var(--text-primary);
     --text-muted: #94a3b8;
-    --border-color: #334155;
-    --glass-bg: rgba(30, 41, 59, 0.7);
-    --glass-border: 1px solid rgba(255, 255, 255, 0.1);
+    --border-color: var(--border-strong);
+    --glass-bg: rgba(var(--card-overlay-rgb), 0.7);
+    --glass-border: var(--glass-border-default);
 }
 
 body {
@@ -37,7 +37,7 @@ body {
     font-size: 2rem;
     font-weight: 700;
     margin-bottom: 0.5rem;
-    background: linear-gradient(to right, #60a5fa, #a855f7);
+    background: linear-gradient(to right, var(--primary-blue-light), #a855f7);
     background-clip: text;
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
@@ -147,22 +147,22 @@ body {
 
 .btn-action.approve {
     background: rgba(16, 185, 129, 0.1);
-    color: #10b981;
+    color: var(--accent-green);
 }
 
 .btn-action.approve:hover {
-    background: #10b981;
+    background: var(--accent-green);
     color: white;
     box-shadow: 0 0 12px rgba(16, 185, 129, 0.4);
 }
 
 .btn-action.delete {
     background: rgba(239, 68, 68, 0.1);
-    color: #ef4444;
+    color: var(--accent-red);
 }
 
 .btn-action.delete:hover {
-    background: #ef4444;
+    background: var(--accent-red);
     color: white;
     box-shadow: 0 0 12px rgba(239, 68, 68, 0.4);
 }

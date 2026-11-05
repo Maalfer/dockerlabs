@@ -484,10 +484,17 @@ def register_pages_admin_routes(
         if not user_id:
             return RedirectResponse(url="/login", status_code=302)
         current_user_role = session.get("role", "")
+        username = session.get("username")
+        machines = (
+            PendingMachineSubmission.query
+            .filter_by(autor_solicitante=username)
+            .order_by(PendingMachineSubmission.submitted_at.desc())
+            .all()
+        )
         return templates.TemplateResponse(
             request,
             "dockerlabs/auth/user-pending.html",
-            {"username": session.get("username"), "session": session, "url_for": url_for, "current_user_role": current_user_role, "g": {"csp_nonce": secrets.token_urlsafe(32)}},
+            {"username": username, "machines": machines, "session": session, "url_for": url_for, "current_user_role": current_user_role, "g": {"csp_nonce": secrets.token_urlsafe(32)}},
         )
 
 

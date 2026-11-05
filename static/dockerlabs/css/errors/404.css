@@ -1,9 +1,9 @@
 /* Estilos para página de error 404 - Página no encontrada */
 :root {
-    --primary-color: #3b82f6;
-    --glass-bg: rgba(30, 41, 59, 0.7);
-    --glass-border: 1px solid rgba(255, 255, 255, 0.1);
-    --text-main: #f8fafc;
+    --primary-color: var(--primary-blue);
+    --glass-bg: rgba(var(--card-overlay-rgb), 0.7);
+    --glass-border: var(--glass-border-default);
+    --text-main: var(--text-primary);
     --text-muted: #94a3b8;
 }
 
@@ -116,7 +116,7 @@
     gap: 0.5rem;
     padding: 0.8rem 2rem;
     background: rgba(59, 130, 246, 0.1);
-    color: #60a5fa;
+    color: var(--primary-blue-light);
     border: 1px solid rgba(59, 130, 246, 0.2);
     border-radius: 12px;
     font-weight: 600;
@@ -125,7 +125,7 @@
 }
 
 .btn-home:hover {
-    background: #3b82f6;
+    background: var(--primary-blue);
     color: white;
     box-shadow: 0 0 20px rgba(59, 130, 246, 0.4);
     transform: translateY(-2px);

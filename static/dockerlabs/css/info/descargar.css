@@ -84,7 +84,7 @@
 }
 
 .pasos code {
-    background: rgba(15, 23, 42, 0.6);
+    background: rgba(var(--surface-overlay-rgb), 0.6);
     border: 1px solid var(--border-subtle);
     border-radius: 6px;
     padding: 0.15rem 0.4rem;
@@ -94,7 +94,7 @@
 }
 
 .comando-box {
-    background: rgba(15, 23, 42, 0.75);
+    background: rgba(var(--surface-overlay-rgb), 0.75);
     border: 1px solid var(--border-subtle);
     border-radius: 10px;
     padding: 0.8rem 1rem;
@@ -146,7 +146,7 @@
 }
 
 .descargar-info kbd {
-    background: rgba(15, 23, 42, 0.7);
+    background: rgba(var(--surface-overlay-rgb), 0.7);
     border: 1px solid var(--border-subtle);
     border-radius: 5px;
     padding: 0.1rem 0.4rem;
@@ -154,7 +154,7 @@
 }
 
 .captura-box {
-    background: rgba(15, 23, 42, 0.6);
+    background: rgba(var(--surface-overlay-rgb), 0.6);
     border: 1px solid var(--border-subtle);
     border-radius: 14px;
     padding: 1rem;
@@ -196,7 +196,7 @@
 }
 
 .captura-item figcaption code {
-    background: rgba(15, 23, 42, 0.6);
+    background: rgba(var(--surface-overlay-rgb), 0.6);
     border: 1px solid var(--border-subtle);
     border-radius: 6px;
     padding: 0.1rem 0.35rem;

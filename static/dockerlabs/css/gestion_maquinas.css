@@ -1,11 +1,11 @@
 :root {
-    --primary-color: #3b82f6;
+    --primary-color: var(--primary-blue);
     --accent-bunker: #6f42c1;
-    --bg-dark: #0f172a;
-    --bg-card: rgba(30, 41, 59, 0.7);
-    --glass-bg: rgba(30, 41, 59, 0.7);
-    --glass-border: 1px solid rgba(255, 255, 255, 0.1);
-    --text-main: #f1f5f9;
+    --bg-dark: rgb(var(--surface-overlay-rgb));
+    --bg-card: rgba(var(--card-overlay-rgb), 0.7);
+    --glass-bg: rgba(var(--card-overlay-rgb), 0.7);
+    --glass-border: var(--glass-border-default);
+    --text-main: var(--text-primary);
     --text-muted: #94a3b8;
     --border-color: rgba(255, 255, 255, 0.1);
 }
@@ -31,7 +31,7 @@
 }
 
 .search-box:focus-within {
-    border-color: #3b82f6;
+    border-color: var(--primary-blue);
     box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
 }
 
@@ -51,7 +51,7 @@
 }
 
 .search-box input::placeholder {
-    color: #64748b;
+    color: var(--text-muted);
 }
 
 /* Pagination Container */
@@ -82,7 +82,7 @@
     align-items: center;
     gap: 0.5rem;
     padding: 0.6rem 1.2rem;
-    background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+    background: linear-gradient(135deg, var(--primary-blue), var(--accent-purple));
     color: white;
     text-decoration: none;
     border-radius: 8px;
@@ -155,7 +155,7 @@
     border: none;
     background: rgba(255, 255, 255, 0.05);
     /* Default visible background */
-    color: #cbd5e1;
+    color: var(--text-secondary);
     /* High contrast text */
     font-weight: 600;
     border-radius: 8px;
@@ -164,7 +164,7 @@
 }
 
 .platform-btn.active {
-    background: #3b82f6;
+    background: var(--primary-blue);
     /* Hardcoded blue */
     color: white;
     box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
@@ -269,9 +269,9 @@
 }
 
 .text-blue {
-    color: #60a5fa !important;
+    color: var(--primary-blue-light) !important;
     font-weight: 700;
-    border-left: 3px solid #60a5fa;
+    border-left: 3px solid var(--primary-blue-light);
 }
 
 .text-yellow {
@@ -343,23 +343,23 @@
 }
 
 .btn-action.save {
-    color: #10b981;
+    color: var(--accent-green);
     background: rgba(16, 185, 129, 0.1);
 }
 
 .btn-action.save:hover {
-    background: #10b981;
+    background: var(--accent-green);
     color: white;
     box-shadow: 0 0 10px rgba(16, 185, 129, 0.3);
 }
 
 .btn-action.delete {
-    color: #ef4444;
+    color: var(--accent-red);
     background: rgba(239, 68, 68, 0.1);
 }
 
 .btn-action.delete:hover {
-    background: #ef4444;
+    background: var(--accent-red);
     color: white;
     box-shadow: 0 0 10px rgba(239, 68, 68, 0.3);
 }
@@ -438,7 +438,7 @@
 
 /* Filters */
 .filter-row th {
-    background: rgba(15, 23, 42, 0.6);
+    background: rgba(var(--surface-overlay-rgb), 0.6);
     padding: 0.8rem;
     border-bottom: 2px solid var(--primary-color);
     /* Colorful separator */

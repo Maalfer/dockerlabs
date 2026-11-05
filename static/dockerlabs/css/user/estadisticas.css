@@ -29,7 +29,7 @@
 
 .chart-card {
     background: #1e293b;
-    border: 1px solid #334155;
+    border: 1px solid var(--border-strong);
     border-radius: 12px;
     padding: 1.5rem;
     box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
@@ -63,7 +63,7 @@
     font-weight: 700;
     margin: 3rem 0 1.5rem;
     padding-bottom: 0.5rem;
-    border-bottom: 1px solid #334155;
+    border-bottom: 1px solid var(--border-strong);
 }
 
 .section-title:first-of-type {
@@ -79,7 +79,7 @@
 
 .stat-tile {
     background: #1e293b;
-    border: 1px solid #334155;
+    border: 1px solid var(--border-strong);
     border-radius: 12px;
     padding: 1.25rem;
     text-align: center;
@@ -111,7 +111,7 @@
     align-items: flex-end;
     gap: 1rem;
     background: #1e293b;
-    border: 1px solid #334155;
+    border: 1px solid var(--border-strong);
     border-radius: 12px;
     padding: 1rem 1.25rem;
     margin-bottom: 1.5rem;
@@ -135,7 +135,7 @@
 .stats-filter-dates input[type="date"] {
     background: #0f172a;
     color: #f8fafc;
-    border: 1px solid #334155;
+    border: 1px solid var(--border-strong);
     border-radius: 8px;
     padding: 0.55rem 0.75rem;
     font-family: 'Fira Code', monospace;
@@ -181,7 +181,7 @@
 }
 
 .stats-filter-btn {
-    background: #8b5cf6;
+    background: var(--accent-purple);
     color: #fff;
     border: none;
     border-radius: 8px;
@@ -197,7 +197,7 @@
 }
 
 .stats-filter-hint {
-    color: #64748b;
+    color: var(--text-muted);
     font-size: 0.8rem;
     align-self: center;
     margin-left: auto;
@@ -215,7 +215,7 @@
 
 /* Tooltip personalizado para todas las gráficas */
 .chart-tooltip {
-    --tooltip-accent: #8b5cf6;
+    --tooltip-accent: var(--accent-purple);
     position: absolute;
     z-index: 50;
     pointer-events: none;
@@ -299,7 +299,7 @@
 
 .chart-tooltip__divider {
     height: 1px;
-    background: linear-gradient(90deg, var(--tooltip-accent) 0%, #334155 60%, transparent 100%);
+    background: linear-gradient(90deg, var(--tooltip-accent) 0%, var(--border-strong) 60%, transparent 100%);
     margin: 0.6rem 0;
 }
 

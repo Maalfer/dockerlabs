@@ -3,10 +3,10 @@
    en vez de amarillo/naranja = no encontrado) para distinguirlas a simple
    vista sin romper la consistencia visual entre ambas. */
 :root {
-    --primary-color: #ef4444;
-    --glass-bg: rgba(30, 41, 59, 0.7);
-    --glass-border: 1px solid rgba(255, 255, 255, 0.1);
-    --text-main: #f8fafc;
+    --primary-color: var(--accent-red);
+    --glass-bg: rgba(var(--card-overlay-rgb), 0.7);
+    --glass-border: var(--glass-border-default);
+    --text-main: var(--text-primary);
     --text-muted: #94a3b8;
 }
 
@@ -128,7 +128,7 @@
 }
 
 .btn-home:hover {
-    background: #ef4444;
+    background: var(--accent-red);
     color: white;
     box-shadow: 0 0 20px rgba(239, 68, 68, 0.4);
     transform: translateY(-2px);

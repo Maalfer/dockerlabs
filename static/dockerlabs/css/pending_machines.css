@@ -39,7 +39,7 @@
     gap: 0.35rem;
     background: rgba(59, 130, 246, 0.12);
     border: 1px solid rgba(59, 130, 246, 0.3);
-    color: #60a5fa;
+    color: var(--primary-blue-light);
     font-family: 'Fira Code', monospace;
     font-size: 0.78rem;
     padding: 0.2rem 0.7rem;
@@ -90,7 +90,7 @@
 
 /* ── Single card ── */
 .pm-card {
-    background: rgba(15, 23, 42, 0.85);
+    background: rgba(var(--surface-overlay-rgb), 0.85);
     border: 1px solid rgba(51, 65, 85, 0.55);
     border-radius: 16px;
     overflow: hidden;
@@ -109,7 +109,7 @@
 /* coloured top accent based on difficulty */
 .pm-card-accent {
     height: 3px;
-    background: linear-gradient(90deg, #3b82f6, #8b5cf6);
+    background: linear-gradient(90deg, var(--primary-blue), var(--accent-purple));
 }
 
 .pm-card[data-diff="muy fácil"] .pm-card-accent,
@@ -118,10 +118,10 @@
 .pm-card[data-diff="fácil"] .pm-card-accent,
 .pm-card[data-diff="facil"]  .pm-card-accent { background: linear-gradient(90deg, #06b6d4, #0284c7); }
 
-.pm-card[data-diff="medio"] .pm-card-accent { background: linear-gradient(90deg, #f59e0b, #d97706); }
+.pm-card[data-diff="medio"] .pm-card-accent { background: linear-gradient(90deg, var(--accent-yellow), #d97706); }
 
 .pm-card[data-diff="difícil"] .pm-card-accent,
-.pm-card[data-diff="dificil"]  .pm-card-accent { background: linear-gradient(90deg, #ef4444, #b91c1c); }
+.pm-card[data-diff="dificil"]  .pm-card-accent { background: linear-gradient(90deg, var(--accent-red), #b91c1c); }
 
 /* ── Card body ── */
 .pm-card-body {
@@ -151,7 +151,7 @@
 }
 
 .pm-name i {
-    color: #64748b;
+    color: var(--text-muted);
     font-size: 0.9rem;
 }
 
@@ -181,7 +181,7 @@
 .badge-rejected { background: rgba(239,68,68,.13);  border-color: rgba(239,68,68,.35);  color: #f87171; }
 
 .badge-diff-muy-facil  { background: rgba(34,197,94,.1);   border-color: rgba(34,197,94,.3);   color: #4ade80; }
-.badge-diff-facil      { background: rgba(6,182,212,.1);   border-color: rgba(6,182,212,.3);   color: #22d3ee; }
+.badge-diff-facil      { background: rgba(6,182,212,.1);   border-color: rgba(6,182,212,.3);   color: var(--accent-cyan); }
 .badge-diff-medio      { background: rgba(245,158,11,.1);  border-color: rgba(245,158,11,.3);  color: #fbbf24; }
 .badge-diff-dificil    { background: rgba(239,68,68,.1);   border-color: rgba(239,68,68,.3);   color: #f87171; }
 
@@ -223,7 +223,7 @@
 }
 
 .pm-meta-row i {
-    color: #3b82f6;
+    color: var(--primary-blue);
     font-size: 0.85rem;
     width: 16px;
     flex-shrink: 0;
@@ -231,14 +231,14 @@
 }
 
 .pm-meta-row span {
-    color: #cbd5e1;
+    color: var(--text-secondary);
     font-family: 'Fira Code', monospace;
     word-break: break-word;
     line-height: 1.5;
 }
 
 .pm-meta-row .label {
-    color: #64748b;
+    color: var(--text-muted);
     min-width: 60px;
     flex-shrink: 0;
 }
@@ -276,11 +276,11 @@
 .pm-btn-link {
     background: rgba(59, 130, 246, 0.1);
     border-color: rgba(59, 130, 246, 0.3);
-    color: #60a5fa;
+    color: var(--primary-blue-light);
 }
 .pm-btn-link:hover {
     background: rgba(59, 130, 246, 0.18);
-    border-color: #3b82f6;
+    border-color: var(--primary-blue);
     color: #93c5fd;
 }
 
@@ -291,7 +291,7 @@
 }
 .pm-btn-writeup:hover {
     background: rgba(139, 92, 246, 0.18);
-    border-color: #8b5cf6;
+    border-color: var(--accent-purple);
     color: #c4b5fd;
 }
 
@@ -303,7 +303,7 @@
 }
 .pm-btn-reject:hover {
     background: rgba(239, 68, 68, 0.18);
-    border-color: #ef4444;
+    border-color: var(--accent-red);
     color: #fca5a5;
 }
 

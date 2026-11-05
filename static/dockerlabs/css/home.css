@@ -7,8 +7,8 @@
 }
 
 .busqueda-con-filtro .form-control {
-    background: rgba(15, 23, 42, 0.6);
-    border: 1px solid #334155;
+    background: rgba(var(--surface-overlay-rgb), 0.6);
+    border: 1px solid var(--border-strong);
     color: #f1f5f9;
 }
 
@@ -17,8 +17,8 @@
 }
 
 .busqueda-con-filtro .form-control:focus {
-    background: rgba(15, 23, 42, 0.8);
-    border-color: #3b82f6;
+    background: rgba(var(--surface-overlay-rgb), 0.8);
+    border-color: var(--primary-blue);
     box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
 }
 
@@ -30,8 +30,8 @@
     align-items: center;
     flex-shrink: 0;
     gap: 2px;
-    background: rgba(15, 23, 42, 0.96);
-    border: 1px solid #334155;
+    background: rgba(var(--surface-overlay-rgb), 0.96);
+    border: 1px solid var(--border-strong);
     border-radius: 10px;
     padding: 3px;
 }
@@ -67,7 +67,7 @@
 .search-buttons-group .btn-filter:active {
     background: rgba(34, 211, 238, 0.12);
     border: none;
-    color: var(--accent-cyan, #22d3ee);
+    color: var(--accent-cyan, var(--accent-cyan));
 }
 
 .search-buttons-group .btn-category:focus,
@@ -87,15 +87,15 @@
 .search-buttons-group .dropdown-menu {
     font-size: 0.875rem;
     z-index: 1100 !important;
-    background: rgba(15, 23, 42, 0.98);
-    border: 1px solid #334155;
+    background: rgba(var(--surface-overlay-rgb), 0.98);
+    border: 1px solid var(--border-strong);
     border-radius: 8px;
     padding: 0.5rem 0;
     margin-top: 8px !important;
 }
 
 .search-buttons-group .dropdown-item {
-    color: #cbd5e1;
+    color: var(--text-secondary);
     padding: 0.5rem 1rem;
     font-size: 0.85rem;
 }
@@ -109,7 +109,7 @@
    plataforma, resueltas/sin resolver). Mismo patrón que ya usaban los
    botones de dificultad. */
 .search-buttons-group .dropdown-item .count {
-    color: #64748b;
+    color: var(--text-muted);
     font-size: 0.8em;
 }
 
@@ -118,7 +118,7 @@
 }
 
 .search-buttons-group .dropdown-divider {
-    border-color: #334155;
+    border-color: var(--border-strong);
     margin: 0.5rem 0;
 }
 
@@ -135,7 +135,7 @@
     border: 1px solid rgba(139, 92, 246, 0.6);
     border-radius: 6px;
     cursor: pointer;
-    background: rgba(15, 23, 42, 0.96);
+    background: rgba(var(--surface-overlay-rgb), 0.96);
     color: #c4b5fd;
     box-shadow: 0 0 10px rgba(139, 92, 246, 0.15);
     transition: all 0.3s ease;

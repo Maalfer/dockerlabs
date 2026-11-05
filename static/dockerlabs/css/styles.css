@@ -22,6 +22,9 @@
     --hack-green-dark: #1f9900;
     --hack-glow: rgba(60, 255, 0, 0.55);
     --hack-border: #1a3f1a;
+    --surface-overlay-rgb: 15, 23, 42;
+    --card-overlay-rgb: 30, 41, 59;
+    --glass-border-default: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 *,
@@ -75,7 +78,7 @@ body {
 }
 
 header {
-    background: rgba(15, 23, 42, 0.96);
+    background: rgba(var(--surface-overlay-rgb), 0.96);
     -webkit-backdrop-filter: blur(12px);
     backdrop-filter: blur(12px);
     border-bottom: 1px solid rgba(51, 65, 85, 0.9);
@@ -83,7 +86,7 @@ header {
     display: grid;
     grid-template-columns: auto 1fr auto;
     align-items: center;
-    box-shadow: 0 12px 30px rgba(15, 23, 42, 0.85);
+    box-shadow: 0 12px 30px rgba(var(--surface-overlay-rgb), 0.85);
     position: fixed;
     top: 0;
     width: 100%;
@@ -242,7 +245,7 @@ header h1 a:hover {
 .btn-logout:hover {
     background: #1a0000 !important;
     color: #ffe2e2 !important;
-    border-color: #ef4444 !important;
+    border-color: var(--accent-red) !important;
     box-shadow: 0 0 12px rgba(248, 113, 113, 0.9) !important;
 }
 
@@ -260,13 +263,13 @@ header h1 a:hover {
     align-items: center;
     margin-bottom: 1.5rem;
     gap: 1rem;
-    background: rgba(15, 23, 42, 0.96);
+    background: rgba(var(--surface-overlay-rgb), 0.96);
     padding: 1.1rem 1.3rem;
     border-radius: 16px;
     border: 1px solid var(--border-strong);
     -webkit-backdrop-filter: blur(18px);
     backdrop-filter: blur(18px);
-    box-shadow: 0 18px 40px rgba(15, 23, 42, 0.9);
+    box-shadow: 0 18px 40px rgba(var(--surface-overlay-rgb), 0.9);
 }
 
 .header .col-md-6 {
@@ -295,7 +298,7 @@ header h1 a:hover {
 }
 
 #buscador {
-    background: rgba(15, 23, 42, 0.96);
+    background: rgba(var(--surface-overlay-rgb), 0.96);
     border: 1px solid var(--border-strong);
     border-radius: 999px;
     padding: 0.55rem 0.9rem;
@@ -310,7 +313,7 @@ header h1 a:hover {
     outline: none;
     border-color: var(--accent-cyan);
     box-shadow: 0 0 0 1px rgba(34, 211, 238, 0.5);
-    background: rgba(15, 23, 42, 0.98);
+    background: rgba(var(--surface-overlay-rgb), 0.98);
 }
 
 #buscador::placeholder {
@@ -352,7 +355,7 @@ header h1 a:hover {
 
 #filtro-dificultad button {
     flex-shrink: 0;
-    background: rgba(15, 23, 42, 0.96);
+    background: rgba(var(--surface-overlay-rgb), 0.96);
     border: 1px solid var(--border-strong);
     color: var(--text-secondary);
     padding: 0.5rem 1rem;
@@ -514,7 +517,7 @@ header h1 a:hover {
     flex-wrap: wrap;
     gap: 0.4rem;
     padding: 0.25rem 0.5rem;
-    background: rgba(15, 23, 42, 0.4);
+    background: rgba(var(--surface-overlay-rgb), 0.4);
     border: 1px solid rgba(51, 65, 85, 0.4);
     border-radius: 6px;
 }
@@ -676,7 +679,7 @@ header h1 a:hover {
 }
 
 .acciones button {
-    background: rgba(15, 23, 42, 0.96);
+    background: rgba(var(--surface-overlay-rgb), 0.96);
     border: 1px solid var(--border-strong);
     color: var(--primary-blue-light);
     border-radius: 10px;
@@ -735,7 +738,7 @@ header h1 a:hover {
     left: 6%;
     width: 88%;
     height: 10px;
-    background: rgba(15, 23, 42, 0.8);
+    background: rgba(var(--surface-overlay-rgb), 0.8);
     border-radius: 50%;
     filter: blur(8px);
     transition: bottom 0.25s ease, width 0.25s ease, background 0.25s ease, filter 0.25s ease;
@@ -921,7 +924,7 @@ footer {
     left: 50%;
     width: 200%;
     height: 80px;
-    background: linear-gradient(to right, #020617, #020617);
+    background: linear-gradient(to right, var(--background-dark), var(--background-dark));
     border-radius: 50%;
     transform: translateX(-50%);
     animation: wave 6s linear infinite;
@@ -930,7 +933,7 @@ footer {
 
 .wave.wave2 {
     height: 100px;
-    background: linear-gradient(to right, #020617, #020617);
+    background: linear-gradient(to right, var(--background-dark), var(--background-dark));
     opacity: 0.5;
     animation: wave 9s linear infinite;
 }
@@ -957,7 +960,7 @@ footer {
     left: 0;
     width: 100%;
     height: 100%;
-    background: radial-gradient(circle at top, rgba(15, 23, 42, 0.96), rgba(15, 23, 42, 0.98));
+    background: radial-gradient(circle at top, rgba(var(--surface-overlay-rgb), 0.96), rgba(var(--surface-overlay-rgb), 0.98));
     display: none;
     align-items: center;
     justify-content: center;
@@ -1694,7 +1697,7 @@ footer {
     left: 0;
     width: 100%;
     height: 100%;
-    background: rgba(15, 23, 42, 0.6);
+    background: rgba(var(--surface-overlay-rgb), 0.6);
     -webkit-backdrop-filter: blur(12px);
     backdrop-filter: blur(12px);
     z-index: 10000;
@@ -1743,7 +1746,7 @@ footer {
     right: 1.25rem;
     background: transparent;
     border: none;
-    color: #64748b;
+    color: var(--text-muted);
     font-size: 1.25rem;
     cursor: pointer;
     padding: 4px;
@@ -1779,7 +1782,7 @@ footer {
     font-size: 0.8rem;
     text-transform: uppercase;
     letter-spacing: 0.05em;
-    color: #64748b;
+    color: var(--text-muted);
     font-weight: 600;
 }
 
@@ -1810,7 +1813,7 @@ footer {
 
 .ranking-item:hover {
     background: rgba(30, 41, 59, 1);
-    border-color: #334155;
+    border-color: var(--border-strong);
     transform: translateY(-1px);
 }
 
@@ -1834,7 +1837,7 @@ footer {
 }
 
 .colaboradores-card {
-    background: #020617;
+    background: var(--background-dark);
     border: 1px solid #0f172a;
     border-radius: 20px;
 }
@@ -1848,7 +1851,7 @@ footer {
 
 .colaborador {
     position: relative;
-    background: #020617;
+    background: var(--background-dark);
     border: 2px solid #0f172a;
     border-radius: 24px;
     padding: 3rem 2.5rem;
@@ -1869,7 +1872,7 @@ footer {
     height: 96px;
     border-radius: 999px;
     object-fit: cover;
-    background: #020617;
+    background: var(--background-dark);
     border: 1px solid #0f172a;
     transition: transform 0.45s cubic-bezier(0.22, 1, 0.36, 1);
 }
@@ -1883,7 +1886,7 @@ footer {
 
 .colaborador:hover {
     transform: translateY(-4px);
-    border-color: #1f2937;
+    border-color: var(--border-subtle);
     box-shadow: 0 28px 60px rgba(0, 0, 0, 0.7);
 }
 
@@ -1947,25 +1950,25 @@ footer {
 /* ===== New Card ===== */
 
 .como_se_crea_una_maquina-card {
-    background: #020617;
+    background: var(--background-dark);
     border: 1px solid #0f172a;
     border-radius: 20px;
 }
 
 .enviar_maquina-card {
-    background: #020617;
+    background: var(--background-dark);
     border: 1px solid #0f172a;
     border-radius: 20px;
 }
 
 .soporte-card {
-    background: #020617;
+    background: var(--background-dark);
     border: 1px solid #0f172a;
     border-radius: 20px;
 }
 
 .intrucciones_de_uso-card {
-    background: #020617;
+    background: var(--background-dark);
     border: 1px solid #0f172a;
     border-radius: 20px;
 }
@@ -2000,7 +2003,7 @@ footer {
 
 .alert-hint {
     background: rgba(59, 130, 246, 0.08);
-    color: #60a5fa;
+    color: var(--primary-blue-light);
     padding: 16px 20px;
     border-radius: 12px;
     border: 1px solid rgba(96, 165, 250, 0.6);
@@ -2018,7 +2021,7 @@ footer {
 }
 
 .alert-hint:hover {
-    border-color: #60a5fa;
+    border-color: var(--primary-blue-light);
     box-shadow:
         0 0 10px rgba(96, 165, 250, 0.7),
         0 0 20px rgba(96, 165, 250, 0.5);
@@ -2086,7 +2089,7 @@ footer {
     padding: 0.35rem 1rem;
     border: 1px solid var(--border-strong);
     border-radius: 999px;
-    background: rgba(15, 23, 42, 0.7);
+    background: rgba(var(--surface-overlay-rgb), 0.7);
     display: inline-flex;
     align-items: center;
     gap: 0.45rem;

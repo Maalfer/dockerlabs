@@ -22,7 +22,7 @@
 }
 
 .brand-title:hover .brand-text {
-    color: #8b5cf6;
+    color: var(--accent-purple);
     text-shadow: 0 0 15px rgba(139, 92, 246, 0.4);
 }
 
@@ -187,7 +187,7 @@
     padding: 10px 12px;
     border-radius: 10px;
     border: 1px solid #2d3748;
-    background: #0b1220;
+    background: var(--surface-dark);
     color: #fff;
     outline: none;
     transition: border-color 0.2s ease, box-shadow 0.2s ease;
@@ -211,7 +211,7 @@
     padding: 12px;
     border: none;
     border-radius: 10px;
-    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+    background: linear-gradient(135deg, #6366f1, var(--accent-purple));
     color: white;
     font-weight: bold;
     cursor: pointer;
@@ -242,7 +242,7 @@
     position: absolute;
     top: -5px;
     right: -5px;
-    background-color: #ef4444;
+    background-color: var(--accent-red);
     color: white;
     border-radius: 50%;
     padding: 2px 6px;
@@ -257,7 +257,7 @@
 #notificationsModal {
     position: fixed;
     inset: 0;
-    background: rgba(15, 23, 42, 0.6);
+    background: rgba(var(--surface-overlay-rgb), 0.6);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
     display: none;
@@ -308,7 +308,7 @@
     border-radius: 8px;
     border: none;
     background: transparent;
-    color: #64748b;
+    color: var(--text-muted);
     font-size: 0.9rem;
     display: flex;
     align-items: center;
@@ -347,7 +347,7 @@
 
 .notif-header-icon {
     font-size: 1.3rem;
-    color: #3b82f6;
+    color: var(--primary-blue);
     flex-shrink: 0;
 }
 
@@ -362,7 +362,7 @@
 .notif-header-subtitle {
     font-family: 'Inter', sans-serif;
     font-size: 0.75rem;
-    color: #64748b;
+    color: var(--text-muted);
     text-transform: uppercase;
     letter-spacing: 0.05em;
     margin-top: 0.3rem;
@@ -390,7 +390,7 @@
     border-radius: 8px;
     border: 1px solid transparent;
     background: transparent;
-    color: #64748b;
+    color: var(--text-muted);
     font-family: 'Inter', sans-serif;
     font-size: 0.8rem;
     font-weight: 500;
@@ -407,7 +407,7 @@
 .notif-tab-btn.active {
     background: rgba(59, 130, 246, 0.12);
     border-color: rgba(59, 130, 246, 0.28);
-    color: #60a5fa;
+    color: var(--primary-blue-light);
 }
 
 /* Content area */
@@ -440,7 +440,7 @@
     display: flex;
     align-items: center;
     gap: 0.6rem;
-    color: #64748b;
+    color: var(--text-muted);
     font-family: 'Inter', sans-serif;
     font-size: 0.9rem;
     padding: 4rem 1rem;
@@ -470,7 +470,7 @@
     background: transparent;
     border: none;
     border-top: 1px solid rgba(148, 163, 184, 0.1);
-    color: #64748b;
+    color: var(--text-muted);
     font-family: 'Inter', sans-serif;
     font-size: 0.8rem;
     cursor: pointer;
@@ -481,7 +481,7 @@
 
 .notif-toggle-btn:hover {
     background: rgba(59, 130, 246, 0.07);
-    color: #64748b;
+    color: var(--text-muted);
 }
 
 /* Mobile: slide up from bottom */
@@ -524,7 +524,7 @@
 }
 
 .notification-item.unread {
-    border-left: 3px solid #3b82f6;
+    border-left: 3px solid var(--primary-blue);
     background: rgba(15, 35, 70, 0.65);
     box-shadow: inset 4px 0 12px -6px rgba(59, 130, 246, 0.25);
 }
@@ -557,7 +557,7 @@
 }
 
 .notification-title i {
-    color: #3b82f6;
+    color: var(--primary-blue);
     font-size: 1.2rem;
 }
 
@@ -572,7 +572,7 @@
 
 .notification-sender {
     font-weight: 600;
-    color: #cbd5e1;
+    color: var(--text-secondary);
     display: flex;
     align-items: center;
     gap: 0.3rem;
@@ -614,13 +614,13 @@
 
 .notification-content.markdown-content h1 {
     font-size: 1.5rem;
-    border-bottom: 2px solid #3b82f6;
+    border-bottom: 2px solid var(--primary-blue);
     padding-bottom: 0.5rem;
 }
 
 .notification-content.markdown-content h2 {
     font-size: 1.3rem;
-    border-bottom: 1px solid #334155;
+    border-bottom: 1px solid var(--border-strong);
     padding-bottom: 0.25rem;
 }
 
@@ -643,7 +643,7 @@
     font-family: 'Fira Code', monospace;
     font-size: 0.85rem;
     color: #e2e8f0;
-    border: 1px solid #334155;
+    border: 1px solid var(--border-strong);
 }
 
 .notification-content.markdown-content pre {
@@ -652,7 +652,7 @@
     border-radius: 8px;
     overflow-x: auto;
     margin: 0.75rem 0;
-    border: 1px solid #334155;
+    border: 1px solid var(--border-strong);
 }
 
 .notification-content.markdown-content pre code {
@@ -663,14 +663,14 @@
 }
 
 .notification-content.markdown-content a {
-    color: #3b82f6;
+    color: var(--primary-blue);
     text-decoration: none;
     font-weight: 500;
-    border-bottom: 1px dotted #3b82f6;
+    border-bottom: 1px dotted var(--primary-blue);
 }
 
 .notification-content.markdown-content a:hover {
-    color: #60a5fa;
+    color: var(--primary-blue-light);
     border-bottom-style: solid;
 }
 
@@ -694,10 +694,10 @@
 }
 
 .notification-content.markdown-content blockquote {
-    border-left: 4px solid #3b82f6;
+    border-left: 4px solid var(--primary-blue);
     padding-left: 1rem;
     margin: 0.75rem 0;
-    color: #cbd5e1;
+    color: var(--text-secondary);
     font-style: italic;
     background: rgba(59, 130, 246, 0.1);
     padding: 0.75rem 1rem;
@@ -710,13 +710,13 @@
 }
 
 .notification-content.markdown-content em {
-    color: #cbd5e1;
+    color: var(--text-secondary);
     font-style: italic;
 }
 
 .notification-content.markdown-content hr {
     border: none;
-    border-top: 1px solid #334155;
+    border-top: 1px solid var(--border-strong);
     margin: 1rem 0;
 }
 
@@ -728,7 +728,7 @@
 
 .notification-content.markdown-content th,
 .notification-content.markdown-content td {
-    border: 1px solid #334155;
+    border: 1px solid var(--border-strong);
     padding: 0.5rem;
     text-align: left;
 }
@@ -746,7 +746,7 @@
 }
 
 .notification-mark-read-btn {
-    background: linear-gradient(135deg, #3b82f6, #2563eb);
+    background: linear-gradient(135deg, var(--primary-blue), #2563eb);
     color: white;
     border: none;
     padding: 0.5rem 1rem;
@@ -762,7 +762,7 @@
 }
 
 .notification-mark-read-btn:hover {
-    background: linear-gradient(135deg, #2563eb, #1d4ed8);
+    background: linear-gradient(135deg, #2563eb, var(--primary-blue-dark));
     transform: translateY(-1px);
     box-shadow: 0 6px 8px -1px rgba(59, 130, 246, 0.4);
 }
@@ -772,7 +772,7 @@
 }
 
 .notification-delete-btn {
-    background: linear-gradient(135deg, #ef4444, #dc2626);
+    background: linear-gradient(135deg, var(--accent-red), #dc2626);
     color: white;
     border: none;
     padding: 0.5rem;
@@ -829,7 +829,7 @@
     gap: 0.25rem;
     padding: 0.25rem 0.6rem;
     border-radius: 20px;
-    border: 1px solid #334155;
+    border: 1px solid var(--border-strong);
     background: rgba(51, 65, 85, 0.4);
     cursor: pointer;
     font-size: 0.9rem;
@@ -840,20 +840,20 @@
 
 .reaction-pill:hover {
     background: rgba(59, 130, 246, 0.15);
-    border-color: #3b82f6;
+    border-color: var(--primary-blue);
     color: #f1f5f9;
     transform: scale(1.05);
 }
 
 .reaction-pill.reacted {
     background: rgba(59, 130, 246, 0.2);
-    border-color: #3b82f6;
+    border-color: var(--primary-blue);
     color: #93c5fd;
 }
 
 .reaction-pill.reacted:hover {
     background: rgba(239, 68, 68, 0.15);
-    border-color: #ef4444;
+    border-color: var(--accent-red);
     color: #fca5a5;
 }
 
@@ -880,15 +880,15 @@
     border-radius: 20px;
     border: 1px dashed #475569;
     background: transparent;
-    color: #64748b;
+    color: var(--text-muted);
     cursor: pointer;
     font-size: 0.9rem;
     transition: border-color 0.15s ease, color 0.15s ease, background 0.15s ease;
 }
 
 .reaction-add-btn:hover {
-    border-color: #3b82f6;
-    color: #3b82f6;
+    border-color: var(--primary-blue);
+    color: var(--primary-blue);
     background: rgba(59, 130, 246, 0.1);
 }
 
@@ -901,7 +901,7 @@
     gap: 0.2rem;
     padding: 0.5rem;
     background: #1e293b;
-    border: 1px solid #334155;
+    border: 1px solid var(--border-strong);
     border-radius: 12px;
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
     z-index: 100;
