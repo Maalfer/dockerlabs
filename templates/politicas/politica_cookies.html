@@ -3,13 +3,16 @@
 {% block title %}Política de Cookies - DockerLabs{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{{ static_v('dockerlabs/css/politicas/politica_cookies.css') }}"
+<link rel="stylesheet" href="{{ static_v('dockerlabs/css/politicas/politicas-comun.css') }}"
       media="print" onload="this.media='all'">
-<noscript><link rel="stylesheet" href="{{ static_v('dockerlabs/css/politicas/politica_cookies.css') }}"></noscript>
+<noscript><link rel="stylesheet" href="{{ static_v('dockerlabs/css/politicas/politicas-comun.css') }}"></noscript>
+<link rel="stylesheet" href="{{ static_v('dockerlabs/css/auth-ballena.css') }}">
 {% endblock %}
 
 {% block content %}
-<div class="policy-container">
+<div class="policy-container dl-lectura">
+    {% with ballena_mensajes = {"idle": "Soy Cody. ¿Cookies? Solo la imprescindible. Te lo resumo ↓", "fin": "¡Fin! Ni una cookie de rastreo, palabra de ballena."}, ballena_lectura = true %}{% include "dockerlabs/auth/_ballena.html" %}{% endwith %}
+
 
     <div class="policy-header">
         <span class="terminal-prompt">$</span>
@@ -24,7 +27,7 @@
             página web y mejorar la experiencia del usuario. A continuación, detallamos qué son las cookies,
             cuáles utilizamos y cómo puedes gestionarlas.</p>
 
-        <section class="policy-section">
+        <section class="policy-section" data-tldr="Una cookie es un archivito que recuerda cosas como tu sesión.">
             <h2><span class="policy-section-num">1</span> ¿Qué son las Cookies?</h2>
             <p>Las cookies son pequeños archivos de texto que los sitios web almacenan en su ordenador o
                 dispositivo móvil cuando los visita. Permiten que el sitio web recuerde sus acciones y
@@ -32,7 +35,7 @@
                 volver a introducirlas cada vez que vuelve al sitio o navega de una página a otra.</p>
         </section>
 
-        <section class="policy-section">
+        <section class="policy-section" data-tldr="Solo usamos una cookie técnica: «session». Nada de publicidad ni rastreo.">
             <h2><span class="policy-section-num">2</span> Cookies que Utilizamos</h2>
             <p>DockerLabs utiliza únicamente <strong>cookies técnicas y de sesión</strong>, necesarias para el
                 correcto funcionamiento de la plataforma:</p>
@@ -45,7 +48,7 @@
                 comerciales.</p>
         </section>
 
-        <section class="policy-section">
+        <section class="policy-section" data-tldr="Si bloqueas las cookies, no podrás iniciar sesión.">
             <h2><span class="policy-section-num">3</span> Gestión de Cookies</h2>
             <p>Dado que nuestras cookies son estrictamente necesarias para el funcionamiento del área de usuarios
                 (login y registro), si decide bloquearlas a través de la configuración de su navegador, es
@@ -53,10 +56,11 @@
         </section>
 
         <div class="policy-back">
-            <a href="{{ url_for('main.home') }}" class="policy-back-btn">
+            <a href="{{ url_for('main.home') }}" class="policy-back-btn dl-btn dl-btn--neutro">
                 <i class="bi bi-arrow-left"></i> Volver al Inicio
             </a>
         </div>
     </div>
 </div>
+<script src="{{ static_v('dockerlabs/js/ballena.js') }}" defer></script>
 {% endblock %}

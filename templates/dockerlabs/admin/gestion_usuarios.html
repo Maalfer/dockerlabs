@@ -296,7 +296,7 @@
                 <td style="color: #94a3b8; font-size: 0.875rem;">{{ usuario.created_at.strftime('%Y-%m-%d') if usuario.created_at else '—' }}</td>
                 {% if current_user_role == 'admin' %}
                 <td>
-                    <button type="button" class="btn-delete delete-user-btn" data-user-id="{{ usuario.id }}" data-csrf="{{ csrf_token_value }}">
+                    <button type="button" class="btn-delete delete-user-btn dl-btn dl-btn--peligro" data-user-id="{{ usuario.id }}" data-csrf="{{ csrf_token_value }}">
                         <i class="bi bi-trash"></i> Eliminar
                     </button>
                 </td>

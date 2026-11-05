@@ -1,0 +1,122 @@
+/* ==========================================================================
+   Footer compartido DockerLabs / BunkerLabs — versión móvil (≤ 768 px).
+   Lo cargan las dos bases (templates/dockerlabs/base.html y
+   templates/bunkerlabs/base.html) después de su CSS propio. En escritorio cada
+   web conserva su footer fijo de siempre; aquí solo se define el móvil.
+
+   Antes, en móvil, los enlaces eran un párrafo corrido ("Equipo de /
+   DockerLabs" partido entre líneas y separadores "·" colgando al final de
+   línea), los iconos quedaban muy separados del texto y el body dejaba 100 px
+   vacíos bajo el footer. Ahora:
+     1) iconos de redes como botones táctiles de 42 px
+     2) enlaces como "chips" que nunca se parten
+     3) copyright y versión, discretos, cerrando el footer
+
+   Acento: ámbar por defecto; BunkerLabs define --dl-acento (morado).
+   ========================================================================== */
+
+@media (max-width: 768px) {
+    body { padding-bottom: 0 !important; }
+
+    footer {
+        --dl-footer-acento: var(--dl-acento, #f59e0b);
+        position: relative !important;
+        margin-top: 2.5rem;
+        padding: 24px 16px calc(20px + env(safe-area-inset-bottom)) !important;
+        border-top: 1px solid rgba(148, 163, 184, .12) !important;
+        background: linear-gradient(180deg, rgba(15, 23, 42, .35), rgba(2, 6, 23, .9)) !important;
+        box-shadow: none !important;
+    }
+    footer .wave-container { display: none !important; }
+
+    footer .footer-content {
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: center !important;
+        gap: 18px !important;
+        max-width: 420px;
+        margin: 0 auto !important;
+        padding: 0 !important;
+    }
+
+    /* 1) Redes sociales */
+    footer .footer-icons {
+        order: -1;
+        display: flex !important;
+        justify-content: center !important;
+        gap: 12px !important;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+    footer .footer-icon {
+        display: inline-flex !important;
+        align-items: center;
+        justify-content: center;
+        width: 42px;
+        height: 42px;
+        margin: 0 !important;
+        padding: 0 !important;
+        border-radius: 12px;
+        background: rgba(255, 255, 255, .03);
+        border: 1px solid rgba(148, 163, 184, .16);
+        transition: border-color .2s ease, background-color .2s ease, transform .2s ease;
+    }
+    footer .footer-icon:is(:hover, :focus-visible) {
+        border-color: var(--dl-footer-acento);
+        background: rgba(255, 255, 255, .06);
+        transform: translateY(-1px);
+    }
+    footer .footer-icon i { font-size: 1.15rem !important; margin: 0 !important; }
+
+    /* 2) Enlaces */
+    footer .footer-content p.copyright {
+        display: flex !important;
+        flex-wrap: wrap;
+        justify-content: center;
+        align-items: center;
+        gap: 2px 2px;
+        margin: 0 !important;
+        padding: 0 !important;
+        font-size: .8rem !important;
+        line-height: 1.4 !important;
+        text-align: center;
+    }
+    footer .footer-sep { display: none; }
+    footer .copyright > .footer-link {
+        display: inline-flex !important;
+        align-items: center;
+        min-height: 34px;
+        margin: 0 !important;
+        padding: 0 10px !important;
+        border-radius: 8px;
+        font-size: .8rem !important;
+        color: var(--text-secondary, #cbd5e1) !important;
+        white-space: nowrap;
+        text-decoration: none;
+    }
+    footer .copyright > .footer-link:is(:hover, :focus-visible) { color: var(--dl-footer-acento) !important; }
+    footer .copyright > .footer-link i { display: none; }
+
+    /* 3) Copyright y versión */
+    footer .footer-copy {
+        order: 2;
+        flex-basis: 100%;
+        margin-top: 10px;
+        padding-top: 14px;
+        border-top: 1px solid rgba(148, 163, 184, .1);
+        color: #64748b;
+        font-size: .74rem;
+    }
+    footer .footer-copy .footer-link {
+        display: inline !important;
+        min-height: 0;
+        padding: 0 0 0 4px !important;
+        font-size: inherit !important;
+        color: #94a3b8 !important;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    footer .footer-icon { transition: none; }
+    footer .footer-icon:is(:hover, :focus-visible) { transform: none; }
+}

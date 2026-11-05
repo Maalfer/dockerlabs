@@ -100,10 +100,10 @@
                         </div>
 
                         <div class="form-actions">
-                            <button type="button" class="btn-save" onclick="saveProfile()">
+                            <button type="button" class="btn-save dl-btn" onclick="saveProfile()">
                                 <i class="bi bi-check-circle"></i> Guardar cambios
                             </button>
-                            <button type="button" class="btn-cancel" onclick="cancelEdit()">
+                            <button type="button" class="btn-cancel dl-btn dl-btn--neutro" onclick="cancelEdit()">
                                 <i class="bi bi-x-circle"></i> Cancelar
                             </button>
                         </div>
@@ -156,10 +156,10 @@
                     </div>
 
                     <div class="form-actions">
-                        <button type="button" id="btnChangePassword" class="btn-save">
+                        <button type="button" id="btnChangePassword" class="btn-save dl-btn">
                             <i class="bi bi-shield-check"></i> Actualizar contraseña
                         </button>
-                        <button type="reset" class="btn-cancel">
+                        <button type="reset" class="btn-cancel dl-btn dl-btn--neutro">
                             <i class="bi bi-x-circle"></i> Cancelar
                         </button>
                     </div>
@@ -176,22 +176,7 @@
                 <p style="color: var(--text-secondary); margin-bottom: 1.5rem; font-size: 0.95rem;">
                     Envía una notificación global a todos los usuarios registrados. Aparecerá en el icono de la campana del header.
                 </p>
-                <button type="button" onclick="openSendNotificationModal()" style="
-                    display: inline-flex;
-                    align-items: center;
-                    gap: 0.6rem;
-                    padding: 0.75rem 1.5rem;
-                    background: linear-gradient(135deg, #6366f1, #8b5cf6);
-                    color: white;
-                    border: none;
-                    border-radius: 10px;
-                    font-size: 0.95rem;
-                    font-weight: 600;
-                    cursor: pointer;
-                    transition: all 0.2s ease;
-                    box-shadow: 0 4px 15px rgba(99, 102, 241, 0.35);
-                " onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 6px 20px rgba(99,102,241,0.45)'"
-                   onmouseout="this.style.transform='translateY(0)';this.style.boxShadow='0 4px 15px rgba(99,102,241,0.35)'">
+                <button class="dl-btn" type="button" onclick="openSendNotificationModal()">
                     <i class="bi bi-megaphone-fill" style="font-size: 1.1rem;"></i>
                     Enviar notificación a todos los usuarios
                 </button>
@@ -245,9 +230,7 @@
                                 </td>
                                 <td style="padding:0.6rem 0.75rem;border-bottom:1px solid #1e293b;text-align:right;">
                                     {% if not t.revoked_at %}
-                                    <button type="button" class="api-token-revoke-btn"
-                                            style="padding:0.4rem 0.9rem;border:1px solid rgba(248,113,113,0.4);border-radius:8px;
-                                                   background:rgba(248,113,113,0.08);color:#f87171;font-size:0.82rem;font-weight:600;cursor:pointer;">
+                                    <button type="button" class="api-token-revoke-btn dl-btn dl-btn--peligro">
                                         Revocar
                                     </button>
                                     {% endif %}
@@ -262,22 +245,7 @@
                     </table>
                 </div>
 
-                <button type="button" id="apiTokenCreateBtn" style="
-                    display: inline-flex;
-                    align-items: center;
-                    gap: 0.6rem;
-                    padding: 0.75rem 1.5rem;
-                    background: linear-gradient(135deg, #0284c7, #38bdf8);
-                    color: white;
-                    border: none;
-                    border-radius: 10px;
-                    font-size: 0.95rem;
-                    font-weight: 600;
-                    cursor: pointer;
-                    transition: all 0.2s ease;
-                    box-shadow: 0 4px 15px rgba(56, 189, 248, 0.35);
-                " onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 6px 20px rgba(56,189,248,0.45)'"
-                   onmouseout="this.style.transform='translateY(0)';this.style.boxShadow='0 4px 15px rgba(56,189,248,0.35)'">
+                <button class="dl-btn" type="button" id="apiTokenCreateBtn">
                     <i class="bi bi-plus-circle" style="font-size: 1.1rem;"></i>
                     Generar nuevo token
                 </button>
@@ -293,14 +261,7 @@
                 <p style="color:#94a3b8;font-size:0.95rem;margin:0;">
                     Consulta y descarga tus diplomas, y verifica la autenticidad de cualquier certificado de DockerLabs.
                 </p>
-                <a href="/certificados"
-                   style="display:inline-flex;align-items:center;gap:0.55rem;white-space:nowrap;
-                          padding:0.7rem 1.5rem;border-radius:12px;font-size:0.95rem;font-weight:700;
-                          background:linear-gradient(135deg,#0d9488,#2dd4bf);color:#fff;
-                          text-decoration:none;transition:all 0.2s;
-                          box-shadow:0 4px 14px rgba(45,212,191,0.3);"
-                   onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 6px 20px rgba(45,212,191,0.45)'"
-                   onmouseout="this.style.transform='';this.style.boxShadow='0 4px 14px rgba(45,212,191,0.3)'">
+                <a href="/certificados" class="dl-btn dl-btn--grande">
                     <i class="bi bi-patch-check-fill"></i> Ver Mis Certificados
                 </a>
             </div>
@@ -381,22 +342,13 @@
                            style="flex:1 1 320px;min-width:0;background:#0f172a;border:1px solid #1e293b;
                                   border-radius:10px;padding:0.7rem 0.9rem;color:#e2e8f0;font-size:0.9rem;
                                   font-family:ui-monospace,SFMono-Regular,Menlo,monospace;">
-                    <button type="button" id="perfilCopiarBtn"
-                            style="display:inline-flex;align-items:center;gap:0.5rem;white-space:nowrap;
-                                   padding:0.7rem 1.2rem;border:1px solid #1e293b;border-radius:10px;
-                                   background:#1e293b;color:#e2e8f0;font-size:0.9rem;font-weight:600;cursor:pointer;">
+                    <button class="dl-btn dl-btn--neutro" type="button" id="perfilCopiarBtn">
                         <i class="bi bi-clipboard"></i> <span>Copiar</span>
                     </button>
-                    <a href="{{ perfil_web_path }}" target="_blank" rel="noopener"
-                       style="display:inline-flex;align-items:center;gap:0.5rem;white-space:nowrap;
-                              padding:0.7rem 1.2rem;border-radius:10px;font-size:0.9rem;font-weight:700;
-                              background:linear-gradient(135deg,#0d9488,#2dd4bf);color:#fff;text-decoration:none;">
+                    <a class="dl-btn" href="{{ perfil_web_path }}" target="_blank" rel="noopener">
                         <i class="bi bi-box-arrow-up-right"></i> Abrir página
                     </a>
-                    <a href="{{ perfil_path }}" target="_blank" rel="noopener"
-                       style="display:inline-flex;align-items:center;gap:0.5rem;white-space:nowrap;
-                              padding:0.7rem 1.2rem;border-radius:10px;font-size:0.9rem;font-weight:700;
-                              background:linear-gradient(135deg,#0284c7,#38bdf8);color:#fff;text-decoration:none;">
+                    <a class="dl-btn dl-btn--neutro" href="{{ perfil_path }}" target="_blank" rel="noopener">
                         <i class="bi bi-code-slash"></i> Abrir JSON
                     </a>
                 </div>
@@ -407,10 +359,7 @@
                 </div>
 
                 <div style="margin-top:1.5rem;border-top:1px solid #1e293b;padding-top:1.25rem;">
-                    <button type="button" id="perfilEndpointsBtn"
-                            style="display:inline-flex;align-items:center;gap:0.5rem;
-                                   padding:0.55rem 1rem;border:1px solid #1e293b;border-radius:10px;
-                                   background:#0f172a;color:#38bdf8;font-size:0.85rem;font-weight:600;cursor:pointer;">
+                    <button class="dl-btn dl-btn--neutro" type="button" id="perfilEndpointsBtn">
                         <i class="bi bi-code-slash"></i> Ver endpoints de la API
                     </button>
                 </div>
@@ -520,8 +469,8 @@
                 </div>
             </div>
             <div class="form-actions d-flex justify-content-end gap-2">
-                <button type="button" class="btn btn-secondary" onclick="closeSendNotificationModal()">Cancelar</button>
-                <button type="submit" class="btn btn-primary">Enviar Notificación</button>
+                <button type="button" class="dl-btn dl-btn--neutro" onclick="closeSendNotificationModal()">Cancelar</button>
+                <button type="submit" class="dl-btn">Enviar Notificación</button>
             </div>
         </form>
     </div>
@@ -543,8 +492,8 @@
                        placeholder="Ej: Claude Code" required>
             </div>
             <div class="form-actions d-flex justify-content-end gap-2">
-                <button type="button" class="btn btn-secondary" id="apiTokenCreateCancelar">Cancelar</button>
-                <button type="submit" class="btn btn-primary">Generar token</button>
+                <button type="button" class="dl-btn dl-btn--neutro" id="apiTokenCreateCancelar">Cancelar</button>
+                <button type="submit" class="dl-btn">Generar token</button>
             </div>
         </form>
     </div>
@@ -847,8 +796,7 @@
                 '<td class="token-last-used" style="padding:0.6rem 0.75rem;border-bottom:1px solid #1e293b;color:#94a3b8;">Nunca</td>' +
                 '<td class="token-status" style="padding:0.6rem 0.75rem;border-bottom:1px solid #1e293b;"><span style="color:#2dd4bf;font-weight:600;">Activo</span></td>' +
                 '<td style="padding:0.6rem 0.75rem;border-bottom:1px solid #1e293b;text-align:right;">' +
-                '<button type="button" class="api-token-revoke-btn" style="padding:0.4rem 0.9rem;border:1px solid rgba(248,113,113,0.4);' +
-                'border-radius:8px;background:rgba(248,113,113,0.08);color:#f87171;font-size:0.82rem;font-weight:600;cursor:pointer;">Revocar</button></td>';
+                '<button type="button" class="api-token-revoke-btn dl-btn dl-btn--peligro">Revocar</button></td>';
         }
 
         function addApiTokenRow(tok) {

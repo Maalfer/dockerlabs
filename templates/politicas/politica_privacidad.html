@@ -3,13 +3,16 @@
 {% block title %}Política de Privacidad - DockerLabs{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{{ static_v('dockerlabs/css/politicas/politica_privacidad.css') }}"
+<link rel="stylesheet" href="{{ static_v('dockerlabs/css/politicas/politicas-comun.css') }}"
       media="print" onload="this.media='all'">
-<noscript><link rel="stylesheet" href="{{ static_v('dockerlabs/css/politicas/politica_privacidad.css') }}"></noscript>
+<noscript><link rel="stylesheet" href="{{ static_v('dockerlabs/css/politicas/politicas-comun.css') }}"></noscript>
+<link rel="stylesheet" href="{{ static_v('dockerlabs/css/auth-ballena.css') }}">
 {% endblock %}
 
 {% block content %}
-<div class="policy-container">
+<div class="policy-container dl-lectura">
+    {% with ballena_mensajes = {"idle": "Soy Cody. Te resumo cada sección mientras lees ↓", "fin": "¡Leído hasta el final! Pocos leen la letra pequeña."}, ballena_lectura = true %}{% include "dockerlabs/auth/_ballena.html" %}{% endwith %}
+
 
     <div class="policy-header">
         <span class="terminal-prompt">$</span>
@@ -24,7 +27,7 @@
             datos personales. Esta Política de Privacidad explica cómo recopilamos, usamos y protegemos tu
             información, en cumplimiento con el Reglamento General de Protección de Datos (RGPD).</p>
 
-        <section class="policy-section">
+        <section class="policy-section" data-tldr="Quien cuida tus datos es Mario Álvarez. Contacto: info@elrincondelhacker.es.">
             <h2><span class="policy-section-num">1</span> Responsable del Tratamiento</h2>
             <ul>
                 <li><strong>Responsable:</strong> Mario Álvarez Fernandez</li>
@@ -33,7 +36,7 @@
             </ul>
         </section>
 
-        <section class="policy-section">
+        <section class="policy-section" data-tldr="Solo guardamos tu usuario y tu email. La contraseña va hasheada: ni los admins la ven.">
             <h2><span class="policy-section-num">2</span> Datos que Recopilamos</h2>
             <p>Para el funcionamiento de la plataforma y la gestión de usuarios, <strong>únicamente</strong>
                 recopilamos y almacenamos los siguientes datos personales:</p>
@@ -47,7 +50,7 @@
                 almacena de forma encriptada (hasheada) y es inaccesible incluso para los administradores.</p>
         </section>
 
-        <section class="policy-section">
+        <section class="policy-section" data-tldr="Tus datos sirven para tu cuenta, tu progreso en el ranking y avisos de seguridad.">
             <h2><span class="policy-section-num">3</span> Finalidad del Tratamiento</h2>
             <p>Sus datos personales se tratan con las siguientes finalidades:</p>
             <ul>
@@ -58,7 +61,7 @@
             </ul>
         </section>
 
-        <section class="policy-section">
+        <section class="policy-section" data-tldr="Base legal: tu consentimiento. Se guardan mientras tengas cuenta y puedes pedir borrarlos.">
             <h2><span class="policy-section-num">4</span> Legitimación y Conservación</h2>
             <p>La base legal para el tratamiento de sus datos es el <strong>consentimiento</strong> del usuario
                 al registrarse voluntariamente en la plataforma. Los datos se conservarán mientras el usuario
@@ -66,13 +69,13 @@
                 momento.</p>
         </section>
 
-        <section class="policy-section">
+        <section class="policy-section" data-tldr="Tus datos no se ceden a nadie, salvo obligación legal.">
             <h2><span class="policy-section-num">5</span> Cesión de Datos</h2>
             <p>Sus datos (nombre de usuario y correo) <strong>no se cederán a terceros</strong> bajo ningún
                 concepto, salvo obligación legal.</p>
         </section>
 
-        <section class="policy-section">
+        <section class="policy-section" data-tldr="Puedes acceder, corregir o borrar tus datos cuando quieras.">
             <h2><span class="policy-section-num">6</span> Derechos del Usuario</h2>
             <p>Tiene derecho a acceder, rectificar y suprimir sus datos, así como a limitar u oponerse a su
                 tratamiento. Para ejercer estos derechos, puede ponerse en contacto con la administración de la
@@ -80,10 +83,11 @@
         </section>
 
         <div class="policy-back">
-            <a href="{{ url_for('main.home') }}" class="policy-back-btn">
+            <a href="{{ url_for('main.home') }}" class="policy-back-btn dl-btn dl-btn--neutro">
                 <i class="bi bi-arrow-left"></i> Volver al Inicio
             </a>
         </div>
     </div>
 </div>
+<script src="{{ static_v('dockerlabs/js/ballena.js') }}" defer></script>
 {% endblock %}

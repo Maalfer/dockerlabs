@@ -1,4 +1,5 @@
-/* Ballena de login / registro / recuperar contraseña.
+/* Cody, la ballena de DockerLabs (login / registro / recuperar contraseña,
+   páginas legales en modo lectura y guía de ayuda de la home).
    - Sigue el cursor con la mirada y parpadea.
    - Se tapa el ojo con la aleta al escribir la contraseña (y mira de reojo si la muestras).
    - Echa un chorro de agua de vez en cuando y al hacerle clic.
@@ -18,34 +19,42 @@
     var reducir = window.matchMedia("(prefers-reduced-motion: reduce)");
     var M = {};
     try { M = JSON.parse(escena.getAttribute("data-mensajes") || "{}"); } catch (e) { M = {}; }
+    // Modo lectura (páginas legales): el bocadillo resume la sección que lees
+    // y la pantalla del portátil enseña el porcentaje leído.
+    var lectura = escena.hasAttribute("data-lectura");
+    var lecturaBase = { t: M.idle || "Te lo resumo mientras lees." };
+    // Modo guía (ayuda de la home): los textos los marca guia.js con window.DLBallena.
+    var guia = escena.hasAttribute("data-guia");
+    var guiaBase = { t: M.idle || "¡Hola! Soy Cody. ¿Te echo una aleta?" };
+    var fijo = lectura || guia;
 
-    /* ---------- Repertorio de frases ---------- */
+    /* ---------- Repertorio de frases (las que no tienen autor son de Cody) ---------- */
     var FRASES = [
-        { t: "Paso a paso se llega a root." },
-        { t: "Enumera, enumera… y vuelve a enumerar." },
-        { t: "Si no encuentras la vulnerabilidad, aún no has enumerado lo suficiente." },
-        { t: "Las flags no se encuentran: se ganan." },
-        { t: "Atascarse también es parte del camino." },
-        { t: "Prueba, falla, aprende, repite. Eso es hacking." },
-        { t: "Detrás de cada shell hay horas de paciencia." },
-        { t: "Tu mejor exploit es la constancia." },
-        { t: "Nadie nace sabiendo escalar privilegios." },
-        { t: "La curiosidad es la herramienta más potente de un hacker." },
-        { t: "Rómpelo, entiéndelo y vuelve a romperlo." },
-        { t: "Comparte lo que sabes: así crece la comunidad." },
-        { t: "Si funcionó a la primera, sospecha." },
-        { t: "¿Atascado? Respira, toma un café y vuelve a mirar los puertos." },
-        { t: "Un buen writeup enseña más que mil flags." },
-        { t: "Cada máquina que resuelves te hace un poco mejor que ayer." },
-        { t: "Hoy es un gran día para aprender algo nuevo." },
-        { t: "No compares tu capítulo 1 con el capítulo 20 de otro." },
-        { t: "Lee el código fuente. Casi siempre hay pistas." },
-        { t: "Los errores de hoy son los conocimientos de mañana." },
-        { t: "Una pausa a tiempo también forma parte del pentest." },
-        { t: "La práctica no hace al maestro: lo hace la práctica constante." },
-        { t: "El que no se rinde, tarde o temprano consigue la shell." },
-        { t: "Cada «Permission denied» es una invitación a seguir buscando." },
-        { t: "Las ballenas también empezaron nadando en la orilla." },
+        { t: "Paso a paso se llega a root.", a: "Cody" },
+        { t: "Enumera, enumera… y vuelve a enumerar.", a: "Cody" },
+        { t: "Si no encuentras la vulnerabilidad, aún no has enumerado lo suficiente.", a: "Cody" },
+        { t: "Las flags no se encuentran: se ganan.", a: "Cody" },
+        { t: "Atascarse también es parte del camino.", a: "Cody" },
+        { t: "Prueba, falla, aprende, repite. Eso es hacking.", a: "Cody" },
+        { t: "Detrás de cada shell hay horas de paciencia.", a: "Cody" },
+        { t: "Tu mejor exploit es la constancia.", a: "Cody" },
+        { t: "Nadie nace sabiendo escalar privilegios.", a: "Cody" },
+        { t: "La curiosidad es la herramienta más potente de un hacker.", a: "Cody" },
+        { t: "Rómpelo, entiéndelo y vuelve a romperlo.", a: "Cody" },
+        { t: "Comparte lo que sabes: así crece la comunidad.", a: "Cody" },
+        { t: "Si funcionó a la primera, sospecha.", a: "Cody" },
+        { t: "¿Atascado? Respira, toma un café y vuelve a mirar los puertos.", a: "Cody" },
+        { t: "Un buen writeup enseña más que mil flags.", a: "Cody" },
+        { t: "Cada máquina que resuelves te hace un poco mejor que ayer.", a: "Cody" },
+        { t: "Hoy es un gran día para aprender algo nuevo.", a: "Cody" },
+        { t: "No compares tu capítulo 1 con el capítulo 20 de otro.", a: "Cody" },
+        { t: "Lee el código fuente. Casi siempre hay pistas.", a: "Cody" },
+        { t: "Los errores de hoy son los conocimientos de mañana.", a: "Cody" },
+        { t: "Una pausa a tiempo también forma parte del pentest.", a: "Cody" },
+        { t: "La práctica no hace al maestro: lo hace la práctica constante.", a: "Cody" },
+        { t: "El que no se rinde, tarde o temprano consigue la shell.", a: "Cody" },
+        { t: "Cada «Permission denied» es una invitación a seguir buscando.", a: "Cody" },
+        { t: "Las ballenas también empezaron nadando en la orilla.", a: "Cody" },
         { t: "La seguridad es un proceso, no un producto.", a: "Bruce Schneier" },
         { t: "Los aficionados hackean sistemas; los profesionales hackean personas.", a: "Bruce Schneier" },
         { t: "Hablar es barato. Enséñame el código.", a: "Linus Torvalds" },
@@ -120,21 +129,23 @@
         pinta(t, "", true);
     }
     // Vuelve a la frase motivacional (respetando una reacción fijada).
+    function fraseBase() { return lectura ? lecturaBase : (guia ? guiaBase : fraseActual); }
     function volver() {
         var espera = bloqueoHasta - Date.now();
         if (espera > 0) { setTimeout(volver, espera + 30); return; }
         if (campoPw()) return;
         reaccion = false;
-        pinta(fraseActual.t, fraseActual.a, true);
+        pinta(fraseBase().t, fraseBase().a, true);
     }
     function nuevaFrase() {
+        if (fijo) return;
         siguienteFrase();
         if (!reaccion) pinta(fraseActual.t, fraseActual.a, true);
     }
 
     siguienteFrase();
-    pinta(fraseActual.t, fraseActual.a, true);
-    if (otra) {
+    pinta(fraseBase().t, fraseBase().a, true);
+    if (otra && !fijo) {
         otra.hidden = false;
         otra.addEventListener("mousedown", function (e) { e.preventDefault(); });
         otra.addEventListener("click", function () {
@@ -152,7 +163,7 @@
             if (!document.hidden && !reaccion) nuevaFrase();
         }, 20000);
     }
-    reiniciaRotacion();
+    if (!fijo) reiniciaRotacion();
 
     /* ---------- Estados temporales ---------- */
     var timers = {};
@@ -240,7 +251,12 @@
     svg.addEventListener("click", function () {
         soplar();
         momento("feliz", 1200);
-        if (!campoPw()) {
+        if (fijo) {
+            // en lectura / guía: una frase motivacional de regalo y luego vuelve al resumen
+            siguienteFrase(); reaccion = true; bloqueoHasta = Date.now() + 6000;
+            pinta(fraseActual.t, fraseActual.a, true);
+            setTimeout(volver, 6050);
+        } else if (!campoPw()) {
             bloqueoHasta = 0; reaccion = false;
             siguienteFrase(); pinta(fraseActual.t, fraseActual.a, true);
             reiniciaRotacion();
@@ -280,4 +296,51 @@
     document.querySelectorAll(".dl-auth form").forEach(function (f) {
         f.addEventListener("submit", function () { decir("envio", 1500); });
     });
+
+    /* ---------- Modo lectura ---------- */
+    if (lectura) {
+        var secciones = Array.prototype.slice.call(document.querySelectorAll(".policy-section[data-tldr]"));
+        var total = secciones.length, actual = -1, terminado = false, tLee = 0, rafL = 0;
+        var pctEl = svg.querySelector(".b-pt-pct");
+        var alScroll = function () {
+            rafL = 0;
+            var max = document.documentElement.scrollHeight - window.innerHeight;
+            var pct = max > 0 ? Math.min(100, Math.round(window.scrollY / max * 100)) : 100;
+            if (pctEl) pctEl.textContent = pct + "%";
+            if (window.scrollY > 0 && !svg.classList.contains("feliz")) {
+                svg.classList.add("leyendo");
+                clearTimeout(tLee);
+                tLee = setTimeout(function () { svg.classList.remove("leyendo"); }, 1100);
+            }
+            // sección actual: la última cuyo título ya ha pasado por el 45 % de la pantalla
+            var idx = -1, lim = window.innerHeight * 0.45;
+            for (var i = 0; i < total; i++) { if (secciones[i].getBoundingClientRect().top < lim) idx = i; }
+            if (idx !== actual) {
+                actual = idx;
+                lecturaBase = idx < 0 ? { t: M.idle || "Te lo resumo mientras lees." }
+                    : { t: secciones[idx].getAttribute("data-tldr"), a: "tl;dr · " + (idx + 1) + "/" + total };
+                if (!reaccion) pinta(lecturaBase.t, lecturaBase.a, true);
+            }
+            if (!terminado && max > 40 && window.scrollY > 0 && pct >= 99) {
+                terminado = true;
+                clearTimeout(tLee); svg.classList.remove("leyendo");
+                momento("feliz", 2600); soplar();
+                decir("fin", 6000); setTimeout(volver, 6050);
+            }
+        };
+        window.addEventListener("scroll", function () { if (!rafL) rafL = requestAnimationFrame(alScroll); }, { passive: true });
+        window.addEventListener("resize", function () { if (!rafL) rafL = requestAnimationFrame(alScroll); });
+        alScroll();
+    }
+
+    /* ---------- API para otros scripts (guía de ayuda) ---------- */
+    window.DLBallena = {
+        decir: function (texto, quien) {
+            guiaBase = { t: texto, a: quien || "" };
+            reaccion = false; bloqueoHasta = 0;
+            pinta(guiaBase.t, guiaBase.a, true);
+        },
+        momento: momento,
+        soplar: soplar
+    };
 })();

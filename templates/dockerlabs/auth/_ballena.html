@@ -1,8 +1,8 @@
-{# Ballena hacker animada de las páginas de acceso (login / registro / recuperar).
+{# Cody, la ballena hacker animada (login / registro / recuperar y páginas legales en modo lectura).
    Inspirada en el logo de DockerLabs: lomo azul marino, vientre crema, aleta dorsal.
    Decorativa: aria-hidden. El bocadillo (terminal) muestra frases motivacionales
    (ballena.js) y reacciones puntuales cuyos textos llegan por `ballena_mensajes`. #}
-<aside class="dl-ballena" aria-hidden="true" data-mensajes='{{ ballena_mensajes | tojson }}'>
+<aside class="dl-ballena" aria-hidden="true" data-mensajes='{{ ballena_mensajes | tojson }}'{% if ballena_lectura %} data-lectura{% endif %}{% if ballena_guia %} data-guia{% endif %}>
     <div class="dl-bocadillo">
         <p class="dl-bocadillo-txt"><span class="dl-prompt">$</span>Paso a paso se llega a root.</p>
         <p class="dl-bocadillo-autor" hidden></p>
@@ -26,7 +26,7 @@
                 <stop offset="0" stop-color="#fff" stop-opacity=".35"/><stop offset="1" stop-color="#fff" stop-opacity="0"/>
             </linearGradient>
             <radialGradient id="bgLuz" cx=".5" cy=".5" r=".5">
-                <stop offset="0" stop-color="#4ade80" stop-opacity=".3"/><stop offset="1" stop-color="#4ade80" stop-opacity="0"/>
+                <stop offset="0" stop-color="#3cff00" stop-opacity=".2"/><stop offset="1" stop-color="#3cff00" stop-opacity="0"/>
             </radialGradient>
             <clipPath id="bcCuerpo">
                 <path d="M52 98 C60 62 108 40 160 42 C206 44 230 72 228 102 C226 132 198 148 156 148 C116 148 82 138 60 118 C54 112 50 104 52 98 Z"/>
@@ -35,7 +35,7 @@
         </defs>
 
         <!-- chorro binario -->
-        <g class="b-chorro" fill="#4ade80" font-family="Fira Code, ui-monospace, monospace" font-size="11" font-weight="700" text-anchor="middle">
+        <g class="b-chorro" fill="#3cff00" font-family="Fira Code, ui-monospace, monospace" font-size="11" font-weight="700" text-anchor="middle">
             <text class="b-bit b-bit-1" x="150" y="40">1</text>
             <text class="b-bit b-bit-2" x="150" y="40">0</text>
             <text class="b-bit b-bit-3" x="150" y="40">1</text>
@@ -99,13 +99,14 @@
                     <rect x="176" y="122" width="42" height="28" rx="3.5" fill="#1e293b" stroke="#334155" stroke-width="1.5"/>
                     <rect class="b-pantalla" x="179.5" y="125.5" width="35" height="21" rx="1.5" fill="#03140b"/>
                     <g font-family="Fira Code, ui-monospace, monospace" font-size="10" font-weight="700" text-anchor="middle">
-                        <g class="b-pt b-pt-normal" fill="#4ade80"><text x="192" y="140">&gt;</text><rect class="b-pt-cursor" x="198.5" y="138.6" width="6.5" height="2.2" rx=".6"/></g>
-                        <text class="b-pt b-pt-pw" x="197" y="142" fill="#4ade80">***</text>
-                        <text class="b-pt b-pt-ver" x="197" y="140" fill="#4ade80">abc</text>
+                        <g class="b-pt b-pt-normal" fill="#3cff00"><text x="192" y="140">&gt;</text><rect class="b-pt-cursor" x="198.5" y="138.6" width="6.5" height="2.2" rx=".6"/></g>
+                        <text class="b-pt b-pt-pw" x="197" y="142" fill="#3cff00">***</text>
+                        <text class="b-pt b-pt-ver" x="197" y="140" fill="#3cff00">abc</text>
                         <text class="b-pt b-pt-err" x="197" y="140" fill="#f87171">x_x</text>
-                        <text class="b-pt b-pt-ok" x="197" y="140" fill="#4ade80">^_^</text>
+                        <text class="b-pt b-pt-ok" x="197" y="140" fill="#3cff00">^_^</text>
+                        <text class="b-pt b-pt-pct" x="197" y="140" fill="#3cff00" font-size="9">0%</text>
                     </g>
-                    <g class="b-pt b-pt-code" fill="#4ade80">
+                    <g class="b-pt b-pt-code" fill="#3cff00">
                         <rect class="b-linea b-linea-1" x="183" y="129" width="16" height="2.4" rx="1.2"/>
                         <rect class="b-linea b-linea-2" x="186" y="134" width="22" height="2.4" rx="1.2"/>
                         <rect class="b-linea b-linea-3" x="186" y="139" width="12" height="2.4" rx="1.2"/>

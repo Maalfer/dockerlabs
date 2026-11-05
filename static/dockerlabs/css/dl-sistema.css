@@ -1,0 +1,397 @@
+/* ==========================================================================
+   Sistema visual DockerLabs (se carga en todas las páginas, después de
+   styles.css y base.css). Secciones:
+     1. Botones            — un único lenguaje para todas las acciones
+     2. Campos de formulario — mismo foco en toda la web
+     3. Paginación
+     4. Espacio bajo el header fijo
+     5. Ajustes de la lista de máquinas en móvil
+
+   1. BOTONES
+
+   Regla de color de la web:
+     · Ámbar (--accent-yellow) ........ acciones: botones y CTAs
+     · Verde hacker (--hack-green) .... hover/foco de las acciones y todo lo "terminal"
+     · Cian (--accent-cyan) ........... información: enlaces, viñetas, numeración
+     · Pizarra (--border-strong) ...... acciones secundarias / neutras
+     · Colores de dificultad y morado . reservados a dificultad y Academia/writeups
+
+   Es el mismo estilo que los botones del header (Acceder, menú, Writeups,
+   Autores): borde ámbar, líneas de escaneo y, al pasar el ratón, verde hacker
+   con brillo. Se usa añadiendo la clase .dl-btn (más variantes) al elemento.
+   :is(a, button) sube la especificidad lo justo para ganar a los estilos
+   antiguos de cada página (.btn-login, .descargar-btn, .btn-primary...).
+   ========================================================================== */
+
+:is(a, button).dl-btn {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: .5rem;
+    padding: .6rem 1.25rem;
+    overflow: hidden;
+    font-family: 'Fira Code', monospace;
+    font-size: .88rem;
+    font-weight: 600;
+    letter-spacing: .03em;
+    line-height: 1.2;
+    text-decoration: none;
+    text-shadow: none;
+    white-space: nowrap;
+    color: var(--accent-yellow);
+    background: rgba(245, 158, 11, .06);
+    border: 1px solid var(--accent-yellow);
+    border-radius: 6px;
+    box-shadow: none;
+    cursor: pointer;
+    transition: background-color .2s ease, color .2s ease, border-color .2s ease, box-shadow .2s ease, transform .2s ease;
+}
+/* líneas de escaneo, como en el header */
+:is(a, button).dl-btn::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: repeating-linear-gradient(to bottom, rgba(0, 255, 0, .07) 0, rgba(0, 255, 0, .07) 2px, transparent 2px, transparent 4px);
+    pointer-events: none;
+    border-radius: inherit;
+}
+/* anula los brillos/degradados que algunas páginas ponían con ::before */
+:is(a, button).dl-btn::before { content: none; }
+
+:is(a, button).dl-btn:hover,
+:is(a, button).dl-btn:focus-visible {
+    color: #afffaf;
+    background: #001a00;
+    border-color: var(--hack-green);
+    box-shadow: 0 0 12px var(--hack-glow);
+    transform: translateY(-2px);
+}
+:is(a, button).dl-btn:focus-visible { outline: 2px solid var(--hack-green); outline-offset: 2px; }
+:is(a, button).dl-btn:active { transform: translateY(0); background: rgba(230, 180, 0, .15); }
+:is(a, button).dl-btn:disabled,
+:is(a, button).dl-btn[aria-disabled="true"] {
+    opacity: .45;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+    color: var(--accent-yellow);
+    background: rgba(245, 158, 11, .06);
+    border-color: var(--accent-yellow);
+}
+:is(a, button).dl-btn :is(i, svg) { color: currentColor; }
+
+/* Variantes */
+:is(a, button).dl-btn--grande { padding: .85rem 1.6rem; font-size: .95rem; }
+:is(a, button).dl-btn--bloque { display: flex; width: 100%; }
+:is(a, button).dl-btn--neutro {
+    color: var(--text-secondary);
+    background: rgba(15, 23, 42, .96);
+    border-color: var(--border-strong);
+}
+:is(a, button).dl-btn--neutro::after { content: none; }
+:is(a, button).dl-btn--neutro:hover,
+:is(a, button).dl-btn--neutro:focus-visible {
+    color: var(--accent-yellow);
+    background: rgba(15, 23, 42, .96);
+    border-color: var(--accent-yellow);
+    box-shadow: 0 0 10px rgba(245, 158, 11, .18);
+}
+:is(a, button).dl-btn--neutro:focus-visible { outline-color: var(--accent-yellow); }
+
+@media (prefers-reduced-motion: reduce) {
+    :is(a, button).dl-btn { transition: none; }
+    :is(a, button).dl-btn:hover, :is(a, button).dl-btn:focus-visible { transform: none; }
+}
+@media (forced-colors: active) {
+    :is(a, button).dl-btn { border: 1px solid ButtonText; }
+}
+
+/* Excepciones con estilos por id en su página: se igualan aquí */
+#openSubmitMachine.dl-btn { border-radius: 6px; }
+
+
+/* ==========================================================================
+   2. CAMPOS DE FORMULARIO
+   Antes cada página enfocaba en un color (cian en el buscador, azul en el
+   login, índigo en enviar máquina). Ahora el campo activo se marca en ámbar,
+   el color de "elemento con el que estás interactuando".
+   ========================================================================== */
+:is(input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"]):not([type="hidden"]):not([type="submit"]):not([type="button"]), select, textarea):focus {
+    border-color: var(--accent-yellow) !important;
+    box-shadow: 0 0 0 3px rgba(245, 158, 11, .16) !important;
+    outline: none !important;
+}
+:is(input[type="checkbox"], input[type="radio"]):focus-visible {
+    outline: 2px solid var(--accent-yellow) !important;
+    outline-offset: 2px;
+}
+:is(input[type="checkbox"], input[type="radio"]) { accent-color: var(--accent-yellow); }
+/* La etiqueta del campo activo acompaña al campo */
+body .form-group:focus-within label,
+body .form-group:focus-within label i { color: var(--accent-yellow) !important; }
+
+/* ==========================================================================
+   3. PAGINACIÓN — página actual en ámbar, hover en verde hacker
+   ========================================================================== */
+body .pagination-btn.active {
+    color: var(--accent-yellow) !important;
+    background: rgba(245, 158, 11, .1) !important;
+    border: 1px solid var(--accent-yellow) !important;
+    box-shadow: 0 0 10px rgba(245, 158, 11, .2) !important;
+}
+body .pagination-btn:hover:not(:disabled):not(.active) {
+    color: #afffaf !important;
+    background: #001a00 !important;
+    box-shadow: 0 0 10px var(--hack-glow) !important;
+}
+body .pagination-btn:focus-visible { outline: 2px solid var(--hack-green); outline-offset: 2px; }
+
+/* ==========================================================================
+   4. ESPACIO BAJO EL HEADER FIJO
+   El body reservaba 90–100 px en móvil para un header que mide 44 px, y
+   dejaba ~50 px vacíos encima de todas las páginas. Ahora reserva justo la
+   altura real del header en cada tramo (medida: 44 / 50 / 72 px).
+   ========================================================================== */
+body { padding-top: 72px; }
+@media (max-width: 768px) { body { padding-top: 50px; } }
+@media (max-width: 480px) { body { padding-top: 44px; } }
+
+/* Ritmo vertical común en las páginas de contenido: el título empieza a
+   40 px del header en escritorio y a 24 px en móvil (antes 60–110 px, cada
+   página con su propio valor). */
+.policy-container,
+.soporte-container,
+.descargar-container { padding-top: 40px !important; }
+.container.mt-5 { margin-top: 28px !important; }
+@media (max-width: 768px) {
+    .policy-container,
+    .soporte-container,
+    .descargar-container { padding-top: 24px !important; }
+    .container.mt-5 { margin-top: 12px !important; }
+}
+
+/* ==========================================================================
+   5. LISTA DE MÁQUINAS EN MÓVIL
+   El nombre iba centrado dentro de una columna fija, así que cada nombre
+   empezaba a una altura distinta según su longitud. Ahora todos arrancan
+   en el mismo borde izquierdo.
+   ========================================================================== */
+@media (max-width: 480px) {
+    .maquina-item > span:first-child {
+        text-align: left !important;
+        justify-content: flex-start;
+    }
+}
+
+/* ==========================================================================
+   6. PANEL DE BÚSQUEDA Y FILTROS DE LA HOME
+   En móvil ocupaba 6 filas (buscador, iconos, Writeups, Autores, Academia y
+   Dificultad, cada uno en la suya) y el grupo de iconos no llenaba el ancho.
+   Ahora son 3 filas proporcionadas:
+     1) buscador + iconos de filtro, misma altura
+     2) Writeups · Autores · Academia, a partes iguales
+     3) Dificultad + ayuda
+   ========================================================================== */
+/* El buscador y el grupo de iconos comparten forma (antes píldora + caja) */
+#buscador { border-radius: 10px; }
+
+@media (max-width: 768px) {
+    .header-filters-row { flex-wrap: wrap !important; gap: .5rem !important; }
+
+    /* fila 1 */
+    .header-filters-row > .busqueda-con-filtro {
+        order: 1;
+        /* todo el ancho menos el grupo de iconos (147 px) y el hueco: así
+           comparten fila siempre, también en móviles de 320 px */
+        flex: 1 1 calc(100% - 156px) !important;
+        width: auto !important;
+        max-width: none !important;
+        min-width: 0 !important;
+    }
+    .header-filters-row #buscador { height: 44px; min-width: 0 !important; }
+    .header-filters-row > .search-buttons-group { order: 2; flex: 0 0 auto; height: 44px; }
+    .header-filters-row > .search-buttons-group .btn { min-height: 36px; }
+
+    /* fila 2: el contenedor de Dificultad/Academia "desaparece" para que sus
+       botones se repartan en las filas de la propia rejilla */
+    .header-filters-row .d-flex.flex-wrap.gap-2.ms-auto { display: contents !important; }
+    .header-filters-row > #ranking,
+    .header-filters-row > #autores,
+    .header-filters-row #academia {
+        order: 3 !important;
+        flex: 1 1 28% !important;
+        width: auto !important;
+        min-width: 0 !important;
+        height: 40px;
+        margin: 0 !important;
+        padding: 0 .5rem !important;
+        justify-content: center;
+    }
+
+    /* fila 3 */
+    .header-filters-row .dropdown {
+        order: 4 !important;
+        flex: 1 1 100% !important;
+        width: 100% !important;
+    }
+    .header-filters-row #filtro-dificultad-btn { height: 40px; }
+    .header-filters-row .dl-ayuda-btn.dl-btn { width: 40px; height: 40px; }
+}
+@media (max-width: 360px) {
+    .header-filters-row > #ranking,
+    .header-filters-row > #autores,
+    .header-filters-row #academia { font-size: .62rem !important; letter-spacing: 0 !important; }
+}
+
+/* Sin scroll horizontal en móviles pequeños: el panel de filtros (fila de
+   Bootstrap con márgenes negativos) y la paginación se salían unos píxeles. */
+@media (max-width: 480px) {
+    .container > .header.row { margin-left: 0 !important; margin-right: 0 !important; }
+    .pagination-wrapper { max-width: 100%; flex-wrap: wrap; justify-content: center; row-gap: .4rem; }
+}
+
+/* En ≤360 px los botones de acción se estiraban (mín. 60 px cada uno) y el
+   nombre de la máquina se quedaba en 4 letras. Mismo tamaño que en 390 px. */
+@media (max-width: 360px) {
+    .maquina-item .acciones button { flex: 0 0 auto !important; min-width: 0 !important; }
+    .maquina-item .acciones { flex-wrap: nowrap !important; }
+}
+
+/* ==========================================================================
+   7. HEADER EN MÓVIL: el nombre "DockerLabs" vuelve a verse
+   Estaba oculto por debajo de 768 px y dejaba un hueco vacío entre el logo y
+   los botones. Ahora va junto al logo, igual que BunkerLabs en móvil.
+   ========================================================================== */
+@media (max-width: 768px) {
+    header .header-title {
+        display: block !important;
+        min-width: 0;
+        margin: 0 !important;
+        text-align: left;
+        overflow: hidden;
+    }
+    header .header-title .brand-title {
+        display: block;
+        font-size: 1.15rem;
+        letter-spacing: .06em;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    header .header-left .logo-container { margin-right: 0; }
+}
+@media (max-width: 480px) {
+    header .header-title .brand-title { font-size: 1.02rem; letter-spacing: .05em; }
+}
+/* Con sesión iniciada hay 5 botones: el nombre se compacta para caber entero */
+@media (max-width: 400px) {
+    header:has(.notification-btn) .header-title .brand-title { font-size: .88rem; letter-spacing: .02em; }
+}
+
+/* Acciones destructivas (eliminar, revocar): rojo, nunca verde al pasar */
+:is(a, button).dl-btn--peligro { color: #f87171; background: rgba(239, 68, 68, .07); border-color: rgba(248, 113, 113, .6); }
+:is(a, button).dl-btn--peligro::after { content: none; }
+:is(a, button).dl-btn--peligro:hover,
+:is(a, button).dl-btn--peligro:focus-visible {
+    color: #fff; background: rgba(239, 68, 68, .85); border-color: #ef4444; box-shadow: 0 0 12px rgba(239, 68, 68, .45);
+}
+:is(a, button).dl-btn--peligro:focus-visible { outline-color: #f87171; }
+
+/* ==========================================================================
+   8. ZONA PRIVADA EN MÓVIL (dashboard, estadísticas, certificados, gestión)
+   ========================================================================== */
+/* El body es un contenedor flex que ajustaba cada página al ancho de su
+   contenido más ancho: una tabla de 568 px dentro de una caja con scroll
+   ensanchaba toda la página (650 px en un móvil de 390) y el navegador
+   reducía el zoom. Los contenedores de página ocupan ahora el ancho
+   disponible, sin crecer por su contenido. */
+body > :is(.dashboard-container, .stats-container, .container, .pp-wrap, main) { width: 100%; min-width: 0; }
+
+@media (max-width: 768px) {
+    /* Mismo ritmo que el resto de la web: el título a 24 px del header */
+    .dashboard-container { padding-top: 8px !important; }
+    .dashboard-header { padding: 1rem 0 1.25rem !important; }
+    .dashboard-content { gap: 1.25rem !important; padding: 0 .75rem !important; }
+    .profile-section, .security-section { padding: 1.15rem !important; border-radius: 14px !important; }
+    .section-header h2 { font-size: 1.25rem !important; }
+    .welcome-section h1 { font-size: 1.75rem !important; }
+    .form-actions { flex-direction: column; gap: .6rem; }
+    .form-actions > :is(button, a) { width: 100%; }
+
+    /* Estadísticas: las gráficas pedían columnas de 440 px como mínimo */
+    .stats-container { padding-top: 24px !important; }
+    .charts-grid { grid-template-columns: minmax(0, 1fr) !important; }
+    .chart-card { min-width: 0 !important; }
+    .chart-container, .chart-container canvas { max-width: 100% !important; }
+
+    /* Gestión de usuarios */
+    .gestion-usuarios-container { padding: 24px .75rem 1rem !important; }
+    .gestion-usuarios-header { flex-wrap: wrap; gap: .75rem; margin-bottom: 1.25rem !important; }
+    .gestion-usuarios-header .search-box, .gestion-usuarios-header .search-box input { width: 100%; }
+    .gestion-usuarios-container .pagination { flex-wrap: wrap; justify-content: center; gap: .4rem; }
+    .gestion-usuarios-container .pagination .page-info { flex-basis: 100%; text-align: center; }
+}
+
+/* Tablas → tarjetas en móvil: una tabla de 5-6 columnas no cabe en 390 px.
+   Cada fila pasa a ser una tarjeta con el dato principal arriba. */
+@media (max-width: 640px) {
+    /* Tokens de API (dashboard de admin) */
+    table:has(#apiTokensTableBody) { display: block; }
+    table:has(#apiTokensTableBody) thead { display: none; }
+    #apiTokensTableBody { display: block; }
+    #apiTokensTableBody > tr:not(#apiTokensEmptyRow) {
+        display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: .3rem .75rem;
+        padding: .85rem .95rem; margin-bottom: .6rem;
+        background: rgba(15, 23, 42, .55); border: 1px solid var(--border-strong); border-radius: 12px;
+    }
+    #apiTokensTableBody > tr > td { display: block; padding: 0 !important; border: 0 !important; text-align: left !important; font-size: .82rem; }
+    #apiTokensTableBody > tr > td:nth-child(1) { grid-column: 1; font-weight: 600; font-size: .92rem; overflow-wrap: anywhere; }
+    #apiTokensTableBody > tr > td:nth-child(5) { grid-column: 2; grid-row: 1; text-align: right !important; }
+    #apiTokensTableBody > tr > td:nth-child(2) { grid-column: 1 / -1; }
+    #apiTokensTableBody > tr > td:nth-child(3),
+    #apiTokensTableBody > tr > td:nth-child(4) { grid-column: 1 / -1; }
+    #apiTokensTableBody > tr > td:nth-child(3)::before { content: "Creado · "; color: #64748b; }
+    #apiTokensTableBody > tr > td:nth-child(4)::before { content: "Último uso · "; color: #64748b; }
+    #apiTokensTableBody > tr > td:nth-child(6) { grid-column: 1 / -1; margin-top: .35rem; }
+    #apiTokensTableBody > tr > td:nth-child(6):not(:has(button)) { display: none; }
+
+    /* Gestión de usuarios (las columnas cambian según el rol: se seleccionan por contenido) */
+    .users-table, .users-table tbody { display: block; width: 100%; }
+    .users-table thead { display: none; }
+    .users-table tbody tr {
+        display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: .4rem .75rem; align-items: center;
+        padding: .85rem .95rem; margin-bottom: .6rem;
+        background: rgba(15, 23, 42, .6); border: 1px solid var(--border-strong); border-radius: 12px;
+    }
+    .users-table tbody td { display: block; padding: 0 !important; border: 0 !important; white-space: normal; }
+    .users-table tbody td:first-child { grid-column: 2; grid-row: 1; color: #64748b; font-size: .78rem; text-align: right; }
+    .users-table tbody td:first-child::before { content: "#"; }
+    .users-table tbody td.user-cell { grid-column: 1; grid-row: 1; font-weight: 600; }
+    .users-table tbody td.email-cell { grid-column: 1 / -1; color: #94a3b8; font-size: .82rem; overflow-wrap: anywhere; }
+    .users-table tbody td:has(.role-select, .role-badge) { grid-column: 1; }
+    .users-table tbody td:not(:first-child):not(.user-cell):not(.email-cell):not(:has(select, .role-badge, button)) { grid-column: 2; text-align: right; font-size: .78rem !important; }
+    .users-table tbody td:not(:first-child):not(.user-cell):not(.email-cell):not(:has(select, .role-badge, button))::before { content: "Alta · "; color: #64748b; }
+    .users-table tbody td:has(.delete-user-btn) { grid-column: 1 / -1; }
+    .users-table tbody td:has(.delete-user-btn) .btn-delete { width: 100%; justify-content: center; }
+}
+
+/* En pantallas estrechas un botón con texto largo pasa a dos líneas en vez
+   de salirse de la pantalla */
+@media (max-width: 640px) {
+    :is(a, button).dl-btn { white-space: normal; text-align: center; max-width: 100%; }
+}
+
+/* Estadísticas en móvil: cifras en 2 columnas (antes una por fila, mucho scroll) */
+@media (max-width: 640px) {
+    .stat-tiles { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; gap: .6rem !important; }
+    .stat-tile { padding: 1rem .6rem !important; min-width: 0; }
+    .stat-tile :is(.stat-value, .tile-value, strong, h3) { font-size: 1.45rem !important; overflow-wrap: anywhere; }
+    .users-table tbody td:has(.delete-user-btn) .dl-btn { padding: .5rem 1rem; font-size: .82rem; }
+}
+
+/* Perfil público: cabecera menos acolchada en móviles estrechos */
+@media (max-width: 480px) {
+    .pp-hero { padding: 1.25rem !important; gap: 1.25rem !important; }
+    .pp-ident { flex-basis: 100% !important; }
+}

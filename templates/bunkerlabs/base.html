@@ -29,6 +29,7 @@
     <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap"></noscript>
 
     <link rel="stylesheet" href="{{ static_v('bunkerlabs/css/bunkerlabs.css') }}">
+    <link rel="stylesheet" href="{{ static_v('dockerlabs/css/dl-footer.css') }}">
     <link rel="icon" href="{{ url_for('static', filename='dockerlabs/images/logos/logo_120.png') }}" type="image/png">
 
     <script nonce="{{ csp_nonce }}">
@@ -84,10 +85,10 @@
     <footer>
         <div class="footer-content">
             <p class="copyright">
-                <i class="bi bi-c-circle"></i> Copyright BunkerLabs {{ current_year() }} ·
-                <a href="{{ url_for('main.equipo') }}" class="footer-link nowrap">Equipo de DockerLabs</a> ·
-                <a href="{{ url_for('main.politica_privacidad') }}" class="footer-link">Política de Privacidad</a> ·
-                <a href="{{ url_for('main.politica_cookies') }}" class="footer-link">Cookies</a> ·
+                <span class="footer-copy"><i class="bi bi-c-circle"></i> Copyright BunkerLabs {{ current_year() }}</span><span class="footer-sep" aria-hidden="true"> · </span>
+                <a href="{{ url_for('main.equipo') }}" class="footer-link nowrap">Equipo de DockerLabs</a><span class="footer-sep" aria-hidden="true"> · </span>
+                <a href="{{ url_for('main.politica_privacidad') }}" class="footer-link">Política de Privacidad</a><span class="footer-sep" aria-hidden="true"> · </span>
+                <a href="{{ url_for('main.politica_cookies') }}" class="footer-link">Cookies</a><span class="footer-sep" aria-hidden="true"> · </span>
                 <a href="{{ url_for('main.condiciones_uso') }}" class="footer-link">Condiciones de Uso</a>
             </p>
 
@@ -152,16 +153,21 @@
                     bunkerlabsText.textContent = originalText;
                 });
 
-                // Mobile responsive behavior
-                bunkerlabsBrand.addEventListener('click', function (event) {
-                    const isMobile = window.innerWidth <= 768;
-
-                    if (isMobile) {
-                        // In mobile, prevent default and go to bunkerlabs home
-                        event.preventDefault();
-                        window.location.href = '{{ url_for("bunkerlabs.bunkerlabs_home") }}';
-                    }
-                    // In desktop, let the default href work (DockerLabs)
+                // En pantallas táctiles no hay hover: al tocar, el título se
+                // transforma un instante en su destino (igual que el hover de
+                // escritorio) y después navega. Mismo enlace que en escritorio.
+                bunkerlabsBrand.addEventListener('click', function (e) {
+                    var t = bunkerlabsBrand.querySelector('.brand-text');
+                    if (!t || !window.matchMedia('(hover: none)').matches || e.metaKey || e.ctrlKey) return;
+                    e.preventDefault();
+                    var destino = bunkerlabsBrand.href;
+                    // fija el texto del destino (el mouseleave del hover lo restauraría)
+                    t.setAttribute('data-original', t.getAttribute('data-hover'));
+                    t.textContent = t.getAttribute('data-hover');
+                    t.style.color = '#8b5cf6';
+                    t.style.textShadow = '0 0 15px rgba(139, 92, 246, 0.45)';
+                    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) { window.location.href = destino; return; }
+                    setTimeout(function () { window.location.href = destino; }, 320);
                 });
             }
         });

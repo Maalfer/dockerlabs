@@ -1,0 +1,374 @@
+/* ==========================================================================
+   Guía de ayuda de la home (botón "?" + modal con la ballena)
+   Los estilos de la ballena y del bocadillo vienen de auth-ballena.css.
+   ========================================================================== */
+
+/* ---- Botón "?" junto al filtro de dificultad ---- */
+.header-filters-row .dropdown:has(> .dl-ayuda-btn) { display: flex; align-items: center; gap: 8px; }
+.header-filters-row .dropdown:has(> .dl-ayuda-btn) > #filtro-dificultad-btn { flex: 1 1 auto; min-width: 0; }
+.dl-ayuda-btn.dl-btn {
+    flex: 0 0 auto;
+    width: 36px; height: 36px; padding: 0;
+    font-size: 1rem;
+}
+.dl-ayuda-btn i { pointer-events: none; }
+.dl-ayuda-nuevo::before {
+    content: "" !important; position: absolute; inset: -1px; border-radius: 6px;
+    border: 2px solid var(--accent-yellow); pointer-events: none;
+    animation: dl-ayuda-pulso 2.2s ease-out infinite;
+}
+.dl-ayuda-btn.dl-btn.dl-ayuda-nuevo { overflow: visible; }
+@keyframes dl-ayuda-pulso { 0% { transform: scale(1); opacity: .75; } 100% { transform: scale(1.45); opacity: 0; } }
+
+/* ---- Modal ---- */
+html.dl-guia-sin-scroll, html.dl-guia-sin-scroll body { overflow: hidden; }
+.dl-guia {
+    position: fixed; inset: 0; z-index: 2000;
+    display: flex; align-items: center; justify-content: center;
+    padding: 20px;
+}
+.dl-guia[hidden] { display: none; }
+.dl-guia-fondo {
+    position: absolute; inset: 0;
+    background: rgba(2, 6, 23, .62);
+    backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+    opacity: 0; transition: opacity .25s ease;
+}
+.dl-guia.abierta .dl-guia-fondo { opacity: 1; }
+
+.dl-guia-ventana {
+    position: relative;
+    width: min(920px, 100%);
+    max-height: min(640px, calc(100dvh - 40px));
+    display: flex; flex-direction: column;
+    background:
+        radial-gradient(520px 260px at 18% 0%, rgba(34, 211, 238, .08), transparent 70%),
+        linear-gradient(180deg, rgba(15, 23, 42, .98), rgba(2, 8, 23, .99));
+    border: 1px solid rgba(148, 163, 184, .2);
+    border-radius: 20px;
+    box-shadow: 0 40px 80px -20px rgba(0, 0, 0, .85), 0 0 70px -24px rgba(34, 211, 238, .35);
+    overflow: hidden;
+    opacity: 0; transform: translateY(18px) scale(.97);
+    transition: opacity .25s ease, transform .4s cubic-bezier(.2, .9, .3, 1.15);
+}
+.dl-guia.abierta .dl-guia-ventana { opacity: 1; transform: none; }
+
+/* Barra de "terminal" */
+.dl-guia-barra {
+    display: flex; align-items: center; gap: 12px;
+    padding: 10px 12px 10px 16px;
+    background: rgba(255, 255, 255, .025);
+    border-bottom: 1px solid rgba(255, 255, 255, .06);
+}
+.dl-guia-luces { display: inline-flex; gap: 7px; }
+.dl-guia-luces i { width: 11px; height: 11px; border-radius: 50%; opacity: .85; }
+.dl-guia-luces i:nth-child(1) { background: #f87171; }
+.dl-guia-luces i:nth-child(2) { background: #fbbf24; }
+.dl-guia-luces i:nth-child(3) { background: #4ade80; }
+.dl-guia-ruta {
+    flex: 1; text-align: center; color: #64748b;
+    font-family: 'Fira Code', ui-monospace, monospace; font-size: .78rem;
+}
+.dl-guia-x {
+    width: 32px; height: 32px; padding: 0; border: 0; border-radius: 9px;
+    display: inline-flex; align-items: center; justify-content: center;
+    background: transparent; color: #94a3b8; cursor: pointer;
+    transition: background-color .15s ease, color .15s ease;
+}
+.dl-guia-x:hover { background: rgba(255, 255, 255, .07); color: #fff; }
+.dl-guia-x:focus-visible { outline: 2px solid var(--accent-cyan); outline-offset: 1px; }
+.dl-guia-x svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; }
+
+/* Cuerpo: ballena + panel */
+.dl-guia-cuerpo {
+    flex: 1; min-height: 0;
+    display: grid; grid-template-columns: 290px minmax(0, 1fr); gap: 32px;
+    padding: 24px 30px 12px;
+}
+.dl-guia .dl-ballena { width: 290px; align-self: center; }
+.dl-guia .ballena { width: 260px; }
+.dl-guia.abierta .ballena { animation: dl-guia-emerge .8s cubic-bezier(.2, .9, .3, 1.25) .08s both; }
+@keyframes dl-guia-emerge { from { opacity: 0; transform: translateY(46px); } to { opacity: 1; transform: none; } }
+.dl-guia .dl-bocadillo { min-height: 92px; }
+
+.dl-guia-panel {
+    min-height: 0; overflow-y: auto; overscroll-behavior: contain;
+    padding: 4px 8px 8px 0;
+    scrollbar-width: thin; scrollbar-color: rgba(148, 163, 184, .3) transparent;
+}
+.dl-guia-contador {
+    margin: 0 0 .35rem; color: var(--accent-yellow);
+    font-family: 'Fira Code', ui-monospace, monospace; font-size: .78rem; font-weight: 600; letter-spacing: .08em;
+}
+.dl-guia-contador::before { content: "paso "; color: #64748b; font-weight: 500; }
+
+.dl-guia-paso h2 {
+    margin: 0 0 .85rem; color: #f1f5f9;
+    font-family: 'Fira Code', ui-monospace, monospace; font-size: 1.45rem; font-weight: 700; letter-spacing: -.01em;
+}
+.dl-guia-paso p { margin: 0 0 .85rem; color: var(--text-secondary); font-size: .93rem; line-height: 1.68; }
+.dl-guia-paso strong { color: #fff; }
+.dl-guia-paso em { color: var(--accent-cyan); font-style: normal; }
+.dl-guia-paso a { color: var(--accent-cyan); text-decoration: underline; text-underline-offset: 3px; text-decoration-color: rgba(34, 211, 238, .4); }
+.dl-guia-paso a:hover { text-decoration-color: currentColor; }
+.dl-guia-paso code {
+    padding: .1em .42em; border-radius: 6px;
+    background: rgba(60, 255, 0, .07); color: #8cf56b;
+    font-family: 'Fira Code', ui-monospace, monospace; font-size: .86em;
+}
+.dl-guia-paso kbd {
+    padding: .1em .45em; border-radius: 6px;
+    background: rgba(255, 255, 255, .08); border: 1px solid rgba(255, 255, 255, .16); border-bottom-width: 2px;
+    color: #e2e8f0; font-family: 'Fira Code', ui-monospace, monospace; font-size: .82em;
+}
+.dl-guia-muyfacil { color: var(--accent-cyan) !important; }
+
+/* Entrada de cada paso */
+.dl-guia-paso.entra-der { animation: dl-guia-der .35s cubic-bezier(.2, .8, .3, 1) both; }
+.dl-guia-paso.entra-izq { animation: dl-guia-izq .35s cubic-bezier(.2, .8, .3, 1) both; }
+@keyframes dl-guia-der { from { opacity: 0; transform: translateX(16px); } to { opacity: 1; transform: none; } }
+@keyframes dl-guia-izq { from { opacity: 0; transform: translateX(-16px); } to { opacity: 1; transform: none; } }
+
+/* Listas */
+.dl-guia-lista { list-style: none; margin: 0 0 .9rem; padding: 0; }
+.dl-guia-lista li {
+    position: relative; padding-left: 1.4rem; margin-bottom: .55rem;
+    color: var(--text-secondary); font-size: .93rem; line-height: 1.6;
+}
+.dl-guia-lista li::before {
+    content: ">"; position: absolute; left: 0; color: var(--accent-cyan);
+    font-family: 'Fira Code', ui-monospace, monospace; font-weight: 700;
+}
+.dl-guia-objetivos { list-style: none; margin: 0 0 1rem; padding: 0; display: grid; gap: .6rem; }
+.dl-guia-objetivos li {
+    display: flex; gap: .8rem; align-items: flex-start;
+    padding: .75rem .9rem; border-radius: 12px;
+    background: rgba(255, 255, 255, .03); border: 1px solid rgba(255, 255, 255, .07);
+    color: var(--text-secondary); font-size: .92rem; line-height: 1.55;
+}
+.dl-guia-objetivos span {
+    flex: 0 0 auto; width: 1.6rem; height: 1.6rem; border-radius: 50%;
+    display: inline-flex; align-items: center; justify-content: center;
+    background: rgba(34, 211, 238, .12); border: 1px solid rgba(34, 211, 238, .4);
+    color: var(--accent-cyan); font-family: 'Fira Code', ui-monospace, monospace; font-size: .8rem; font-weight: 700;
+}
+.dl-guia-nota {
+    padding: .1rem 0 .1rem .85rem;
+    border-left: 3px solid rgba(34, 211, 238, .45);
+    color: #94a3b8 !important; font-size: .86rem !important;
+}
+
+/* Comandos copiables */
+.dl-guia-cmd {
+    display: flex; align-items: center; gap: .5rem;
+    margin: .2rem 0 1rem; padding: .55rem .55rem .55rem 1rem;
+    background: #020617; border: 1px solid var(--hack-border); border-radius: 12px;
+    box-shadow: 0 0 24px -14px var(--hack-glow);
+}
+.dl-guia-cmd code {
+    flex: 1; min-width: 0; overflow-x: auto; white-space: nowrap;
+    padding: 0; background: none; color: #e2e8f0; font-size: .88rem;
+    scrollbar-width: none;
+}
+.dl-guia-cmd code::before { content: "$ "; color: var(--hack-green); font-weight: 700; }
+.dl-guia-copiar {
+    position: relative; flex: 0 0 auto;
+    width: 34px; height: 34px; padding: 0; border-radius: 9px;
+    display: inline-flex; align-items: center; justify-content: center;
+    background: rgba(255, 255, 255, .04); border: 1px solid rgba(255, 255, 255, .1);
+    color: #94a3b8; cursor: pointer;
+    transition: color .15s ease, border-color .15s ease, background-color .15s ease;
+}
+.dl-guia-copiar:hover { color: var(--hack-green); border-color: var(--hack-green); background: #001a00; }
+.dl-guia-copiar:focus-visible { outline: 2px solid var(--hack-green); outline-offset: 1px; }
+.dl-guia-copiar svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.dl-guia-copiar.copiado { color: var(--hack-green); border-color: var(--hack-green); background: #001a00; box-shadow: 0 0 10px var(--hack-glow); }
+.dl-guia-copiar.copiado::after {
+    content: "¡Copiado!"; position: absolute; bottom: calc(100% + 8px); right: 0;
+    padding: .25rem .55rem; border-radius: 7px; white-space: nowrap;
+    background: var(--hack-green); color: #001a00; font-family: 'Fira Code', ui-monospace, monospace; font-size: .72rem; font-weight: 700;
+}
+
+/* Iconos (los mismos de las tarjetas de máquinas) */
+.dl-guia-ic {
+    display: inline-flex; align-items: center; justify-content: center; vertical-align: middle;
+    width: 28px; height: 28px; flex: 0 0 auto; border-radius: 8px; border: 1px solid currentColor;
+    font-size: .95rem;
+}
+.dl-guia-ic svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.dl-guia-ic-verde { color: #34d399; background: rgba(52, 211, 153, .08); }
+.dl-guia-ic-morado { color: #a78bfa; background: rgba(167, 139, 250, .08); }
+.dl-guia-ic-cian { color: #22d3ee; background: rgba(34, 211, 238, .08); }
+.dl-guia-ic-ambar { color: #fbbf24; background: rgba(251, 191, 36, .08); }
+.dl-guia-recursos { list-style: none; margin: 0 0 1rem; padding: 0; display: grid; gap: .65rem; }
+.dl-guia-recursos li { display: flex; align-items: center; gap: .8rem; color: var(--text-secondary); font-size: .92rem; line-height: 1.5; }
+
+/* Botón final: es un .dl-btn (botones.css); aquí solo el margen */
+.dl-guia-cta.dl-btn { margin-top: .25rem; }
+
+/* Pie: anterior / puntos / siguiente */
+.dl-guia-pie {
+    display: flex; align-items: center; justify-content: space-between; gap: 12px;
+    padding: 14px 30px 18px;
+    border-top: 1px solid rgba(255, 255, 255, .06);
+}
+.dl-guia-nav.dl-btn { gap: .4rem; padding: .55rem 1rem; font-size: .85rem; }
+.dl-guia-nav svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+.dl-guia-dots { display: flex; align-items: center; gap: 8px; }
+.dl-guia-dot {
+    position: relative; width: 8px; height: 8px; padding: 0; border: 0; border-radius: 99px;
+    background: rgba(255, 255, 255, .2); cursor: pointer;
+    transition: width .25s ease, background-color .25s ease;
+}
+.dl-guia-dot::after { content: ""; position: absolute; inset: -7px -4px; }
+.dl-guia-dot:hover { background: rgba(255, 255, 255, .4); }
+.dl-guia-dot[aria-current="step"] { width: 24px; background: var(--accent-yellow); box-shadow: 0 0 8px rgba(245, 158, 11, .45); }
+.dl-guia-dot:focus-visible { outline: 2px solid var(--accent-cyan); outline-offset: 3px; }
+
+/* ---- Móvil / tablet: hoja que sube desde abajo, ballena en fila ---- */
+@media (max-width: 880px) {
+    .dl-guia { padding: 0; align-items: flex-end; }
+    .dl-guia-ventana {
+        width: 100%; max-height: 92dvh;
+        border-radius: 20px 20px 0 0; border-bottom: 0;
+        transform: translateY(60px);
+    }
+    .dl-guia-cuerpo { grid-template-columns: 1fr; grid-template-rows: auto minmax(0, 1fr); gap: 14px; padding: 14px 16px 8px; }
+    .dl-guia .dl-ballena { width: 100%; align-self: auto; }
+    .dl-guia .ballena { width: 96px; }
+    .dl-guia .dl-bocadillo { min-height: 0; }
+    .dl-guia-paso h2 { font-size: 1.2rem; margin-bottom: .6rem; }
+    .dl-guia-paso p, .dl-guia-lista li, .dl-guia-recursos li { font-size: .88rem; }
+    .dl-guia-pie { padding: 10px 16px calc(12px + env(safe-area-inset-bottom)); }
+}
+@media (max-width: 420px) {
+    .dl-guia-nav span { display: none; }
+    .dl-guia-nav.dl-btn { padding: .6rem .75rem; }
+    .dl-guia-dots { gap: 6px; }
+    .dl-guia-cmd code { font-size: .78rem; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .dl-ayuda-btn, .dl-ayuda-nuevo::after, .dl-guia-fondo, .dl-guia-ventana, .dl-guia .ballena,
+    .dl-guia-paso, .dl-guia-dot { animation: none !important; transition: none !important; }
+}
+
+/* Iconos propios (la versión de Bootstrap Icons de la web no trae estos glifos) */
+.dl-ayuda-ic { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; pointer-events: none; }
+.dl-ayuda-ic circle { fill: currentColor; stroke-width: 1.6; }
+.dl-guia-cta-ic { width: 18px; height: 18px; flex: 0 0 auto; fill: none; stroke: currentColor; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; transition: transform .2s ease; }
+.dl-guia-cta:hover .dl-guia-cta-ic { transform: translateX(3px); }
+
+/* ==========================================================================
+   Capturas de la guía: marco tipo ventana + pie, ampliables con un clic
+   ========================================================================== */
+.dl-guia-ventana { max-height: min(700px, calc(100dvh - 40px)); }
+
+.dl-guia-captura {
+    position: relative;
+    margin: .3rem 0 1.05rem;
+    border-radius: 14px;
+    background: #050b18;
+    border: 1px solid rgba(148, 163, 184, .16);
+    box-shadow: 0 18px 36px -22px rgba(0, 0, 0, .9), 0 0 0 1px rgba(255, 255, 255, .02) inset;
+    overflow: hidden;
+}
+/* barra superior con las tres luces, como una ventana de terminal */
+.dl-guia-captura::before {
+    content: "";
+    display: block; height: 22px;
+    background:
+        radial-gradient(circle at 14px 11px, #f87171 3.5px, transparent 4px),
+        radial-gradient(circle at 27px 11px, #fbbf24 3.5px, transparent 4px),
+        radial-gradient(circle at 40px 11px, #4ade80 3.5px, transparent 4px),
+        rgba(255, 255, 255, .03);
+    border-bottom: 1px solid rgba(255, 255, 255, .05);
+}
+.dl-guia-zoom-btn {
+    position: relative; display: flex; align-items: center; justify-content: center;
+    width: 100%; padding: 12px; margin: 0;
+    background:
+        radial-gradient(420px 140px at 50% 0%, rgba(34, 211, 238, .06), transparent 70%),
+        transparent;
+    border: 0; cursor: zoom-in;
+}
+.dl-guia-zoom-btn img {
+    display: block;
+    width: auto; height: auto; max-width: 100%; max-height: 220px;
+    border-radius: 8px;
+    box-shadow: 0 6px 20px -10px rgba(0, 0, 0, .8);
+    transition: transform .3s ease;
+}
+.dl-guia-zoom-btn:hover img { transform: scale(1.015); }
+.dl-guia-zoom-btn:focus-visible { outline: 2px solid var(--accent-cyan); outline-offset: -4px; border-radius: 12px; }
+.dl-guia-lupa {
+    position: absolute; top: 10px; right: 10px;
+    width: 30px; height: 30px; border-radius: 9px;
+    display: inline-flex; align-items: center; justify-content: center;
+    background: rgba(2, 8, 23, .85); border: 1px solid var(--accent-yellow); color: var(--accent-yellow);
+    opacity: 0; transform: translateY(-3px);
+    transition: opacity .2s ease, transform .2s ease;
+}
+.dl-guia-lupa svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; }
+.dl-guia-zoom-btn:hover .dl-guia-lupa, .dl-guia-zoom-btn:focus-visible .dl-guia-lupa { opacity: 1; transform: none; }
+@media (hover: none) { .dl-guia-lupa { opacity: .85; transform: none; } }
+.dl-guia-captura figcaption {
+    display: flex; gap: .55rem; align-items: baseline;
+    padding: .6rem .9rem .65rem;
+    border-top: 1px solid rgba(255, 255, 255, .06);
+    background: rgba(255, 255, 255, .02);
+    color: #94a3b8; font-size: .8rem; line-height: 1.5;
+}
+.dl-guia-captura figcaption::before {
+    content: "▸"; color: var(--accent-cyan); font-family: 'Fira Code', ui-monospace, monospace; font-weight: 700; flex: 0 0 auto;
+}
+.dl-guia-paso.entra-der .dl-guia-captura, .dl-guia-paso.entra-izq .dl-guia-captura {
+    animation: dl-guia-captura .5s cubic-bezier(.2, .8, .3, 1) .08s both;
+}
+@keyframes dl-guia-captura { from { opacity: 0; transform: translateY(10px) scale(.985); } to { opacity: 1; transform: none; } }
+
+/* Visor ampliado (dentro del modal) */
+.dl-guia-visor {
+    position: absolute; inset: 0; z-index: 5;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px;
+    padding: 56px 28px 28px;
+    background: rgba(2, 6, 23, .94);
+    backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+    cursor: zoom-out;
+    opacity: 0; transition: opacity .2s ease;
+}
+.dl-guia-visor[hidden] { display: none; }
+.dl-guia-visor.abierto { opacity: 1; }
+.dl-guia-visor img {
+    max-width: 100%; max-height: calc(100% - 50px); width: auto; height: auto;
+    border-radius: 10px; border: 1px solid rgba(148, 163, 184, .2);
+    box-shadow: 0 30px 60px -20px rgba(0, 0, 0, .9);
+    transform: scale(.96); transition: transform .3s cubic-bezier(.2, .9, .3, 1.15);
+}
+.dl-guia-visor.abierto img { transform: none; }
+.dl-guia-visor-txt { margin: 0; max-width: 640px; text-align: center; color: #cbd5e1; font-size: .85rem; line-height: 1.5; }
+.dl-guia-visor-txt code { padding: .1em .4em; border-radius: 6px; background: rgba(60, 255, 0, .07); color: #8cf56b; font-size: .88em; }
+.dl-guia-visor-cerrar {
+    position: absolute; top: 12px; right: 12px;
+    width: 36px; height: 36px; padding: 0; border-radius: 10px;
+    display: inline-flex; align-items: center; justify-content: center;
+    background: rgba(255, 255, 255, .06); border: 1px solid rgba(255, 255, 255, .14); color: #e2e8f0; cursor: pointer;
+}
+.dl-guia-visor-cerrar:hover { background: rgba(255, 255, 255, .12); }
+.dl-guia-visor-cerrar:focus-visible { outline: 2px solid var(--accent-cyan); outline-offset: 2px; }
+.dl-guia-visor-cerrar svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; }
+
+@media (max-width: 880px) {
+    .dl-guia-zoom-btn { padding: 8px; }
+    .dl-guia-zoom-btn img { max-height: 170px; }
+    .dl-guia-captura figcaption { font-size: .76rem; padding: .5rem .75rem; }
+    .dl-guia-visor { padding: 52px 12px 16px; }
+}
+@media (prefers-reduced-motion: reduce) {
+    .dl-guia-captura, .dl-guia-zoom-btn img, .dl-guia-lupa, .dl-guia-visor, .dl-guia-visor img { animation: none !important; transition: none !important; }
+}
+/* Pie de foto como texto normal (los <code>/<strong> no deben partirlo en columnas) */
+.dl-guia-captura figcaption { display: block; position: relative; padding-left: 1.85rem; }
+.dl-guia-captura figcaption::before { position: absolute; left: .9rem; top: .6rem; }
+@media (max-width: 880px) { .dl-guia-captura figcaption { padding-left: 1.7rem; } .dl-guia-captura figcaption::before { left: .75rem; top: .5rem; } }
+.dl-guia-visor img { max-height: none; }

@@ -6,6 +6,8 @@
 <link rel="stylesheet" href="{{ static_v('dockerlabs/css/home.css') }}"
       media="print" onload="this.media='all'">
 <noscript><link rel="stylesheet" href="{{ static_v('dockerlabs/css/home.css') }}"></noscript>
+<link rel="stylesheet" href="{{ static_v('dockerlabs/css/auth-ballena.css') }}">
+<link rel="stylesheet" href="{{ static_v('dockerlabs/css/guia.css') }}">
 {% endblock %}
 
 {% block content %}
@@ -144,6 +146,12 @@
                                 </a>
                             </li>
                         </ul>
+                        <!-- Ayuda para quien empieza: abre la guía con Cody, la ballena -->
+                        <button type="button" id="dl-ayuda-btn" class="dl-ayuda-btn dl-btn"
+                                aria-haspopup="dialog" aria-controls="dl-guia" aria-expanded="false"
+                                aria-label="Ayuda: Cody te enseña a empezar en DockerLabs" title="¿Primera vez? Cody te ayuda">
+                            <svg class="dl-ayuda-ic" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M9.2 9.1a2.9 2.9 0 0 1 5.6 1c0 1.9-2.8 2.5-2.8 4.2"/><circle cx="12" cy="18" r=".6"/></svg>
+                        </button>
                     </div>
 
                     <!-- Academia Button -->
@@ -257,6 +265,7 @@
     {% endif %}
 </div>
 
+{% include "dockerlabs/_guia.html" %}
 {% endblock %}
 
 {% block scripts %}
@@ -274,5 +283,7 @@
 <script src="{{ static_v('dockerlabs/js/writeups.js') }}" defer></script>
 <script src="{{ static_v('dockerlabs/js/ranking.js') }}" defer></script>
 <script src="{{ static_v('dockerlabs/js/subirwriteup.js') }}" defer></script>
+<script src="{{ static_v('dockerlabs/js/ballena.js') }}" defer></script>
+<script src="{{ static_v('dockerlabs/js/guia.js') }}" defer></script>
 
 {% endblock %}

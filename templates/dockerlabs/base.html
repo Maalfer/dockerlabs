@@ -70,6 +70,8 @@
     <link rel="stylesheet" href="{{ static_v('dockerlabs/css/styles.css') }}">
     {% endif %}
     <link rel="stylesheet" href="{{ static_v('dockerlabs/css/base.css') }}">
+    <link rel="stylesheet" href="{{ static_v('dockerlabs/css/dl-sistema.css') }}">
+    <link rel="stylesheet" href="{{ static_v('dockerlabs/css/dl-footer.css') }}">
 
     {% block extra_css %}{% endblock %}
 
@@ -383,12 +385,12 @@
     <footer class="{% if no_default_styles %}custom-footer{% endif %}">
         <div class="footer-content">
             <p class="copyright">
-                <i class="bi bi-c-circle"></i> Copyright DockerLabs {{ current_year() }}
-                <a href="https://github.com/Maalfer/dockerlabs/blob/main/CHANGELOG.md" class="footer-link dockerlabs-version" target="_blank" rel="noopener noreferrer">v{{ dockerlabs_version }}</a> ·
-                <a href="{{ url_for('main.equipo') }}" class="footer-link nowrap">Equipo de DockerLabs</a> ·
-                <a href="/go/newsletter?o=footer" class="footer-link" target="_blank" rel="noopener nofollow">Newsletter</a> ·
-                <a href="{{ url_for('main.politica_privacidad') }}" class="footer-link">Política de Privacidad</a> ·
-                <a href="{{ url_for('main.politica_cookies') }}" class="footer-link">Cookies</a> ·
+                <span class="footer-copy"><i class="bi bi-c-circle"></i> Copyright DockerLabs {{ current_year() }}
+                <a href="https://github.com/Maalfer/dockerlabs/blob/main/CHANGELOG.md" class="footer-link dockerlabs-version" target="_blank" rel="noopener noreferrer">v{{ dockerlabs_version }}</a></span><span class="footer-sep" aria-hidden="true"> · </span>
+                <a href="{{ url_for('main.equipo') }}" class="footer-link nowrap">Equipo de DockerLabs</a><span class="footer-sep" aria-hidden="true"> · </span>
+                <a href="/go/newsletter?o=footer" class="footer-link" target="_blank" rel="noopener nofollow">Newsletter</a><span class="footer-sep" aria-hidden="true"> · </span>
+                <a href="{{ url_for('main.politica_privacidad') }}" class="footer-link">Política de Privacidad</a><span class="footer-sep" aria-hidden="true"> · </span>
+                <a href="{{ url_for('main.politica_cookies') }}" class="footer-link">Cookies</a><span class="footer-sep" aria-hidden="true"> · </span>
                 <a href="{{ url_for('main.condiciones_uso') }}" class="footer-link">Condiciones de Uso</a>
             </p>
 
@@ -441,11 +443,21 @@
             // Título: móvil → dockerlabs.es, escritorio → BunkerLabs
             var dockerlabsLink = document.getElementById('dockerlabs-link');
             if (dockerlabsLink) {
+                // En pantallas táctiles no hay hover: al tocar, el título se
+                // transforma un instante en su destino (igual que el hover de
+                // escritorio) y después navega. Mismo enlace que en escritorio.
                 dockerlabsLink.addEventListener('click', function (e) {
-                    if (window.innerWidth <= 768) {
-                        e.preventDefault();
-                        window.location.href = 'https://dockerlabs.es';
-                    }
+                    var t = dockerlabsLink.querySelector('.brand-text');
+                    if (!t || !window.matchMedia('(hover: none)').matches || e.metaKey || e.ctrlKey) return;
+                    e.preventDefault();
+                    var destino = dockerlabsLink.href;
+                    // fija el texto del destino (el mouseleave del hover lo restauraría)
+                    t.setAttribute('data-original', t.getAttribute('data-hover'));
+                    t.textContent = t.getAttribute('data-hover');
+                    t.style.color = '#8b5cf6';
+                    t.style.textShadow = '0 0 15px rgba(139, 92, 246, 0.45)';
+                    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) { window.location.href = destino; return; }
+                    setTimeout(function () { window.location.href = destino; }, 320);
                 });
             }
 

@@ -1,0 +1,117 @@
+{# Guía para quien empieza de cero: se abre con el botón "?" junto al filtro de dificultad.
+   La ballena presenta cada paso; el panel tiene el detalle. Lógica en static/dockerlabs/js/guia.js #}
+<div class="dl-guia" id="dl-guia" hidden>
+    <div class="dl-guia-fondo" data-cerrar></div>
+    <div class="dl-guia-ventana" role="dialog" aria-modal="true" aria-label="Guía de DockerLabs para empezar, con Cody">
+        <div class="dl-guia-barra">
+            <span class="dl-guia-luces" aria-hidden="true"><i></i><i></i><i></i></span>
+            <span class="dl-guia-ruta" aria-hidden="true">cody@dockerlabs:~/ayuda</span>
+            <button type="button" class="dl-guia-x" data-cerrar aria-label="Cerrar la guía">
+                <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M6 6l12 12M18 6L6 18"/></svg>
+            </button>
+        </div>
+
+        <div class="dl-guia-cuerpo">
+            {% with ballena_mensajes = {"idle": "¡Hola! Soy Cody. ¿Te echo una aleta?"}, ballena_guia = true %}{% include "dockerlabs/auth/_ballena.html" %}{% endwith %}
+
+            <div class="dl-guia-panel">
+                <p class="dl-guia-contador" aria-live="polite"><span class="dl-guia-n">1</span>/8</p>
+
+                <section class="dl-guia-paso" data-dice="¡Hola! Soy Cody, la ballena de DockerLabs. ¿Primera vez por aquí? Te lo enseño todo en un par de minutos." data-estado="hola">
+                    <h2>¿Qué es DockerLabs?</h2>
+                    <p>Una plataforma para <strong>aprender y practicar hacking ético</strong>. Cada máquina es un laboratorio vulnerable a propósito que despliegas <strong>en tu propio ordenador con Docker</strong>, en segundos y sin máquinas virtuales pesadas.</p>
+                    <ul class="dl-guia-lista">
+                        <li>Laboratorios creados por la comunidad, de <em>Muy fácil</em> a <em>Difícil</em>.</li>
+                        <li>Todo corre en local: legal, seguro y controlado.</li>
+                        <li>Cada máquina tiene writeups para aprender de cómo se resolvió.</li>
+                    </ul>
+                </section>
+
+                <section class="dl-guia-paso" data-dice="Aquí se viene a romper cosas… pero de forma legal." data-estado="normal" hidden>
+                    <h2>¿Para qué sirve?</h2>
+                    <p>Para entrenar como en una auditoría real. En cada máquina tienes dos objetivos:</p>
+                    <ol class="dl-guia-objetivos">
+                        <li><span>1</span><div><strong>Intrusión</strong>: encontrar una vulnerabilidad y conseguir acceso a la máquina.</div></li>
+                        <li><span>2</span><div><strong>Escalada de privilegios</strong>: pasar de usuario normal a <code>root</code>.</div></li>
+                    </ol>
+                    <p class="dl-guia-nota">Lo que aprendas aquí, úsalo solo en sistemas propios o con autorización.</p>
+                </section>
+
+                <section class="dl-guia-paso" data-dice="Solo necesitas Linux, Docker… y muchas ganas." data-estado="teclea" hidden>
+                    <h2>Lo que necesitas</h2>
+                    <p>Un Linux (Kali, Parrot, Ubuntu…) con <strong>Docker</strong> instalado. En Debian, Kali o Ubuntu:</p>
+                    <div class="dl-guia-cmd"><code>sudo apt install docker.io</code><button type="button" class="dl-guia-copiar" data-copy="sudo apt install docker.io" aria-label="Copiar comando"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V6a2 2 0 0 1 2-2h9"/></svg></button></div>
+                    <figure class="dl-guia-captura"><button type="button" class="dl-guia-zoom-btn" aria-label="Ampliar captura: Terminal instalando Docker con sudo apt install docker.io"><img src="{{ static_v('dockerlabs/images/guia/docker.webp') }}" width="873" height="217" alt="Terminal instalando Docker con sudo apt install docker.io" loading="lazy" decoding="async"><span class="dl-guia-lupa" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><circle cx="11" cy="11" r="6"/><path d="M20 20l-4.5-4.5M11 8.5v5M8.5 11h5"/></svg></span></button><figcaption>Si ya lo tienes instalado, <code>apt</code> te dirá que está en su versión más reciente.</figcaption></figure>
+                    <p class="dl-guia-nota">¿No lo tienes? Tranquilo: el script <code>auto_deploy.sh</code> detecta si falta Docker y lo instala por ti. Las máquinas Windows se descargan como <code>.ova</code> y se importan en VirtualBox.</p>
+                </section>
+
+                <section class="dl-guia-paso" data-dice="Empieza por las «Muy fácil». Todas las ballenas empezaron nadando en la orilla." data-estado="normal" hidden>
+                    <h2>Elige tu primera máquina</h2>
+                    <ul class="dl-guia-lista">
+                        <li>Abre el filtro <strong>Dificultad</strong> (justo al lado de este botón de ayuda) y elige <strong class="dl-guia-muyfacil">Muy fácil</strong>.</li>
+                        <li>Pulsa <strong>Descripción</strong> para ver de qué va cada máquina.</li>
+                        <li>También puedes buscar por nombre o filtrar por categoría y plataforma.</li>
+                    </ul>
+                    <figure class="dl-guia-captura"><button type="button" class="dl-guia-zoom-btn" aria-label="Ampliar captura: Menú del filtro Dificultad con la opción Muy fácil marcada"><img src="{{ static_v('dockerlabs/images/guia/dificultad.webp') }}" width="214" height="253" alt="Menú del filtro Dificultad con la opción Muy fácil marcada" loading="lazy" decoding="async"><span class="dl-guia-lupa" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><circle cx="11" cy="11" r="6"/><path d="M20 20l-4.5-4.5M11 8.5v5M8.5 11h5"/></svg></span></button><figcaption>El número entre paréntesis indica cuántas máquinas hay de cada nivel.</figcaption></figure>
+                </section>
+
+                <section class="dl-guia-paso" data-dice="Pulsa la flechita verde y la tendrás en un momento." data-estado="sopla" hidden>
+                    <h2>Descárgala</h2>
+                    <p>Pulsa el botón <span class="dl-guia-ic dl-guia-ic-verde"><svg aria-hidden="true"><use href="#ic-download"/></svg></span> de la máquina. Te llevará a su página de descarga, con las instrucciones.</p>
+                    <figure class="dl-guia-captura"><button type="button" class="dl-guia-zoom-btn" aria-label="Ampliar captura: Tarjeta de una máquina con el botón de descarga resaltado"><img src="{{ static_v('dockerlabs/images/guia/descargar.webp') }}" width="703" height="78" alt="Tarjeta de una máquina con el botón de descarga resaltado" loading="lazy" decoding="async"><span class="dl-guia-lupa" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><circle cx="11" cy="11" r="6"/><path d="M20 20l-4.5-4.5M11 8.5v5M8.5 11h5"/></svg></span></button><figcaption>Cada máquina tiene su flecha verde de descarga, a la derecha de <strong>Descripción</strong>.</figcaption></figure>
+                    <p>Descomprime el <code>.zip</code>: dentro encontrarás <code>maquina.tar</code> y el script <code>auto_deploy.sh</code>.</p>
+                    <div class="dl-guia-cmd"><code>unzip maquina.zip</code><button type="button" class="dl-guia-copiar" data-copy="unzip maquina.zip" aria-label="Copiar comando"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V6a2 2 0 0 1 2-2h9"/></svg></button></div>
+                </section>
+
+                <section class="dl-guia-paso" data-dice="Aquí viene la magia: un comando y listo." data-estado="teclea" hidden>
+                    <h2>Despliégala</h2>
+                    <p>Abre una terminal en esa carpeta y ejecuta:</p>
+                    <div class="dl-guia-cmd"><code>sudo bash auto_deploy.sh maquina.tar</code><button type="button" class="dl-guia-copiar" data-copy="sudo bash auto_deploy.sh maquina.tar" aria-label="Copiar comando"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V6a2 2 0 0 1 2-2h9"/></svg></button></div>
+                    <figure class="dl-guia-captura"><button type="button" class="dl-guia-zoom-btn" aria-label="Ampliar captura: Salida de auto_deploy.sh desplegando la máquina y mostrando su IP 172.17.0.2"><img src="{{ static_v('dockerlabs/images/guia/desplegar.webp') }}" width="928" height="605" alt="Salida de auto_deploy.sh desplegando la máquina y mostrando su IP 172.17.0.2" loading="lazy" decoding="async"><span class="dl-guia-lupa" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><circle cx="11" cy="11" r="6"/><path d="M20 20l-4.5-4.5M11 8.5v5M8.5 11h5"/></svg></span></button><figcaption>El script despliega la máquina y te muestra su IP. Déjalo abierto mientras la hackeas.</figcaption></figure>
+                    <p>En unos segundos el script te dará la <strong>IP de la máquina</strong> (normalmente <code>172.17.0.2</code>). ¡Ya puedes empezar!</p>
+                    <p class="dl-guia-nota">Cuando termines, pulsa <kbd>Ctrl</kbd> + <kbd>C</kbd> en esa misma terminal y la máquina se elimina sola.</p>
+                </section>
+
+                <section class="dl-guia-paso" data-dice="Enumera, enumera… y vuelve a enumerar." data-estado="teclea" hidden>
+                    <h2>¡A hackear!</h2>
+                    <p>Empieza escaneando la IP para ver qué servicios tiene abiertos:</p>
+                    <div class="dl-guia-cmd"><code>nmap -p- --open -sV &lt;IP&gt;</code><button type="button" class="dl-guia-copiar" data-copy="nmap -p- --open -sV " aria-label="Copiar comando"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V6a2 2 0 0 1 2-2h9"/></svg></button></div>
+                    <figure class="dl-guia-captura"><button type="button" class="dl-guia-zoom-btn" aria-label="Ampliar captura: Resultado de un escaneo con nmap mostrando puertos abiertos y sus servicios"><img src="{{ static_v('dockerlabs/images/guia/nmap.webp') }}" width="512" height="174" alt="Resultado de un escaneo con nmap mostrando puertos abiertos y sus servicios" loading="lazy" decoding="async"><span class="dl-guia-lupa" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><circle cx="11" cy="11" r="6"/><path d="M20 20l-4.5-4.5M11 8.5v5M8.5 11h5"/></svg></span></button><figcaption>Cada puerto <code>open</code> es un servicio que puedes investigar: ahí empieza el ataque.</figcaption></figure>
+                    <p>Investiga cada servicio, encuentra la vulnerabilidad, entra en la máquina y escala privilegios hasta ser <code>root</code>.</p>
+                </section>
+
+                <section class="dl-guia-paso" data-dice="¿Atascado? Pedir ayuda también es de hackers." data-estado="feliz" hidden>
+                    <h2>¿Atascado? No pasa nada</h2>
+                    <ul class="dl-guia-recursos">
+                        <li><span class="dl-guia-ic dl-guia-ic-morado"><svg aria-hidden="true"><use href="#ic-writeup"/></svg></span><div><strong>Writeups</strong>: soluciones de la comunidad para cada máquina.</div></li>
+                        <li><span class="dl-guia-ic dl-guia-ic-verde"><svg aria-hidden="true"><use href="#ic-upload"/></svg></span><div><strong>Sube tu writeup</strong> cuando la resuelvas y aparece en el ranking.</div></li>
+                        <li><span class="dl-guia-ic dl-guia-ic-cian"><i class="bi bi-book" aria-hidden="true"></i></span><div><a href="{{ url_for('main.instrucciones_uso') }}">Instrucciones de uso</a> y solución de errores.</div></li>
+                        <li><span class="dl-guia-ic dl-guia-ic-cian"><i class="bi bi-discord" aria-hidden="true"></i></span><div>Pregunta en el <a href="https://discord.gg/dD3yVejBUR" target="_blank" rel="noopener noreferrer">Discord de la comunidad</a>.</div></li>
+                        <li><span class="dl-guia-ic dl-guia-ic-ambar"><i class="bi bi-mortarboard-fill" aria-hidden="true"></i></span><div>¿Quieres aprender desde cero? Pásate por la <a href="/go/academia?o=guia" target="_blank" rel="noopener">Academia</a>.</div></li>
+                    </ul>
+                    <button type="button" class="dl-guia-cta dl-btn dl-btn--grande" data-accion="muyfacil">
+                        <svg class="dl-guia-cta-ic" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M5 12h14M13 6l6 6-6 6"/></svg> Ver máquinas Muy fácil
+                    </button>
+                </section>
+            </div>
+        </div>
+
+        <div class="dl-guia-visor" hidden>
+            <button type="button" class="dl-guia-visor-cerrar" aria-label="Cerrar captura ampliada">
+                <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M6 6l12 12M18 6L6 18"/></svg>
+            </button>
+            <img alt="">
+            <p class="dl-guia-visor-txt"></p>
+        </div>
+
+        <div class="dl-guia-pie">
+            <button type="button" class="dl-guia-nav dl-guia-ant dl-btn dl-btn--neutro" aria-label="Paso anterior">
+                <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M15 6l-6 6 6 6"/></svg><span>Anterior</span>
+            </button>
+            <div class="dl-guia-dots" role="group" aria-label="Pasos de la guía"></div>
+            <button type="button" class="dl-guia-nav dl-guia-sig dl-btn">
+                <span>Siguiente</span><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M9 6l6 6-6 6"/></svg>
+            </button>
+        </div>
+    </div>
+</div>
