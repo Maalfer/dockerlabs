@@ -318,7 +318,7 @@
             if (idx !== actual) {
                 actual = idx;
                 lecturaBase = idx < 0 ? { t: M.idle || "Te lo resumo mientras lees." }
-                    : { t: secciones[idx].getAttribute("data-tldr"), a: "tl;dr · " + (idx + 1) + "/" + total };
+                    : { t: secciones[idx].getAttribute("data-tldr"), a: "resumen " + (idx + 1) + "/" + total };
                 if (!reaccion) pinta(lecturaBase.t, lecturaBase.a, true);
             }
             if (!terminado && max > 40 && window.scrollY > 0 && pct >= 99) {
