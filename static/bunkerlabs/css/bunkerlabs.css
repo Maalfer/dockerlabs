@@ -1879,10 +1879,8 @@ footer {
 
 /* =====================
    COHERENCIA CON DOCKERLABS EN MÓVIL
-   El header medía 72 px en móvil, con logo de 55 px (que en 360 px se
-   deformaba) y título de 24 px, frente a los 44 px de DockerLabs. Ahora
-   usa exactamente las mismas medidas que el header móvil de DockerLabs:
-   44 px de alto, logo de 36 px y el nombre junto al logo.
+   El header móvil usa las mismas medidas que el de DockerLabs: 44 px de alto,
+   logo de 36 px y el nombre junto al logo.
    ===================== */
 :root { --dl-acento: #a78bfa; } /* acento del footer compartido (dl-footer.css) */
 

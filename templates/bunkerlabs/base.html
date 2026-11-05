@@ -43,7 +43,6 @@
 
 <body>
     <header>
-        {# Logo y título son dos enlaces hermanos (antes uno dentro de otro: HTML inválido) #}
         <a href="{{ url_for('index') }}" class="logo">
             <div class="logo-container">
                 <img src="{{ url_for('static', filename='dockerlabs/images/logos/logo_120.png') }}" alt="DockerLabs">

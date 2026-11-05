@@ -43,7 +43,7 @@ docker compose -f docker-compose.yml -f tests/docker-compose.test.yml down -v
 ```
 tests/
   conftest.py       # fixtures raíz: BD de test, truncado entre tests, TestClient,
-                     # mocks de red (SMTP/Discord), login_as, admin_api_token
+                     # mocks de red (SMTP/Discord), login_as
   factories.py       # make_user/make_machine/make_writeup/... con defaults sensatos
   unit/              # sin BD, sin red — funciones puras (validators, slugs, image_utils...)
   integration/        # contra TestClient + MariaDB real, un fichero por familia de rutas

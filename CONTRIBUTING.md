@@ -85,7 +85,9 @@ fichero [`VERSION`](VERSION) en la raíz: todo lo demás (footer, meta tag,
 `GET /api/version`, badge del README) lo lee de ahí, así que nunca hay que
 tocar nada más que ese fichero y el `CHANGELOG.md`.
 
-Para publicar una nueva versión:
+> **La versión no se sube nunca salvo que el dueño del proyecto lo pida expresamente.** No toques `VERSION` ni crees secciones `## [X.Y.Z]` en `CHANGELOG.md` por tu cuenta: los cambios se anotan en `## [Sin publicar]` y el número lo decide él.
+
+Para publicar una nueva versión (solo cuando el dueño lo pida):
 
 1. Decide el número según el impacto del cambio:
    - **PATCH** (`2.0.1`): corrección de bug o de seguridad, sin romper nada.

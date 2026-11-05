@@ -1,14 +1,5 @@
-"""Toda referencia de una plantilla a otro fichero debe existir.
-
-Comprueba, sin BD ni servidor, que:
-  - cada `static_v('...')` y `url_for('static', filename='...')` apunta a un
-    fichero real dentro de static/;
-  - cada `{% include %}` / `{% extends %}` apunta a una plantilla existente;
-  - cada `<script>` en línea lleva el nonce CSP.
-
-Así, renombrar o borrar un CSS/JS/imagen (o un parcial) sin actualizar las
-plantillas rompe el suite en vez de dejar un enlace roto en producción.
-"""
+"""Toda referencia de una plantilla a otro fichero existe y todo script en
+línea lleva el nonce CSP."""
 import re
 from pathlib import Path
 

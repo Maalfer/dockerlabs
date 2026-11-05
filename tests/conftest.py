@@ -288,31 +288,5 @@ def login_as(client, auth):
     return _login
 
 
-@pytest.fixture
-def admin_api_token(db):
-    """Fixture-factory: `admin_api_token(admin_user, label="...")` crea una
-    fila `ApiToken` real (mismo esquema pbkdf2 que /dashboard) y devuelve el
-    token en claro + los headers listos para usar: `Authorization: Bearer`.
-    Replica el patrón ya verificado a mano contra producción para probar el
-    acceso por cabecera (bypassa CSRF por diseño, ver routers.get_session)."""
-
-    def _make(admin_user, label="pytest"):
-        from dockerlabs.models import ApiToken
-        from dockerlabs.token_auth import generate_api_token, hash_api_token, token_display_prefix
-
-        token = generate_api_token()
-        row = ApiToken(
-            admin_user_id=admin_user.id,
-            label=label,
-            token_hash=hash_api_token(token),
-            token_prefix=token_display_prefix(token),
-        )
-        db.session.add(row)
-        db.session.commit()
-        return token, {"Authorization": f"Bearer {token}"}
-
-    return _make
-
-
 def csrf_headers(csrf_token: str) -> dict:
     return {"X-CSRFToken": csrf_token}

@@ -10,7 +10,7 @@ from fastapi import Depends, HTTPException, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
 from dockerlabs.models import OutboundClickLog
 
-from dockerlabs.models import ApiToken, Category, Certificate, CompletedMachine, EmailChangeToken, EmailVerificationToken, Machine, PasswordResetToken, User
+from dockerlabs.models import Category, Certificate, CompletedMachine, EmailChangeToken, EmailVerificationToken, Machine, PasswordResetToken, User
 from dockerlabs.tiempo import utcnow
 
 
@@ -181,13 +181,6 @@ def register_pages_core_routes(
         cert = Certificate.query.filter_by(user_id=user_id).first() if user_id else None
         perfil_cert_id = cert.cert_id if cert else None
 
-        # Sección "Tokens de API": solo se calcula (y solo se pinta en la
-        # plantilla) para admins. Nunca se envía el token en claro; solo lo
-        # que ya vive en BD (label, prefijo, fechas).
-        api_tokens = []
-        if role == "admin":
-            api_tokens = ApiToken.query.order_by(ApiToken.created_at.desc()).all()
-
         context = {
             "request": request,
             "profile_image_url": profile_image_url,
@@ -198,7 +191,6 @@ def register_pages_core_routes(
             "perfil_web_url": f"https://dockerlabs.es{perfil_web_path}",
             "perfil_publico": perfil_publico,
             "perfil_cert_id": perfil_cert_id,
-            "api_tokens": api_tokens,
             "user": user,
             "current_user_role": role,
             "session": session_data,

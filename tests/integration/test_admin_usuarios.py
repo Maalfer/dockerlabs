@@ -133,7 +133,7 @@ class TestDeleteUser:
         # Borrar al otro admin funciona (quedan 2 -> 1).
         r = client.post(f"/api/admin/delete_user/{other_admin.id}", headers={"X-CSRFToken": csrf})
         assert r.status_code == 200
-        db.session.rollback()  # ver nota REPEATABLE READ en test_api_tokens.py
+        db.session.rollback()  # ver «Gotcha importante (REPEATABLE READ)» en tests/README.md
         assert User.query.filter_by(role="admin").count() == 1
 
         # NOTA sobre el orden de guards en delete_user: el check "no puedes

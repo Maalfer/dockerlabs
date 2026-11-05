@@ -1,19 +1,7 @@
-/* ==========================================================================
-   Footer compartido DockerLabs / BunkerLabs — versión móvil (≤ 768 px).
-   Lo cargan las dos bases (templates/dockerlabs/base.html y
-   templates/bunkerlabs/base.html) después de su CSS propio. En escritorio cada
-   web conserva su footer fijo de siempre; aquí solo se define el móvil.
-
-   Antes, en móvil, los enlaces eran un párrafo corrido ("Equipo de /
-   DockerLabs" partido entre líneas y separadores "·" colgando al final de
-   línea), los iconos quedaban muy separados del texto y el body dejaba 100 px
-   vacíos bajo el footer. Ahora:
-     1) iconos de redes como botones táctiles de 42 px
-     2) enlaces como "chips" que nunca se parten
-     3) copyright y versión, discretos, cerrando el footer
-
-   Acento: ámbar por defecto; BunkerLabs define --dl-acento (morado).
-   ========================================================================== */
+/* Footer en móvil (≤ 768 px), compartido por DockerLabs y BunkerLabs: iconos
+   de redes como botones táctiles, enlaces que no se parten y copyright al
+   final. En escritorio cada web mantiene su footer fijo. BunkerLabs cambia el
+   acento con --dl-acento. */
 
 @media (max-width: 768px) {
     body { padding-bottom: 0 !important; }

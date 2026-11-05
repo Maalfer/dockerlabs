@@ -170,23 +170,14 @@ class TestDashboard:
         r = client.get("/dashboard")
         assert r.status_code == 200
 
-    def test_api_tokens_section_only_for_admin(self, client, login_as, db):
-        # NOTA: "Tokens de API" en texto plano NO sirve de marcador por sí solo:
-        # el <script> del dashboard trae un comentario JS con ese mismo texto
-        # que SIEMPRE se renderiza, sea cual sea el rol (no está dentro del
-        # {% if %}). El marcador fiable es un id del HTML que sí vive dentro
-        # del bloque `{% if current_user_role == 'admin' %}` (ver plantilla).
-        admin = make_user(db, role="admin")
-        login_as(admin)
-        r = client.get("/dashboard")
-        assert 'id="apiTokensTableBody"' in r.text
-
-    @pytest.mark.parametrize("role", ["moderador", "jugador"])
-    def test_api_tokens_section_hidden_for_non_admin(self, client, login_as, db, role):
+    @pytest.mark.parametrize("role", ["admin", "moderador", "jugador"])
+    def test_dashboard_no_tiene_seccion_de_tokens_de_api(self, client, login_as, db, role):
         user = make_user(db, role=role)
         login_as(user)
         r = client.get("/dashboard")
-        assert 'id="apiTokensTableBody"' not in r.text
+        assert r.status_code == 200
+        assert "apiToken" not in r.text
+        assert "Tokens de API" not in r.text
 
 
 class TestLogout:

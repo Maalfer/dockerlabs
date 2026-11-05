@@ -11,7 +11,6 @@ import sys
 import time
 from pathlib import Path
 
-# Raíz del proyecto (antes era la ruta absoluta del VPS: no servía con Docker Compose)
 RAIZ = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(RAIZ))
 

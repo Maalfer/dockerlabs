@@ -1,12 +1,5 @@
-"""Páginas públicas de información y legales (contenido estático).
-
-Antes vivían en `pages_admin.py`, mezcladas con la administración, como diez
-funciones casi idénticas. Ahora se declaran en una tabla: para añadir una
-página informativa basta con una línea en `_PAGINAS` y su plantilla.
-
-Todas reciben el contexto común (`session`, `current_user_role`, `url_for`);
-el nonce CSP lo inyecta el context processor de `dockerlabs/routers.py`.
-"""
+"""Páginas públicas de información y legales: cada entrada de `_PAGINAS` es
+una ruta y su plantilla."""
 import secrets
 
 from fastapi import Depends, Request
@@ -56,5 +49,5 @@ def register_pages_info_routes(pages_router, get_session, templates, url_for):
 
     @pages_router.get("/bug-bounty")
     def bug_bounty_page():
-        # Programa retirado: se conserva la URL para no romper enlaces antiguos
+        # Se conserva la URL para no romper enlaces existentes
         return RedirectResponse(url="/", status_code=302)

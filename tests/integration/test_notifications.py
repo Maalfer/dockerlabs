@@ -156,7 +156,7 @@ class TestSendNotification:
 
 
 class TestRoleRevalidationOnSend:
-    """Mismo patrón que test_api_tokens.py::TestHeaderAuthentication: get_session()
+    """Mismo patrón que test_sessions_csrf.py::TestRoleRevalidation: get_session()
     revalida el rol contra BD en cada petición, así que una cookie vieja que
     afirma un rol que ya no es real no basta (ni aunque el forjado sea vía
     login_as(user, role=...), que simula exactamente una cookie desincronizada

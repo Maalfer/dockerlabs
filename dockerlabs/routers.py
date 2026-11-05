@@ -10,11 +10,9 @@ import logging
 
 
 from dockerlabs import __version__ as DOCKERLABS_VERSION
-from dockerlabs.models import User, SessionConfig, ApiToken
+from dockerlabs.models import User, SessionConfig
 from dockerlabs.extensions import db
-from dockerlabs.token_auth import verify_api_token
 from werkzeug.security import check_password_hash as _werkzeug_check_password_hash
-from dockerlabs.tiempo import utcnow
 
 _FLASK_TO_FASTAPI = {
         # Auth
@@ -95,16 +93,9 @@ def url_for(endpoint, **kwargs):
 # Configurar Jinja2 templates
 BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 def _contexto_csp(request):
-    """Nonce CSP de la petición, inyectado en TODAS las plantillas.
-
-    `security_headers_middleware` (asgi.py) genera un nonce por petición, lo
-    guarda en `request.state.csp_nonce` y lo pone en la cabecera CSP. Las
-    plantillas lo usan como `{{ csp_nonce }}` (bases) o `{{ g.csp_nonce }}`
-    (páginas). Las rutas NO deben crear el suyo: un nonce nuevo no coincide
-    con el de la cabecera y el navegador bloquearía esos scripts al pasar la
-    CSP de report-only a obligatoria. Starlette aplica los context processors
-    después del contexto de cada ruta, así que este valor siempre prevalece.
-    """
+    """Inyecta en todas las plantillas el nonce CSP de la petición (lo genera
+    security_headers_middleware). Las rutas no deben crear el suyo: no
+    coincidiría con la cabecera."""
     nonce = getattr(request.state, "csp_nonce", "")
     return {"csp_nonce": nonce, "g": {"csp_nonce": nonce}}
 
@@ -168,76 +159,10 @@ def compute_csrf_token(session_id) -> str:
         secret = secret.encode()
     return hmac.new(secret, str(session_id).encode(), hashlib.sha256).hexdigest()
 
-def _extract_api_token(request: Request) -> Optional[str]:
-    """Token de admin enviado por cabecera: `Authorization: Bearer <token>`
-    o, como alternativa, `X-Admin-Token: <token>`."""
-    auth = request.headers.get("Authorization", "")
-    if auth.lower().startswith("bearer "):
-        candidate = auth[7:].strip()
-        if candidate:
-            return candidate
-    header_token = request.headers.get("X-Admin-Token", "").strip()
-    return header_token or None
-
-
-def _get_session_from_api_token(request: Request) -> Optional[dict]:
-    """Si la petición trae un token de admin por cabecera, lo valida contra
-    `ApiToken` y devuelve una sesión equivalente a la de un admin logueado
-    por cookie (mismo dict que produce el resto de esta función: user_id,
-    username, role). Devuelve None si no se envió ningún token (para que
-    get_session() siga con el flujo normal de cookie); devuelve {} (sesión
-    vacía, igual que "no autenticado") si se envió un token pero no es
-    válido, para no confundirlo con una cookie que pudiera venir a la vez.
-
-    Solo hay unos pocos tokens de admin activos a la vez (los genera el
-    propio dueño de la plataforma desde /dashboard), así que iterar y
-    comparar con pbkdf2 es aceptable y evita tener que indexar por hash."""
-    token = _extract_api_token(request)
-    if not token:
-        return None
-
-    logger = logging.getLogger(__name__)
-    try:
-        candidates = ApiToken.query.filter(ApiToken.revoked_at.is_(None)).all()
-    except Exception:
-        db.session.rollback()
-        logger.warning("Error consultando ApiToken para autenticación por cabecera")
-        return {}
-
-    for row in candidates:
-        if verify_api_token(row.token_hash, token):
-            admin = db.session.get(User, row.admin_user_id)
-            if not admin or admin.role != "admin":
-                # El dueño del token ya no es admin (degradado o borrado): no
-                # cae a ningún otro rol, se trata como no autenticado.
-                return {}
-            row.last_used_at = utcnow()
-            try:
-                db.session.commit()
-            except Exception:
-                db.session.rollback()
-            return {
-                "user_id": admin.id,
-                "username": admin.username,
-                "role": "admin",
-                "_auth_via": "api_token",
-            }
-
-    # Token presente pero no coincide con ninguno activo: rechazar.
-    return {}
-
-
 def get_session(request: Request) -> dict:
-    """Extrae y valida la sesión del usuario: desde un token de API de admin
-    por cabecera (ver `_get_session_from_api_token`) o, si no hay token,
-    desde la cookie de sesión firmada. Este es el punto único del que
-    dependen todas las rutas (directamente o vía `require_auth_and_role`),
-    así que un token válido por cabecera hereda automáticamente el mismo
-    acceso que ya tiene un admin logueado, sin tocar cada ruta."""
-    token_session = _get_session_from_api_token(request)
-    if token_session is not None:
-        return token_session
-
+    """Extrae y valida la sesión del usuario desde la cookie de sesión firmada.
+    Es el punto único del que dependen todas las rutas (directamente o vía
+    `require_auth_and_role`)."""
     cookie = request.cookies.get("session")
     if not cookie:
         return {}
@@ -641,7 +566,6 @@ from dockerlabs.routes.auth import register_auth_routes
 from dockerlabs.routes.perfil import register_perfil_routes
 from dockerlabs.routes.admin_usuarios import register_admin_usuarios_routes
 from dockerlabs.routes.maquinas_api import register_maquinas_api_routes
-from dockerlabs.routes.api_tokens import register_api_tokens_routes
 
 register_api_publica_routes(
     api_router=api_router,
@@ -672,13 +596,6 @@ register_admin_usuarios_routes(
     api_router=api_router,
     get_session=get_session,
     verify_csrf_token=verify_csrf_token,
-)
-
-register_api_tokens_routes(
-    api_router=api_router,
-    get_session=get_session,
-    verify_csrf_token=verify_csrf_token,
-    db=db,
 )
 
 register_maquinas_api_routes(

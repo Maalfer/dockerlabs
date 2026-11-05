@@ -113,9 +113,7 @@
 
 /* ==========================================================================
    2. CAMPOS DE FORMULARIO
-   Antes cada página enfocaba en un color (cian en el buscador, azul en el
-   login, índigo en enviar máquina). Ahora el campo activo se marca en ámbar,
-   el color de "elemento con el que estás interactuando".
+   El campo activo se marca en ámbar, como el resto de elementos interactivos.
    ========================================================================== */
 :is(input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"]):not([type="hidden"]):not([type="submit"]):not([type="button"]), select, textarea):focus {
     border-color: var(--accent-yellow) !important;
@@ -149,17 +147,15 @@ body .pagination-btn:focus-visible { outline: 2px solid var(--hack-green); outli
 
 /* ==========================================================================
    4. ESPACIO BAJO EL HEADER FIJO
-   El body reservaba 90–100 px en móvil para un header que mide 44 px, y
-   dejaba ~50 px vacíos encima de todas las páginas. Ahora reserva justo la
-   altura real del header en cada tramo (medida: 44 / 50 / 72 px).
+   El body reserva exactamente la altura del header fijo en cada tramo
+   (44 / 50 / 72 px).
    ========================================================================== */
 body { padding-top: 72px; }
 @media (max-width: 768px) { body { padding-top: 50px; } }
 @media (max-width: 480px) { body { padding-top: 44px; } }
 
-/* Ritmo vertical común en las páginas de contenido: el título empieza a
-   40 px del header en escritorio y a 24 px en móvil (antes 60–110 px, cada
-   página con su propio valor). */
+/* Ritmo vertical común: el título de una página de contenido empieza a 40 px
+   del header en escritorio y a 24 px en móvil. */
 .policy-container,
 .soporte-container,
 .descargar-container { padding-top: 40px !important; }
@@ -173,9 +169,7 @@ body { padding-top: 72px; }
 
 /* ==========================================================================
    5. LISTA DE MÁQUINAS EN MÓVIL
-   El nombre iba centrado dentro de una columna fija, así que cada nombre
-   empezaba a una altura distinta según su longitud. Ahora todos arrancan
-   en el mismo borde izquierdo.
+   Todos los nombres de máquina arrancan en el mismo borde izquierdo.
    ========================================================================== */
 @media (max-width: 480px) {
     .maquina-item > span:first-child {
@@ -186,14 +180,12 @@ body { padding-top: 72px; }
 
 /* ==========================================================================
    6. PANEL DE BÚSQUEDA Y FILTROS DE LA HOME
-   En móvil ocupaba 6 filas (buscador, iconos, Writeups, Autores, Academia y
-   Dificultad, cada uno en la suya) y el grupo de iconos no llenaba el ancho.
-   Ahora son 3 filas proporcionadas:
+   En móvil, 3 filas:
      1) buscador + iconos de filtro, misma altura
      2) Writeups · Autores · Academia, a partes iguales
      3) Dificultad + ayuda
    ========================================================================== */
-/* El buscador y el grupo de iconos comparten forma (antes píldora + caja) */
+/* El buscador y el grupo de iconos comparten forma */
 #buscador { border-radius: 10px; }
 
 @media (max-width: 768px) {
@@ -244,15 +236,15 @@ body { padding-top: 72px; }
     .header-filters-row #academia { font-size: .62rem !important; letter-spacing: 0 !important; }
 }
 
-/* Sin scroll horizontal en móviles pequeños: el panel de filtros (fila de
-   Bootstrap con márgenes negativos) y la paginación se salían unos píxeles. */
+/* Sin scroll horizontal en móviles pequeños (fila de Bootstrap con márgenes
+   negativos y paginación). */
 @media (max-width: 480px) {
     .container > .header.row { margin-left: 0 !important; margin-right: 0 !important; }
     .pagination-wrapper { max-width: 100%; flex-wrap: wrap; justify-content: center; row-gap: .4rem; }
 }
 
-/* En ≤360 px los botones de acción se estiraban (mín. 60 px cada uno) y el
-   nombre de la máquina se quedaba en 4 letras. Mismo tamaño que en 390 px. */
+/* En ≤ 360 px los botones de acción no se estiran: el nombre de la máquina
+   conserva su espacio. */
 @media (max-width: 360px) {
     .maquina-item .acciones button { flex: 0 0 auto !important; min-width: 0 !important; }
     .maquina-item .acciones { flex-wrap: nowrap !important; }
@@ -260,8 +252,7 @@ body { padding-top: 72px; }
 
 /* ==========================================================================
    7. HEADER EN MÓVIL: el nombre "DockerLabs" vuelve a verse
-   Estaba oculto por debajo de 768 px y dejaba un hueco vacío entre el logo y
-   los botones. Ahora va junto al logo, igual que BunkerLabs en móvil.
+   Va junto al logo, igual que BunkerLabs en móvil.
    ========================================================================== */
 @media (max-width: 768px) {
     header .header-title {
@@ -301,11 +292,8 @@ body { padding-top: 72px; }
 /* ==========================================================================
    8. ZONA PRIVADA EN MÓVIL (dashboard, estadísticas, certificados, gestión)
    ========================================================================== */
-/* El body es un contenedor flex que ajustaba cada página al ancho de su
-   contenido más ancho: una tabla de 568 px dentro de una caja con scroll
-   ensanchaba toda la página (650 px en un móvil de 390) y el navegador
-   reducía el zoom. Los contenedores de página ocupan ahora el ancho
-   disponible, sin crecer por su contenido. */
+/* El body es un contenedor flex: sin esto, una tabla ancha ensancharía toda
+   la página en móvil y el navegador reduciría el zoom. */
 body > :is(.dashboard-container, .stats-container, .container, .pp-wrap, main) { width: 100%; min-width: 0; }
 
 @media (max-width: 768px) {
@@ -333,29 +321,8 @@ body > :is(.dashboard-container, .stats-container, .container, .pp-wrap, main) {
     .gestion-usuarios-container .pagination .page-info { flex-basis: 100%; text-align: center; }
 }
 
-/* Tablas → tarjetas en móvil: una tabla de 5-6 columnas no cabe en 390 px.
-   Cada fila pasa a ser una tarjeta con el dato principal arriba. */
+/* Tablas → tarjetas en móvil: cada fila es una tarjeta con el dato principal arriba. */
 @media (max-width: 640px) {
-    /* Tokens de API (dashboard de admin) */
-    table:has(#apiTokensTableBody) { display: block; }
-    table:has(#apiTokensTableBody) thead { display: none; }
-    #apiTokensTableBody { display: block; }
-    #apiTokensTableBody > tr:not(#apiTokensEmptyRow) {
-        display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: .3rem .75rem;
-        padding: .85rem .95rem; margin-bottom: .6rem;
-        background: rgba(15, 23, 42, .55); border: 1px solid var(--border-strong); border-radius: 12px;
-    }
-    #apiTokensTableBody > tr > td { display: block; padding: 0 !important; border: 0 !important; text-align: left !important; font-size: .82rem; }
-    #apiTokensTableBody > tr > td:nth-child(1) { grid-column: 1; font-weight: 600; font-size: .92rem; overflow-wrap: anywhere; }
-    #apiTokensTableBody > tr > td:nth-child(5) { grid-column: 2; grid-row: 1; text-align: right !important; }
-    #apiTokensTableBody > tr > td:nth-child(2) { grid-column: 1 / -1; }
-    #apiTokensTableBody > tr > td:nth-child(3),
-    #apiTokensTableBody > tr > td:nth-child(4) { grid-column: 1 / -1; }
-    #apiTokensTableBody > tr > td:nth-child(3)::before { content: "Creado · "; color: #64748b; }
-    #apiTokensTableBody > tr > td:nth-child(4)::before { content: "Último uso · "; color: #64748b; }
-    #apiTokensTableBody > tr > td:nth-child(6) { grid-column: 1 / -1; margin-top: .35rem; }
-    #apiTokensTableBody > tr > td:nth-child(6):not(:has(button)) { display: none; }
-
     /* Gestión de usuarios (las columnas cambian según el rol: se seleccionan por contenido) */
     .users-table, .users-table tbody { display: block; width: 100%; }
     .users-table thead { display: none; }
@@ -382,7 +349,7 @@ body > :is(.dashboard-container, .stats-container, .container, .pp-wrap, main) {
     :is(a, button).dl-btn { white-space: normal; text-align: center; max-width: 100%; }
 }
 
-/* Estadísticas en móvil: cifras en 2 columnas (antes una por fila, mucho scroll) */
+/* Estadísticas en móvil: cifras en 2 columnas */
 @media (max-width: 640px) {
     .stat-tiles { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; gap: .6rem !important; }
     .stat-tile { padding: 1rem .6rem !important; min-width: 0; }

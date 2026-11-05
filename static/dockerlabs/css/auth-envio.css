@@ -1,8 +1,5 @@
-/* ==========================================================================
-   Estado "enviando" de los formularios de acceso (login y registro).
-   Antes estaba copiado como <style> en línea en login.html y register.html
-   (114 líneas idénticas). El overlay es templates/dockerlabs/auth/_cargando.html.
-   ========================================================================== */
+/* Estado "enviando" de los formularios de login y registro.
+   El overlay está en templates/dockerlabs/auth/_cargando.html. */
 
 /* Puntos animados dentro del botón mientras se envía */
 .btn-loader { display: inline-flex; align-items: center; gap: 4px; }

@@ -7,6 +7,9 @@
 > cada cambio se sincroniza a mano a un clon aparte y se comitea/pushea. **No**
 > asumas que `main` está desactualizado. Detalles completos en **`DEPLOYMENT.md`**.
 
+> ## Versión: solo la sube el dueño
+> **La versión no se sube nunca salvo que el dueño del proyecto lo pida expresamente.** No toques `VERSION` ni crees secciones `## [X.Y.Z]` en `CHANGELOG.md` por tu cuenta: los cambios se anotan en `## [Sin publicar]` y el número lo decide él.
+
 > ## 🔒 API pública estable — NO romper
 > `GET /u/<slug>`, `GET /api/certificado/{pdf,imagen,verificar}/<CERT_ID>` y
 > `GET /img/{maquina,perfil}/<id>` son una **API pública consumida por otras
@@ -57,7 +60,6 @@ dockerlabs/
     certificados.py       # Certificados de usuario (render PNG + archivado del PDF)
     public_profile.py     # API pública JSON del perfil: GET /u/<slug>
     api_publica.py        # API pública: resumen, rankings y envío de máquinas
-    api_tokens.py         # Tokens de API de administrador (sección "Tokens de API" en /dashboard)
     auth.py               # Autenticación: alta, acceso y recuperación de contraseña
     perfil.py             # Perfil del usuario: contraseña, datos, redes sociales y foto
     seo.py                # Recursos de raíz: favicon, robots.txt y sitemap.xml

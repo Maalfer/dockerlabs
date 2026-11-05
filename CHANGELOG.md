@@ -17,8 +17,6 @@ Las entradas de seguridad referencian su identificador de advisory
 
 ## [Sin publicar]
 
-## [2.1.0] - 2026-11-05
-
 ### Added
 
 - **Cody**, la ballena hacker de DockerLabs (SVG animado, sin dependencias):
@@ -66,6 +64,15 @@ Las entradas de seguridad referencian su identificador de advisory
   (`logger.exception`) en lugar de perderse.
 - Eliminados los avisos de APIs obsoletas (`datetime.utcnow`,
   `Query.get`): de 1.057 a 1 en el suite de tests.
+
+### Removed
+
+- Tokens de API de administrador: la sección «Tokens de API» del dashboard,
+  los endpoints `/api/admin/tokens` (crear, listar y revocar) y la
+  autenticación por cabecera (`Authorization: Bearer` / `X-Admin-Token`) que
+  equivalía a una sesión de admin. Ahora la única forma de autenticarse es la
+  cookie de sesión. Todos los tokens existentes ya estaban revocados. La
+  tabla `api_tokens` queda en la BD sin uso (no se borra automáticamente).
 
 ## [2.0.1] - 2026-10-22
 

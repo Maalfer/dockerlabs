@@ -1,13 +1,4 @@
-"""El nonce de cada <script nonce="..."> debe ser el mismo que el de la cabecera CSP.
-
-`security_headers_middleware` (asgi.py) genera un nonce por petición y lo pone
-en la cabecera; el context processor `_contexto_csp` (dockerlabs/routers.py)
-lo inyecta en todas las plantillas. Antes, ~30 rutas pasaban un nonce propio
-(`secrets.token_urlsafe(32)`) y las bases usaban una variable inexistente, de
-modo que ningún script en línea casaba con la política: con la CSP en modo
-obligatorio, el navegador los habría bloqueado todos. Estos tests impiden que
-vuelva a pasar.
-"""
+"""El nonce de cada <script nonce="..."> coincide con el de la cabecera CSP."""
 import re
 
 import pytest

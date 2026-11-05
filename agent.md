@@ -79,4 +79,5 @@ La función `static_v(filename)` en Jinja2 añade `?v=<mtime_hex>` a los assets.
 - **Sin rastros de migración.** No dejar en el código alusiones a frameworks anteriores, fases de migración ni referencias a cómo estaba antes.
 - **Nombres claros.** Las variables, funciones y parámetros deben describir su propósito. No usar abreviaciones ni nombres genéricos como `data`, `obj`, `tmp` salvo que el contexto los haga obvios.
 - **No sobre-documentar.** Los módulos y funciones tienen una docstring corta solo si aporta información que el nombre no da. Sin bloques de docstring de varios párrafos.
+- **Versión.** **La versión no se sube nunca salvo que el dueño del proyecto lo pida expresamente.** No toques `VERSION` ni crees secciones `## [X.Y.Z]` en `CHANGELOG.md` por tu cuenta: los cambios se anotan en `## [Sin publicar]` y el número lo decide él.
 - **Código de producción.** Cada cambio debe ser seguro, reversible y no romper funcionalidad existente. Hacer backup de BD antes de cualquier cambio de esquema.

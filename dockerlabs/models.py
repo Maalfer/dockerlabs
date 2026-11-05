@@ -496,37 +496,6 @@ class WriteupAnalysisResult(db.Model):
         return f'<WriteupAnalysisResult writeup_id={self.writeup_id} dismissed={self.dismissed}>'
 
 
-class ApiToken(db.Model):
-    """Token de API de administrador, generado desde /dashboard.
-
-    Da acceso equivalente a una sesión de admin logueado (ver
-    `get_session()` en routers.py, que lo acepta por cabecera). El token en
-    claro NUNCA se guarda: solo su hash (`dockerlabs.token_auth`). Se
-    muestra una única vez al crearlo.
-    """
-    __tablename__ = 'api_tokens'
-
-    id = db.Column(db.Integer, primary_key=True)
-    admin_user_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='CASCADE'), nullable=False)
-    label = db.Column(db.String(120), nullable=False)
-    token_hash = db.Column(db.String(255), nullable=False)
-    # Fragmento no sensible (p.ej. "dlab_ab12cd34") para reconocer el token
-    # en la UI sin poder reconstruirlo a partir de él.
-    token_prefix = db.Column(db.String(16), nullable=False)
-    created_at = db.Column(db.DateTime, default=utcnow)
-    last_used_at = db.Column(db.DateTime, nullable=True)
-    revoked_at = db.Column(db.DateTime, nullable=True)
-
-    admin_user = db.relationship('User', backref=db.backref('api_tokens', cascade='all, delete-orphan'))
-
-    __table_args__ = (
-        db.Index('idx_api_tokens_admin_user_id', 'admin_user_id'),
-    )
-
-    def __repr__(self):
-        return f'<ApiToken {self.label!r} admin={self.admin_user_id} revoked={bool(self.revoked_at)}>'
-
-
 # Mantiene `User.slug` sincronizado con `User.username` en cualquier alta o
 # renombrado, sea cual sea el módulo que lo provoque.
 from dockerlabs.slugs import register_slug_events

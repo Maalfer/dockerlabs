@@ -1,9 +1,10 @@
 """Tests cross-cutting de sesión/CSRF: get_session, verify_csrf_token,
 create_session_cookie y compute_csrf_token (dockerlabs/routers.py).
 
-Vehículo principal: /api/admin/tokens (admin-only, GET sin CSRF / POST con
-CSRF) ya cubierto funcionalmente en test_api_tokens.py; aquí se prueba el
-comportamiento de sesión en sí, no la feature de tokens.
+Vehículos (se prueba el comportamiento de sesión/CSRF, no estas features):
+  - GET  /api/notifications           exige sesión: 401 si la sesión no vale.
+  - GET  /api/admin/writeup_reports   solo admin/moderador: 403 si el rol real no lo es.
+  - POST /api/notifications/send      solo admin/moderador y protegido por CSRF.
 """
 import pytest
 
@@ -20,25 +21,25 @@ class TestCsrfOnWriteEndpoints:
     def test_get_never_requires_csrf_even_logged_in(self, client, login_as, db):
         admin = _admin(db)
         login_as(admin)  # cookie puesta, csrf token ignorado para GET
-        r = client.get("/api/admin/tokens")
+        r = client.get("/api/admin/writeup_reports")
         assert r.status_code == 200
 
     def test_post_without_csrf_header_rejected(self, client, login_as, db):
         admin = _admin(db)
         login_as(admin)
-        r = client.post("/api/admin/tokens", json={"label": "x"})
+        r = client.post("/api/notifications/send", json={"title": "t", "content": "c"})
         assert r.status_code == 403
 
     def test_post_with_wrong_csrf_token_rejected(self, client, login_as, db):
         admin = _admin(db)
         login_as(admin)
-        r = client.post("/api/admin/tokens", json={"label": "x"}, headers={"X-CSRFToken": "not-the-real-token"})
+        r = client.post("/api/notifications/send", json={"title": "t", "content": "c"}, headers={"X-CSRFToken": "not-the-real-token"})
         assert r.status_code == 403
 
     def test_post_with_correct_csrf_token_succeeds(self, client, login_as, db):
         admin = _admin(db)
         csrf = login_as(admin)
-        r = client.post("/api/admin/tokens", json={"label": "x"}, headers={"X-CSRFToken": csrf})
+        r = client.post("/api/notifications/send", json={"title": "t", "content": "c"}, headers={"X-CSRFToken": csrf})
         assert r.status_code == 200
 
 
@@ -58,13 +59,13 @@ class TestSessionVersionRevalidation:
         # Cookie firmada con un session_version anterior al real en BD (simula
         # un cambio de contraseña/email ocurrido después de emitir la cookie).
         login_as(admin, session_version=admin.session_version - 1)
-        r = client.get("/api/admin/tokens")
+        r = client.get("/api/notifications")
         assert r.status_code == 401
 
     def test_matching_session_version_is_valid(self, client, login_as, db):
         admin = _admin(db)
         login_as(admin, session_version=admin.session_version)
-        r = client.get("/api/admin/tokens")
+        r = client.get("/api/notifications")
         assert r.status_code == 200
 
 
@@ -73,13 +74,13 @@ class TestRoleRevalidation:
         jugador = make_user(db, role="jugador")
         # La cookie AFIRMA admin, pero la fila real en BD sigue siendo jugador.
         login_as(jugador, role="admin")
-        r = client.get("/api/admin/tokens")
+        r = client.get("/api/admin/writeup_reports")
         assert r.status_code == 403
 
     def test_real_admin_role_from_db_grants_access(self, client, login_as, db):
         admin = _admin(db)
         login_as(admin, role="admin")
-        r = client.get("/api/admin/tokens")
+        r = client.get("/api/admin/writeup_reports")
         assert r.status_code == 200
 
 
@@ -92,7 +93,7 @@ class TestDeletedUser:
         db.session.delete(db.session.get(User, admin.id))
         db.session.commit()
 
-        r = client.get("/api/admin/tokens")
+        r = client.get("/api/notifications")
         assert r.status_code == 401
 
 
@@ -107,5 +108,5 @@ class TestTamperedCookie:
         tampered = good_cookie[:-5] + ("a" if good_cookie[-5] != "a" else "b") + good_cookie[-4:]
         client.cookies.set("session", tampered)
 
-        r = client.get("/api/admin/tokens")
+        r = client.get("/api/notifications")
         assert r.status_code == 401
