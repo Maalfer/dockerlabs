@@ -350,7 +350,6 @@ def register_public_profile_routes(pages_router, db, api_router=None,
             "session":            session or {},
             "current_user_role":  (session or {}).get("role", ""),
             "csrf_token_value":   (session or {}).get("csrf_token", ""),
-            "g": {"csp_nonce": getattr(request.state, "csp_nonce", "")},
         }
 
         user, raw = _buscar_usuario(slug)
@@ -378,7 +377,7 @@ def register_public_profile_routes(pages_router, db, api_router=None,
             return JSONResponse(status_code=401,
                                 content={"success": False, "error": "Debes iniciar sesión"})
 
-        user = User.query.get(user_id)
+        user = db.session.get(User, user_id)
         if not user:
             return JSONResponse(status_code=404,
                                 content={"success": False, "error": "Usuario no encontrado"})

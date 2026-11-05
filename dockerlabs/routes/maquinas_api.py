@@ -3,7 +3,6 @@
 import io
 import os
 import time
-from datetime import datetime
 
 from fastapi import Depends, File, Form, Request, UploadFile
 from fastapi.responses import JSONResponse
@@ -14,6 +13,10 @@ from werkzeug.utils import secure_filename
 
 from dockerlabs.extensions import db
 from dockerlabs.models import User, Machine, CompletedMachine, Rating, Writeup
+from dockerlabs.tiempo import utcnow
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class RateMachineRequest(BaseModel):
@@ -41,7 +44,7 @@ def register_maquinas_api_routes(api_router, get_session, verify_csrf_token, BAS
         if caller_role not in ('admin', 'moderador'):
             return JSONResponse(status_code=403, content={"error": "Acceso denegado"})
 
-        maquina = Machine.query.get(id)
+        maquina = db.session.get(Machine, id)
         if not maquina:
             return JSONResponse(status_code=404, content={"error": "Máquina no encontrada"})
         maquina.guest_access = not maquina.guest_access
@@ -59,7 +62,7 @@ def register_maquinas_api_routes(api_router, get_session, verify_csrf_token, BAS
         if role not in ('admin', 'moderador', 'jugador'):
             return JSONResponse(status_code=403, content={"error": "Acceso denegado"})
 
-        maquina = Machine.query.get(machine_id)
+        maquina = db.session.get(Machine, machine_id)
         if not maquina:
             return JSONResponse(status_code=404, content={"error": "Máquina no encontrada"})
 
@@ -105,7 +108,7 @@ def register_maquinas_api_routes(api_router, get_session, verify_csrf_token, BAS
         caller_role = session.get('role', '')
         username = (session.get('username') or '').strip()
 
-        maq = Machine.query.get(machine_id)
+        maq = db.session.get(Machine, machine_id)
         if not maq:
             return JSONResponse(status_code=404, content={"error": "Máquina no encontrada"})
 
@@ -177,6 +180,7 @@ def register_maquinas_api_routes(api_router, get_session, verify_csrf_token, BAS
             maq.logo_mime = logo_mime
             db.session.commit()
         except Exception as e:
+            logger.exception("Error inesperado en api_upload_machine_logo")
             db.session.rollback()
             return JSONResponse(status_code=500, content={"error": str(e)})
 
@@ -213,7 +217,7 @@ def register_maquinas_api_routes(api_router, get_session, verify_csrf_token, BAS
                 existing.aprendizaje_score = data.aprendizaje_score
                 existing.recomendaria_score = data.recomendaria_score
                 existing.diversion_score = data.diversion_score
-                existing.fecha = datetime.utcnow()
+                existing.fecha = utcnow()
             else:
                 new_rating = Rating(
                     usuario_id=user_id,
@@ -227,6 +231,7 @@ def register_maquinas_api_routes(api_router, get_session, verify_csrf_token, BAS
             db.session.commit()
             return {"success": True, "message": "Puntuación guardada correctamente"}
         except Exception as e:
+            logger.exception("Error inesperado en api_rate_machine")
             db.session.rollback()
             return JSONResponse(status_code=500, content={"success": False, "message": str(e)})
 

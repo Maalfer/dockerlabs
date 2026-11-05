@@ -4,7 +4,6 @@ import logging
 import os
 import re
 import secrets
-from datetime import datetime
 from typing import Optional
 
 from fastapi import Depends, Request
@@ -23,6 +22,9 @@ from dockerlabs.models import (
     EmailVerificationToken,
     PasswordResetToken,
 )
+from dockerlabs.tiempo import utcnow
+
+logger = logging.getLogger(__name__)
 
 
 class LoginRequest(BaseModel):
@@ -145,7 +147,7 @@ def register_auth_routes(api_router, get_session, verify_csrf_token, create_sess
         if is_smtp_configured():
             try:
                 token = secrets.token_urlsafe(32)
-                expires_at = datetime.utcnow() + timedelta(hours=24)
+                expires_at = utcnow() + timedelta(hours=24)
                 pending = EmailVerificationToken(
                     token=token,
                     username=username,
@@ -160,6 +162,7 @@ def register_auth_routes(api_router, get_session, verify_csrf_token, create_sess
                 await run_in_threadpool(send_verification_email, email, username, token, base_url)
                 return {"success": True, "verify_email": True}
             except Exception as e:
+                logger.exception("Error inesperado en api_auth_register")
                 db.session.rollback()
                 return JSONResponse(status_code=500, content={"success": False, "message": f"Error al procesar el registro: {str(e)}"})
         else:
@@ -173,6 +176,7 @@ def register_auth_routes(api_router, get_session, verify_csrf_token, create_sess
                 db.session.rollback()
                 return JSONResponse(status_code=400, content={"success": False, "message": "El usuario o el correo ya estan registrados."})
             except Exception as e:
+                logger.exception("Error inesperado en api_auth_register")
                 db.session.rollback()
                 return JSONResponse(status_code=500, content={"success": False, "message": f"Error al crear usuario: {str(e)}"})
 
@@ -196,7 +200,7 @@ def register_auth_routes(api_router, get_session, verify_csrf_token, create_sess
         db.session.flush()
 
         token = secrets.token_urlsafe(32)
-        expires_at = datetime.utcnow() + timedelta(hours=1)
+        expires_at = utcnow() + timedelta(hours=1)
         reset_token = PasswordResetToken(token=token, user_id=user.id, expires_at=expires_at)
         db.session.add(reset_token)
         db.session.commit()
@@ -221,12 +225,12 @@ def register_auth_routes(api_router, get_session, verify_csrf_token, create_sess
         if not reset_token:
             return JSONResponse(status_code=400, content={"success": False, "message": "Enlace de recuperacion invalido o ya utilizado."})
 
-        if datetime.utcnow() > reset_token.expires_at:
+        if utcnow() > reset_token.expires_at:
             db.session.delete(reset_token)
             db.session.commit()
             return JSONResponse(status_code=400, content={"success": False, "message": "El enlace ha expirado. Solicita uno nuevo."})
 
-        user = User.query.get(reset_token.user_id)
+        user = db.session.get(User, reset_token.user_id)
         if not user:
             return JSONResponse(status_code=400, content={"success": False, "message": "Usuario no encontrado."})
 

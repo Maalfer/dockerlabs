@@ -9,6 +9,7 @@ sesión (subida de logo a PinguinoExaminador/Bigbank).
 import pytest
 
 from tests.factories import make_user
+from dockerlabs.tiempo import utcnow
 
 pytestmark = pytest.mark.integration
 
@@ -173,7 +174,7 @@ class TestHeaderAuthentication:
         admin = _admin(db)
         token, headers = admin_api_token(admin)
         row = ApiToken.query.filter_by(admin_user_id=admin.id).first()
-        row.revoked_at = datetime.utcnow()
+        row.revoked_at = utcnow()
         db.session.commit()
 
         r = client.get("/api/admin/tokens", headers=headers)

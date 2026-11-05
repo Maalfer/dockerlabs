@@ -8,6 +8,7 @@ from werkzeug.utils import secure_filename
 
 from dockerlabs.database import db_session
 from dockerlabs.models import Machine, User
+from dockerlabs.extensions import db
 
 
 def register_image_routes(api_router, pages_router):
@@ -41,7 +42,7 @@ def register_image_routes(api_router, pages_router):
         db_session.remove()
 
         try:
-            user = User.query.get(user_id)
+            user = db.session.get(User, user_id)
         except Exception:
             db_session.remove()
             user = None
@@ -98,7 +99,7 @@ def register_image_routes(api_router, pages_router):
         db_session.remove()
 
         try:
-            machine = Machine.query.get(machine_id)
+            machine = db.session.get(Machine, machine_id)
         except Exception:
             db_session.remove()
             machine = None

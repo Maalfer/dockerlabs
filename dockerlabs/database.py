@@ -65,8 +65,9 @@ class _Base:
 Base = declarative_base(cls=_Base)
 
 def init_db():
-    import dockerlabs.models
-    import bunkerlabs.models
+    # Importar los modelos registra sus tablas en Base.metadata antes del create_all
+    import dockerlabs.models  # noqa: F401
+    import bunkerlabs.models  # noqa: F401
     # Con varios workers de uvicorn, todos ejecutan create_all a la vez; el
     # checkfirst tiene una carrera al crear una tabla NUEVA (uno la crea y
     # los demás reciben 'table already exists'). Toleramos esa carrera para

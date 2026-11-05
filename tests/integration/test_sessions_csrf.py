@@ -89,7 +89,7 @@ class TestDeletedUser:
         login_as(admin)
 
         from dockerlabs.models import User
-        db.session.delete(User.query.get(admin.id))
+        db.session.delete(db.session.get(User, admin.id))
         db.session.commit()
 
         r = client.get("/api/admin/tokens")

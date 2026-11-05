@@ -66,7 +66,7 @@ class TestActualizarPermisos:
         r = client.post(ACTUALIZAR_URL, data=payload, headers=csrf_headers(csrf))
         assert r.status_code == 200, r.text
         db.session.rollback()
-        assert Machine.query.get(maquina.id).nombre == "EditadoPorAdmin"
+        assert db.session.get(Machine, maquina.id).nombre == "EditadoPorAdmin"
 
     def test_moderador_can_edit_any_machine(self, client, login_as, db):
         from dockerlabs.models import Machine
@@ -77,7 +77,7 @@ class TestActualizarPermisos:
         r = client.post(ACTUALIZAR_URL, data=payload, headers=csrf_headers(csrf))
         assert r.status_code == 200, r.text
         db.session.rollback()
-        assert Machine.query.get(maquina.id).nombre == "EditadoPorMod"
+        assert db.session.get(Machine, maquina.id).nombre == "EditadoPorMod"
 
     def test_jugador_can_edit_own_machine(self, client, login_as, db):
         from dockerlabs.models import Machine
@@ -88,7 +88,7 @@ class TestActualizarPermisos:
         r = client.post(ACTUALIZAR_URL, data=payload, headers=csrf_headers(csrf))
         assert r.status_code == 200, r.text
         db.session.rollback()
-        assert Machine.query.get(maquina.id).nombre == "EditadoPorDueno"
+        assert db.session.get(Machine, maquina.id).nombre == "EditadoPorDueno"
 
     def test_jugador_cannot_edit_others_machine(self, client, login_as, db):
         from dockerlabs.models import Machine
@@ -99,7 +99,7 @@ class TestActualizarPermisos:
         r = client.post(ACTUALIZAR_URL, data=payload, headers=csrf_headers(csrf))
         assert r.status_code == 403
         db.session.rollback()
-        assert Machine.query.get(maquina.id).nombre == maquina.nombre  # sin cambios
+        assert db.session.get(Machine, maquina.id).nombre == maquina.nombre  # sin cambios
 
     def test_jugador_submitting_different_autor_does_not_reassign_authorship(self, client, login_as, db):
         from dockerlabs.models import Machine
@@ -110,7 +110,7 @@ class TestActualizarPermisos:
         r = client.post(ACTUALIZAR_URL, data=payload, headers=csrf_headers(csrf))
         assert r.status_code == 200, r.text
         db.session.rollback()
-        assert Machine.query.get(maquina.id).autor == jugador.username
+        assert db.session.get(Machine, maquina.id).autor == jugador.username
 
 
 class TestActualizarValidaciones:
@@ -224,7 +224,7 @@ class TestEliminar:
         r = client.post(ELIMINAR_URL, data={"id": str(maquina.id), "origen": maquina.origen}, headers=csrf_headers(csrf))
         assert r.status_code == 403
         db.session.rollback()
-        assert Machine.query.get(maquina.id) is not None
+        assert db.session.get(Machine, maquina.id) is not None
 
 
 class TestAddMaquinaPage:
@@ -356,7 +356,7 @@ class TestDescargarMaquina:
             r = client.get(f"/maquinas/{maquina.id}/descargar")
             assert r.status_code == 200
         db.session.rollback()
-        assert Machine.query.get(maquina.id).descargas == 3
+        assert db.session.get(Machine, maquina.id).descargas == 3
         assert MachineDownloadLog.query.filter_by(machine_id=maquina.id).count() == 3
 
     def test_bunker_origin_redirects_to_bunker_download(self, client, db):

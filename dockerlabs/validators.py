@@ -52,7 +52,7 @@ def validate_url(url):
     dangerous_chars = ['"', "'", '<', '>', '`', '\n', '\r', '\t']
     for char in dangerous_chars:
         if char in url:
-            return False, f"La URL contiene caracteres no permitidos"
+            return False, "La URL contiene caracteres no permitidos"
 
     lower_url = url.lower()
     if lower_url.startswith(('javascript:', 'data:', 'vbscript:', 'file:', 'about:')):
@@ -142,7 +142,7 @@ def validate_image_content(file_stream, max_size_mb=5):
 
         file_stream.seek(0)
         return True, None
-    except Exception as e:
+    except Exception:
         file_stream.seek(0)
         return False, "El archivo no es una imagen válida o está corrupto"
 

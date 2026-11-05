@@ -14,6 +14,7 @@ from dockerlabs.models import User, SessionConfig, ApiToken
 from dockerlabs.extensions import db
 from dockerlabs.token_auth import verify_api_token
 from werkzeug.security import check_password_hash as _werkzeug_check_password_hash
+from dockerlabs.tiempo import utcnow
 
 _FLASK_TO_FASTAPI = {
         # Auth
@@ -93,7 +94,22 @@ def url_for(endpoint, **kwargs):
 
 # Configurar Jinja2 templates
 BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
-templates = Jinja2Templates(directory=os.path.join(BASE_DIR, 'templates'))
+def _contexto_csp(request):
+    """Nonce CSP de la petición, inyectado en TODAS las plantillas.
+
+    `security_headers_middleware` (asgi.py) genera un nonce por petición, lo
+    guarda en `request.state.csp_nonce` y lo pone en la cabecera CSP. Las
+    plantillas lo usan como `{{ csp_nonce }}` (bases) o `{{ g.csp_nonce }}`
+    (páginas). Las rutas NO deben crear el suyo: un nonce nuevo no coincide
+    con el de la cabecera y el navegador bloquearía esos scripts al pasar la
+    CSP de report-only a obligatoria. Starlette aplica los context processors
+    después del contexto de cada ruta, así que este valor siempre prevalece.
+    """
+    nonce = getattr(request.state, "csp_nonce", "")
+    return {"csp_nonce": nonce, "g": {"csp_nonce": nonce}}
+
+
+templates = Jinja2Templates(directory=os.path.join(BASE_DIR, 'templates'), context_processors=[_contexto_csp])
 
 # Sobrescribir url_for en el entorno de Jinja2 para usar nuestra función personalizada
 templates.env.globals['url_for'] = url_for
@@ -190,12 +206,12 @@ def _get_session_from_api_token(request: Request) -> Optional[dict]:
 
     for row in candidates:
         if verify_api_token(row.token_hash, token):
-            admin = User.query.get(row.admin_user_id)
+            admin = db.session.get(User, row.admin_user_id)
             if not admin or admin.role != "admin":
                 # El dueño del token ya no es admin (degradado o borrado): no
                 # cae a ningún otro rol, se trata como no autenticado.
                 return {}
-            row.last_used_at = datetime.utcnow()
+            row.last_used_at = utcnow()
             try:
                 db.session.commit()
             except Exception:
@@ -507,6 +523,7 @@ from dockerlabs.routes.images import register_image_routes
 from dockerlabs.routes.certificados import register_certificado_routes
 from dockerlabs.routes.pending_admin import register_pending_admin_routes
 from dockerlabs.routes.pages_admin import register_pages_admin_routes
+from dockerlabs.routes.pages_info import register_pages_info_routes
 from dockerlabs.routes.pages_core import register_pages_core_routes
 from dockerlabs.routes.public_profile import register_public_profile_routes
 
@@ -564,6 +581,13 @@ register_machine_routes(
     encode_session_cookie=encode_session_cookie,
     templates=templates,
     db=db,
+    url_for=url_for,
+)
+
+register_pages_info_routes(
+    pages_router=pages_router,
+    get_session=get_session,
+    templates=templates,
     url_for=url_for,
 )
 

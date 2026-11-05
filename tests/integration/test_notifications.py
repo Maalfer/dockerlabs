@@ -291,7 +291,7 @@ class TestMarkRead:
         assert r.status_code == 200
 
         db.session.rollback()
-        row = Notification.query.get(notif.id)
+        row = db.session.get(Notification, notif.id)
         assert row.read is True
 
     def test_global_notification_creates_notification_read_row(self, client, login_as, db):
@@ -461,7 +461,7 @@ class TestDeleteNotification:
         # de esta sesión (se creó en este mismo test), así que acceder a
         # `notif.id` ahora dispararía un refresh imposible (la fila ya no
         # existe) y SQLAlchemy lanzaría ObjectDeletedError. Por el mismo
-        # motivo tampoco usamos Notification.query.get(): intentaría
+        # motivo tampoco usamos db.session.get(Notification, ): intentaría
         # refrescar el objeto del identity map en vez de devolver None.
         assert Notification.query.filter_by(id=notif_id).first() is None
 
@@ -495,7 +495,7 @@ class TestDeleteNotification:
         assert r.status_code == 403
 
         db.session.rollback()
-        assert Notification.query.get(notif.id) is not None
+        assert db.session.get(Notification, notif.id) is not None
 
     def test_nonexistent_notification_404(self, client, login_as, db):
         user = _jugador(db)

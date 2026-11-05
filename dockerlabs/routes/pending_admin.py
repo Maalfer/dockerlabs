@@ -1,9 +1,9 @@
-from datetime import datetime
 
 from fastapi import Depends, Request
 from fastapi.responses import JSONResponse
 
 from dockerlabs.models import PendingMachineSubmission
+from dockerlabs.tiempo import utcnow
 
 
 def register_pending_admin_routes(api_router, get_session, verify_csrf_token, db):
@@ -18,11 +18,11 @@ def register_pending_admin_routes(api_router, get_session, verify_csrf_token, db
         if caller_role not in ("admin", "moderador"):
             return JSONResponse(status_code=403, content={"error": "Acceso denegado"})
 
-        sub = PendingMachineSubmission.query.get(machine_id)
+        sub = db.session.get(PendingMachineSubmission, machine_id)
         if not sub:
             return JSONResponse(status_code=404, content={"error": "Máquina pendiente no encontrada"})
         sub.estado = "aprobado"
-        sub.reviewed_at = datetime.utcnow()
+        sub.reviewed_at = utcnow()
         db.session.commit()
         return {"message": "Máquina aprobada", "success": True}
 
@@ -37,7 +37,7 @@ def register_pending_admin_routes(api_router, get_session, verify_csrf_token, db
         if caller_role not in ("admin", "moderador"):
             return JSONResponse(status_code=403, content={"error": "Acceso denegado"})
 
-        sub = PendingMachineSubmission.query.get(machine_id)
+        sub = db.session.get(PendingMachineSubmission, machine_id)
         if not sub:
             return JSONResponse(status_code=404, content={"error": "Máquina pendiente no encontrada"})
         db.session.delete(sub)

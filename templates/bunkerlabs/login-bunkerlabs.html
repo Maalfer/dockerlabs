@@ -110,7 +110,7 @@
 
 {% block scripts %}
 {{ super() }}
-<script>
+<script nonce="{{ g.csp_nonce }}">
     document.addEventListener('DOMContentLoaded', function () {
         const passwordInput = document.getElementById('password');
         const bunkerBox = document.querySelector('.bunker-box');

@@ -26,7 +26,7 @@ class TestChangePassword:
 
         db.session.rollback()
         from dockerlabs.models import User
-        refreshed = User.query.get(user.id)
+        refreshed = db.session.get(User, user.id)
         assert refreshed.session_version == original_version + 1
 
         # El MISMO client, sin volver a hacer login, sigue autenticado: la
@@ -82,7 +82,7 @@ class TestUpdateProfile:
 
         db.session.rollback()
         from dockerlabs.models import User
-        refreshed = User.query.get(user.id)
+        refreshed = db.session.get(User, user.id)
         assert "<script>" not in refreshed.biography
         assert "<b>" not in refreshed.biography
         assert "Hola" in refreshed.biography and "mundo" in refreshed.biography
@@ -109,7 +109,7 @@ class TestUpdateProfile:
 
         db.session.rollback()
         from dockerlabs.models import User
-        refreshed = User.query.get(user.id)
+        refreshed = db.session.get(User, user.id)
         assert refreshed.nombre_diploma == "Nombre Nuevo Para El Diploma"
 
     def test_updating_profile_without_changing_nombre_diploma_does_not_error(self, client, login_as, db):
@@ -138,7 +138,7 @@ class TestUpdateSocialLinks:
 
         db.session.rollback()
         from dockerlabs.models import User
-        refreshed = User.query.get(user.id)
+        refreshed = db.session.get(User, user.id)
         assert refreshed.linkedin_url == "https://linkedin.com/in/someone"
 
     def test_dangerous_url_rejected(self, client, login_as, db):
@@ -261,7 +261,7 @@ class TestUploadProfilePhoto:
 
         db.session.rollback()
         from dockerlabs.models import User
-        refreshed = User.query.get(user.id)
+        refreshed = db.session.get(User, user.id)
         first_path = refreshed.profile_image_path
         assert first_path is not None
         assert first_path.endswith(".webp")
@@ -279,7 +279,7 @@ class TestUploadProfilePhoto:
         assert r2.status_code == 200
 
         db.session.rollback()
-        refreshed2 = User.query.get(user.id)
+        refreshed2 = db.session.get(User, user.id)
         assert refreshed2.profile_image_path != first_path
 
     def test_oversized_image_rejected(self, client, login_as, db):

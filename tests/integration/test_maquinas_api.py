@@ -149,7 +149,7 @@ class TestUploadLogoValidation:
         )
         assert r1.status_code == 200, r1.text
         db.session.rollback()
-        old_logo_path = Machine.query.get(maquina.id).logo_path
+        old_logo_path = db.session.get(Machine, maquina.id).logo_path
         assert old_logo_path
         old_abspath = os.path.join(BASE_DIR, old_logo_path)
         assert os.path.isfile(old_abspath)
@@ -162,7 +162,7 @@ class TestUploadLogoValidation:
         )
         assert r2.status_code == 200, r2.text
         db.session.rollback()
-        new_logo_path = Machine.query.get(maquina.id).logo_path
+        new_logo_path = db.session.get(Machine, maquina.id).logo_path
         assert new_logo_path != old_logo_path
         assert not os.path.exists(old_abspath)
         assert os.path.isfile(os.path.join(BASE_DIR, new_logo_path))

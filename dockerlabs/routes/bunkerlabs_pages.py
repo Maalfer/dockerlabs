@@ -1,4 +1,3 @@
-from datetime import datetime
 from typing import Optional
 from urllib.parse import quote
 
@@ -11,6 +10,7 @@ from sqlalchemy.exc import IntegrityError
 
 from bunkerlabs.models import BunkerAccessLog, BunkerAccessToken
 from dockerlabs.models import Machine, MachineDownloadLog
+from dockerlabs.tiempo import utcnow
 
 
 def register_bunkerlabs_pages_routes(
@@ -61,17 +61,17 @@ def register_bunkerlabs_pages_routes(
                         # PIN (rama `else` de abajo) heredara el username de
                         # quien entró antes que él. Quién entró y cuándo ya
                         # queda registrado, por evento, en `BunkerAccessLog`.
-                        token_obj.last_accessed = datetime.utcnow()
+                        token_obj.last_accessed = utcnow()
                         db.session.add(
-                            BunkerAccessLog(token_id=token_obj.id, user_nombre=docker_username, accessed_at=datetime.utcnow())
+                            BunkerAccessLog(token_id=token_obj.id, user_nombre=docker_username, accessed_at=utcnow())
                         )
                         db.session.commit()
                         session["bunkerlabs_nombre"] = docker_username
                     else:
                         session["bunkerlabs_nombre"] = token_obj.nombre
-                        token_obj.last_accessed = datetime.utcnow()
+                        token_obj.last_accessed = utcnow()
                         db.session.add(
-                            BunkerAccessLog(token_id=token_obj.id, user_nombre=token_obj.nombre, accessed_at=datetime.utcnow())
+                            BunkerAccessLog(token_id=token_obj.id, user_nombre=token_obj.nombre, accessed_at=utcnow())
                         )
                         db.session.commit()
 
@@ -94,7 +94,6 @@ def register_bunkerlabs_pages_routes(
             "session": session,
             "csrf_token_value": csrf_token,
             "maquina": maquina,
-            "g": {"csp_nonce": secrets.token_urlsafe(32)},
         }
 
         response = templates.TemplateResponse(request, "bunkerlabs/login-bunkerlabs.html", context)
@@ -154,12 +153,12 @@ def register_bunkerlabs_pages_routes(
                     session["bunkerlabs_nombre"] = "Anónimo"
                     session["bunkerlabs_anonymous"] = True
                 session["bunkerlabs_ok"] = True
-                token_obj.last_accessed = datetime.utcnow()
+                token_obj.last_accessed = utcnow()
                 db.session.add(
                     BunkerAccessLog(
                         token_id=token_obj.id,
                         user_nombre=session["bunkerlabs_nombre"],
-                        accessed_at=datetime.utcnow(),
+                        accessed_at=utcnow(),
                     )
                 )
                 db.session.commit()
@@ -228,7 +227,6 @@ def register_bunkerlabs_pages_routes(
                 "url_for": url_for,
                 "current_user_role": current_user_role,
                 "csrf_token_value": csrf_token,
-                "g": {"csp_nonce": secrets.token_urlsafe(32)},
             },
         )
 
@@ -283,7 +281,6 @@ def register_bunkerlabs_pages_routes(
             "bunker_machines": bunker_machines,
             "session": session,
             "csrf_token_value": csrf_token,
-            "g": {"csp_nonce": secrets.token_urlsafe(32)},
         }
 
         response = templates.TemplateResponse(request, "bunkerlabs/gestion.html", context)
@@ -300,7 +297,7 @@ def register_bunkerlabs_pages_routes(
         if not ok:
             return JSONResponse(status_code=403, content={"error": "Acceso denegado"})
 
-        token_obj = BunkerAccessToken.query.get(token_id)
+        token_obj = db.session.get(BunkerAccessToken, token_id)
         if token_obj:
             db.session.delete(token_obj)
             db.session.commit()
@@ -344,6 +341,5 @@ def register_bunkerlabs_pages_routes(
                 "url_for": url_for,
                 "current_user_role": session.get("role", ""),
                 "csrf_token_value": csrf_token,
-                "g": {"csp_nonce": secrets.token_urlsafe(32)},
             },
         )

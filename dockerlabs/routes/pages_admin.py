@@ -9,6 +9,7 @@ from sqlalchemy import or_
 from dockerlabs.models import (Category, Certificate, CertificateRequestLog,
     CompletedMachine, Machine, MachineDownloadLog, PendingMachineSubmission,
     Rating, User, Writeup, PageVisitLog, OutboundClickLog)
+from dockerlabs.tiempo import utcnow
 
 
 def _parse_date_flexible(date_str: str):
@@ -135,7 +136,7 @@ def _resolve_range(rango: str, desde: str, hasta: str, visible_min: datetime):
 
     Devuelve un dict con start, end (inclusive), label (título para el gráfico)
     y un booleano `empty` indicando si el rango no cruza datos visibles."""
-    now = datetime.utcnow()
+    now = utcnow()
     today = datetime(now.year, now.month, now.day)
 
     def end_of_day(d):
@@ -201,7 +202,7 @@ def _smart_presets(visible_min: datetime, active: str):
     [s, e] queda 'disabled' si termina antes del primer dato visible (e <
     visible_min): ofrecerlo solo mostraría un gráfico vacío. Si aún no hay
     registros temporales, todos quedan habilitados para uso futuro."""
-    now = datetime.utcnow()
+    now = utcnow()
     today = datetime(now.year, now.month, now.day)
     this_monday = today - timedelta(days=today.weekday())
     prev_sunday = this_monday - timedelta(days=1)
@@ -251,92 +252,6 @@ def register_pages_admin_routes(
     url_for,
     db,
 ):
-    @pages_router.get("/instrucciones-uso", response_class=HTMLResponse)
-    def instrucciones_uso_page(request: Request, session: dict = Depends(get_session)):
-        current_user_role = session.get("role", "")
-        return templates.TemplateResponse(
-            request,
-            "dockerlabs/info/instrucciones_uso.html",
-            {"url_for": url_for, "session": session, "current_user_role": current_user_role, "g": {"csp_nonce": secrets.token_urlsafe(32)}},
-        )
-
-    @pages_router.get("/soporte", response_class=HTMLResponse)
-    def soporte_page(request: Request, session: dict = Depends(get_session)):
-        current_user_role = session.get("role", "")
-        return templates.TemplateResponse(
-            request, "dockerlabs/info/soporte.html", {"url_for": url_for, "session": session, "current_user_role": current_user_role, "g": {"csp_nonce": secrets.token_urlsafe(32)}}
-        )
-
-    @pages_router.get("/equipo", response_class=HTMLResponse)
-    def equipo_page(request: Request, session: dict = Depends(get_session)):
-        current_user_role = session.get("role", "")
-        return templates.TemplateResponse(
-            request, "dockerlabs/equipo.html", {"url_for": url_for, "session": session, "current_user_role": current_user_role, "g": {"csp_nonce": secrets.token_urlsafe(32)}}
-        )
-
-    @pages_router.get("/enviar-maquina", response_class=HTMLResponse)
-    def enviar_maquina_page(request: Request, session: dict = Depends(get_session)):
-        current_user_role = session.get("role", "")
-        csrf_token = session.get("csrf_token") or secrets.token_urlsafe(32)
-        return templates.TemplateResponse(
-            request,
-            "dockerlabs/info/enviar_maquina.html",
-            {"url_for": url_for, "session": session, "current_user_role": current_user_role, "csrf_token_value": csrf_token, "g": {"csp_nonce": secrets.token_urlsafe(32)}},
-        )
-
-    @pages_router.get("/como-se-crea-una-maquina", response_class=HTMLResponse)
-    def como_se_crea_page(request: Request, session: dict = Depends(get_session)):
-        current_user_role = session.get("role", "")
-        return templates.TemplateResponse(
-            request,
-            "dockerlabs/info/como_se_crea_una_maquina.html",
-            {"url_for": url_for, "session": session, "current_user_role": current_user_role, "g": {"csp_nonce": secrets.token_urlsafe(32)}},
-        )
-
-    @pages_router.get("/agradecimientos", response_class=HTMLResponse)
-    def agradecimientos_page(request: Request, session: dict = Depends(get_session)):
-        current_user_role = session.get("role", "")
-        return templates.TemplateResponse(
-            request,
-            "dockerlabs/info/agradecimientos.html",
-            {"url_for": url_for, "session": session, "current_user_role": current_user_role, "g": {"csp_nonce": secrets.token_urlsafe(32)}},
-        )
-
-    @pages_router.get("/terminos-condiciones", response_class=HTMLResponse)
-    def terminos_condiciones_page(request: Request, session: dict = Depends(get_session)):
-        current_user_role = session.get("role", "")
-        return templates.TemplateResponse(
-            request,
-            "dockerlabs/info/terminos-condiciones.html",
-            {"url_for": url_for, "session": session, "current_user_role": current_user_role, "g": {"csp_nonce": secrets.token_urlsafe(32)}},
-        )
-
-    @pages_router.get("/bug-bounty")
-    def bug_bounty_page(request: Request, session: dict = Depends(get_session)):
-        return RedirectResponse(url="/", status_code=302)
-
-    @pages_router.get("/politica-privacidad", response_class=HTMLResponse)
-    def politica_privacidad_page(request: Request, session: dict = Depends(get_session)):
-        return templates.TemplateResponse(
-            request,
-            "politicas/politica_privacidad.html",
-            {"url_for": url_for, "session": session, "g": {"csp_nonce": secrets.token_urlsafe(32)}},
-        )
-
-    @pages_router.get("/politica-cookies", response_class=HTMLResponse)
-    def politica_cookies_page(request: Request, session: dict = Depends(get_session)):
-        return templates.TemplateResponse(
-            request,
-            "politicas/politica_cookies.html",
-            {"url_for": url_for, "session": session, "g": {"csp_nonce": secrets.token_urlsafe(32)}},
-        )
-
-    @pages_router.get("/condiciones-uso", response_class=HTMLResponse)
-    def condiciones_uso_page(request: Request, session: dict = Depends(get_session)):
-        return templates.TemplateResponse(
-            request, "politicas/condiciones_uso.html", {"url_for": url_for, "session": session, "g": {"csp_nonce": secrets.token_urlsafe(32)}}
-        )
-
     @pages_router.get("/gestion-usuarios", response_class=HTMLResponse)
     def gestion_usuarios_page(request: Request, session: dict = Depends(get_session)):
         ok, redirect = require_auth_and_role(session, ["admin", "moderador"])
@@ -365,7 +280,6 @@ def register_pages_admin_routes(
                 "usuarios": usuarios,
                 "session": session,
                 "csrf_token_value": csrf_token,
-                "g": {"csp_nonce": secrets.token_urlsafe(32)},
                 "page": page,
                 "per_page": per_page,
                 "total": total,
@@ -460,7 +374,6 @@ def register_pages_admin_routes(
                 "url_for": url_for,
                 "current_user_role": current_user_role,
                 "session": session,
-                "g": {"csp_nonce": secrets.token_urlsafe(32)},
             },
         )
 
@@ -475,7 +388,7 @@ def register_pages_admin_routes(
         return templates.TemplateResponse(
             request,
             "dockerlabs/admin/pending.html",
-            {"machines": machines, "session": session, "url_for": url_for, "current_user_role": current_user_role, "csrf_token_value": csrf_token, "g": {"csp_nonce": secrets.token_urlsafe(32)}},
+            {"machines": machines, "session": session, "url_for": url_for, "current_user_role": current_user_role, "csrf_token_value": csrf_token},
         )
 
     @pages_router.get("/user-pending", response_class=HTMLResponse)
@@ -494,7 +407,7 @@ def register_pages_admin_routes(
         return templates.TemplateResponse(
             request,
             "dockerlabs/auth/user-pending.html",
-            {"username": username, "machines": machines, "session": session, "url_for": url_for, "current_user_role": current_user_role, "g": {"csp_nonce": secrets.token_urlsafe(32)}},
+            {"username": username, "machines": machines, "session": session, "url_for": url_for, "current_user_role": current_user_role},
         )
 
 
@@ -503,13 +416,13 @@ def register_pages_admin_routes(
         ok, redirect = require_auth_and_role(session, ["admin", "moderador"])
         if not ok:
             return redirect
-        user = User.query.get(session.get("user_id")) if session.get("user_id") else None
+        user = db.session.get(User, session.get("user_id")) if session.get("user_id") else None
         csrf_token = session.get("csrf_token") or secrets.token_urlsafe(32)
         current_user_role = session.get("role", "")
         return templates.TemplateResponse(
             request,
             "dockerlabs/user/writeups_analisis.html",
-            {"user": user, "session": session, "csrf_token_value": csrf_token, "url_for": url_for, "current_user_role": current_user_role, "g": {"csp_nonce": secrets.token_urlsafe(32)}},
+            {"user": user, "session": session, "csrf_token_value": csrf_token, "url_for": url_for, "current_user_role": current_user_role},
         )
 
     @pages_router.get("/writeups-recibidos", response_class=HTMLResponse)
@@ -517,13 +430,13 @@ def register_pages_admin_routes(
         ok, redirect = require_auth_and_role(session, ["admin", "moderador", "jugador"])
         if not ok:
             return redirect
-        user = User.query.get(session.get("user_id")) if session.get("user_id") else None
+        user = db.session.get(User, session.get("user_id")) if session.get("user_id") else None
         csrf_token = session.get("csrf_token") or secrets.token_urlsafe(32)
         current_user_role = session.get("role", "")
         return templates.TemplateResponse(
             request,
             "dockerlabs/user/writeups_recibidos.html",
-            {"session": session, "user": user, "csrf_token_value": csrf_token, "url_for": url_for, "current_user_role": current_user_role, "g": {"csp_nonce": secrets.token_urlsafe(32)}},
+            {"session": session, "user": user, "csrf_token_value": csrf_token, "url_for": url_for, "current_user_role": current_user_role},
         )
 
     @pages_router.get("/writeups-publicados", response_class=HTMLResponse)
@@ -531,13 +444,13 @@ def register_pages_admin_routes(
         ok, redirect = require_auth_and_role(session, ["admin", "moderador", "jugador"])
         if not ok:
             return redirect
-        user = User.query.get(session.get("user_id")) if session.get("user_id") else None
+        user = db.session.get(User, session.get("user_id")) if session.get("user_id") else None
         csrf_token = session.get("csrf_token") or secrets.token_urlsafe(32)
         current_user_role = session.get("role", "")
         return templates.TemplateResponse(
             request,
             "dockerlabs/user/writeups_publicados.html",
-            {"user": user, "session": session, "csrf_token_value": csrf_token, "url_for": url_for, "current_user_role": current_user_role, "g": {"csp_nonce": secrets.token_urlsafe(32)}},
+            {"user": user, "session": session, "csrf_token_value": csrf_token, "url_for": url_for, "current_user_role": current_user_role},
         )
 
     @pages_router.get("/estadisticas", response_class=HTMLResponse)
@@ -552,7 +465,7 @@ def register_pages_admin_routes(
         if not ok:
             return redirect
 
-        now = datetime.utcnow()
+        now = utcnow()
         month_start = datetime(now.year, now.month, 1)
 
         machines = Machine.query.all()
@@ -743,6 +656,5 @@ def register_pages_admin_routes(
                 "session": session,
                 "url_for": url_for,
                 "current_user_role": current_user_role,
-                "g": {"csp_nonce": secrets.token_urlsafe(32)},
             },
         )

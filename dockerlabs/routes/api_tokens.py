@@ -6,7 +6,6 @@ al generarlo; en BD solo se guarda su hash (dockerlabs.token_auth). El uso
 del token por cabecera lo acepta de forma centralizada `get_session()` en
 routers.py, así que no hay que tocar cada ruta admin una por una.
 """
-from datetime import datetime
 
 from fastapi import Depends, Request
 from fastapi.responses import JSONResponse
@@ -14,6 +13,7 @@ from pydantic import BaseModel, Field
 
 from dockerlabs.models import ApiToken
 from dockerlabs.token_auth import generate_api_token, hash_api_token, token_display_prefix
+from dockerlabs.tiempo import utcnow
 
 
 class CreateTokenRequest(BaseModel):
@@ -96,12 +96,12 @@ def register_api_tokens_routes(api_router, get_session, verify_csrf_token, db):
         if not ok:
             return err
 
-        token_row = ApiToken.query.get(token_id)
+        token_row = db.session.get(ApiToken, token_id)
         if not token_row:
             return JSONResponse(status_code=404, content={"error": "Token no encontrado"})
 
         if token_row.revoked_at is None:
-            token_row.revoked_at = datetime.utcnow()
+            token_row.revoked_at = utcnow()
             db.session.commit()
 
         return {"success": True, "id": token_row.id, "revoked_at": token_row.revoked_at.isoformat()}

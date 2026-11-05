@@ -1,5 +1,4 @@
 import os
-import secrets
 from datetime import datetime
 from typing import Optional
 
@@ -11,6 +10,9 @@ from sqlalchemy import func
 from dockerlabs.discord_notify import notify_new_machine
 from dockerlabs.maquinas import recalcular_ranking_creadores
 from dockerlabs.models import Category, CompletedMachine, Machine, MachineDownloadLog, User
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class AddMaquinaRequest(BaseModel):
@@ -115,7 +117,7 @@ def register_machine_routes(
 
         clase, dificultad_texto, color = _difficulty_to_color_clase(dificultad)
 
-        maquina = Machine.query.get(id)
+        maquina = db.session.get(Machine, id)
         if not maquina:
             return JSONResponse(status_code=404, content={"error": "Máquina no encontrada"})
 
@@ -183,6 +185,7 @@ def register_machine_routes(
 
             return {"success": True, "message": "Máquina actualizada correctamente"}
         except Exception as e:
+            logger.exception("Error inesperado en api_actualizar_maquina")
             db.session.rollback()
             return JSONResponse(status_code=500, content={"error": str(e)})
 
@@ -201,7 +204,7 @@ def register_machine_routes(
         if origen not in ("docker", "bunker"):
             return JSONResponse(status_code=400, content={"error": "Origen inválido"})
 
-        maquina = Machine.query.get(id)
+        maquina = db.session.get(Machine, id)
         if not maquina:
             return JSONResponse(status_code=404, content={"error": "Máquina no encontrada"})
         try:
@@ -211,6 +214,7 @@ def register_machine_routes(
                 recalcular_ranking_creadores()
             return {"success": True, "message": "Máquina eliminada correctamente"}
         except Exception as e:
+            logger.exception("Error inesperado en api_eliminar_maquina")
             db.session.rollback()
             return JSONResponse(status_code=500, content={"error": str(e)})
 
@@ -223,7 +227,7 @@ def register_machine_routes(
         return templates.TemplateResponse(
             request,
             "dockerlabs/info/add-maquina.html",
-            {"error": None, "session": session, "url_for": url_for, "current_user_role": current_user_role, "g": {"csp_nonce": secrets.token_urlsafe(32)}},
+            {"error": None, "session": session, "url_for": url_for, "current_user_role": current_user_role},
         )
 
     @api_router.post("/add-maquina")
@@ -246,7 +250,7 @@ def register_machine_routes(
         except ValueError:
             return JSONResponse(status_code=400, content={"error": "Formato de fecha inválido (YYYY-MM-DD)"})
 
-        user_obj = User.query.get(user_id)
+        user_obj = db.session.get(User, user_id)
         enlace_autor = ""
         if user_obj:
             enlace_autor = user_obj.youtube_url or user_obj.github_url or user_obj.linkedin_url or ""
@@ -287,6 +291,7 @@ def register_machine_routes(
                 "origen": new_machine.origen,
             }
         except Exception as e:
+            logger.exception("Error inesperado en api_add_maquina")
             db.session.rollback()
             return JSONResponse(status_code=500, content={"error": str(e)})
 
@@ -345,13 +350,12 @@ def register_machine_routes(
                 "session": session,
                 "url_for": url_for,
                 "current_user_role": current_user_role,
-                "g": {"csp_nonce": secrets.token_urlsafe(32)},
             },
         )
 
     @pages_router.get("/maquinas/{machine_id}/descargar", response_class=HTMLResponse)
     def descargar_maquina_page(machine_id: int, request: Request, session: dict = Depends(get_session)):
-        maquina = Machine.query.get(machine_id)
+        maquina = db.session.get(Machine, machine_id)
         if not maquina:
             raise HTTPException(status_code=404)
         if maquina.origen == "bunker":
@@ -380,7 +384,6 @@ def register_machine_routes(
                 "session": session,
                 "url_for": url_for,
                 "current_user_role": current_user_role,
-                "g": {"csp_nonce": secrets.token_urlsafe(32)},
             },
         )
 

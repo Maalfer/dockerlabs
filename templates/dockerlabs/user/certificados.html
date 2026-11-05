@@ -90,7 +90,7 @@
 {% endblock %}
 
 {% block scripts %}
-<script>
+<script nonce="{{ g.csp_nonce }}">
     // escapeHtml() la aporta utils.js, cargado desde base.html.
 
     function loadCertificados() {

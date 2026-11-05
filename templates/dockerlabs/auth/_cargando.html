@@ -1,0 +1,12 @@
+{# Overlay "enviando…" de los formularios de acceso. Estilos en
+   static/dockerlabs/css/auth-envio.css. Uso:
+   {% with texto_cargando = "Iniciando sesión..." %}{% include "dockerlabs/auth/_cargando.html" %}{% endwith %} #}
+<div id="loading-overlay" class="loading-overlay" role="status" aria-live="polite">
+    <div class="loading-spinner" aria-hidden="true">
+        <div class="spinner-circle"></div>
+        <div class="spinner-circle"></div>
+        <div class="spinner-circle"></div>
+        <div class="spinner-circle"></div>
+    </div>
+    <p class="loading-text">{{ texto_cargando }}</p>
+</div>

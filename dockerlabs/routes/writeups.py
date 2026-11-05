@@ -11,8 +11,10 @@ from sqlalchemy import func
 from dockerlabs import validators
 from dockerlabs.discord_notify import notify_writeups_batch
 from dockerlabs.models import Machine, PendingWriteup, User, Writeup, WriteupAnalysisResult, WriteupReport
+from dockerlabs.tiempo import utcnow
 
-_logger = logging.getLogger(__name__)
+logger = logging.getLogger(__name__)
+
 
 
 class SubmitWriteupRequest(BaseModel):
@@ -97,7 +99,7 @@ def register_writeup_routes(api_router, get_session, verify_csrf_token, db):
             return {"message": "Writeup enviado correctamente"}
         except Exception as e:
             db.session.rollback()
-            _logger.error(f"Error saving writeup: {str(e)}", exc_info=True)
+            logger.error(f"Error saving writeup: {str(e)}", exc_info=True)
             return JSONResponse(status_code=500, content={"error": f"Error al guardar: {str(e)}"})
 
     @api_router.post("/writeups/recibidos/aprobar-todos")
@@ -168,6 +170,7 @@ def register_writeup_routes(api_router, get_session, verify_csrf_token, db):
 
             return {"message": f"{aprobados} writeup(s) aprobado(s) correctamente.", "aprobados": aprobados}
         except Exception as e:
+            logger.exception("Error inesperado en api_approve_all_writeups_recibidos")
             db.session.rollback()
             return JSONResponse(status_code=500, content={"error": f"Error al aprobar todos: {str(e)}"})
 
@@ -185,7 +188,7 @@ def register_writeup_routes(api_router, get_session, verify_csrf_token, db):
         db.session.rollback()
 
         try:
-            pending = PendingWriteup.query.get(writeup_id)
+            pending = db.session.get(PendingWriteup, writeup_id)
             if not pending:
                 return JSONResponse(status_code=404, content={"error": "Writeup no encontrado"})
 
@@ -232,6 +235,7 @@ def register_writeup_routes(api_router, get_session, verify_csrf_token, db):
 
             return {"message": "Writeup aprobado y movido a publicados."}
         except Exception as e:
+            logger.exception("Error inesperado en api_approve_writeup_recibido")
             db.session.rollback()
             return JSONResponse(status_code=500, content={"error": f"Error al aprobar: {str(e)}"})
 
@@ -258,7 +262,7 @@ def register_writeup_routes(api_router, get_session, verify_csrf_token, db):
         if not valid:
             return JSONResponse(status_code=400, content={"error": f"Tipo inválido: {err}"})
 
-        writeup = Writeup.query.get(writeup_id)
+        writeup = db.session.get(Writeup, writeup_id)
         if not writeup:
             return JSONResponse(status_code=404, content={"error": "Writeup no encontrado"})
 
@@ -277,6 +281,7 @@ def register_writeup_routes(api_router, get_session, verify_csrf_token, db):
             recalcular_ranking_writeups()
             return {"message": "Writeup actualizado correctamente"}
         except Exception as e:
+            logger.exception("Error inesperado en api_update_writeup_subido")
             db.session.rollback()
             return JSONResponse(status_code=500, content={"error": str(e)})
 
@@ -291,7 +296,7 @@ def register_writeup_routes(api_router, get_session, verify_csrf_token, db):
         if caller_role not in ("admin", "moderador"):
             return JSONResponse(status_code=403, content={"error": "Acceso denegado"})
 
-        writeup = Writeup.query.get(writeup_id)
+        writeup = db.session.get(Writeup, writeup_id)
         if not writeup:
             return JSONResponse(status_code=404, content={"error": "Writeup no encontrado"})
         autor, maquina = writeup.autor, writeup.maquina
@@ -317,7 +322,7 @@ def register_writeup_routes(api_router, get_session, verify_csrf_token, db):
         if caller_role not in ("admin", "moderador"):
             return JSONResponse(status_code=403, content={"error": "Acceso denegado"})
 
-        writeup = Writeup.query.get(writeup_id)
+        writeup = db.session.get(Writeup, writeup_id)
         if not writeup:
             return JSONResponse(status_code=404, content={"error": "Writeup no encontrado"})
         autor, maquina = writeup.autor, writeup.maquina
@@ -325,6 +330,7 @@ def register_writeup_routes(api_router, get_session, verify_csrf_token, db):
             db.session.delete(writeup)
             db.session.commit()
         except Exception as e:
+            logger.exception("Error inesperado en api_delete_writeup_subido_delete")
             db.session.rollback()
             return JSONResponse(status_code=500, content={"error": f"Error al eliminar: {str(e)}"})
         from dockerlabs.writeups import recalcular_ranking_writeups
@@ -359,7 +365,7 @@ def register_writeup_routes(api_router, get_session, verify_csrf_token, db):
             if not valid:
                 return JSONResponse(status_code=400, content={"error": err})
 
-        pending = PendingWriteup.query.get(writeup_id)
+        pending = db.session.get(PendingWriteup, writeup_id)
         if not pending:
             return JSONResponse(status_code=404, content={"error": "Writeup no encontrado"})
         try:
@@ -369,6 +375,7 @@ def register_writeup_routes(api_router, get_session, verify_csrf_token, db):
             pending.tipo = data.tipo
             db.session.commit()
         except Exception as e:
+            logger.exception("Error inesperado en api_update_writeup_recibido")
             db.session.rollback()
             return JSONResponse(status_code=500, content={"error": f"Error al actualizar: {str(e)}"})
         return {"message": "Writeup actualizado correctamente"}
@@ -384,13 +391,14 @@ def register_writeup_routes(api_router, get_session, verify_csrf_token, db):
         if caller_role not in ("admin", "moderador"):
             return JSONResponse(status_code=403, content={"error": "Acceso denegado"})
 
-        pending = PendingWriteup.query.get(writeup_id)
+        pending = db.session.get(PendingWriteup, writeup_id)
         if not pending:
             return JSONResponse(status_code=404, content={"error": "Writeup no encontrado"})
         try:
             db.session.delete(pending)
             db.session.commit()
         except Exception as e:
+            logger.exception("Error inesperado en api_delete_writeup_recibido")
             db.session.rollback()
             return JSONResponse(status_code=500, content={"error": f"Error al eliminar: {str(e)}"})
         return {"message": "Writeup eliminado correctamente"}
@@ -406,13 +414,14 @@ def register_writeup_routes(api_router, get_session, verify_csrf_token, db):
         if caller_role not in ("admin", "moderador"):
             return JSONResponse(status_code=403, content={"error": "Acceso denegado"})
 
-        pending = PendingWriteup.query.get(writeup_id)
+        pending = db.session.get(PendingWriteup, writeup_id)
         if not pending:
             return JSONResponse(status_code=404, content={"error": "Writeup no encontrado"})
         try:
             db.session.delete(pending)
             db.session.commit()
         except Exception as e:
+            logger.exception("Error inesperado en api_delete_writeup_recibido_delete")
             db.session.rollback()
             return JSONResponse(status_code=500, content={"error": f"Error al eliminar: {str(e)}"})
         return {"message": "Writeup eliminado correctamente"}
@@ -440,7 +449,7 @@ def register_writeup_routes(api_router, get_session, verify_csrf_token, db):
         if not user_id:
             return JSONResponse(status_code=401, content={"error": "Debes iniciar sesión para reportar"})
 
-        if not Writeup.query.get(writeup_id):
+        if not db.session.get(Writeup, writeup_id):
             return JSONResponse(status_code=404, content={"error": "Writeup no encontrado"})
         try:
             report = WriteupReport(writeup_id=writeup_id, reporter_id=user_id, reason=data.reason)
@@ -448,6 +457,7 @@ def register_writeup_routes(api_router, get_session, verify_csrf_token, db):
             db.session.commit()
             return {"message": "Reporte enviado correctamente"}
         except Exception:
+            logger.exception("Error inesperado en api_report_writeup")
             db.session.rollback()
             return JSONResponse(status_code=500, content={"error": "Error al guardar el reporte"})
 
@@ -462,7 +472,7 @@ def register_writeup_routes(api_router, get_session, verify_csrf_token, db):
         if caller_role not in ("admin", "moderador"):
             return JSONResponse(status_code=403, content={"error": "Acceso denegado"})
 
-        report = WriteupReport.query.get(report_id)
+        report = db.session.get(WriteupReport, report_id)
         if report:
             db.session.delete(report)
             db.session.commit()
@@ -659,7 +669,7 @@ def register_writeup_routes(api_router, get_session, verify_csrf_token, db):
                                 return {"id": w.id, "maquina": w.maquina, "autor": w.autor, "url": w.url, "tipo": w.tipo, "status": status, "error": None}
                     except httpx.TimeoutException:
                         return None
-                    except Exception as e:
+                    except Exception:
                         return None
                     return None
 
@@ -692,7 +702,7 @@ def register_writeup_routes(api_router, get_session, verify_csrf_token, db):
 
                 yield f"data: {json.dumps({'type': 'complete', 'total_analizados': total, 'total_rotos': len(broken), 'rotos': broken})}\n\n"
 
-                _analyzed_at = datetime.utcnow()
+                _analyzed_at = utcnow()
                 try:
                     WriteupAnalysisResult.query.delete()
                     for _w in broken:
@@ -773,6 +783,7 @@ def register_writeup_routes(api_router, get_session, verify_csrf_token, db):
             db.session.commit()
             return {"ok": True}
         except Exception as e:
+            logger.exception("Error inesperado en api_analisis_dismiss")
             db.session.rollback()
             return JSONResponse(status_code=500, content={"error": str(e)})
 
@@ -795,7 +806,7 @@ def register_writeup_routes(api_router, get_session, verify_csrf_token, db):
         try:
             deleted = 0
             for wid in ids:
-                w = Writeup.query.get(int(wid))
+                w = db.session.get(Writeup, int(wid))
                 if w:
                     db.session.delete(w)
                     deleted += 1
@@ -807,6 +818,7 @@ def register_writeup_routes(api_router, get_session, verify_csrf_token, db):
             recalcular_ranking_writeups()
             return {"message": f"{deleted} writeup(s) eliminados correctamente", "deleted": deleted}
         except Exception as e:
+            logger.exception("Error inesperado en api_delete_writeups_batch")
             db.session.rollback()
             return JSONResponse(status_code=500, content={"error": f"Error al eliminar: {str(e)}"})
 

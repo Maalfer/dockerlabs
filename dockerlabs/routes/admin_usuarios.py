@@ -7,6 +7,9 @@ from pydantic import BaseModel
 
 from dockerlabs.extensions import db
 from dockerlabs.models import User
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class UpdateRoleRequest(BaseModel):
@@ -32,7 +35,7 @@ def register_admin_usuarios_routes(api_router, get_session, verify_csrf_token):
         if caller_role == 'moderador' and nuevo_rol == 'admin':
             return JSONResponse(status_code=403, content={"error": "Los moderadores no pueden asignar rol de admin"})
 
-        user = User.query.get(user_id)
+        user = db.session.get(User, user_id)
         if not user:
             return JSONResponse(status_code=404, content={"error": "Usuario no encontrado"})
 
@@ -58,7 +61,7 @@ def register_admin_usuarios_routes(api_router, get_session, verify_csrf_token):
             return JSONResponse(status_code=400, content={"error": "No puedes eliminar tu propia cuenta desde aquí."})
 
 
-        user = User.query.get(user_id)
+        user = db.session.get(User, user_id)
         if not user:
             return JSONResponse(status_code=404, content={"error": "Usuario no encontrado."})
         if user.role == 'admin':
@@ -70,5 +73,6 @@ def register_admin_usuarios_routes(api_router, get_session, verify_csrf_token):
             db.session.commit()
             return {"message": "Usuario eliminado correctamente.", "success": True}
         except Exception as e:
+            logger.exception("Error inesperado en api_delete_user")
             db.session.rollback()
             return JSONResponse(status_code=500, content={"error": f"Error al eliminar el usuario: {str(e)}"})

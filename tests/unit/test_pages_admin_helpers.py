@@ -10,6 +10,7 @@ from datetime import datetime, timedelta
 from types import SimpleNamespace
 
 import pytest
+from dockerlabs.tiempo import utcnow
 
 pytestmark = pytest.mark.unit
 
@@ -21,7 +22,7 @@ def pa():
 
 
 def _today_midnight():
-    now = datetime.utcnow()
+    now = utcnow()
     return datetime(now.year, now.month, now.day)
 
 
@@ -184,24 +185,14 @@ class TestResolveRange:
         assert r["start"] == datetime(today.year, today.month, 1)
 
     def test_mes_anterior_crosses_year_boundary(self, pa, monkeypatch):
-        class FrozenDatetime(datetime):
-            @classmethod
-            def utcnow(cls):
-                return datetime(2026, 1, 15)
-
-        monkeypatch.setattr(pa, "datetime", FrozenDatetime)
+        monkeypatch.setattr(pa, "utcnow", lambda: datetime(2026, 1, 15))
         r = pa._resolve_range("mes_anterior", "", "", None)
         assert r["start"] == datetime(2025, 12, 1)
         assert r["end"] == datetime(2025, 12, 31, 23, 59, 59)
         assert r["label"] == "de 12/2025"
 
     def test_mes_anterior_regular_month(self, pa, monkeypatch):
-        class FrozenDatetime(datetime):
-            @classmethod
-            def utcnow(cls):
-                return datetime(2026, 6, 10)
-
-        monkeypatch.setattr(pa, "datetime", FrozenDatetime)
+        monkeypatch.setattr(pa, "utcnow", lambda: datetime(2026, 6, 10))
         r = pa._resolve_range("mes_anterior", "", "", None)
         assert r["start"] == datetime(2026, 5, 1)
         assert r["end"] == datetime(2026, 5, 31, 23, 59, 59)

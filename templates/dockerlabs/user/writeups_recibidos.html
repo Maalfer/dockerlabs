@@ -69,7 +69,7 @@
 
 {% block scripts %}
 {{ super() }}
-<script>
+<script nonce="{{ g.csp_nonce }}">
     const currentUserRole = "{{ user.role if user.role else '' }}";
     const currentUsername = "{{ user.username if user.username else '' }}";
 </script>

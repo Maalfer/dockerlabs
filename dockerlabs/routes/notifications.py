@@ -6,6 +6,9 @@ from sqlalchemy import or_
 from sqlalchemy.orm import selectinload
 
 from dockerlabs.models import Notification, NotificationRead, NotificationReaction, User
+import logging
+
+logger = logging.getLogger(__name__)
 
 ALLOWED_EMOJIS = {"👍", "❤️", "😂", "😮", "😢", "🔥", "🎉", "👀"}
 
@@ -30,7 +33,7 @@ def register_notification_routes(api_router, get_session, verify_csrf_token, db)
         if not user_id:
             return JSONResponse(status_code=401, content={"success": False, "message": "Debes iniciar sesión"})
 
-        user = User.query.get(user_id)
+        user = db.session.get(User, user_id)
         if not user or user.role not in ["admin", "moderador"]:
             return JSONResponse(status_code=403, content={"success": False, "message": "No tienes permisos"})
 
@@ -54,6 +57,7 @@ def register_notification_routes(api_router, get_session, verify_csrf_token, db)
             db.session.add(notification)
             db.session.commit()
         except Exception as e:
+            logger.exception("Error inesperado en api_send_notification")
             db.session.rollback()
             return JSONResponse(status_code=500, content={"success": False, "message": f"Error al enviar: {str(e)}"})
 
@@ -138,7 +142,7 @@ def register_notification_routes(api_router, get_session, verify_csrf_token, db)
         if not user_id:
             return JSONResponse(status_code=401, content={"success": False, "message": "Debes iniciar sesión"})
 
-        notification = Notification.query.get(notification_id)
+        notification = db.session.get(Notification, notification_id)
         if not notification:
             return JSONResponse(status_code=404, content={"success": False, "message": "Notificación no encontrada"})
 
@@ -158,6 +162,7 @@ def register_notification_routes(api_router, get_session, verify_csrf_token, db)
                 notification.read = True
                 db.session.commit()
         except Exception as e:
+            logger.exception("Error inesperado en api_mark_notification_read")
             db.session.rollback()
             return JSONResponse(status_code=500, content={"success": False, "message": f"Error: {str(e)}"})
         return {"success": True}
@@ -181,7 +186,7 @@ def register_notification_routes(api_router, get_session, verify_csrf_token, db)
         if request_data.emoji not in ALLOWED_EMOJIS:
             return JSONResponse(status_code=400, content={"success": False, "message": "Emoji no permitido"})
 
-        notification = Notification.query.get(notification_id)
+        notification = db.session.get(Notification, notification_id)
         if not notification:
             return JSONResponse(status_code=404, content={"success": False, "message": "Notificación no encontrada"})
 
@@ -208,6 +213,7 @@ def register_notification_routes(api_router, get_session, verify_csrf_token, db)
                 reacted = True
             db.session.commit()
         except Exception as e:
+            logger.exception("Error inesperado en api_react_notification")
             db.session.rollback()
             return JSONResponse(status_code=500, content={"success": False, "message": f"Error: {str(e)}"})
 
@@ -226,7 +232,7 @@ def register_notification_routes(api_router, get_session, verify_csrf_token, db)
         if not user_id:
             return JSONResponse(status_code=401, content={"success": False, "message": "Debes iniciar sesión"})
 
-        notification = Notification.query.get(notification_id)
+        notification = db.session.get(Notification, notification_id)
         if not notification:
             return JSONResponse(status_code=404, content={"success": False, "message": "Notificación no encontrada"})
 
@@ -237,6 +243,7 @@ def register_notification_routes(api_router, get_session, verify_csrf_token, db)
             db.session.delete(notification)
             db.session.commit()
         except Exception as e:
+            logger.exception("Error inesperado en api_delete_notification")
             db.session.rollback()
             return JSONResponse(status_code=500, content={"success": False, "message": f"Error: {str(e)}"})
         return {"success": True, "message": "Notificación eliminada"}

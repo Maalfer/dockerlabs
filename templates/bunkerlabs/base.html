@@ -43,13 +43,14 @@
 
 <body>
     <header>
+        {# Logo y título son dos enlaces hermanos (antes uno dentro de otro: HTML inválido) #}
         <a href="{{ url_for('index') }}" class="logo">
             <div class="logo-container">
-                <img src="{{ url_for('static', filename='dockerlabs/images/logos/logo_120.png') }}" alt="Logo">
+                <img src="{{ url_for('static', filename='dockerlabs/images/logos/logo_120.png') }}" alt="DockerLabs">
             </div>
-            <a href="{{ url_for('index') }}" id="bunkerlabs-link" class="brand-title">
-                <span class="brand-text" data-original="BunkerLabs" data-hover="DockerLabs">BunkerLabs</span>
-            </a>
+        </a>
+        <a href="{{ url_for('index') }}" id="bunkerlabs-link" class="brand-title">
+            <span class="brand-text" data-original="BunkerLabs" data-hover="DockerLabs">BunkerLabs</span>
         </a>
 
 

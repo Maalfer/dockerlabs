@@ -255,7 +255,7 @@
 {% endblock %}
 
 {% block scripts %}
-<script>
+<script nonce="{{ g.csp_nonce }}">
     Chart.defaults.color = '#94a3b8';
     Chart.defaults.borderColor = '#334155';
     Chart.defaults.font.family = "'Fira Code', monospace";

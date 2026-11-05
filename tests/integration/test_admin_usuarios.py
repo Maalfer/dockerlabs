@@ -18,7 +18,7 @@ class TestUpdateUserRole:
 
         db.session.rollback()
         from dockerlabs.models import User
-        assert User.query.get(jugador.id).role == "moderador"
+        assert db.session.get(User, jugador.id).role == "moderador"
 
     def test_admin_can_promote_moderador_to_admin(self, client, login_as, db):
         admin = make_user(db, role="admin")
@@ -30,7 +30,7 @@ class TestUpdateUserRole:
 
         db.session.rollback()
         from dockerlabs.models import User
-        assert User.query.get(mod.id).role == "admin"
+        assert db.session.get(User, mod.id).role == "admin"
 
     def test_admin_can_demote_admin_to_jugador_when_another_admin_remains(self, client, login_as, db):
         admin = make_user(db, role="admin")
@@ -42,7 +42,7 @@ class TestUpdateUserRole:
 
         db.session.rollback()
         from dockerlabs.models import User
-        assert User.query.get(other_admin.id).role == "jugador"
+        assert db.session.get(User, other_admin.id).role == "jugador"
 
     def test_moderador_cannot_set_role_to_admin(self, client, login_as, db):
         mod = make_user(db, role="moderador")
@@ -71,7 +71,7 @@ class TestUpdateUserRole:
         assert r.status_code == 400
 
         db.session.rollback()
-        assert User.query.get(sole_admin.id).role == "admin"
+        assert db.session.get(User, sole_admin.id).role == "admin"
 
         # Con un segundo admin presente, la degradación del primero sí procede.
         second_admin = make_user(db, role="admin")
@@ -110,7 +110,7 @@ class TestDeleteUser:
         # identity map de esta sesión, así que acceder a `jugador.id` ahora
         # dispara un refresh que SQLAlchemy no puede completar (la fila ya no
         # existe) y lanza ObjectDeletedError en vez de darnos el id. Tampoco
-        # usamos User.query.get(): por el mismo motivo de identity map,
+        # usamos db.session.get(User, ): por el mismo motivo de identity map,
         # intentaría refrescar el objeto en vez de devolver None.
         assert User.query.filter_by(id=jugador_id).first() is None
 

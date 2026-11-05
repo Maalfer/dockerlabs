@@ -454,7 +454,7 @@ def sync_user_certificates_safe(user_id: int, *, force: bool = False) -> None:
 
     token = _request_scope_id.set(object())
     try:
-        user = User.query.get(user_id)
+        user = db.session.get(User, user_id)
         if user:
             sync_user_certificates(user, force=force)
     except Exception:
@@ -585,7 +585,7 @@ def register_certificado_routes(api_router, get_session, db):
         # El PDF ya no se archiva: se compone al vuelo desde el WebP guardado.
         if not cert.image_path or not os.path.isfile(abspath_for(cert.image_path)):
             # Falta el WebP: reemitirlo es mejor que un 404.
-            user = User.query.get(cert.user_id)
+            user = db.session.get(User, cert.user_id)
             if user:
                 ensure_certificate(user, cert.machine_name, force=True)
             cert = Certificate.query.filter_by(cert_id=raw).first()
@@ -616,7 +616,7 @@ def register_certificado_routes(api_router, get_session, db):
         if not cert.image_path or not os.path.isfile(abspath_for(cert.image_path)):
             # Falta el fichero (o la fila es anterior a que se guardara imagen):
             # reemitirlo es mejor que devolver un 404.
-            user = User.query.get(cert.user_id)
+            user = db.session.get(User, cert.user_id)
             if user:
                 ensure_certificate(user, cert.machine_name, force=True)
             cert = Certificate.query.filter_by(cert_id=raw).first()

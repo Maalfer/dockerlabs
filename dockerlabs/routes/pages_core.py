@@ -2,7 +2,6 @@ import hashlib
 import os
 import re
 import secrets
-from datetime import datetime
 from urllib.parse import quote, urlencode
 
 from sqlalchemy.exc import IntegrityError
@@ -12,6 +11,7 @@ from fastapi.responses import HTMLResponse, RedirectResponse
 from dockerlabs.models import OutboundClickLog
 
 from dockerlabs.models import ApiToken, Category, Certificate, CompletedMachine, EmailChangeToken, EmailVerificationToken, Machine, PasswordResetToken, User
+from dockerlabs.tiempo import utcnow
 
 
 def register_pages_core_routes(
@@ -47,7 +47,7 @@ def register_pages_core_routes(
         if ua and not any(b in ua.lower() for b in _GO_BOTS):
             try:
                 ip = request.headers.get("cf-connecting-ip") or (request.client.host if request.client else "")
-                day = datetime.utcnow().strftime("%Y-%m-%d")
+                day = utcnow().strftime("%Y-%m-%d")
                 visitor = hashlib.sha256(f"{os.environ.get('SECRET_KEY', 'dockerlabs')}|{ip}|{ua}|{day}".encode()).hexdigest()[:16]
                 db.session.add(OutboundClickLog(destino=destino, origen=origen, visitor=visitor))
                 db.session.commit()
@@ -144,7 +144,6 @@ def register_pages_core_routes(
             "csrf_token_value": csrf_token,
             "url_for": url_for,
             "current_user_role": current_user_role,
-            "g": {"csp_nonce": secrets.token_urlsafe(32)},
         }
         return templates.TemplateResponse(request, "dockerlabs/home.html", context)
 
@@ -161,7 +160,7 @@ def register_pages_core_routes(
         current_username = session.get("username")
         profile_image_url = get_fastapi_profile_image_url(username=current_username, user_id=user_id)
 
-        user = User.query.get(user_id) if user_id else None
+        user = db.session.get(User, user_id) if user_id else None
 
         session_data = {"user_id": user_id, "username": current_username, "role": role}
 
@@ -206,9 +205,6 @@ def register_pages_core_routes(
             "csrf_token_value": csrf_token,
             "get_profile_image_url": get_fastapi_profile_image_url,
             "url_for": url_for,
-            # El nonce debe ser el que el middleware puso en la cabecera CSP,
-            # no uno nuevo, o el script inline no casaría con la política.
-            "g": {"csp_nonce": getattr(request.state, "csp_nonce", "")},
         }
         return templates.TemplateResponse(request, "dockerlabs/admin/dashboard.html", context)
 
@@ -237,7 +233,6 @@ def register_pages_core_routes(
             "current_user_role": role,
             "csrf_token_value": csrf_token,
             "url_for": url_for,
-            "g": {"csp_nonce": secrets.token_urlsafe(32)},
         }
         return templates.TemplateResponse(request, "dockerlabs/user/certificados.html", context)
 
@@ -290,7 +285,6 @@ def register_pages_core_routes(
             "request": request,
             "csrf_token_value": csrf_token,
             "url_for": url_for,
-            "g": {"csp_nonce": secrets.token_urlsafe(32)},
             "session": session,
             "success": None,
             "remaining": None,
@@ -313,7 +307,6 @@ def register_pages_core_routes(
             "session": {},
             "csrf_token_value": csrf_token,
             "url_for": url_for,
-            "g": {"csp_nonce": secrets.token_urlsafe(32)},
         }
         response = templates.TemplateResponse(request, "dockerlabs/auth/register.html", context)
         if cookie_val:
@@ -327,7 +320,7 @@ def register_pages_core_routes(
 
         csrf_token, cookie_val = _anonymous_csrf_token(session)
 
-        context = {"session": {}, "csrf_token_value": csrf_token, "url_for": url_for, "g": {"csp_nonce": secrets.token_urlsafe(32)}}
+        context = {"session": {}, "csrf_token_value": csrf_token, "url_for": url_for}
         response = templates.TemplateResponse(request, "dockerlabs/auth/recover.html", context)
         if cookie_val:
             response.set_cookie(key="session", value=cookie_val, httponly=True, secure=True, path="/", samesite="lax")
@@ -345,7 +338,7 @@ def register_pages_core_routes(
             pending = EmailVerificationToken.query.filter_by(token=token).first()
             if not pending:
                 error = "Enlace de verificacion invalido o ya utilizado."
-            elif datetime.utcnow() > pending.expires_at:
+            elif utcnow() > pending.expires_at:
                 db.session.delete(pending)
                 db.session.commit()
                 error = "El enlace de verificacion ha expirado. Vuelve a registrarte."
@@ -385,7 +378,6 @@ def register_pages_core_routes(
             "url_for": url_for,
             "session": {},
             "current_user_role": "",
-            "g": {"csp_nonce": secrets.token_urlsafe(32)},
         }
         return templates.TemplateResponse(request, "dockerlabs/auth/verify_email.html", context)
 
@@ -402,7 +394,7 @@ def register_pages_core_routes(
             change_tok = EmailChangeToken.query.filter_by(token=token, used=False).first()
             if not change_tok:
                 error = "Enlace invalido o ya utilizado."
-            elif datetime.utcnow() > change_tok.expires_at:
+            elif utcnow() > change_tok.expires_at:
                 error = "El enlace ha expirado. Solicita el cambio de correo de nuevo desde tu perfil."
             else:
                 existing = User.query.filter(
@@ -411,7 +403,7 @@ def register_pages_core_routes(
                 if existing:
                     error = "Ese correo ya esta registrado por otra cuenta."
                 else:
-                    user_obj = User.query.get(change_tok.user_id)
+                    user_obj = db.session.get(User, change_tok.user_id)
                     if not user_obj:
                         error = "Usuario no encontrado."
                     else:
@@ -434,7 +426,6 @@ def register_pages_core_routes(
             "url_for": url_for,
             "session": {},
             "current_user_role": "",
-            "g": {"csp_nonce": secrets.token_urlsafe(32)},
         }
         response = templates.TemplateResponse(request, "dockerlabs/auth/confirm_email_change.html", context)
 
@@ -448,7 +439,7 @@ def register_pages_core_routes(
                 session.get("role") or "jugador",
                 existing_session=session,
                 _id=session.get("_id"),
-                session_version=User.query.get(changed_user_id).session_version,
+                session_version=db.session.get(User, changed_user_id).session_version,
             )
             response.set_cookie(key="session", value=cookie_val, httponly=True, secure=True, path="/", samesite="lax")
 
@@ -465,7 +456,7 @@ def register_pages_core_routes(
             reset_tok = PasswordResetToken.query.filter_by(token=token, used=False).first()
             if not reset_tok:
                 error = "Enlace invalido o ya utilizado."
-            elif datetime.utcnow() > reset_tok.expires_at:
+            elif utcnow() > reset_tok.expires_at:
                 error = "El enlace ha expirado. Solicita uno nuevo desde la pagina de recuperacion."
             else:
                 valid_token = True
@@ -480,7 +471,6 @@ def register_pages_core_routes(
             "url_for": url_for,
             "session": {},
             "current_user_role": "",
-            "g": {"csp_nonce": secrets.token_urlsafe(32)},
         }
         return templates.TemplateResponse(request, "dockerlabs/auth/reset_password.html", context)
 

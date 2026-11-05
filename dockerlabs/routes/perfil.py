@@ -6,7 +6,7 @@ import os
 import secrets
 import time
 from collections import defaultdict
-from datetime import datetime, timedelta
+from datetime import timedelta
 from typing import Optional
 
 from fastapi import BackgroundTasks, Depends, File, Request, UploadFile
@@ -18,6 +18,9 @@ from werkzeug.utils import secure_filename
 
 from dockerlabs.extensions import db
 from dockerlabs.models import EmailChangeToken, User
+from dockerlabs.tiempo import utcnow
+
+logger = logging.getLogger(__name__)
 
 
 class ChangePasswordRequest(BaseModel):
@@ -75,7 +78,7 @@ def register_perfil_routes(api_router, get_session, verify_csrf_token, check_pas
             return JSONResponse(status_code=400, content={"error": pwd_error})
 
     
-        user_obj = User.query.get(user_id)
+        user_obj = db.session.get(User, user_id)
         if not user_obj:
             return JSONResponse(status_code=404, content={"error": "Usuario no encontrado."})
             
@@ -113,7 +116,7 @@ def register_perfil_routes(api_router, get_session, verify_csrf_token, check_pas
         biography_sanitized = validators.sanitize_text(data.biography.strip()) if data.biography else ""
         nombre_diploma_sanitized = validators.sanitize_text(data.nombre_diploma.strip())[:100] if data.nombre_diploma and data.nombre_diploma.strip() else None
 
-        user_obj = User.query.get(user_id)
+        user_obj = db.session.get(User, user_id)
         if not user_obj:
             return JSONResponse(status_code=404, content={"error": "Usuario no encontrado."})
 
@@ -137,6 +140,7 @@ def register_perfil_routes(api_router, get_session, verify_csrf_token, check_pas
 
             return {"message": "Perfil actualizado correctamente.", "success": True}
         except Exception as e:
+            logger.exception("Error inesperado en api_update_profile")
             db.session.rollback()
             return JSONResponse(status_code=500, content={"error": f"Error al actualizar el perfil: {str(e)}"})
 
@@ -153,7 +157,7 @@ def register_perfil_routes(api_router, get_session, verify_csrf_token, check_pas
         if _email_change_rate_limited(user_id):
             return JSONResponse(status_code=429, content={"error": "Has solicitado el cambio de correo demasiadas veces. Inténtalo de nuevo en unos minutos."})
 
-        user_obj = User.query.get(user_id)
+        user_obj = db.session.get(User, user_id)
         if not user_obj:
             return JSONResponse(status_code=404, content={"error": "Usuario no encontrado."})
 
@@ -182,7 +186,7 @@ def register_perfil_routes(api_router, get_session, verify_csrf_token, check_pas
         db.session.flush()
 
         token = secrets.token_urlsafe(32)
-        expires_at = datetime.utcnow() + timedelta(hours=1)
+        expires_at = utcnow() + timedelta(hours=1)
         change_tok = EmailChangeToken(token=token, user_id=user_id, new_email=new_email, expires_at=expires_at)
         db.session.add(change_tok)
         db.session.commit()
@@ -229,7 +233,7 @@ def register_perfil_routes(api_router, get_session, verify_csrf_token, check_pas
         if _err:
             return JSONResponse(status_code=400, content={"error": f"Enlace de YouTube invalido: {_err}"})
     
-        user_obj = User.query.get(user_id)
+        user_obj = db.session.get(User, user_id)
         if not user_obj:
             return JSONResponse(status_code=404, content={"error": "Usuario no encontrado."})
             
@@ -267,7 +271,7 @@ def register_perfil_routes(api_router, get_session, verify_csrf_token, check_pas
         try:
             img = Image.open(io.BytesIO(file_bytes))
             img.verify()
-        except Exception as exc:
+        except Exception:
             logging.exception("Verificación de imagen fallida")
             return JSONResponse(status_code=400, content={"error": "La imagen enviada no es válida"})
 
@@ -288,11 +292,11 @@ def register_perfil_routes(api_router, get_session, verify_csrf_token, check_pas
 
         try:
             webp_bytes = to_webp(file_bytes, profile='perfil')
-        except Exception as exc:
+        except Exception:
             logging.exception("Error al convertir imagen de perfil a WebP")
             return JSONResponse(status_code=400, content={"error": "No se pudo procesar la imagen"})
 
-        user_obj = User.query.get(user_id)
+        user_obj = db.session.get(User, user_id)
         if not user_obj:
             return JSONResponse(status_code=400, content={"error": "No se ha podido determinar el usuario"})
 
@@ -319,7 +323,7 @@ def register_perfil_routes(api_router, get_session, verify_csrf_token, check_pas
             user_obj.profile_image_data = None
             user_obj.profile_image_mime = 'image/webp'
             db.session.commit()
-        except Exception as exc:
+        except Exception:
             logging.exception("Error al guardar la foto de perfil en disco")
             db.session.rollback()
             return JSONResponse(status_code=500, content={"error": "Error al guardar la imagen en el servidor"})

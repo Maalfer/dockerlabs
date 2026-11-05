@@ -671,7 +671,7 @@
     if (check && check.checked) cargarStats();
 })();
 </script>
-<script>
+<script nonce="{{ g.csp_nonce }}">
     function openSendNotificationModal() {
         document.getElementById('sendNotificationModal').classList.add('visible');
     }

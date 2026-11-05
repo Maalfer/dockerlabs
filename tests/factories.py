@@ -12,6 +12,7 @@ recolecta este fichero.
 from __future__ import annotations
 
 from faker import Faker
+from dockerlabs.tiempo import utcnow
 
 _faker = Faker()
 
@@ -230,7 +231,7 @@ def make_email_verification_token(db, *, username, email, **overrides):
         "username": username,
         "email": email,
         "password_hash": generate_password_hash("Str0ngPassw0rd!"),
-        "expires_at": datetime.utcnow() + timedelta(hours=24),
+        "expires_at": utcnow() + timedelta(hours=24),
     }
     defaults.update(overrides)
     row = EmailVerificationToken(**defaults)
@@ -247,7 +248,7 @@ def make_password_reset_token(db, *, user_id, **overrides):
     defaults = {
         "token": overrides.pop("token", _faker.unique.uuid4()),
         "user_id": user_id,
-        "expires_at": datetime.utcnow() + timedelta(hours=1),
+        "expires_at": utcnow() + timedelta(hours=1),
         "used": False,
     }
     defaults.update(overrides)
@@ -266,7 +267,7 @@ def make_email_change_token(db, *, user_id, new_email, **overrides):
         "token": overrides.pop("token", _faker.unique.uuid4()),
         "user_id": user_id,
         "new_email": new_email,
-        "expires_at": datetime.utcnow() + timedelta(hours=1),
+        "expires_at": utcnow() + timedelta(hours=1),
         "used": False,
     }
     defaults.update(overrides)

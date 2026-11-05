@@ -41,11 +41,13 @@ dockerlabs/
   validators.py          # Validación de inputs (nombres, URLs, imágenes)
   image_utils.py         # Conversión a WebP
   email.py               # Envío de correos (Postfix local)
+  tiempo.py              # utcnow(): instante UTC naive, como lo guarda la BD
   routes/
     machines.py           # CRUD máquinas, claims, machine-edit-requests
     maquinas_api.py       # API de máquinas: acceso invitado, logo, valoraciones y completadas
     pages_core.py         # Páginas públicas principales
-    pages_admin.py        # Panel de administración
+    pages_info.py         # Páginas informativas y legales (tabla ruta → plantilla)
+    pages_admin.py        # Panel de administración (solo páginas de admin)
     admin_usuarios.py     # Administración de usuarios: cambio de rol y borrado
     writeups.py           # Gestión de writeups y ranking
     notifications.py      # Sistema de notificaciones
@@ -61,8 +63,10 @@ dockerlabs/
     seo.py                # Recursos de raíz: favicon, robots.txt y sitemap.xml
     pending_admin.py      # Revisión de envíos pendientes
 bunkerlabs/              # Módulos propios de BunkerLabs
-static/                  # Assets estáticos (JS, CSS, imágenes)
+static/                  # Assets estáticos (JS, CSS, imágenes) — ver «Frontend»
 templates/               # Plantillas Jinja2
+tools/                   # Scripts de mantenimiento (smoke check, backfill de certificados…)
+tests/                   # Suite pytest: unit/ (sin BD) e integration/ (MariaDB real)
 uploads/ # Ficheros en disco (perfiles, logos y certificados PDF)
 ```
 
@@ -102,7 +106,12 @@ db.session.rollback()
 # Queries:
 User.query.filter_by(username='foo').first()
 db.session.query(Machine).filter(...).all()
+db.session.get(User, user_id)        # por clave primaria (NO Model.query.get: obsoleto en SQLAlchemy 2.0)
 ```
+
+Fechas: la BD guarda DATETIME en UTC **sin zona horaria**. Usa siempre
+`from dockerlabs.tiempo import utcnow` (nunca `datetime.utcnow()`, obsoleto
+desde Python 3.12, ni `datetime.now()`, que es hora local).
 
 La sesión se limpia automáticamente al final de cada request por `DBSessionMiddleware` en `asgi.py`.
 
@@ -136,14 +145,66 @@ Variables globales disponibles en todos los templates:
 Contexto mínimo que debe pasar cada página HTML:
 
 ```python
-templates.TemplateResponse("plantilla.html", {
-    "request": request,
+templates.TemplateResponse(request, "plantilla.html", {
     "session": session,
     "current_user_role": session.get("role", ""),
     "csrf_token_value": session.get("csrf_token", ""),
-    "g": {"csp_nonce": request.state.csp_nonce},
 })
 ```
+
+El nonce CSP **no** se pasa a mano: el context processor `_contexto_csp`
+(`routers.py`) inyecta en todas las plantillas `csp_nonce` y `g.csp_nonce` con
+el nonce real de la cabecera. Nunca generes uno en una ruta
+(`secrets.token_urlsafe(...)`): no coincidiría con la cabecera y el navegador
+bloquearía el script. Lo vigila `tests/integration/test_csp_nonce.py`.
+
+Toda referencia a un fichero desde una plantilla (`static_v(...)`,
+`url_for('static', ...)`, `{% include %}`, `{% extends %}`) debe existir: lo
+comprueba `tests/unit/test_plantillas_recursos.py`.
+
+## Frontend: sistema visual
+
+Hojas globales (las carga `templates/dockerlabs/base.html` en este orden):
+
+| Fichero | Contenido |
+|---------|-----------|
+| `static/dockerlabs/css/styles.css`, `base.css` | Estilos base de la web |
+| `static/dockerlabs/css/dl-sistema.css` | **Sistema visual**: botones `.dl-btn`, foco de formularios, paginación, espacio bajo el header, ajustes móviles y zona privada en móvil |
+| `static/dockerlabs/css/dl-footer.css` | Footer en móvil, compartido con BunkerLabs |
+
+Regla de color (no inventes colores nuevos para acciones):
+
+- **Ámbar** `--accent-yellow`: acciones (botones). Al pasar el ratón → **verde hacker** `--hack-green` con brillo.
+- **Verde hacker**: también todo lo «terminal» (prompt `$`, cursor, salida).
+- **Cian** `--accent-cyan`: información (enlaces, viñetas, numeración).
+- **Pizarra**: acciones secundarias. **Rojo**: acciones destructivas.
+- Colores de dificultad y morado de Academia: reservados a lo suyo.
+
+Botones: añade clases, no estilos en línea —
+`dl-btn` (principal), `dl-btn--neutro` (secundario), `dl-btn--peligro`
+(destructivo), `dl-btn--grande`, `dl-btn--bloque`.
+
+Espaciado: el header fijo mide 44 px (≤ 480 px), 50 px (≤ 768 px) y 72 px;
+`dl-sistema.css` ajusta `body` a esas alturas. El título de una página de
+contenido empieza a 24 px del header en móvil y a 40 px en escritorio.
+
+### Cody, la ballena
+
+Mascota animada de DockerLabs (SVG + CSS + JS, sin dependencias):
+
+- Parcial: `templates/dockerlabs/auth/_ballena.html`. Se incluye con
+  `{% with ballena_mensajes = {...} %}{% include ... %}{% endwith %}`.
+  Opcional: `ballena_lectura = true` (páginas legales: resume cada
+  `.policy-section[data-tldr]` y muestra el % leído) o `ballena_guia = true`
+  (la controla otro script).
+- Estilos: `static/dockerlabs/css/auth-ballena.css`. Lógica:
+  `static/dockerlabs/js/ballena.js`, que expone `window.DLBallena`
+  (`decir(texto, autor)`, `momento(clase, ms)`, `soplar()`).
+- Frases: repertorio en `ballena.js`; las que no tienen autor real se firman
+  como «Cody».
+- Guía de ayuda de la home (botón `?` junto a Dificultad):
+  `templates/dockerlabs/_guia.html` + `static/dockerlabs/css/guia.css` +
+  `static/dockerlabs/js/guia.js`; capturas en `static/dockerlabs/images/guia/`.
 
 ## Perfil público (`/u/<slug>`)
 
@@ -213,7 +274,7 @@ Al borrar un writeup se retira el diploma con `revoke_certificate_safe()`.
 insensible a mayúsculas solo cuando no hay dos cuentas homónimas (existen
 `oscar` y `Oscar`). Usa **siempre** esa función; el backfill la comparte.
 
-`backfill_certificados.py` emite los que falten y retira los sobrantes. Es
+`tools/backfill_certificados.py` emite los que falten y retira los sobrantes. Es
 idempotente (`--force` re-renderiza, `--dry-run` solo cuenta).
 
 ## Almacenamiento de imágenes
@@ -238,15 +299,18 @@ idempotente (`--force` re-renderiza, `--dry-run` solo cuenta).
 3. `secure_filename()` en uploads de ficheros
 4. Imágenes verificadas con PIL antes de guardar
 5. Límites: 5 MB perfiles, 2 MB logos
-6. Scripts inline en templates requieren `nonce="{{ g.csp_nonce }}"`
+6. Scripts inline en templates requieren `nonce="{{ g.csp_nonce }}"` (el nonce lo pone el context processor; ver «Templates Jinja2»). La CSP está en modo *report-only*: antes de hacerla obligatoria hay que retirar los manejadores en línea (`onclick=`, `onload=`…) de plantillas y JS.
 7. Rate limit: 300 req/min por IP en el middleware ASGI (excluye `/static/`, `/img/`). Los diccionarios de rate-limit se purgan al superar 10.000 claves, para que rotar la IP de origen no agote la memoria del worker.
-8. El `rol` viaja firmado en la cookie (30 días, sin almacén de sesiones). `get_session` lo revalida contra la BD cuando la cookie afirma `admin`/`moderador`, de modo que degradar o borrar a un privilegiado surte efecto al instante.
+8. El `rol` viaja firmado en la cookie (30 días, sin almacén de sesiones). `get_session` revalida **toda** sesión con usuario contra la BD: corrige el rol si ha cambiado, invalida la sesión si la cuenta se borró y compara `session_version`, que sube al cambiar contraseña o email (así se cierran las sesiones abiertas antes de ese cambio).
 9. Las respuestas `/img/` llevan una CSP `sandbox` en vigor: un SVG subido como logo no ejecuta scripts al abrirlo como documento.
+10. Un `except Exception` que devuelve un error 500 debe registrar la causa con `logger.exception(...)` (`logger = logging.getLogger(__name__)` por módulo): sin eso, un fallo en producción no deja rastro en `journalctl`.
 
 ## Comandos útiles
 
 ```bash
 sudo systemctl restart dockerlabs   # Reiniciar el servicio
 sudo journalctl -u dockerlabs -f    # Ver logs en tiempo real
+pytest tests/ -q                    # Suite completo (necesita la MariaDB de test, ver tests/README.md)
+python tools/smoke_check.py         # Smoke check de solo lectura contra la app
 mysqldump -u dockerlabs -p'...' dockerlabs > backup.sql   # Backup BD
 ```

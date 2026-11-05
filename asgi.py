@@ -198,7 +198,6 @@ async def custom_http_exception_handler(request: Request, exc: StarletteHTTPExce
             "session": session,
             "current_user_role": session.get("role", ""),
             "url_for": url_for,
-            "g": {"csp_nonce": getattr(request.state, "csp_nonce", "")},
         },
         status_code=exc.status_code,
     )

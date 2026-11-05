@@ -264,4 +264,4 @@ class TestDeleteBatch:
         assert r.status_code == 500
         assert "invalid literal" in r.json()["error"]
         db.session.rollback()
-        assert Writeup.query.get(w1.id) is not None  # nada se borro: rollback de todo el batch
+        assert db.session.get(Writeup, w1.id) is not None  # nada se borro: rollback de todo el batch

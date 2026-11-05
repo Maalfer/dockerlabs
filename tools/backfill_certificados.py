@@ -3,17 +3,20 @@
 Un certificado corresponde en cuanto hay un writeup publicado de una máquina
 por un usuario registrado. Idempotente: los diplomas ya archivados se saltan.
 
-    venv/bin/python backfill_certificados.py            # emite los que falten
-    venv/bin/python backfill_certificados.py --force    # re-renderiza todos
-    venv/bin/python backfill_certificados.py --dry-run  # solo cuenta
+    venv/bin/python tools/backfill_certificados.py            # emite los que falten
+    venv/bin/python tools/backfill_certificados.py --force    # re-renderiza todos
+    venv/bin/python tools/backfill_certificados.py --dry-run  # solo cuenta
 """
 import sys
 import time
+from pathlib import Path
 
-sys.path.insert(0, '/opt/dockerlabs')
+# Raíz del proyecto (antes era la ruta absoluta del VPS: no servía con Docker Compose)
+RAIZ = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(RAIZ))
 
 from dotenv import load_dotenv
-load_dotenv('/opt/dockerlabs/.env')
+load_dotenv(RAIZ / '.env')
 
 from sqlalchemy import func
 

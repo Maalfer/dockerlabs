@@ -4,6 +4,9 @@ from fastapi import Depends, HTTPException, Request
 from pydantic import BaseModel
 
 from bunkerlabs.models import BunkerAccessLog
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class BunkerAccessLogEntry(BaseModel):
@@ -44,5 +47,6 @@ def register_bunker_api_routes(api_router, get_session, verify_csrf_token, db):
             db.session.commit()
             return {"message": "Historial eliminado correctamente"}
         except Exception:
+            logger.exception("Error inesperado en api_delete_bunker_access_logs")
             db.session.rollback()
             raise HTTPException(status_code=500, detail="Error al eliminar el historial")

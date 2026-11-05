@@ -12,6 +12,7 @@ import re
 import pytest
 
 from tests.factories import make_completed_machine, make_email_change_token, make_machine, make_password_reset_token, make_user
+from dockerlabs.tiempo import utcnow
 
 pytestmark = pytest.mark.integration
 
@@ -288,7 +289,7 @@ class TestConfirmEmailChange:
         db.session.rollback()
         from dockerlabs.models import User
 
-        refreshed = User.query.get(user.id)
+        refreshed = db.session.get(User, user.id)
         assert refreshed.email == "requester@example.test"  # no se aplicó el cambio
 
     def test_missing_token_shows_error(self, client):
@@ -320,7 +321,7 @@ class TestResetPasswordPage:
         from datetime import datetime, timedelta
 
         user = make_user(db, role="jugador")
-        tok = make_password_reset_token(db, user_id=user.id, expires_at=datetime.utcnow() - timedelta(hours=1))
+        tok = make_password_reset_token(db, user_id=user.id, expires_at=utcnow() - timedelta(hours=1))
 
         r = client.get(f"/reset-password?token={tok.token}")
         assert r.status_code == 200

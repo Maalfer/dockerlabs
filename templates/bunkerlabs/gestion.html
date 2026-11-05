@@ -223,7 +223,7 @@
 </div>
 
 <script src="{{ static_v('dockerlabs/vendor/bootstrap.bundle.min.js') }}"></script>
-<script>
+<script nonce="{{ g.csp_nonce }}">
 // ─── Tab navigation ───────────────────────────────────────────────────────────
 document.querySelectorAll('.gestion-nav-btn').forEach(btn => {
     btn.addEventListener('click', function () {

@@ -14,6 +14,7 @@ from tests.factories import (
     make_user,
     make_writeup,
 )
+from dockerlabs.tiempo import utcnow
 
 pytestmark = pytest.mark.integration
 
@@ -52,7 +53,10 @@ class TestLogin:
         r = client.post("/api/auth/login", json={"username": user.username, "password": "WrongPassword1!"})
         assert r.status_code == 401
         assert r.json()["success"] is False
-        return r.json()["message"]
+        # Mensaje genérico: no revela si el fallo es de usuario o de contraseña
+        mensaje = r.json()["message"].lower()
+        assert mensaje
+        assert user.username.lower() not in mensaje
 
     def test_unknown_user_and_wrong_password_return_identical_message(self, client, db):
         # No debe poder distinguirse si el usuario existe o no (anti username-enumeration).
@@ -272,7 +276,7 @@ class TestResetPassword:
 
         db.session.rollback()
         from dockerlabs.models import PasswordResetToken, User
-        refreshed = User.query.get(user.id)
+        refreshed = db.session.get(User, user.id)
         assert refreshed.session_version == original_version + 1
 
         used_token = PasswordResetToken.query.filter_by(token=token_row.token).first()
@@ -290,7 +294,7 @@ class TestResetPassword:
 
     def test_expired_token_rejected(self, client, db):
         user = make_user(db)
-        token_row = make_password_reset_token(db, user_id=user.id, expires_at=datetime.utcnow() - timedelta(hours=1))
+        token_row = make_password_reset_token(db, user_id=user.id, expires_at=utcnow() - timedelta(hours=1))
 
         r = client.post("/api/auth/reset-password", json={
             "token": token_row.token, "password": "NewPassw0rd!", "password2": "NewPassw0rd!",

@@ -33,7 +33,7 @@ class TestApprove:
         assert r.json()["success"] is True
 
         db.session.rollback()
-        row = PendingMachineSubmission.query.get(sub.id)
+        row = db.session.get(PendingMachineSubmission, sub.id)
         assert row.estado == "aprobado"
         assert row.reviewed_at is not None
 

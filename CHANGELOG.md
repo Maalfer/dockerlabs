@@ -17,11 +17,55 @@ Las entradas de seguridad referencian su identificador de advisory
 
 ## [Sin publicar]
 
+## [2.1.0] - 2026-11-05
+
+### Added
+
+- **Cody**, la ballena hacker de DockerLabs (SVG animado, sin dependencias):
+  acompaña login, registro y recuperación de contraseña; sigue el cursor, se
+  tapa el ojo al escribir la contraseña, teclea en su portátil y suelta un
+  chorro binario. Bocadillo de terminal con ~40 frases motivacionales.
+- Cody en las páginas legales (modo lectura): resume cada sección mientras
+  lees y muestra el porcentaje leído.
+- Guía de ayuda para quien empieza (botón `?` junto al filtro de dificultad):
+  8 pasos con Cody y capturas ampliables; el último aplica el filtro
+  «Muy fácil».
+- Sistema visual común (`dl-sistema.css`): botones `.dl-btn` y sus variantes,
+  con la regla de color de la web (ámbar → verde hacker).
+- Footer móvil compartido por DockerLabs y BunkerLabs (`dl-footer.css`).
+- Tests: el nonce de cada script coincide con la cabecera CSP; toda
+  referencia de una plantilla a otro fichero existe.
+
+### Changed
+
+- Botones principales de login, registro, descargas, envío de máquinas,
+  soporte, dashboard y gestión de usuarios con el mismo estilo que el header.
+- Foco de formularios y paginación unificados en ámbar.
+- Móvil: buscador y filtros de la home en la misma fila (de 6 a 3 filas);
+  nombres de máquina alineados; el nombre «DockerLabs» vuelve al header;
+  header de BunkerLabs con las mismas medidas que el de DockerLabs.
+- Móvil: dashboard, estadísticas, certificados, gestión de usuarios y perfil
+  público ya no desbordan la pantalla (tablas convertidas en tarjetas).
+- Ritmo vertical común: menos hueco entre el header y el contenido.
+- Páginas informativas y legales movidas de `pages_admin.py` a
+  `routes/pages_info.py`.
+- `tools/backfill_certificados.py` (antes en la raíz) usa rutas relativas.
+
 ### Fixed
 
 - Las instrucciones de descarga muestran el nombre real del fichero de la
   máquina en el comando `auto_deploy.sh` en vez de un placeholder genérico
   (idea original de [@ateto3](https://github.com/ateto3) en el PR #26).
+- Nonce CSP: ~35 rutas pasaban un nonce propio y las bases usaban una
+  variable inexistente, así que ningún script en línea casaba con la
+  política. Ahora lo inyecta un context processor en todas las plantillas.
+- En móvil, el título del header vuelve a llevar de DockerLabs a BunkerLabs
+  y viceversa, como en escritorio.
+- HTML inválido (enlaces anidados) en el header de BunkerLabs.
+- Los errores 500 inesperados ya se registran en el log
+  (`logger.exception`) en lugar de perderse.
+- Eliminados los avisos de APIs obsoletas (`datetime.utcnow`,
+  `Query.get`): de 1.057 a 1 en el suite de tests.
 
 ## [2.0.1] - 2026-10-22
 

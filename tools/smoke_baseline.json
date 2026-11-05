@@ -17,18 +17,22 @@
     "/ruta-que-no-existe-smoke-test": 404,
     "/static/dockerlabs/js/utils.js": 200
   },
-  "modulos_compilados": 43,
-  "n_rutas": 234,
+  "modulos_compilados": 81,
+  "n_rutas": 240,
   "plantillas": [
     "bunkerlabs/base.html",
+    "bunkerlabs/descargar.html",
     "bunkerlabs/gestion.html",
     "bunkerlabs/home.html",
     "bunkerlabs/login-bunkerlabs.html",
-    "bunkerlabs/recursos.html",
+    "dockerlabs/_guia.html",
     "dockerlabs/admin/dashboard.html",
     "dockerlabs/admin/gestion_maquinas.html",
     "dockerlabs/admin/gestion_usuarios.html",
     "dockerlabs/admin/pending.html",
+    "dockerlabs/auth/_ballena.html",
+    "dockerlabs/auth/_cargando.html",
+    "dockerlabs/auth/confirm_email_change.html",
     "dockerlabs/auth/login.html",
     "dockerlabs/auth/recover.html",
     "dockerlabs/auth/register.html",
@@ -37,6 +41,7 @@
     "dockerlabs/auth/verify_email.html",
     "dockerlabs/base.html",
     "dockerlabs/equipo.html",
+    "dockerlabs/errors/403.html",
     "dockerlabs/errors/404.html",
     "dockerlabs/home.html",
     "dockerlabs/info/add-maquina.html",
@@ -98,7 +103,7 @@
       "methods": [
         "GET"
       ],
-      "name": "agradecimientos_page",
+      "name": "info_agradecimientos",
       "path": "/agradecimientos"
     },
     {
@@ -481,6 +486,20 @@
     },
     {
       "methods": [
+        "GET"
+      ],
+      "name": "(openapi)",
+      "path": "/api/gestion-maquinas/machine-stats/{machine_id}"
+    },
+    {
+      "methods": [
+        "GET"
+      ],
+      "name": "api_gestion_machine_stats",
+      "path": "/api/gestion-maquinas/machine-stats/{machine_id}"
+    },
+    {
+      "methods": [
         "POST"
       ],
       "name": "(openapi)",
@@ -659,6 +678,20 @@
         "POST"
       ],
       "name": "(openapi)",
+      "path": "/api/request_email_change"
+    },
+    {
+      "methods": [
+        "POST"
+      ],
+      "name": "api_request_email_change",
+      "path": "/api/request_email_change"
+    },
+    {
+      "methods": [
+        "POST"
+      ],
+      "name": "(openapi)",
       "path": "/api/submit-machine"
     },
     {
@@ -737,6 +770,20 @@
       ],
       "name": "api_upload_profile_photo",
       "path": "/api/upload-profile-photo"
+    },
+    {
+      "methods": [
+        "GET"
+      ],
+      "name": "(openapi)",
+      "path": "/api/version"
+    },
+    {
+      "methods": [
+        "GET"
+      ],
+      "name": "api_version",
+      "path": "/api/version"
     },
     {
       "methods": [
@@ -1048,48 +1095,6 @@
     },
     {
       "methods": [
-        "POST"
-      ],
-      "name": "(openapi)",
-      "path": "/bunkerlabs/admin/recursos/add"
-    },
-    {
-      "methods": [
-        "POST"
-      ],
-      "name": "add_bunker_recurso",
-      "path": "/bunkerlabs/admin/recursos/add"
-    },
-    {
-      "methods": [
-        "POST"
-      ],
-      "name": "(openapi)",
-      "path": "/bunkerlabs/admin/recursos/delete/{recurso_id}"
-    },
-    {
-      "methods": [
-        "POST"
-      ],
-      "name": "delete_bunker_recurso",
-      "path": "/bunkerlabs/admin/recursos/delete/{recurso_id}"
-    },
-    {
-      "methods": [
-        "POST"
-      ],
-      "name": "(openapi)",
-      "path": "/bunkerlabs/admin/recursos/edit/{recurso_id}"
-    },
-    {
-      "methods": [
-        "POST"
-      ],
-      "name": "edit_bunker_recurso",
-      "path": "/bunkerlabs/admin/recursos/edit/{recurso_id}"
-    },
-    {
-      "methods": [
         "GET"
       ],
       "name": "(openapi)",
@@ -1191,14 +1196,14 @@
         "GET"
       ],
       "name": "(openapi)",
-      "path": "/bunkerlabs/recursos"
+      "path": "/bunkerlabs/maquinas/{machine_id}/descargar"
     },
     {
       "methods": [
         "GET"
       ],
-      "name": "bunkerlabs_recursos",
-      "path": "/bunkerlabs/recursos"
+      "name": "bunkerlabs_descargar_page",
+      "path": "/bunkerlabs/maquinas/{machine_id}/descargar"
     },
     {
       "methods": [
@@ -1225,7 +1230,7 @@
       "methods": [
         "GET"
       ],
-      "name": "como_se_crea_page",
+      "name": "info_como_se_crea_una_maquina",
       "path": "/como-se-crea-una-maquina"
     },
     {
@@ -1239,8 +1244,22 @@
       "methods": [
         "GET"
       ],
-      "name": "condiciones_uso_page",
+      "name": "info_condiciones_uso",
       "path": "/condiciones-uso"
+    },
+    {
+      "methods": [
+        "GET"
+      ],
+      "name": "(openapi)",
+      "path": "/confirm-email-change"
+    },
+    {
+      "methods": [
+        "GET"
+      ],
+      "name": "confirm_email_change_page",
+      "path": "/confirm-email-change"
     },
     {
       "methods": [
@@ -1289,7 +1308,7 @@
       "methods": [
         "GET"
       ],
-      "name": "equipo_page",
+      "name": "info_equipo",
       "path": "/equipo"
     },
     {
@@ -1375,6 +1394,13 @@
       "methods": [
         "GET"
       ],
+      "name": "go_externo",
+      "path": "/go/{destino}"
+    },
+    {
+      "methods": [
+        "GET"
+      ],
       "name": "(openapi)",
       "path": "/img/maquina/{machine_id}"
     },
@@ -1410,7 +1436,7 @@
       "methods": [
         "GET"
       ],
-      "name": "instrucciones_uso_page",
+      "name": "info_instrucciones_uso",
       "path": "/instrucciones-uso"
     },
     {
@@ -1445,6 +1471,13 @@
       "methods": [
         "GET"
       ],
+      "name": "manifest",
+      "path": "/manifest.webmanifest"
+    },
+    {
+      "methods": [
+        "GET"
+      ],
       "name": "(openapi)",
       "path": "/maquinas-hechas"
     },
@@ -1468,6 +1501,13 @@
       ],
       "name": "descargar_maquina_page",
       "path": "/maquinas/{machine_id}/descargar"
+    },
+    {
+      "methods": [
+        "GET"
+      ],
+      "name": "offline",
+      "path": "/offline"
     },
     {
       "methods": [
@@ -1508,7 +1548,7 @@
       "methods": [
         "GET"
       ],
-      "name": "politica_cookies_page",
+      "name": "info_politica_cookies",
       "path": "/politica-cookies"
     },
     {
@@ -1522,7 +1562,7 @@
       "methods": [
         "GET"
       ],
-      "name": "politica_privacidad_page",
+      "name": "info_politica_privacidad",
       "path": "/politica-privacidad"
     },
     {
@@ -1600,8 +1640,15 @@
       "methods": [
         "GET"
       ],
-      "name": "soporte_page",
+      "name": "info_soporte",
       "path": "/soporte"
+    },
+    {
+      "methods": [
+        "GET"
+      ],
+      "name": "service_worker",
+      "path": "/sw.js"
     },
     {
       "methods": [
@@ -1614,7 +1661,7 @@
       "methods": [
         "GET"
       ],
-      "name": "terminos_condiciones_page",
+      "name": "info_terminos_condiciones",
       "path": "/terminos-condiciones"
     },
     {

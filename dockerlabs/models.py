@@ -1,7 +1,7 @@
 from .extensions import db
-from datetime import datetime
 from sqlalchemy.orm import deferred
 from sqlalchemy import func
+from dockerlabs.tiempo import utcnow
 
 class User(db.Model):
     __tablename__ = 'users'
@@ -11,7 +11,7 @@ class User(db.Model):
     email = db.Column(db.String(120), unique=True, nullable=False)
     password_hash = db.Column(db.String(255), nullable=False)
     role = db.Column(db.String(20), nullable=False, default='jugador')
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=utcnow)
 
     # Se incrementa al cambiar contraseña, cambiar email o resetear la
     # contraseña vía "olvidé mi contraseña". get_session() la compara contra
@@ -66,8 +66,8 @@ class Certificate(db.Model):
     machine_name = db.Column(db.String(191), nullable=False)
     pdf_path = db.Column(db.String(255), nullable=False)
     image_path = db.Column(db.String(255), nullable=True)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=utcnow)
+    updated_at = db.Column(db.DateTime, default=utcnow, onupdate=utcnow)
 
     user = db.relationship('User', backref=db.backref('certificados', cascade='all, delete-orphan'))
 
@@ -88,7 +88,7 @@ class CertificateRequestLog(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     cert_id = db.Column(db.String(16), nullable=False)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='SET NULL'), nullable=True)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=utcnow)
 
     __table_args__ = (
         db.Index('idx_certificate_request_log_cert_id', 'cert_id'),
@@ -139,7 +139,7 @@ class PageVisitLog(db.Model):
     __tablename__ = 'page_visit_log'
 
     id = db.Column(db.Integer, primary_key=True)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=utcnow)
     visitor = db.Column(db.String(16), nullable=False)
 
     __table_args__ = (
@@ -156,7 +156,7 @@ class OutboundClickLog(db.Model):
     destino = db.Column(db.String(20), nullable=False)      # newsletter | academia
     origen = db.Column(db.String(30), nullable=False)       # footer | home-boton ...
     visitor = db.Column(db.String(16), nullable=False, default='')
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=utcnow)
 
     __table_args__ = (
         db.Index('idx_outbound_click_log_created_at', 'created_at'),
@@ -173,7 +173,7 @@ class MachineDownloadLog(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     machine_id = db.Column(db.Integer, db.ForeignKey('maquinas.id', ondelete='CASCADE'), nullable=False)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=utcnow)
 
     __table_args__ = (
         db.Index('idx_machine_download_log_machine_id', 'machine_id'),
@@ -201,7 +201,7 @@ class Writeup(db.Model):
     autor = db.Column(db.String, nullable=False)
     url = db.Column(db.String(2048), nullable=False)
     tipo = db.Column(db.String, nullable=False)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=utcnow)
 
     __table_args__ = (
         db.Index('idx_writeups_maquina', 'maquina'),
@@ -221,7 +221,7 @@ class PendingWriteup(db.Model):
     autor = db.Column(db.String, nullable=False)
     url = db.Column(db.String(2048), nullable=False)
     tipo = db.Column(db.String, nullable=False)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=utcnow)
 
     def __repr__(self):
         return f'<PendingWriteup {self.maquina} by {self.autor}>'
@@ -245,7 +245,7 @@ class WriteupReport(db.Model):
     writeup_id = db.Column(db.Integer, db.ForeignKey('writeups_subidos.id', ondelete='CASCADE'), nullable=False)
     reporter_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='SET NULL'), nullable=True)
     reason = db.Column(db.Text)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=utcnow)
 
     writeup = db.relationship('Writeup', backref=db.backref('reports', cascade='all, delete-orphan'))
     reporter = db.relationship('User', backref='reported_writeups')
@@ -270,7 +270,7 @@ class Rating(db.Model):
     aprendizaje_score = db.Column(db.Integer)
     recomendaria_score = db.Column(db.Integer)
     diversion_score = db.Column(db.Integer)
-    fecha = db.Column(db.DateTime, default=datetime.utcnow)
+    fecha = db.Column(db.DateTime, default=utcnow)
     __table_args__ = (
         db.UniqueConstraint('usuario_id', 'maquina_nombre', name='idx_puntuaciones_uniq'),
     )
@@ -280,7 +280,7 @@ class CompletedMachine(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='CASCADE'), nullable=False)
     machine_name = db.Column(db.String, nullable=False)
-    completed_at = db.Column(db.DateTime, default=datetime.utcnow)
+    completed_at = db.Column(db.DateTime, default=utcnow)
     __table_args__ = (
         db.UniqueConstraint('user_id', 'machine_name', name='idx_maquinas_hechas_uniq'),
 
@@ -310,7 +310,7 @@ class PendingMachineSubmission(db.Model):
 
     submitted_at = db.Column(
         db.DateTime,
-        default=datetime.utcnow
+        default=utcnow
     )
 
     reviewed_by = db.Column(db.Integer)
@@ -323,7 +323,7 @@ class Notification(db.Model):
     receiver_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='CASCADE'), nullable=True)
     title = db.Column(db.String(200), nullable=False)
     content = db.Column(db.Text, nullable=False)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=utcnow)
     read = db.Column(db.Boolean, default=False)
     notification_type = db.Column(db.String(50), nullable=True)
 
@@ -349,7 +349,7 @@ class NotificationReaction(db.Model):
     notification_id = db.Column(db.Integer, db.ForeignKey('notificaciones.id', ondelete='CASCADE'), nullable=False)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='CASCADE'), nullable=False)
     emoji = db.Column(db.String(10), nullable=False)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=utcnow)
 
     notification = db.relationship('Notification', backref=db.backref('reactions', cascade='all, delete-orphan'))
     user = db.relationship('User', backref='notification_reactions')
@@ -372,7 +372,7 @@ class NotificationRead(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     notification_id = db.Column(db.Integer, db.ForeignKey('notificaciones.id', ondelete='CASCADE'), nullable=False)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='CASCADE'), nullable=False)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=utcnow)
 
     __table_args__ = (
         db.UniqueConstraint('notification_id', 'user_id', name='idx_notif_read_uniq'),
@@ -386,7 +386,7 @@ class SessionConfig(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     secret_key = db.Column(db.String(64), nullable=False)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=utcnow)
 
     @staticmethod
     def get_or_create_secret_key():
@@ -412,7 +412,7 @@ class EmailVerificationToken(db.Model):
     username = db.Column(db.String(32), nullable=False)
     email = db.Column(db.String(120), nullable=False)
     password_hash = db.Column(db.String(256), nullable=False)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=utcnow)
     expires_at = db.Column(db.DateTime, nullable=False)
 
     __table_args__ = (
@@ -430,7 +430,7 @@ class PasswordResetToken(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     token = db.Column(db.String(64), unique=True, nullable=False)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='CASCADE'), nullable=False)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=utcnow)
     expires_at = db.Column(db.DateTime, nullable=False)
     used = db.Column(db.Boolean, default=False)
 
@@ -458,7 +458,7 @@ class EmailChangeToken(db.Model):
     token = db.Column(db.String(64), unique=True, nullable=False)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='CASCADE'), nullable=False)
     new_email = db.Column(db.String(120), nullable=False)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=utcnow)
     expires_at = db.Column(db.DateTime, nullable=False)
     used = db.Column(db.Boolean, default=False)
 
@@ -485,7 +485,7 @@ class WriteupAnalysisResult(db.Model):
     status = db.Column(db.Integer, nullable=True)
     error = db.Column(db.String(200), nullable=True)
     dismissed = db.Column(db.Boolean, default=False, nullable=False)
-    analyzed_at = db.Column(db.DateTime, default=datetime.utcnow)
+    analyzed_at = db.Column(db.DateTime, default=utcnow)
 
     __table_args__ = (
         db.Index('idx_analysis_writeup_id', 'writeup_id'),
@@ -513,7 +513,7 @@ class ApiToken(db.Model):
     # Fragmento no sensible (p.ej. "dlab_ab12cd34") para reconocer el token
     # en la UI sin poder reconstruirlo a partir de él.
     token_prefix = db.Column(db.String(16), nullable=False)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=utcnow)
     last_used_at = db.Column(db.DateTime, nullable=True)
     revoked_at = db.Column(db.DateTime, nullable=True)
 
