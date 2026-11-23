@@ -1,466 +1,273 @@
 {% extends "dockerlabs/base.html" %}
 
-{% block extra_css %}
-<link rel="stylesheet" href="{{ static_v('dockerlabs/css/gestion_maquinas.css') }}"
-      media="print" onload="this.media='all'">
-<noscript><link rel="stylesheet" href="{{ static_v('dockerlabs/css/gestion_maquinas.css') }}"></noscript>
-{% endblock %}
-
 {% block title %}Gestión de Máquinas - DockerLabs{% endblock %}
 
 {% block extra_head %}
-<!-- Custom CSS for this page -->
+{# Página privada de administración: fuera de los buscadores. #}
+<meta name="robots" content="noindex, nofollow">
 {% endblock %}
 
+{% block extra_css %}
+{# Sin el truco media="print": la hoja es necesaria para pintar el listado y así no hay salto de diseño. #}
+<link rel="stylesheet" href="{{ static_v('dockerlabs/css/gestion_maquinas.css') }}">
+{% endblock %}
+
+{# ───────────────────────── Macros ───────────────────────── #}
+{% macro opciones(lista, actual) %}
+{%- for valor, texto in lista %}<option value="{{ valor }}"{% if valor == actual %} selected{% endif %}>{{ texto }}</option>{% endfor -%}
+{% endmacro %}
+
+{% macro boton_icono(accion, icono, texto, etiqueta, clase='') %}
+<button type="button" class="gm-icono {{ clase }}" data-accion="{{ accion }}"{% if accion in ('stats', 'detalles') %} aria-haspopup="dialog"{% endif %}
+        aria-label="{{ etiqueta }}" title="{{ texto }}">
+    <i class="bi {{ icono }}" aria-hidden="true"></i><span class="gm-icono-txt" aria-hidden="true">{{ texto }}</span>
+</button>
+{% endmacro %}
+
 {% block content %}
-<div class="gestion-maquinas-container">
+{% set es_staff = current_user_role in ('admin', 'moderador') %}
+{% set nombre_plataforma = 'DockerLabs' if plataforma == 'docker' else 'BunkerLabs' %}
+{% set lista_dificultad = [('Muy Fácil', 'Muy fácil'), ('Fácil', 'Fácil'), ('Medio', 'Medio'), ('Difícil', 'Difícil')] %}
+{% set lista_categoria = [('', 'Sin categoría'), ('Hacking Web', 'Web'), ('Bug Bounty', 'Bug Bounty'), ('Hacking CMS', 'CMS'), ('Hacking Infraestructura', 'Infraestructura'), ('Pivoting', 'Pivoting')] %}
+{% set lista_sistema = [('docker', '🐳 Docker'), ('virtualbox', '📦 VirtualBox')] %}
 
-    <!-- Header: Title & Switcher -->
-    <div class="page-header">
-        <h2 class="page-title">Gestión de Máquinas</h2>
+<main id="contenido" class="gm" aria-labelledby="gm-titulo">
 
-        <div class="header-actions">
-            <div class="search-box">
-                <i class="bi bi-search"></i>
-                <input type="text" id="searchInput" placeholder="Buscar máquinas..." value="{{ search }}">
+    <div class="gm-cabecera">
+        <div>
+            <h2 id="gm-titulo" class="gm-titulo">Gestión de Máquinas</h2>
+            <p class="gm-subtitulo">{{ 'Todas las máquinas de la plataforma.' if es_staff else 'Tus máquinas publicadas.' }}</p>
+        </div>
+
+        {# Cada plataforma es una vista propia (enlace): funciona con el botón «atrás», se puede compartir y solo se pinta la que se usa #}
+        <nav class="gm-plataformas" aria-label="Plataforma">
+            <a href="{{ listado_url(plataforma='docker', page=1) }}" class="gm-tab{% if plataforma == 'docker' %} is-activa{% endif %}"{% if plataforma == 'docker' %} aria-current="page"{% endif %}>
+                <i class="bi bi-box-seam" aria-hidden="true"></i> DockerLabs <span class="gm-contador" data-contador="docker">{{ docker_total }}</span>
+            </a>
+            <a href="{{ listado_url(plataforma='bunker', page=1) }}" class="gm-tab gm-tab--bunker{% if plataforma == 'bunker' %} is-activa{% endif %}"{% if plataforma == 'bunker' %} aria-current="page"{% endif %}>
+                <i class="bi bi-shield-lock" aria-hidden="true"></i> BunkerLabs <span class="gm-contador" data-contador="bunker">{{ bunker_total }}</span>
+            </a>
+        </nav>
+    </div>
+
+    {# La búsqueda se envía con el botón o con Intro: ya no recarga la página al teclear #}
+    <form class="gm-busqueda" role="search" method="get" action="/gestion-maquinas" aria-label="Buscar máquinas">
+        <input type="hidden" name="plataforma" value="{{ plataforma }}">
+        {% if per_page != 20 %}<input type="hidden" name="per_page" value="{{ per_page }}">{% endif %}
+        <div class="gm-campo gm-campo--buscar">
+            <label for="gm-buscar">Buscar</label>
+            <div class="gm-buscar-caja">
+                <i class="bi bi-search" aria-hidden="true"></i>
+                <input type="search" id="gm-buscar" name="search" class="gm-input" value="{{ search }}" maxlength="100"
+                       placeholder="Nombre, autor o dificultad" autocomplete="off" enterkeyhint="search">
             </div>
-            <div class="platform-switcher">
-                <button type="button" id="btn-docker" class="platform-btn active" onclick="mostrarPanelMaquinas('docker')">
-                    <i class="bi bi-box-seam"></i> DockerLabs
-                </button>
-                <button type="button" id="btn-bunker" class="platform-btn" onclick="mostrarPanelMaquinas('bunker')">
-                    <i class="bi bi-shield-lock"></i> BunkerLabs
-                </button>
+        </div>
+        <div class="gm-campo">
+            <label for="gm-dificultad">Dificultad</label>
+            <select id="gm-dificultad" name="dificultad" class="gm-select">
+                <option value="">Todas</option>
+                {{ opciones(lista_dificultad, dificultad) }}
+            </select>
+        </div>
+        <div class="gm-busqueda-acciones">
+            <button type="submit" class="gm-btn gm-btn--primario"><i class="bi bi-search" aria-hidden="true"></i> Buscar</button>
+            {% if search or dificultad %}
+            <a href="{{ listado_url(search='', dificultad='', page=1) }}" class="gm-btn"><i class="bi bi-x-lg" aria-hidden="true"></i> Limpiar</a>
+            {% endif %}
+        </div>
+    </form>
+
+    <p class="gm-resumen" id="gm-resumen" data-inicio="{{ inicio }}" data-fin="{{ fin }}" data-total="{{ total }}">
+        {% if total %}Mostrando <strong>{{ inicio }}–{{ fin }}</strong> de <strong>{{ total }}</strong> {{ 'máquina' if total == 1 else 'máquinas' }} de {{ nombre_plataforma }}{% if search %} para «{{ search }}»{% endif %}{% if dificultad %} · {{ dificultad }}{% endif %}
+        {% else %}Sin resultados en {{ nombre_plataforma }}{% if search %} para «{{ search }}»{% endif %}{% if dificultad %} con dificultad «{{ dificultad }}»{% endif %}.{% endif %}
+    </p>
+
+    {% if not maquinas %}
+    <div class="gm-vacio">
+        <i class="bi bi-inbox" aria-hidden="true"></i>
+        <p>{% if search or dificultad %}Ninguna máquina coincide con los filtros.{% else %}Todavía no hay máquinas registradas en {{ nombre_plataforma }}.{% endif %}</p>
+        {% if search or dificultad %}<a href="{{ listado_url(search='', dificultad='', page=1) }}" class="gm-btn gm-btn--primario">Quitar filtros</a>{% endif %}
+    </div>
+    {% else %}
+
+    <div class="gm-tabla-caja">
+        <table class="gm-tabla" id="gm-tabla" data-origen="{{ plataforma }}">
+            <caption class="gm-oculto">Máquinas de {{ nombre_plataforma }}, página {{ page }} de {{ total_pages }}. Cada fila se guarda con su botón «Guardar».</caption>
+            <thead>
+                <tr>
+                    <th scope="col">Máquina</th>
+                    <th scope="col">Dificultad</th>
+                    <th scope="col">Autor</th>
+                    {% if plataforma == 'docker' %}
+                    <th scope="col">Categoría</th>
+                    <th scope="col">Sistema</th>
+                    {% else %}
+                    <th scope="col">Invitados</th>
+                    {% endif %}
+                    <th scope="col"><span class="gm-oculto">Acciones</span></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for m in maquinas %}
+                <tr data-id="{{ m.id }}" data-nombre="{{ m.nombre }}">
+                    <td class="gm-c-maquina" data-label="Máquina">
+                        <div class="gm-maquina">
+                            <div class="gm-logo">
+                                {% if m.logo_path %}
+                                <img src="/img/maquina/{{ m.id }}?s=96&amp;v={{ m.logo_path.rsplit('/', 1)[-1] }}" alt="Logo de {{ m.nombre }}"
+                                     width="44" height="44" loading="lazy" decoding="async" class="gm-logo-img">
+                                {% elif m.imagen %}
+                                <img src="/img/maquina/{{ m.id }}" alt="Logo de {{ m.nombre }}"
+                                     width="44" height="44" loading="lazy" decoding="async" class="gm-logo-img">
+                                {% else %}
+                                <span class="gm-logo-img gm-logo-vacio" role="img" aria-label="Sin logo">?</span>
+                                {% endif %}
+                                <label class="gm-subir" title="Subir logo (máx. 2 MB)">
+                                    <i class="bi bi-upload" aria-hidden="true"></i>
+                                    <span class="gm-oculto">Subir logo de {{ m.nombre }}</span>
+                                    <input type="file" class="gm-oculto" accept="image/png,image/jpeg,image/webp,image/gif,image/avif" data-accion="logo">
+                                </label>
+                            </div>
+                            <div class="gm-nombre">
+                                <input type="text" name="nombre" class="gm-input" value="{{ m.nombre }}" maxlength="100" required
+                                       autocomplete="off" aria-label="Nombre de la máquina {{ m.nombre }}">
+                                <span class="gm-pendiente" hidden>Sin guardar</span>
+                            </div>
+                        </div>
+                    </td>
+                    <td data-label="Dificultad">
+                        <select name="dificultad" class="gm-select" aria-label="Dificultad de {{ m.nombre }}">
+                            {{ opciones(lista_dificultad, m.dificultad) }}
+                        </select>
+                    </td>
+                    <td data-label="Autor"><span class="gm-autor">{{ m.autor }}</span></td>
+                    {% if plataforma == 'docker' %}
+                    <td data-label="Categoría">
+                        <select name="categoria" class="gm-select" aria-label="Categoría de {{ m.nombre }}">
+                            {{ opciones(lista_categoria, categorias.get(m.id, '')) }}
+                        </select>
+                    </td>
+                    <td data-label="Sistema">
+                        <select name="sistema_operativo" class="gm-select" aria-label="Sistema operativo de {{ m.nombre }}">
+                            {{ opciones(lista_sistema, m.sistema_operativo or 'docker') }}
+                        </select>
+                    </td>
+                    {% else %}
+                    <td data-label="Invitados">
+                        {% if es_staff %}
+                        <button type="button" class="gm-interruptor" role="switch" data-accion="invitados"
+                                aria-checked="{{ 'true' if m.guest_access else 'false' }}"
+                                aria-label="Acceso de invitados a {{ m.nombre }}">
+                            <span class="gm-interruptor-pista" aria-hidden="true"><span class="gm-interruptor-bola"></span></span>
+                            <span class="gm-interruptor-txt">{{ 'Permitido' if m.guest_access else 'Bloqueado' }}</span>
+                        </button>
+                        {% else %}
+                        <span class="gm-autor">{{ 'Permitido' if m.guest_access else 'Bloqueado' }}</span>
+                        {% endif %}
+                    </td>
+                    {% endif %}
+                    <td class="gm-c-acciones" data-label="Acciones">
+                        <div class="gm-acciones" role="group" aria-label="Acciones de {{ m.nombre }}">
+                            {{ boton_icono('stats', 'bi-bar-chart-line', 'Estadísticas', 'Estadísticas de ' ~ m.nombre) }}
+                            {{ boton_icono('detalles', 'bi-pencil', 'Editar detalles', 'Editar detalles de ' ~ m.nombre) }}
+                            {{ boton_icono('guardar', 'bi-check-lg', 'Guardar', 'Guardar cambios de ' ~ m.nombre, 'gm-icono--guardar') }}
+                            {% if es_staff %}{{ boton_icono('eliminar', 'bi-trash', 'Eliminar', 'Eliminar ' ~ m.nombre, 'gm-icono--peligro') }}{% endif %}
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    {% if total_pages > 1 %}
+    <nav class="gm-paginacion" aria-label="Paginación del listado">
+        <ul>
+            {% if page > 1 %}
+            <li><a href="{{ listado_url(page=page - 1) }}" rel="prev" class="gm-pag" aria-label="Página anterior"><i class="bi bi-chevron-left" aria-hidden="true"></i><span>Anterior</span></a></li>
+            {% endif %}
+            {% for p in paginas %}
+            {% if p is none %}
+            <li class="gm-pag-puntos" aria-hidden="true">…</li>
+            {% else %}
+            <li><a href="{{ listado_url(page=p) }}" class="gm-pag gm-pag--num{% if p == page %} is-actual{% endif %}"
+                   aria-label="Página {{ p }}"{% if p == page %} aria-current="page"{% endif %}>{{ p }}</a></li>
+            {% endif %}
+            {% endfor %}
+            {% if page < total_pages %}
+            <li><a href="{{ listado_url(page=page + 1) }}" rel="next" class="gm-pag" aria-label="Página siguiente"><span>Siguiente</span><i class="bi bi-chevron-right" aria-hidden="true"></i></a></li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+
+    {% endif %}
+</main>
+
+{# Datos que no se editan en la tabla: un único JSON en lugar de cientos de inputs ocultos #}
+<script type="application/json" id="gm-datos">{{ datos | tojson }}</script>
+
+{# ───────────────────────── Diálogos (nativos <dialog>: foco atrapado, Esc y fondo inerte gratis) ───────────────────────── #}
+<dialog id="dlg-stats" class="gm-dialogo" aria-labelledby="dlg-stats-titulo">
+    <div class="gm-dialogo-caja">
+        <div class="gm-dialogo-cab">
+            <div>
+                <h3 id="dlg-stats-titulo">Estadísticas</h3>
+                <p id="dlg-stats-sub" class="gm-dialogo-sub"></p>
+            </div>
+            <form method="dialog"><button class="gm-cerrar" aria-label="Cerrar estadísticas"><i class="bi bi-x-lg" aria-hidden="true"></i></button></form>
+        </div>
+        <div id="dlg-stats-cuerpo" class="gm-stats" aria-live="polite"></div>
+    </div>
+</dialog>
+
+<dialog id="dlg-detalles" class="gm-dialogo" aria-labelledby="dlg-detalles-titulo">
+    <div class="gm-dialogo-caja">
+        <div class="gm-dialogo-cab">
+            <div>
+                <h3 id="dlg-detalles-titulo">Detalles</h3>
+                <p id="dlg-detalles-sub" class="gm-dialogo-sub"></p>
+            </div>
+            <form method="dialog"><button class="gm-cerrar" aria-label="Cerrar sin guardar"><i class="bi bi-x-lg" aria-hidden="true"></i></button></form>
+        </div>
+        <div class="gm-detalles">
+            <label for="det-enlace">Enlace del autor <small>(opcional)</small></label>
+            <input type="url" id="det-enlace" class="gm-input" placeholder="https://…" inputmode="url" autocomplete="off">
+
+            <label for="det-descripcion">Descripción</label>
+            <textarea id="det-descripcion" class="gm-input" rows="6"></textarea>
+
+            <label for="det-link">Link de descarga</label>
+            <input type="url" id="det-link" class="gm-input" placeholder="https://…" inputmode="url" autocomplete="off" required>
+
+            <p id="det-error" class="gm-error" role="alert" hidden></p>
+
+            <div class="gm-dialogo-pie">
+                <button type="button" class="gm-btn" data-cerrar="dlg-detalles">Cancelar</button>
+                <button type="button" class="gm-btn gm-btn--primario" id="det-guardar">Guardar y aplicar</button>
             </div>
         </div>
     </div>
+</dialog>
 
-    <!-- PANEL DOCKER -->
-    <div id="panel-docker" class="platform-panel">
-
-        {% if maquinas_docker|length == 0 %}
-        <div class="alert alert-info">No hay máquinas registradas en DockerLabs.</div>
-        {% else %}
-
-        <div class="table-card">
-            <div class="table-responsive">
-                <table class="custom-table" id="tablaDocker">
-                    <caption class="visually-hidden">Máquinas registradas en DockerLabs</caption>
-                    <thead>
-                        <tr>
-                            <th scope="col">
-                                <button type="button" class="th-filter-toggle" onclick="toggleFilters('tablaDocker')"
-                                    aria-label="Mostrar/ocultar filtro por nombre">Nombre <i class="bi bi-caret-down-fill" aria-hidden="true"></i></button>
-                            </th>
-                            <th scope="col">
-                                <button type="button" class="th-filter-toggle" onclick="toggleFilters('tablaDocker')"
-                                    aria-label="Mostrar/ocultar filtro por dificultad">Dificultad <i class="bi bi-caret-down-fill" aria-hidden="true"></i></button>
-                            </th>
-                            <th scope="col">
-                                <button type="button" class="th-filter-toggle" onclick="toggleFilters('tablaDocker')"
-                                    aria-label="Mostrar/ocultar filtro por autor">Autor <i class="bi bi-caret-down-fill" aria-hidden="true"></i></button>
-                            </th>
-                            <th scope="col">Imagen</th>
-                            <th scope="col">Categoría</th>
-                            <th scope="col">Plataforma</th>
-                            <th scope="col" style="width: 130px;">Acciones</th>
-                        </tr>
-                        <!-- Filter Row -->
-                        <tr class="filter-row" style="display: none;">
-                            <th><label class="visually-hidden" for="filterNombreDocker">Filtrar por nombre</label>
-                                <input type="text" id="filterNombreDocker" class="filter-input column-filter" data-column="nombre"
-                                    data-table="tablaDocker" placeholder="Buscar..."></th>
-                            <th><label class="visually-hidden" for="filterDificultadDocker">Filtrar por dificultad</label>
-                                <select id="filterDificultadDocker" class="filter-input column-filter" data-column="dificultad"
-                                    data-table="tablaDocker">
-                                    <option value="">Todas</option>
-                                    <option value="muy fácil">Muy Fácil</option>
-                                    <option value="fácil">Fácil</option>
-                                    <option value="medio">Medio</option>
-                                    <option value="difícil">Difícil</option>
-                                </select>
-                            </th>
-                            <th><label class="visually-hidden" for="filterAutorDocker">Filtrar por autor</label>
-                                <input type="text" id="filterAutorDocker" class="filter-input column-filter" data-column="autor"
-                                    data-table="tablaDocker" placeholder="Autor..."></th>
-                            <th colspan="4"></th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for m in maquinas_docker %}
-                        <tr>
-                            <td>
-                                <form method="post" action="{{ url_for('maquinas.actualizar_maquina') }}"
-                                    class="d-contents">
-                                    <input type="hidden" name="csrf_token" value="{{ csrf_token_value }}">
-                                    <input type="hidden" name="origen" value="docker">
-                                    <input type="hidden" name="id" value="{{ m.id }}">
-                                    <input type="hidden" name="fecha" value="{{ m.fecha }}">
-                                    <input type="hidden" name="enlace_autor" value="{{ m.enlace_autor }}">
-                                    <textarea name="descripcion" class="d-none">{{ m.descripcion }}</textarea>
-                                    <input type="hidden" name="link_descarga" value="{{ m.link_descarga }}">
-
-                                    <button type="button" class="machine-name-link"
-                                        data-machine-id="{{ m.id }}" data-machine-name="{{ m.nombre }}"
-                                        aria-haspopup="dialog" title="Ver estadísticas de esta máquina">
-                                        <i class="bi bi-bar-chart-line-fill" aria-hidden="true"></i>
-                                        <span>{{ m.nombre }}</span>
-                                    </button>
-                                    <input type="text" name="nombre" value="{{ m.nombre }}" class="input-minimal"
-                                        placeholder="Nombre" aria-label="Editar nombre de {{ m.nombre }}">
-                            </td>
-                            <td>
-                                <select name="dificultad" class="select-minimal">
-                                    <option value="Muy Fácil" {% if m.dificultad=='Muy Fácil' %}selected{% endif %}>Muy
-                                        Fácil</option>
-                                    <option value="Fácil" {% if m.dificultad=='Fácil' %}selected{% endif %}>Fácil
-                                    </option>
-                                    <option value="Medio" {% if m.dificultad=='Medio' %}selected{% endif %}>Medio
-                                    </option>
-                                    <option value="Difícil" {% if m.dificultad=='Difícil' %}selected{% endif %}>Difícil
-                                    </option>
-                                </select>
-                            </td>
-                            <td>
-                                <input type="text" name="autor" value="{{ m.autor }}" class="input-minimal" readonly
-                                    style="opacity: 0.7; cursor: not-allowed;">
-                            </td>
-                            <td style="min-width: 180px;">
-                                <input type="hidden" name="imagen" value="{{ m.imagen }}"
-                                    class="imagen-field-{{ m.id }}">
-                                <div class="logo-upload-wrapper">
-                                    {% if m.imagen %}
-                                    <img src="{{ url_for('maquinas.serve_machine_logo', machine_id=m.id) }}" id="preview-docker-{{ m.id }}"
-                                        class="logo-preview">
-                                    {% else %}
-                                    <img src="" id="preview-docker-{{ m.id }}" class="logo-preview"
-                                        style="display:none"> <!-- Placeholder logic could be improved -->
-                                    <div id="placeholder-docker-{{ m.id }}" class="logo-preview"
-                                        style="display: flex; align-items: center; justify-content: center; color: #666;">
-                                        ?</div>
-                                    {% endif %}
-
-                                    <label class="btn-upload-icon" title="Subir logo">
-                                        <i class="bi bi-upload" aria-hidden="true"></i>
-                                        <span class="visually-hidden">Subir logo de {{ m.nombre }}</span>
-                                        <input type="file" id="logo-input-docker-{{ m.id }}" class="d-none"
-                                            accept="image/*" onchange="uploadMachineLogo({{ m.id }}, 'docker')">
-                                    </label>
-                                    <small class="text-muted d-none" id="filename-docker-{{ m.id }}"></small>
-                                </div>
-                            </td>
-                            <td>
-                                <select name="categoria" class="select-minimal">
-                                    <option value="" {% if categorias_map.get(('docker', m.id))=='' %}selected{% endif
-                                        %}>-</option>
-                                    <option value="Hacking Web" {% if categorias_map.get(('docker',
-                                        m.id))=='Hacking Web' %}selected{% endif %}>Web</option>
-                                    <option value="Bug Bounty" {% if categorias_map.get(('docker', m.id))=='Bug Bounty'
-                                        %}selected{% endif %}>Bug Bounty</option>
-                                    <option value="Hacking CMS" {% if categorias_map.get(('docker',
-                                        m.id))=='Hacking CMS' %}selected{% endif %}>CMS</option>
-                                    <option value="Hacking Infraestructura" {% if categorias_map.get(('docker',
-                                        m.id))=='Hacking Infraestructura' %}selected{% endif %}>Infra</option>
-                                    <option value="Pivoting" {% if categorias_map.get(('docker', m.id))=='Pivoting'
-                                        %}selected{% endif %}>Pivoting</option>
-                                </select>
-                            </td>
-                            <td>
-                                <select name="sistema_operativo" class="select-minimal">
-                                    <option value="linux" {% if m.sistema_operativo=='linux' or not m.sistema_operativo %}selected{% endif %}>🐧 Linux</option>
-                                    <option value="windows" {% if m.sistema_operativo=='windows' %}selected{% endif %}>🪟 Windows</option>
-                                    <option value="movil" {% if m.sistema_operativo=='movil' %}selected{% endif %}>📱 Móvil</option>
-                                </select>
-                            </td>
-                            <td>
-                                <div class="d-flex gap-2">
-                                    <button type="button" class="btn-action details" title="Ver/editar detalles"
-                                        aria-label="Ver y editar detalles de {{ m.nombre }}" aria-haspopup="dialog"
-                                        onclick="openMachineDetailsModal(this)">
-                                        <i class="bi bi-card-text" aria-hidden="true"></i>
-                                    </button>
-                                    <button type="submit" class="btn-action save" title="Guardar cambios"
-                                        aria-label="Guardar cambios de {{ m.nombre }}">
-                                        <i class="bi bi-check-lg" aria-hidden="true"></i>
-                                    </button>
-                                    </form>
-                                    <form method="post" action="{{ url_for('maquinas.eliminar_maquina') }}"
-                                        onsubmit="return confirm('¿Seguro que quieres eliminar esta máquina?');"
-                                        class="d-contents">
-                                        <input type="hidden" name="csrf_token" value="{{ csrf_token_value }}">
-                                        <input type="hidden" name="origen" value="docker">
-                                        <input type="hidden" name="id" value="{{ m.id }}">
-                                        <button type="submit" class="btn-action delete" title="Eliminar máquina"
-                                            aria-label="Eliminar {{ m.nombre }}">
-                                            <i class="bi bi-trash" aria-hidden="true"></i>
-                                        </button>
-                                    </form>
-                                </div>
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
+<dialog id="dlg-confirmar" class="gm-dialogo gm-dialogo--chico" role="alertdialog" aria-labelledby="dlg-conf-titulo" aria-describedby="dlg-conf-texto">
+    <form method="dialog" class="gm-dialogo-caja">
+        <h3 id="dlg-conf-titulo">¿Seguro?</h3>
+        <p id="dlg-conf-texto" class="gm-dialogo-texto"></p>
+        <div class="gm-dialogo-pie">
+            <button value="cancelar" class="gm-btn" autofocus>Cancelar</button>
+            <button value="ok" class="gm-btn gm-btn--primario" id="dlg-conf-ok">Confirmar</button>
         </div>
+    </form>
+</dialog>
 
-        <!-- Paginación Docker -->
-        {% if docker_pages > 1 %}
-        <div class="pagination-container">
-            <div class="pagination-info">
-                Mostrando página {{ page }} de {{ docker_pages }} ({{ docker_total }} máquinas)
-            </div>
-            <div class="pagination-controls">
-                {% if docker_has_prev %}
-                <a href="?page={{ page - 1 }}&search={{ search }}" class="pagination-btn">
-                    <i class="bi bi-chevron-left"></i> Anterior
-                </a>
-                {% endif %}
-                
-                <span class="pagination-current">Página {{ page }}</span>
-                
-                {% if docker_has_next %}
-                <a href="?page={{ page + 1 }}&search={{ search }}" class="pagination-btn">
-                    Siguiente <i class="bi bi-chevron-right"></i>
-                </a>
-                {% endif %}
-            </div>
-        </div>
-        {% endif %}
-        {% endif %}
-    </div>
-
-    <!-- PANEL BUNKER -->
-    <div id="panel-bunker" class="platform-panel" style="display: none;">
-
-        {% if maquinas_bunker|length == 0 %}
-        <div class="alert alert-info">No hay máquinas registradas en BunkerLabs.</div>
-        {% else %}
-
-        <div class="table-card">
-            <div class="table-responsive">
-                <table class="custom-table" id="tablaBunker">
-                    <caption class="visually-hidden">Máquinas registradas en BunkerLabs</caption>
-                    <thead>
-                        <tr>
-                            <th scope="col">
-                                <button type="button" class="th-filter-toggle" onclick="toggleFilters('tablaBunker')"
-                                    aria-label="Mostrar/ocultar filtro por nombre">Nombre <i class="bi bi-caret-down-fill" aria-hidden="true"></i></button>
-                            </th>
-                            <th scope="col">
-                                <button type="button" class="th-filter-toggle" onclick="toggleFilters('tablaBunker')"
-                                    aria-label="Mostrar/ocultar filtro por dificultad">Dificultad <i class="bi bi-caret-down-fill" aria-hidden="true"></i></button>
-                            </th>
-                            <th scope="col">
-                                <button type="button" class="th-filter-toggle" onclick="toggleFilters('tablaBunker')"
-                                    aria-label="Mostrar/ocultar filtro por autor">Autor <i class="bi bi-caret-down-fill" aria-hidden="true"></i></button>
-                            </th>
-                            <th scope="col">Imagen</th>
-                            <th scope="col" style="width: 50px;">Guest</th>
-                            <th scope="col" style="width: 130px;">Acciones</th>
-                        </tr>
-                        <!-- Filter Row -->
-                        <tr class="filter-row" style="display: none;">
-                            <th><label class="visually-hidden" for="filterNombreBunker">Filtrar por nombre</label>
-                                <input type="text" id="filterNombreBunker" class="filter-input column-filter" data-column="nombre"
-                                    data-table="tablaBunker" placeholder="Buscar..."></th>
-                            <th><label class="visually-hidden" for="filterDificultadBunker">Filtrar por dificultad</label>
-                                <select id="filterDificultadBunker" class="filter-input column-filter" data-column="dificultad"
-                                    data-table="tablaBunker">
-                                    <option value="">Todas</option>
-                                    <option value="muy fácil">Muy Fácil</option>
-                                    <option value="fácil">Fácil</option>
-                                    <option value="medio">Medio</option>
-                                    <option value="difícil">Difícil</option>
-                                </select>
-                            </th>
-                            <th><label class="visually-hidden" for="filterAutorBunker">Filtrar por autor</label>
-                                <input type="text" id="filterAutorBunker" class="filter-input column-filter" data-column="autor"
-                                    data-table="tablaBunker" placeholder="Autor..."></th>
-                            <th colspan="3"></th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for m in maquinas_bunker %}
-                        <tr>
-                            <td>
-                                <form method="post" action="{{ url_for('maquinas.actualizar_maquina') }}"
-                                    class="d-contents">
-                                    <input type="hidden" name="csrf_token" value="{{ csrf_token_value }}">
-                                    <input type="hidden" name="origen" value="bunker">
-                                    <input type="hidden" name="id" value="{{ m.id }}">
-                                    <input type="hidden" name="fecha" value="{{ m.fecha }}">
-                                    <input type="hidden" name="enlace_autor" value="{{ m.enlace_autor }}">
-                                    <textarea name="descripcion" class="d-none">{{ m.descripcion }}</textarea>
-                                    <input type="hidden" name="link_descarga" value="{{ m.link_descarga }}">
-
-                                    <button type="button" class="machine-name-link"
-                                        data-machine-id="{{ m.id }}" data-machine-name="{{ m.nombre }}"
-                                        aria-haspopup="dialog" title="Ver estadísticas de esta máquina">
-                                        <i class="bi bi-bar-chart-line-fill" aria-hidden="true"></i>
-                                        <span>{{ m.nombre }}</span>
-                                    </button>
-                                    <input type="text" name="nombre" value="{{ m.nombre }}" class="input-minimal"
-                                        placeholder="Nombre" aria-label="Editar nombre de {{ m.nombre }}">
-                            </td>
-                            <td>
-                                <select name="dificultad" class="select-minimal">
-                                    <option value="Muy Fácil" {% if m.dificultad=='Muy Fácil' %}selected{% endif %}>Muy
-                                        Fácil</option>
-                                    <option value="Fácil" {% if m.dificultad=='Fácil' %}selected{% endif %}>Fácil
-                                    </option>
-                                    <option value="Medio" {% if m.dificultad=='Medio' %}selected{% endif %}>Medio
-                                    </option>
-                                    <option value="Difícil" {% if m.dificultad=='Difícil' %}selected{% endif %}>Difícil
-                                    </option>
-                                </select>
-                            </td>
-                            <td>
-                                <input type="text" name="autor" value="{{ m.autor }}" class="input-minimal" readonly
-                                    style="opacity: 0.7; cursor: not-allowed;">
-                            </td>
-                            <td style="min-width: 180px;">
-                                <input type="hidden" name="imagen" value="{{ m.imagen }}"
-                                    class="imagen-field-{{ m.id }}">
-                                <div class="logo-upload-wrapper">
-                                    {% if m.imagen %}
-                                    <img src="{{ url_for('maquinas.serve_machine_logo', machine_id=m.id) }}" id="preview-bunker-{{ m.id }}"
-                                        class="logo-preview">
-                                    {% else %}
-                                    <img src="" id="preview-bunker-{{ m.id }}" class="logo-preview"
-                                        style="display:none">
-                                    <div id="placeholder-bunker-{{ m.id }}" class="logo-preview"
-                                        style="display: flex; align-items: center; justify-content: center; color: #666;">
-                                        ?</div>
-                                    {% endif %}
-
-                                    <label class="btn-upload-icon" title="Subir logo">
-                                        <i class="bi bi-upload" aria-hidden="true"></i>
-                                        <span class="visually-hidden">Subir logo de {{ m.nombre }}</span>
-                                        <input type="file" id="logo-input-bunker-{{ m.id }}" class="d-none"
-                                            accept="image/*" onchange="uploadMachineLogo({{ m.id }}, 'bunker')">
-                                    </label>
-                                    <small class="text-muted d-none" id="filename-bunker-{{ m.id }}"></small>
-                                </div>
-                            </td>
-                            <td class="text-center">
-                                <button type="button" class="btn-action guest-toggle"
-                                    onclick="toggleGuestAccess({{ m.id }}, this)"
-                                    data-active="{{ 'true' if m.guest_access else 'false' }}"
-                                    title="{{ 'Acceso permitido a invitados' if m.guest_access else 'Acceso bloqueado a invitados' }}"
-                                    aria-label="{{ 'Acceso permitido a invitados para ' + m.nombre if m.guest_access else 'Acceso bloqueado a invitados para ' + m.nombre }}">
-                                    {% if m.guest_access %}
-                                    <i class="bi bi-unlock-fill text-success" aria-hidden="true"></i>
-                                    {% else %}
-                                    <i class="bi bi-lock-fill text-danger" aria-hidden="true"></i>
-                                    {% endif %}
-                                </button>
-                            </td>
-                            <td>
-                                <div class="d-flex gap-2">
-                                    <button type="button" class="btn-action details" title="Ver/editar detalles"
-                                        aria-label="Ver y editar detalles de {{ m.nombre }}" aria-haspopup="dialog"
-                                        onclick="openMachineDetailsModal(this)">
-                                        <i class="bi bi-card-text" aria-hidden="true"></i>
-                                    </button>
-                                    <button type="submit" class="btn-action save" title="Guardar cambios"
-                                        aria-label="Guardar cambios de {{ m.nombre }}">
-                                        <i class="bi bi-check-lg" aria-hidden="true"></i>
-                                    </button>
-                                    </form>
-                                    <form method="post" action="{{ url_for('maquinas.eliminar_maquina') }}"
-                                        onsubmit="return confirm('¿Seguro que quieres eliminar esta máquina?');"
-                                        class="d-contents">
-                                        <input type="hidden" name="csrf_token" value="{{ csrf_token_value }}">
-                                        <input type="hidden" name="origen" value="bunker">
-                                        <input type="hidden" name="id" value="{{ m.id }}">
-                                        <button type="submit" class="btn-action delete" title="Eliminar máquina"
-                                            aria-label="Eliminar {{ m.nombre }}">
-                                            <i class="bi bi-trash" aria-hidden="true"></i>
-                                        </button>
-                                    </form>
-                                </div>
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-        </div>
-        
-        <!-- Paginación Bunker -->
-        {% if bunker_pages > 1 %}
-        <div class="pagination-container">
-            <div class="pagination-info">
-                Mostrando página {{ page }} de {{ bunker_pages }} ({{ bunker_total }} máquinas)
-            </div>
-            <div class="pagination-controls">
-                {% if bunker_has_prev %}
-                <a href="?page={{ page - 1 }}&search={{ search }}" class="pagination-btn">
-                    <i class="bi bi-chevron-left"></i> Anterior
-                </a>
-                {% endif %}
-                
-                <span class="pagination-current">Página {{ page }}</span>
-                
-                {% if bunker_has_next %}
-                <a href="?page={{ page + 1 }}&search={{ search }}" class="pagination-btn">
-                    Siguiente <i class="bi bi-chevron-right"></i>
-                </a>
-                {% endif %}
-            </div>
-        </div>
-        {% endif %}
-        {% endif %}
-    </div>
-</div>
-
-<!-- Modal: estadisticas de maquina (writeups, descargas, valoracion) -->
-<div id="machineStatsModal" class="overlay" role="dialog" aria-modal="true" aria-labelledby="machineStatsModalTitle">
-    <div class="popup" style="width: min(420px, 92vw);">
-        <button class="modal-close-button" type="button" onclick="closeModal('machineStatsModal')"
-            aria-label="Cerrar estadísticas">&times;</button>
-        <div class="modal-header">
-            <h2 class="modal-title" id="machineStatsModalTitle">Estadísticas</h2>
-            <div class="modal-subtitle" id="machineStatsModalSubtitle"></div>
-        </div>
-        <div id="machineStatsModalBody" class="machine-stats-body" aria-live="polite">
-            <div class="machine-stats-loading">Cargando...</div>
-        </div>
-    </div>
-</div>
-
-<!-- Modal: detalles largos de la maquina (enlace autor, descripcion, link
-     descarga). Estos campos siguen viviendo como inputs ocultos dentro del
-     form de la fila (ver arriba); este modal solo los edita y, al guardar,
-     dispara el submit normal de esa misma fila. -->
-<div id="machineDetailsModal" class="overlay" role="dialog" aria-modal="true" aria-labelledby="machineDetailsModalTitle">
-    <div class="popup" style="width: min(560px, 92vw);">
-        <button class="modal-close-button" type="button" onclick="closeMachineDetailsModal()"
-            aria-label="Cerrar sin guardar">&times;</button>
-        <div class="modal-header">
-            <h2 class="modal-title" id="machineDetailsModalTitle">Detalles</h2>
-            <div class="modal-subtitle" id="machineDetailsModalSubtitle"></div>
-        </div>
-        <div class="machine-details-body">
-            <label for="detailsEnlaceAutor">Enlace del autor</label>
-            <input type="text" id="detailsEnlaceAutor" class="input-minimal" placeholder="https://...">
-
-            <label for="detailsDescripcion">Descripción</label>
-            <textarea id="detailsDescripcion" class="input-minimal" rows="6"></textarea>
-
-            <label for="detailsLinkDescarga">Link de descarga</label>
-            <input type="text" id="detailsLinkDescarga" class="input-minimal" placeholder="https://...">
-
-            <div class="machine-details-actions">
-                <button type="button" class="btn-secondary" onclick="closeMachineDetailsModal()">Cancelar</button>
-                <button type="button" class="btn-primary" onclick="saveMachineDetailsModal()">Guardar y aplicar</button>
-            </div>
-        </div>
-    </div>
+{# Avisos: «polite» para lo correcto y «alert» para los errores, de modo que los lectores de pantalla los anuncian #}
+<div class="gm-avisos">
+    <div id="gm-avisos" role="status" aria-live="polite"></div>
+    <div id="gm-avisos-err" role="alert"></div>
 </div>
 {% endblock %}
 
 {% block scripts %}
-<script src="{{ static_v('dockerlabs/js/gestion_maquinas.js') }}"></script>
+<script src="{{ static_v('dockerlabs/js/gestion_maquinas.js') }}" defer></script>
 {% endblock %}

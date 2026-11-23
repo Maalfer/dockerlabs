@@ -1,0 +1,116 @@
+{% extends "dockerlabs/base.html" %}
+
+{% block title %}Autoría y canales oficiales - DockerLabs{% endblock %}
+{% block canonical_path %}/autoria{% endblock %}
+{% block og_path %}/autoria{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ static_v('dockerlabs/css/politicas/politicas-comun.css') }}"
+      media="print" onload="this.media='all'">
+<noscript><link rel="stylesheet" href="{{ static_v('dockerlabs/css/politicas/politicas-comun.css') }}"></noscript>
+<link rel="stylesheet" href="{{ static_v('dockerlabs/css/auth-ballena.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="dl-con-cody">
+{% with ballena_contexto = "legal", ballena_mensajes = {"idle": "Soy Cody. Te cuento quién hace DockerLabs y cuáles son sus canales de verdad ↓", "fin": "Ya sabes distinguir el DockerLabs auténtico. Si ves una copia, avísanos."}, ballena_lectura = true %}{% include "dockerlabs/auth/_ballena.html" %}{% endwith %}
+<div class="dl-con-cody-pagina">
+<div class="policy-container">
+
+    <div class="policy-header">
+        <span class="terminal-prompt">$</span>
+        <div>
+            <h1>autoria<span class="policy-cursor">_</span></h1>
+            <p>Quién hace DockerLabs y cuáles son sus canales oficiales.</p>
+        </div>
+    </div>
+
+    <div class="policy-card">
+        <p class="policy-meta">Última actualización: 12 de noviembre de 2026</p>
+        <p class="policy-lead">Esta página sirve para comprobar qué es DockerLabs de verdad: quién es su autor,
+            cuál es su único sitio web y qué canales son oficiales. Si alguien se presenta como DockerLabs, como su
+            autor o como parte de su equipo fuera de lo que aparece aquí, no lo es.</p>
+
+        <section class="policy-section" data-tldr="DockerLabs lo creó y lo mantiene Mario Álvarez Fernández, «El Pingüino de Mario».">
+            <h2><span class="policy-section-num">1</span> Autor y titular</h2>
+            <p>DockerLabs es un proyecto creado, dirigido y mantenido por <strong>Mario Álvarez Fernández</strong>,
+                conocido como <strong>«El Pingüino de Mario»</strong>, que es también el titular de este sitio web
+                (sus datos completos están en las <a href="{{ url_for('main.condiciones_uso') }}">Condiciones de Uso</a>).</p>
+            <p>Las personas que colaboran con el proyecto aparecen en <a href="{{ url_for('main.equipo') }}">Equipo de DockerLabs</a>
+                y en <a href="{{ url_for('main.agradecimientos') }}">Agradecimientos</a>. Las máquinas enviadas por la comunidad
+                son obra de sus autores, que figuran acreditados en la ficha de cada máquina.</p>
+        </section>
+
+        <section class="policy-section" data-tldr="El único sitio oficial es dockerlabs.es. Cualquier otro dominio no es DockerLabs.">
+            <h2><span class="policy-section-num">2</span> El único sitio oficial</h2>
+            <ul>
+                <li><strong>Web:</strong> <code>https://dockerlabs.es</code> (BunkerLabs forma parte de ella: <code>https://dockerlabs.es/bunkerlabs</code>).</li>
+                <li><strong>Correo de la plataforma:</strong> los avisos automáticos (activación de cuenta, recuperación de contraseña…) salen únicamente de direcciones <code>@dockerlabs.es</code>.</li>
+                <li><strong>Contacto:</strong> <a href="mailto:mario@elrincondelhacker.es">mario@elrincondelhacker.es</a>.</li>
+            </ul>
+            <p>DockerLabs no tiene otros dominios, ni versiones «espejo», ni aplicaciones en tiendas de terceros. Un sitio con
+                otro dominio que use este nombre, este diseño o estas máquinas no es DockerLabs, aunque lo parezca.</p>
+        </section>
+
+        <section class="policy-section" data-tldr="GitHub, Discord, YouTube, Telegram y LinkedIn: solo estos enlaces son los oficiales.">
+            <h2><span class="policy-section-num">3</span> Canales oficiales</h2>
+            <ul>
+                <li><strong>Código fuente:</strong> <a href="https://github.com/Maalfer/dockerlabs" target="_blank" rel="noopener noreferrer">github.com/Maalfer/dockerlabs</a></li>
+                <li><strong>Discord:</strong> <a href="https://discord.gg/dD3yVejBUR" target="_blank" rel="noopener noreferrer">discord.gg/dD3yVejBUR</a></li>
+                <li><strong>YouTube:</strong> <a href="https://www.youtube.com/@pinguinodemario" target="_blank" rel="noopener noreferrer">youtube.com/@pinguinodemario</a></li>
+                <li><strong>Telegram:</strong> <a href="https://t.me/elpinguinohack" target="_blank" rel="noopener noreferrer">t.me/elpinguinohack</a></li>
+                <li><strong>LinkedIn del autor:</strong> <a href="https://www.linkedin.com/in/maalfer1/" target="_blank" rel="noopener noreferrer">linkedin.com/in/maalfer1</a></li>
+                <li><strong>Academia:</strong> <a href="https://elrincondelhacker.es" target="_blank" rel="noopener noreferrer">elrincondelhacker.es</a></li>
+                <li><strong>Reporte de vulnerabilidades:</strong> <a href="https://app.secur0.com/programs/vdp/Dockerlabs" target="_blank" rel="noopener noreferrer">programa VDP en Secur0</a></li>
+            </ul>
+            <p>Si un perfil, canal o grupo que no está en esta lista dice ser «el oficial» de DockerLabs, desconfía.</p>
+        </section>
+
+        <section class="policy-section" data-tldr="Mira el dominio, verifica los diplomas por su identificador y consulta el equipo en esta web.">
+            <h2><span class="policy-section-num">4</span> Cómo comprobar que algo es auténtico</h2>
+            <ul>
+                <li><strong>Mira la barra de direcciones:</strong> debe poner <code>dockerlabs.es</code>, con candado (HTTPS).</li>
+                <li><strong>Diplomas:</strong> cada diploma lleva un identificador único (<code>DL-XXXXXX</code>) que se puede verificar en este sitio. Un diploma que no se verifica aquí no lo ha emitido DockerLabs.</li>
+                <li><strong>Equipo:</strong> quien forma parte del proyecto aparece en <a href="{{ url_for('main.equipo') }}">Equipo de DockerLabs</a>. Nadie más actúa en su nombre.</li>
+                <li><strong>Contraseñas:</strong> DockerLabs no pide tu contraseña por correo, por Discord ni por mensajes privados.</li>
+            </ul>
+        </section>
+
+        <section class="policy-section" data-tldr="El nombre, el logotipo y Cody identifican a este proyecto. Puedes citarlos; no hacerte pasar por DockerLabs.">
+            <h2><span class="policy-section-num">5</span> Uso del nombre, el logotipo y la mascota</h2>
+            <p>El nombre <strong>DockerLabs</strong>, el nombre <strong>BunkerLabs</strong>, su logotipo y la mascota <strong>Cody</strong>
+                identifican a este proyecto y a su autor.</p>
+            <p><strong>Sí puedes:</strong> mencionar DockerLabs, enlazarlo, y publicar writeups, vídeos o cursos sobre sus máquinas
+                citando la plataforma y al creador de cada máquina.</p>
+            <p><strong>No está permitido:</strong> presentarte como DockerLabs, como su autor o como miembro de su equipo; usar el
+                nombre, el logotipo o a Cody de forma que parezca que tu web, canal o producto es DockerLabs o está avalado por él;
+                ni publicar como propios el sitio, sus textos, su diseño o sus laboratorios. Las condiciones completas están en las
+                <a href="{{ url_for('main.condiciones_uso') }}">Condiciones de Uso</a> (apartado 7) y en los
+                <a href="{{ url_for('main.terminos_condiciones') }}">Términos de uso del material</a>.</p>
+        </section>
+
+        <section class="policy-section" data-tldr="DockerLabs es independiente: no pertenece a Docker, Inc. ni está avalado por ella.">
+            <h2><span class="policy-section-num">6</span> Proyecto independiente</h2>
+            <p>DockerLabs es un proyecto educativo independiente. <strong>No está afiliado, patrocinado ni avalado por Docker, Inc.</strong>
+                «Docker» y su logotipo son marcas de Docker, Inc.; aquí se mencionan únicamente para describir la tecnología con la
+                que se despliegan los laboratorios.</p>
+        </section>
+
+        <section class="policy-section" data-tldr="¿Has visto una copia o a alguien suplantando a DockerLabs? Escríbenos con el enlace y capturas.">
+            <h2><span class="policy-section-num">7</span> Si ves una suplantación o una copia</h2>
+            <p>Escribe a <a href="mailto:mario@elrincondelhacker.es?subject=Suplantaci%C3%B3n%20de%20DockerLabs">mario@elrincondelhacker.es</a>
+                indicando la dirección (URL) o el perfil, qué has visto y, si puedes, capturas de pantalla. Lo revisaremos y
+                actuaremos para que se retire.</p>
+        </section>
+
+        <div class="policy-back">
+            <a href="{{ url_for('main.home') }}" class="policy-back-btn dl-btn dl-btn--neutro">
+                <i class="bi bi-arrow-left"></i> Volver al Inicio
+            </a>
+        </div>
+    </div>
+</div>
+</div>
+</div>
+<script src="{{ static_v('dockerlabs/js/ballena.js') }}" defer></script>
+{% endblock %}

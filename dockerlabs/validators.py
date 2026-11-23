@@ -181,3 +181,34 @@ def validate_password_complexity(password):
         return False, "La contraseña debe contener al menos una mayúscula, una minúscula, un número y un carácter especial (!@#$%^&*()_+-=[]{}|;:,.<>?)"
     
     return True, None
+
+
+# --- Nombres de usuario reservados -------------------------------------------
+# Evita cuentas que se hagan pasar por el sistema, por el equipo o por el autor
+# de DockerLabs. Solo se aplica al registrarse: las cuentas existentes no cambian.
+_RESERVADOS_EXACTOS = {
+    "admin", "administrador", "administrator", "root", "system", "sistema", "sysadmin",
+    "default", "defaultprofile", "balulero", "logo", "pingu", "cody",
+    "soporte", "support", "helpdesk", "ayuda", "moderador", "moderator", "mod", "mods",
+    "staff", "equipo", "team", "oficial", "official", "webmaster", "seguridad", "security",
+    "null", "undefined", "anonimo", "anonymous", "invitado", "guest",
+}
+_RESERVADOS_CONTIENE = (
+    "dockerlabs", "bunkerlabs", "pinguinodemario", "pinguinomario", "rincondelhacker",
+    "marioalvarez", "maalfer",
+)
+_LEET = str.maketrans({"0": "o", "1": "i", "3": "e", "4": "a", "5": "s", "7": "t", "8": "b", "@": "a", "$": "s"})
+
+
+def es_nombre_reservado(username):
+    """True si `username`, normalizado, coincide con un nombre reservado."""
+    import re
+    import unicodedata
+
+    base = unicodedata.normalize("NFKD", username or "").encode("ascii", "ignore").decode().lower()
+    simple = re.sub(r"[^a-z0-9]", "", base)                    # sin guiones ni separadores
+    leet = re.sub(r"[^a-z]", "", base.translate(_LEET))        # 4dm1n -> admin
+    for forma in (simple, leet, leet.replace("i", "l")):
+        if forma in _RESERVADOS_EXACTOS or any(p in forma for p in _RESERVADOS_CONTIENE):
+            return True
+    return False

@@ -28,11 +28,10 @@ _PWA_DIR = os.path.join(_BASE_DIR, "static", "dockerlabs", "pwa")
 PAGINAS_PUBLICAS = [
     ("/",                        "daily",   "1.0"),
     ("/estadisticas",            "daily",   "0.8"),
-    ("/instrucciones-uso",       "monthly", "0.7"),
-    ("/como-se-crea-una-maquina", "monthly", "0.7"),
-    ("/enviar-maquina",          "monthly", "0.6"),
+    ("/enviar-maquina",          "monthly", "0.7"),
     ("/agradecimientos",         "monthly", "0.5"),
     ("/equipo",                  "monthly", "0.5"),
+    ("/autoria",                 "monthly", "0.5"),
     ("/soporte",                 "monthly", "0.5"),
     ("/terminos-condiciones",    "yearly",  "0.3"),
     ("/condiciones-uso",         "yearly",  "0.3"),
@@ -135,6 +134,25 @@ def register_seo_routes(pages_router):
             "\n".join(lineas),
             headers={"Cache-Control": "public, max-age=86400"},
         )
+
+    @pages_router.get("/.well-known/security.txt", include_in_schema=False)
+    @pages_router.get("/security.txt", include_in_schema=False)
+    def security_txt():
+        # RFC 9116: a quién avisar de un fallo de seguridad o de una suplantación.
+        # «Expires» es obligatorio y se renueva solo: siempre queda a ~6 meses vista.
+        from datetime import timedelta
+        caduca = (datetime.now(timezone.utc) + timedelta(days=180)).strftime("%Y-%m-%dT00:00:00.000Z")
+        lineas = [
+            "Contact: https://app.secur0.com/programs/vdp/Dockerlabs",
+            "Contact: mailto:mario@elrincondelhacker.es",
+            "Expires: %s" % caduca,
+            "Preferred-Languages: es, en",
+            "Canonical: %s/.well-known/security.txt" % SITIO,
+            "Policy: https://app.secur0.com/programs/vdp/Dockerlabs",
+            "# Autoría y canales oficiales: %s/autoria" % SITIO,
+            "",
+        ]
+        return PlainTextResponse("\n".join(lineas), headers={"Cache-Control": "public, max-age=86400"})
 
     @pages_router.get("/sitemap.xml", include_in_schema=False)
     def sitemap(request: Request):

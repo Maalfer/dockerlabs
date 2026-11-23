@@ -12,6 +12,9 @@ class User(db.Model):
     password_hash = db.Column(db.String(255), nullable=False)
     role = db.Column(db.String(20), nullable=False, default='jugador')
     created_at = db.Column(db.DateTime, default=utcnow)
+    # Última actividad con la sesión iniciada. La mantiene get_session() (routers.py),
+    # como mucho una escritura cada 10 minutos por usuario. NULL = sin registro todavía.
+    last_seen_at = db.Column(db.DateTime, nullable=True)
 
     # Se incrementa al cambiar contraseña, cambiar email o resetear la
     # contraseña vía "olvidé mi contraseña". get_session() la compara contra
@@ -43,6 +46,7 @@ class User(db.Model):
 
     __table_args__ = (
         db.Index('idx_users_username', 'username'),
+        db.Index('idx_users_last_seen_at', 'last_seen_at'),
         db.Index('idx_users_email', 'email'),
         db.Index('idx_users_role', 'role'),
     )
@@ -114,9 +118,9 @@ class Machine(db.Model):
     # Contador de descargas: se incrementa cada vez que se sirve la pagina
     # de descarga de la maquina (ver machines.py::descargar_maquina_page).
     descargas = db.Column(db.Integer, nullable=False, default=0)
-    # Plataforma de la maquina ('linux', 'windows' o 'movil'). Se fija al
-    # publicarla; de momento casi todas las de DockerLabs son Linux.
-    sistema_operativo = db.Column(db.String(20), nullable=False, default='linux')
+    # Plataforma de la maquina ('docker' o 'virtualbox'). Se fija al
+    # publicarla; de momento casi todas las de DockerLabs son Docker.
+    sistema_operativo = db.Column(db.String(20), nullable=False, default='docker')
 
     # Logo almacenado en archivo (nuevo sistema)
     logo_path = db.Column(db.String(255), nullable=True)

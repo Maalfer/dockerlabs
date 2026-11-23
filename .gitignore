@@ -26,3 +26,6 @@ database/almacenamiento/
 # Sistema / editor
 .DS_Store
 Thumbs.db
+
+# Backups puntuales de ediciones directas en el VPS (.<algo>-backup-<timestamp>)
+.*-backup-*

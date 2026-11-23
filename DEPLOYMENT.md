@@ -8,10 +8,10 @@
 ## Cómo se edita y publica un cambio
 
 El código en producción se edita **directamente en el VPS**
-(`/opt/dockerlabs/`), igual que entre 2026-06 y 2026-10. La diferencia es
-que desde octubre de 2026 cada cambio también se sincroniza a un clon del
-repo (`git@github.com:Maalfer/dockerlabs.git`) y se comitea/pushea, en vez
-de quedarse solo en el VPS:
+(`/opt/dockerlabs/`), igual que entre 2026-06 y 2026-10. `/opt/dockerlabs`
+es también el clon del repo (`git@github.com:Maalfer/dockerlabs.git`): no
+hay un clon aparte ni un paso de sincronización entre el VPS y git, es el
+mismo directorio.
 
 1. Edita los ficheros directamente en `/opt/dockerlabs/` en el VPS y
    reinicia el servicio para aplicar el cambio:
@@ -24,11 +24,12 @@ de quedarse solo en el VPS:
    curl -s -o /dev/null -w '%{http_code}\n' https://dockerlabs.es/
    sudo journalctl -u dockerlabs -n 30 --no-pager   # revisar errores
    ```
-3. Para que el cambio quede también en git: copia los ficheros tocados a
-   un clon aparte del repo (p. ej. `/root/dockerlabs-sync`), compara antes
-   con `rsync -rtnc --delete` contra `/opt/dockerlabs` excluyendo
-   `venv/ __pycache__/ .env *.bak* uploads/ *.sql` para no arrastrar nada
-   que no toque, y comitea/pushea desde ahí.
+3. El commit y el push a git **solo se hacen cuando el dueño del proyecto
+   lo pide expresamente**, directamente desde `/opt/dockerlabs` (sin copiar
+   nada a ningún otro sitio). `.gitignore` ya excluye `venv/`, `__pycache__/`,
+   `.env`, `uploads/`, `*.bak*`, `*.sql` y los directorios de backup puntual
+   (`.*-backup-*`) que van quedando de ediciones en caliente, para que no se
+   arrastren al repo.
 
 No existe un pipeline de CI/CD que haga esto automáticamente: el workflow
 `.github/workflows/deploy.yml.disabled` sigue desactivado (ver su

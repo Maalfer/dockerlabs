@@ -17,8 +17,8 @@
     "/ruta-que-no-existe-smoke-test": 404,
     "/static/dockerlabs/js/utils.js": 200
   },
-  "modulos_compilados": 81,
-  "n_rutas": 240,
+  "modulos_compilados": 80,
+  "n_rutas": 235,
   "plantillas": [
     "bunkerlabs/base.html",
     "bunkerlabs/descargar.html",
@@ -49,7 +49,6 @@
     "dockerlabs/info/como_se_crea_una_maquina.html",
     "dockerlabs/info/descargar.html",
     "dockerlabs/info/enviar_maquina.html",
-    "dockerlabs/info/instrucciones_uso.html",
     "dockerlabs/info/soporte.html",
     "dockerlabs/info/terminos-condiciones.html",
     "dockerlabs/perfil_publico.html",
@@ -175,48 +174,6 @@
       ],
       "name": "api_reject_pending_machine",
       "path": "/api/admin/pending-machines/{machine_id}/reject"
-    },
-    {
-      "methods": [
-        "GET"
-      ],
-      "name": "(openapi)",
-      "path": "/api/admin/tokens"
-    },
-    {
-      "methods": [
-        "GET"
-      ],
-      "name": "list_api_tokens",
-      "path": "/api/admin/tokens"
-    },
-    {
-      "methods": [
-        "POST"
-      ],
-      "name": "(openapi)",
-      "path": "/api/admin/tokens"
-    },
-    {
-      "methods": [
-        "POST"
-      ],
-      "name": "create_api_token",
-      "path": "/api/admin/tokens"
-    },
-    {
-      "methods": [
-        "POST"
-      ],
-      "name": "(openapi)",
-      "path": "/api/admin/tokens/{token_id}/revoke"
-    },
-    {
-      "methods": [
-        "POST"
-      ],
-      "name": "revoke_api_token",
-      "path": "/api/admin/tokens/{token_id}/revoke"
     },
     {
       "methods": [
@@ -455,6 +412,20 @@
       ],
       "name": "api_get_completed_machines",
       "path": "/api/completed_machines/{machine_name}"
+    },
+    {
+      "methods": [
+        "POST"
+      ],
+      "name": "(openapi)",
+      "path": "/api/delete_account"
+    },
+    {
+      "methods": [
+        "POST"
+      ],
+      "name": "api_delete_account",
+      "path": "/api/delete_account"
     },
     {
       "methods": [
@@ -1308,7 +1279,7 @@
       "methods": [
         "GET"
       ],
-      "name": "info_equipo",
+      "name": "equipo_page",
       "path": "/equipo"
     },
     {
@@ -1429,14 +1400,7 @@
       "methods": [
         "GET"
       ],
-      "name": "(openapi)",
-      "path": "/instrucciones-uso"
-    },
-    {
-      "methods": [
-        "GET"
-      ],
-      "name": "info_instrucciones_uso",
+      "name": "instrucciones_uso_retirada",
       "path": "/instrucciones-uso"
     },
     {

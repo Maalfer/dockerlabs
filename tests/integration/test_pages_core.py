@@ -11,7 +11,7 @@ import re
 
 import pytest
 
-from tests.factories import make_completed_machine, make_email_change_token, make_machine, make_password_reset_token, make_user
+from tests.factories import NAV_HEADERS, make_completed_machine, make_email_change_token, make_machine, make_password_reset_token, make_user
 from dockerlabs.tiempo import utcnow
 
 pytestmark = pytest.mark.integration
@@ -44,7 +44,7 @@ class TestGoExterno:
     def test_sqli_like_origen_param_bucketed_as_otro(self, client, db):
         from dockerlabs.models import OutboundClickLog
 
-        r = client.get("/go/newsletter?o=' OR 1=1", follow_redirects=False)
+        r = client.get("/go/newsletter?o=' OR 1=1", follow_redirects=False, headers=NAV_HEADERS)
         assert r.status_code == 302
         assert "utm_medium=otro" in r.headers["location"]
 
@@ -57,7 +57,7 @@ class TestGoExterno:
     def test_xss_like_origen_param_bucketed_as_otro(self, client, db):
         from dockerlabs.models import OutboundClickLog
 
-        r = client.get("/go/academia?o=<script>alert(1)</script>", follow_redirects=False)
+        r = client.get("/go/academia?o=<script>alert(1)</script>", follow_redirects=False, headers=NAV_HEADERS)
         assert r.status_code == 302
         assert "utm_medium=otro" in r.headers["location"]
 
@@ -87,9 +87,8 @@ class TestGoExterno:
         db.session.rollback()
         before = OutboundClickLog.query.count()
 
-        # El TestClient por defecto manda "User-Agent: testclient", que no
-        # contiene ninguno de los marcadores de bot: cuenta como "navegador normal".
-        r = client.get("/go/newsletter", follow_redirects=False)
+        # Con cabeceras de navegación real (ver NAV_HEADERS): cuenta como persona.
+        r = client.get("/go/newsletter", follow_redirects=False, headers=NAV_HEADERS)
         assert r.status_code == 302
 
         db.session.rollback()

@@ -17,6 +17,7 @@
 {% block og_path %}/perfil/{{ perfil.slug }}{% endblock %}
 
 {% block extra_css %}
+<link rel="stylesheet" href="{{ static_v('dockerlabs/css/auth-ballena.css') }}">
 <style>
     .pp-wrap { max-width: 1140px; margin: 0 auto; padding: 2rem 1rem 4rem; }
 
@@ -190,6 +191,9 @@
 {% endblock %}
 
 {% block content %}
+<div class="dl-con-cody">
+{% with ballena_contexto = "info", ballena_mensajes = {"idle": "Perfil público de " ~ perfil.username ~ ". Te lo resumo ↓", "fin": "¿Quieres uno así? Resuelve máquinas y publica writeups."}, ballena_lectura = true %}{% include "dockerlabs/auth/_ballena.html" %}{% endwith %}
+<div class="dl-con-cody-pagina">
 <div class="pp-wrap">
 
     <header class="pp-hero">
@@ -228,7 +232,7 @@
         </div>
     </header>
 
-    <section class="pp-stats">
+    <section class="pp-stats" data-tldr="Sus cifras: máquinas resueltas, creadas, writeups y certificados.">
         <div class="pp-stat">
             <i class="bi bi-hdd-stack" style="color:#2dd4bf;"></i>
             <div class="pp-stat-num">{{ e.maquinas_hechas }}</div>
@@ -256,7 +260,7 @@
         </div>
     </section>
 
-    <section class="pp-card">
+    <section class="pp-card" data-tldr="Cuánto del catálogo de DockerLabs lleva completado, por dificultad.">
         <div class="pp-card-head">
             <h2><i class="bi bi-bar-chart-line" style="color:#2dd4bf;"></i> Progreso en DockerLabs</h2>
         </div>
@@ -281,7 +285,7 @@
         {% endif %}
     </section>
 
-    <section class="pp-card">
+    <section class="pp-card" data-tldr="Las máquinas que ha resuelto.">
         <div class="pp-card-head">
             <h2><i class="bi bi-check2-circle" style="color:#2dd4bf;"></i> Máquinas resueltas</h2>
             <span class="pp-count">{{ perfil.maquinas_hechas | length }}</span>
@@ -326,7 +330,7 @@
     </section>
 
     {% if perfil.maquinas_creadas %}
-    <section class="pp-card">
+    <section class="pp-card" data-tldr="Las máquinas que ha creado para la comunidad.">
         <div class="pp-card-head">
             <h2><i class="bi bi-tools" style="color:#f59e0b;"></i> Máquinas creadas</h2>
             <span class="pp-count">{{ perfil.maquinas_creadas | length }}</span>
@@ -356,7 +360,7 @@
     {% endif %}
 
     {% if perfil.writeups %}
-    <section class="pp-card">
+    <section class="pp-card" data-tldr="Los writeups que ha publicado.">
         <div class="pp-card-head">
             <h2><i class="bi bi-journal-richtext" style="color:#38bdf8;"></i> Writeups publicados</h2>
             <span class="pp-count">{{ perfil.writeups | length }}</span>
@@ -382,7 +386,7 @@
 
     {% set certs = perfil.certificados | selectattr('generado') | list %}
     {% if certs %}
-    <section class="pp-card">
+    <section class="pp-card" data-tldr="Sus certificados, verificables por identificador.">
         <div class="pp-card-head">
             <h2><i class="bi bi-patch-check-fill" style="color:#a78bfa;"></i> Certificados</h2>
             <span class="pp-count">{{ certs | length }}</span>
@@ -406,4 +410,7 @@
     {% endif %}
 
 </div>
+</div>
+</div>
+<script src="{{ static_v('dockerlabs/js/ballena.js') }}" defer></script>
 {% endblock %}

@@ -1,0 +1,55 @@
+/* ==========================================================================
+   Cody en el header de DockerLabs y de BunkerLabs (templates/dockerlabs/_cody_logo.html).
+   Hoja compartida: la cargan los dos base.html.
+   Misma pose que el logotipo original: sale del agua en diagonal. Quieto por
+   defecto (solo parpadea). Al pasar el cursor o enfocar el enlace salta,
+   sonríe con el ojo, mueve la aleta y la salpicadura y las burbujas se animan.
+   ========================================================================== */
+.logo-container a, a.logo .logo-container { display: inline-flex; border-radius: 50%; }
+.logo-container .hc {
+    display: block; width: 58px; height: 58px; overflow: visible;
+    filter: drop-shadow(0 0 4px rgba(59, 130, 246, .45));
+    transition: transform .25s ease, filter .25s ease;
+}
+.logo-container:hover .hc, a:focus-visible .hc {
+    transform: scale(1.04);
+    filter: drop-shadow(0 0 9px rgba(56, 189, 248, .85));
+}
+.hc .hc-parpado { transform-origin: 190px 81.6px; transform: scaleY(0); animation: hc-parpadea 6.5s ease-in-out infinite; }
+@keyframes hc-parpadea { 0%, 93%, 100% { transform: scaleY(0); } 96% { transform: scaleY(1); } }
+.hc .hc-ojo, .hc .hc-ojo-feliz, .hc .hc-mejilla { transition: opacity .18s ease; }
+.hc .hc-ojo-feliz { opacity: 0; }
+.hc .hc-aleta { transform-origin: 128px 116px; }
+.hc .hc-gota, .hc .hc-burbujas circle { transform-box: fill-box; transform-origin: center; }
+.logo-container:hover .hc-ojo, a:focus-visible .hc-ojo { opacity: 0; }
+.logo-container:hover .hc-ojo-feliz, a:focus-visible .hc-ojo-feliz { opacity: 1; }
+.logo-container:hover .hc-mejilla, a:focus-visible .hc-mejilla { opacity: 1; }
+/* salto: sube en la misma diagonal en la que sale del agua y vuelve a caer */
+.logo-container:hover .hc-salto, a:focus-visible .hc-salto { animation: hc-salto .9s cubic-bezier(.3, .7, .4, 1) 2; }
+@keyframes hc-salto {
+    0%, 100% { transform: translate(0, 0); }
+    12% { transform: translate(-2px, 3px); }
+    50% { transform: translate(8px, -11px); }
+}
+.logo-container:hover .hc-aleta, a:focus-visible .hc-aleta { animation: hc-aleta .45s ease-in-out 4; }
+@keyframes hc-aleta { 0%, 100% { transform: rotate(0); } 50% { transform: rotate(-24deg); } }
+.logo-container:hover .hc-gota, a:focus-visible .hc-gota { animation: hc-gota .9s ease-out 2; }
+.hc .hc-g2 { animation-delay: .08s !important; } .hc .hc-g3 { animation-delay: .16s !important; }
+.hc .hc-g4 { animation-delay: .05s !important; } .hc .hc-g5 { animation-delay: .12s !important; }
+@keyframes hc-gota {
+    0%, 100% { transform: translate(0, 0) scale(1); opacity: 1; }
+    45% { transform: translate(-3px, -13px) scale(1.25); opacity: 1; }
+    80% { transform: translate(-4px, 2px) scale(.8); opacity: .6; }
+}
+.logo-container:hover .hc-burbujas circle, a:focus-visible .hc-burbujas circle { animation: hc-burbuja 1.8s ease-in-out infinite; }
+.hc .hc-b2 { animation-delay: .3s !important; } .hc .hc-b3 { animation-delay: .6s !important; } .hc .hc-b4 { animation-delay: .9s !important; }
+@keyframes hc-burbuja { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-7px); } }
+@media (max-width: 768px) { .logo-container .hc { width: 40px; height: 40px; } }
+@media (max-width: 768px) { a.logo .logo-container .hc { width: 36px; height: 36px; } }   /* header de BunkerLabs: 44 px */
+@media (max-width: 480px) {
+    .logo-container .hc { width: 35px; height: 35px; }
+    .hc .hc-gota, .hc .hc-burbujas { display: none; }   /* a este tamaño son ruido */
+}
+@media (prefers-reduced-motion: reduce) {
+    .hc *, .logo-container .hc { animation: none !important; transition: none !important; }
+}

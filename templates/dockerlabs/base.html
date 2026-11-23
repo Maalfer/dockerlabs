@@ -9,7 +9,9 @@
     <!-- SEO Meta Tags -->
     <meta name="description" content="DockerLabs es una plataforma de ciberseguridad y hacking ético del Pinguino de Mario. Aprende hacking con CTF, laboratorios vulnerables y desafíos prácticos. Mejora tus habilidades en seguridad informática.">
     <meta name="keywords" content="ciberseguridad, hacking ético, CTF, laboratorios vulnerables, seguridad informática, pentesting, DockerLabs, Pinguino de Mario, aprender hacking, desafíos de seguridad">
-    <meta name="author" content="El Pinguino de Mario">
+    <meta name="author" content="Mario Álvarez Fernández (El Pingüino de Mario)">
+    <meta name="copyright" content="© Mario Álvarez Fernández (El Pingüino de Mario). DockerLabs: https://dockerlabs.es/autoria">
+    <link rel="author" href="https://dockerlabs.es/autoria">
     <meta name="application-version" content="{{ dockerlabs_version }}">
     <meta name="robots" content="index, follow">
     <link rel="canonical" href="https://dockerlabs.es{% block canonical_path %}{% endblock %}">
@@ -24,8 +26,6 @@
     <meta property="og:locale" content="es_ES">
 
     <!-- Preconnect hints for performance (solo Google Fonts; Bootstrap+iconos ya son mismo origen) -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 
     <!-- Preload Bootstrap Icons WOFF2 (auto-alojado) → coincide con la url del @font-face del CSS -->
     <link rel="preload" as="font" type="font/woff2" crossorigin
@@ -51,10 +51,12 @@
           media="print" onload="this.media='all'">
     <noscript><link rel="stylesheet" href="{{ static_v('dockerlabs/vendor/bootstrap-icons.min.css') }}"></noscript>
 
-    <!-- Google Fonts: Fira Code + Inter — no bloqueantes, sin cadena de solicitudes críticas -->
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap"
+    <link rel="stylesheet" href="{{ static_v('dockerlabs/css/consentimiento.css') }}">
+    <script src="{{ static_v('dockerlabs/js/consentimiento.js') }}" defer></script>
+    <!-- Fira Code + Inter alojadas en local (sin Google Fonts) — no bloqueantes -->
+    <link rel="stylesheet" href="{{ static_v('dockerlabs/css/fonts.css') }}"
           media="print" onload="this.media='all'">
-    <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap"></noscript>
+    <noscript><link rel="stylesheet" href="{{ static_v('dockerlabs/css/fonts.css') }}"></noscript>
 
     <script src="{{ static_v('dockerlabs/js/marked.min.js') }}" defer></script>
     <script src="{{ static_v('dockerlabs/js/purify.min.js') }}" defer></script>
@@ -85,6 +87,7 @@
     <link rel="stylesheet" href="{{ static_v('dockerlabs/css/base.css') }}">
     <link rel="stylesheet" href="{{ static_v('dockerlabs/css/dl-sistema.css') }}">
     <link rel="stylesheet" href="{{ static_v('dockerlabs/css/dl-footer.css') }}">
+    <link rel="stylesheet" href="{{ static_v('dockerlabs/css/cody-logo.css') }}">
 
     {% block extra_css %}{% endblock %}
 
@@ -101,11 +104,6 @@
     <link rel="stylesheet" href="{{ static_v('dockerlabs/pwa/pwa.css') }}">
 
     <script nonce="{{ csp_nonce }}">
-        window.dataLayer = window.dataLayer || [];
-        function gtag() { dataLayer.push(arguments); }
-        gtag('js', new Date());
-        gtag('config', 'G-ZBED41BLPR');
-
         function getCsrfToken() {
             const meta = document.querySelector('meta[name="csrf-token"]');
             return meta ? meta.getAttribute('content') : '';
@@ -124,10 +122,20 @@
         "description": "DockerLabs es una plataforma de ciberseguridad y hacking ético del Pinguino de Mario. Aprende hacking con CTF, laboratorios vulnerables y desafíos prácticos.",
         "founder": {
             "@type": "Person",
-            "name": "El Pinguino de Mario"
+            "name": "Mario Álvarez Fernández",
+            "alternateName": "El Pingüino de Mario",
+            "url": "https://dockerlabs.es/autoria",
+            "sameAs": [
+                "https://www.linkedin.com/in/maalfer1/",
+                "https://www.youtube.com/@pinguinodemario",
+                "https://github.com/Maalfer"
+            ]
         },
         "sameAs": [
-            "https://www.youtube.com/@pinguinodemario"
+            "https://www.youtube.com/@pinguinodemario",
+            "https://github.com/Maalfer/dockerlabs",
+            "https://discord.gg/dD3yVejBUR",
+            "https://t.me/elpinguinohack"
         ],
         "knowsAbout": [
             "Ciberseguridad",
@@ -156,18 +164,14 @@
 
         <div class="header-left">
             <div class="logo-container">
-                <a href="https://dockerlabs.es">
-                    <picture>
-                        <source srcset="{{ url_for('static', filename='dockerlabs/images/logos/logo_60.webp') }} 1x, {{ url_for('static', filename='dockerlabs/images/logos/logo.webp') }} 2x" type="image/webp">
-                        <img src="{{ url_for('static', filename='dockerlabs/images/logos/logo_120.png') }}" alt="DockerLabs"
-                            width="60" height="55" loading="eager" fetchpriority="high">
-                    </picture>
+                <a href="https://dockerlabs.es" aria-label="DockerLabs: inicio">
+                    {% include "dockerlabs/_cody_logo.html" %}
                 </a>
             </div>
 
             <div class="raiola-container">
                 <a href="https://raiolanetworks.com/landing/hosting-...io/?utm_medium=affiliate&utm_source=5855&utm_campaign=Afiliados"
-                    target="_blank" rel="noopener noreferrer">
+                    target="_blank" rel="sponsored noopener noreferrer">
                     <picture>
                         <source srcset="{{ url_for('static', filename='dockerlabs/images/raiola_290.webp') }} 1x, {{ url_for('static', filename='dockerlabs/images/raiola.webp') }} 2x" type="image/webp">
                         <img src="{{ url_for('static', filename='dockerlabs/images/raiola_580.png') }}" alt="Raiola Networks"
@@ -259,16 +263,8 @@
                     <div class="user-info"><span class="user-name">Programa VDP</span></div>
                     <i class="bi bi-box-arrow-up-right" style="color: #64748b; font-size: 0.9rem;"></i>
                 </a>
-                <a href="{{ url_for('main.instrucciones_uso') }}" class="ranking-item">
-                    <div class="user-info"><span class="user-name">Instrucciones de Uso</span></div>
-                    <i class="bi bi-file-earmark-pdf" style="color: #64748b;"></i>
-                </a>
                 <a href="{{ url_for('main.enviar_maquina') }}" class="ranking-item">
-                    <div class="user-info"><span class="user-name">Enviar Máquina</span></div>
-                    <i class="bi bi-chevron-right" style="color: #64748b;"></i>
-                </a>
-                <a href="{{ url_for('main.como_se_crea') }}" class="ranking-item">
-                    <div class="user-info"><span class="user-name">Cómo se Crea una Máquina</span></div>
+                    <div class="user-info"><span class="user-name">Crear y Enviar Máquina</span></div>
                     <i class="bi bi-chevron-right" style="color: #64748b;"></i>
                 </a>
                 <!-- Swagger UI eliminado - migración a FastAPI planificada -->
@@ -279,6 +275,10 @@
                 <a href="{{ url_for('main.soporte') }}" class="ranking-item">
                     <div class="user-info"><span class="user-name">Soporte</span></div>
                     <i class="bi bi-tools" style="color: #64748b;"></i>
+                </a>
+                <a href="{{ url_for('main.herramientas_comunidad') }}" class="ranking-item">
+                    <div class="user-info"><span class="user-name">Herramientas de Comunidad</span></div>
+                    <i class="bi bi-box-seam" style="color: #64748b;"></i>
                 </a>
             </div>
         </div>
@@ -398,23 +398,24 @@
     <footer class="{% if no_default_styles %}custom-footer{% endif %}">
         <div class="footer-content">
             <p class="copyright">
-                <span class="footer-copy"><i class="bi bi-c-circle"></i> Copyright DockerLabs {{ current_year() }}
-                <a href="https://github.com/Maalfer/dockerlabs/blob/main/CHANGELOG.md" class="footer-link dockerlabs-version" target="_blank" rel="noopener noreferrer">v{{ dockerlabs_version }}</a></span><span class="footer-sep" aria-hidden="true"> · </span>
+                <span class="footer-copy"><i class="bi bi-c-circle"></i> Copyright DockerLabs {{ current_year() }}</span><span class="footer-sep" aria-hidden="true"> · </span>
+                <a href="{{ url_for('main.autoria') }}" class="footer-link">Autoría</a><span class="footer-sep" aria-hidden="true"> · </span>
                 <a href="{{ url_for('main.equipo') }}" class="footer-link nowrap">Equipo de DockerLabs</a><span class="footer-sep" aria-hidden="true"> · </span>
                 <a href="/go/newsletter?o=footer" class="footer-link" target="_blank" rel="noopener nofollow">Newsletter</a><span class="footer-sep" aria-hidden="true"> · </span>
                 <a href="{{ url_for('main.politica_privacidad') }}" class="footer-link">Política de Privacidad</a><span class="footer-sep" aria-hidden="true"> · </span>
                 <a href="{{ url_for('main.politica_cookies') }}" class="footer-link">Cookies</a><span class="footer-sep" aria-hidden="true"> · </span>
+                <a href="{{ url_for('main.politica_cookies') }}#gestionar" class="footer-link" data-cookie-prefs>Gestionar cookies</a><span class="footer-sep" aria-hidden="true"> · </span>
                 <a href="{{ url_for('main.condiciones_uso') }}" class="footer-link">Condiciones de Uso</a>
             </p>
 
             <div class="footer-icons">
-                <a href="https://github.com/Maalfer/dockerlabs" class="footer-icon support-tooltip" target="_blank" rel="noopener noreferrer"
+                <a href="https://github.com/Maalfer/dockerlabs" aria-label="DockerLabs en GitHub (se abre en una pestaña nueva)" class="footer-icon support-tooltip" target="_blank" rel="noopener noreferrer"
                     data-tooltip="¿Nos das una ⭐?"><i class="bi bi-github github-pulse"></i></a>
-                <a href="https://es.linkedin.com/in/maalfer1" class="footer-icon" target="_blank" rel="noopener noreferrer"><i
+                <a href="https://es.linkedin.com/in/maalfer1" aria-label="LinkedIn de Mario (se abre en una pestaña nueva)" class="footer-icon" target="_blank" rel="noopener noreferrer"><i
                         class="bi bi-linkedin"></i></a>
-                <a href="https://t.me/elpinguinohack" class="footer-icon" target="_blank" rel="noopener noreferrer"><i
+                <a href="https://t.me/elpinguinohack" aria-label="Canal de Telegram (se abre en una pestaña nueva)" class="footer-icon" target="_blank" rel="noopener noreferrer"><i
                         class="bi bi-telegram"></i></a>
-                <a href="https://discord.gg/dD3yVejBUR" class="footer-icon" target="_blank" rel="noopener noreferrer"><i
+                <a href="https://discord.gg/dD3yVejBUR" aria-label="Servidor de Discord (se abre en una pestaña nueva)" class="footer-icon" target="_blank" rel="noopener noreferrer"><i
                         class="bi bi-discord"></i></a>
             </div>
         </div>
@@ -464,13 +465,10 @@
                     if (!t || !window.matchMedia('(hover: none)').matches || e.metaKey || e.ctrlKey) return;
                     e.preventDefault();
                     var destino = dockerlabsLink.href;
-                    // fija el texto del destino (el mouseleave del hover lo restauraría)
-                    t.setAttribute('data-original', t.getAttribute('data-hover'));
-                    t.textContent = t.getAttribute('data-hover');
-                    t.style.color = '#8b5cf6';
-                    t.style.textShadow = '0 0 15px rgba(139, 92, 246, 0.45)';
+                    // muestra la transición completa hacia el destino y después navega
+                    dockerlabsLink.classList.add('es-alt');
                     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) { window.location.href = destino; return; }
-                    setTimeout(function () { window.location.href = destino; }, 320);
+                    setTimeout(function () { window.location.href = destino; }, 520);
                 });
             }
 
@@ -478,12 +476,37 @@
             var brandTitle = document.querySelector('.brand-title');
             var brandText = document.querySelector('.brand-text');
             if (brandTitle && brandText) {
-                brandTitle.addEventListener('mouseenter', function () {
-                    brandText.textContent = brandText.dataset.hover;
-                });
-                brandTitle.addEventListener('mouseleave', function () {
-                    brandText.textContent = brandText.dataset.original;
-                });
+                // Parte el título en letras: las que cambian llevan la letra de destino
+                // en data-alt (la pinta el CSS con ::after). La coreografía está en base.css.
+                var deTxt = brandText.dataset.original || brandText.textContent, aTxt = brandText.dataset.hover || '';
+                if (deTxt.length === aTxt.length) {
+                    brandTitle.setAttribute('aria-label', deTxt);
+                    brandText.textContent = '';
+                    var nCambia = 0;
+                    for (var bi = 0; bi < deTxt.length; bi++) {
+                        var c = document.createElement('span');
+                        c.className = 'bt-c';
+                        c.setAttribute('aria-hidden', 'true');
+                        var a = document.createElement('span');
+                        a.className = 'bt-a';
+                        a.textContent = deTxt[bi];
+                        c.appendChild(a);
+                        if (deTxt[bi] !== aTxt[bi]) { c.classList.add('bt-cambia'); c.setAttribute('data-alt', aTxt[bi]); nCambia++; }
+                        c.style.setProperty('--i', bi);
+                        brandText.appendChild(c);
+                    }
+                    brandTitle.classList.add('bt-listo');
+                    var btAlt = function (si) { return function () { brandTitle.classList.toggle('es-alt', si); }; };
+                    brandTitle.addEventListener('mouseenter', btAlt(true));
+                    brandTitle.addEventListener('mouseleave', btAlt(false));
+                    brandTitle.addEventListener('focus', btAlt(true));
+                    brandTitle.addEventListener('blur', btAlt(false));
+                    // al volver atrás desde BunkerLabs (bfcache) el título no debe quedarse cambiado
+                    window.addEventListener('pageshow', btAlt(false));
+                } else {
+                    brandTitle.addEventListener('mouseenter', function () { brandText.textContent = aTxt; });
+                    brandTitle.addEventListener('mouseleave', function () { brandText.textContent = deTxt; });
+                }
             }
         });
     </script>

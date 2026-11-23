@@ -1,115 +1,154 @@
 {% extends "dockerlabs/base.html" %}
 
+{% block title %}Equipo - DockerLabs{% endblock %}
+
 {% block extra_css %}
 <link rel="stylesheet" href="{{ static_v('dockerlabs/css/equipo.css') }}"
       media="print" onload="this.media='all'">
 <noscript><link rel="stylesheet" href="{{ static_v('dockerlabs/css/equipo.css') }}"></noscript>
+<link rel="stylesheet" href="{{ static_v('dockerlabs/css/auth-ballena.css') }}">
 {% endblock %}
 
+{# Un miembro del equipo. `roles` ⊂ {owner, dev, admin, mod}; el primero marca el color del aro. #}
+{% macro insignias(roles) %}
+<div class="eq-roles">
+    {% if 'owner' in roles %}<span class="role-badge role-owner">👑 Owner</span>{% endif %}
+    {% if 'dev' in roles %}<span class="role-badge role-dev"><i class="bi bi-code-slash"></i> Desarrollador</span>{% endif %}
+    {% if 'admin' in roles %}<span class="role-badge role-admin"><i class="bi bi-shield-fill-check"></i> Administrador</span>{% endif %}
+    {% if 'mod' in roles %}<span class="role-badge role-mod"><i class="bi bi-shield-fill"></i> Moderador</span>{% endif %}
+</div>
+{% endmacro %}
+
+{% macro enlace(url) %}
+{% if 'github.com' in url %}<span class="eq-enlace"><i class="bi bi-github"></i> GitHub <i class="bi bi-box-arrow-up-right"></i></span>
+{% elif 'linkedin.com' in url %}<span class="eq-enlace"><i class="bi bi-linkedin"></i> LinkedIn <i class="bi bi-box-arrow-up-right"></i></span>
+{% else %}<span class="eq-enlace"><i class="bi bi-link-45deg"></i> Perfil <i class="bi bi-box-arrow-up-right"></i></span>{% endif %}
+{% endmacro %}
+
+{% macro numero(n) %}{{ ('{:,}'.format(n)).replace(',', '.') }}{% endmacro %}
+
 {% block content %}
+<div class="dl-con-cody">
+{% with ballena_contexto = "equipo", ballena_mensajes = {"idle": "¡Hola! Soy Cody, la mascota del equipo. Te presento a quienes hacen DockerLabs ↓", "fin": "¡Ese es el equipo! ¿Te animas a unirte? 🐳"}, ballena_lectura = true %}{% include "dockerlabs/auth/_ballena.html" %}{% endwith %}
+<div class="dl-con-cody-pagina">
+<div class="eq-page">
 
-<div class="container mt-5 equipo-page">
-
-    <div class="equipo-header">
+    <div class="eq-header">
         <span class="terminal-prompt">$</span>
         <div>
-            <h1>equipo<span class="equipo-cursor">_</span></h1>
+            <h1>equipo<span class="eq-cursor">_</span></h1>
             <p>Las personas detrás de DockerLabs.</p>
         </div>
     </div>
 
-    <!-- ADMINISTRADORES -->
-    <div class="section-label">
-        <span><i class="bi bi-shield-fill-check"></i> Administradores</span>
+    {% if cifras %}
+    <div class="eq-cifras" role="list" aria-label="DockerLabs en cifras"
+         data-tldr="¡Hola, soy Cody! DockerLabs ya suma {{ numero(cifras.maquinas) }} máquinas, {{ numero(cifras.usuarios) }} usuarios y {{ numero(cifras.writeups) }} writeups. ¡Y seguimos creciendo!">
+        <div class="eq-cifra" role="listitem" style="--i:0"><i class="bi bi-box-seam"></i><strong>{{ numero(cifras.maquinas) }}</strong><span>máquinas</span></div>
+        <div class="eq-cifra" role="listitem" style="--i:1"><i class="bi bi-people"></i><strong>{{ numero(cifras.usuarios) }}</strong><span>usuarios</span></div>
+        <div class="eq-cifra" role="listitem" style="--i:2"><i class="bi bi-file-earmark-text"></i><strong>{{ numero(cifras.writeups) }}</strong><span>writeups</span></div>
     </div>
-    <div class="card p-4 mt-2 mb-5 colaboradores-card">
-        <div class="colaboradores-grid admins-grid">
+    {% endif %}
 
-        <a href="https://www.linkedin.com/in/maalfer1/" target="_blank" class="colaborador">
-            <img src="/static/dockerlabs/images/agradecimientos/mario.png" alt="Maalfer">
-            <span class="colaborador-name">El Pingüino de Mario</span>
-            <div class="role-badge role-owner">
-                👑 Owner
+    <!-- ADMINISTRADORES -->
+    <section class="eq-seccion" aria-labelledby="eq-admins">
+        <div class="eq-seccion-cab">
+            <span class="eq-seccion-icono eq-tono-admin"><i class="bi bi-shield-fill-check"></i></span>
+            <div>
+                <h2 id="eq-admins">Administradores</h2>
+                <p>Mantienen la plataforma, el código y la comunidad.</p>
             </div>
-            <div class="role-badge role-dev">
-                <i class="bi bi-code-slash"></i> Desarrollador
-            </div>
-            <div class="role-badge role-admin">
-                <i class="bi bi-shield-fill-check"></i> Administrador
-            </div>
+        </div>
+
+        <a href="https://www.linkedin.com/in/maalfer1/" target="_blank" rel="noopener noreferrer"
+           class="eq-hero" style="--i:0"
+           aria-label="El Pingüino de Mario, owner, desarrollador y administrador. Abrir LinkedIn"
+           data-tldr="Mario, «El Pingüino de Mario», es el owner de DockerLabs, además de desarrollador y administrador.">
+            <span class="eq-avatar eq-avatar--hero eq-tono-owner">
+                <img src="/static/dockerlabs/images/agradecimientos/mario.png" alt="El Pingüino de Mario" width="140" height="140" loading="eager">
+            </span>
+            <span class="eq-hero-texto">
+                <span class="eq-nombre eq-nombre--hero">El Pingüino de Mario</span>
+                {{ insignias(['owner', 'dev', 'admin']) }}
+                <span class="eq-lema">Lidera el proyecto y desarrolla la plataforma.</span>
+                {{ enlace('https://www.linkedin.com/in/maalfer1/') }}
+            </span>
         </a>
 
-            <a href="https://github.com/0xR00" target="_blank" class="colaborador">
-                <img src="/static/dockerlabs/images/agradecimientos/pylon.jpg" alt="0xR0_">
-                <span class="colaborador-name">0xR0_</span>
-                <div class="role-badge role-dev">
-                    <i class="bi bi-code-slash"></i> Desarrollador
-                </div>
-                <div class="role-badge role-admin">
-                    <i class="bi bi-shield-fill-check"></i> Administrador
-                </div>
+        <div class="eq-grid eq-grid--3">
+            {% set admins = [
+                {"nombre": "0xR0_", "alt": "0xR0_", "img": "/static/dockerlabs/images/agradecimientos/pylon.jpg", "url": "https://github.com/0xR00", "roles": ["dev", "admin"],
+                 "tldr": "0xR0_ es desarrollador y administrador de DockerLabs. ¡Gracias por el curro!"},
+                {"nombre": "Maciiii___", "alt": "Maciiii___", "img": "/static/dockerlabs/images/agradecimientos/maci.png", "url": "https://github.com/Maciferna", "roles": ["admin"],
+                 "tldr": "Maciiii___ es administrador de DockerLabs. ¡Gracias por tu trabajo!"},
+                {"nombre": "d1se0", "alt": "d1se0", "img": get_profile_image_url(username='d1se0'), "url": "https://github.com/D1se0", "roles": ["admin"],
+                 "tldr": "d1se0 es administrador de DockerLabs. ¡Gracias por tu trabajo!"},
+            ] %}
+            {% for m in admins %}
+            <a href="{{ m.url }}" target="_blank" rel="noopener noreferrer" class="eq-card" style="--i:{{ loop.index }}"
+               aria-label="{{ m.nombre }}. Abrir perfil" data-tldr="{{ m.tldr }}">
+                <span class="eq-avatar eq-tono-{{ 'dev' if 'dev' in m.roles else 'admin' }}"><img src="{{ m.img }}" alt="{{ m.alt }}" width="96" height="96" loading="lazy"></span>
+                <span class="eq-nombre">{{ m.nombre }}</span>
+                {{ insignias(m.roles) }}
+                {{ enlace(m.url) }}
             </a>
-
-            <a href="https://github.com/Maciferna" target="_blank" class="colaborador">
-                <img src="/static/dockerlabs/images/agradecimientos/maci.png" alt="Maciferma">
-                <span class="colaborador-name">Maciiii___</span>
-                <div class="role-badge role-admin">
-                    <i class="bi bi-shield-fill-check"></i> Administrador
-                </div>
-            </a>
-
-            <a href="https://github.com/D1se0" target="_blank" class="colaborador">
-                <img src="{{ get_profile_image_url(username='d1se0') }}" alt="d1se0">
-                <span class="colaborador-name">d1se0</span>
-                <div class="role-badge role-admin">
-                    <i class="bi bi-shield-fill-check"></i> Administrador
-                </div>
-            </a>
-
+            {% endfor %}
         </div>
-    </div>
+    </section>
 
     <!-- MODERADORES -->
-    <div class="section-label">
-        <span><i class="bi bi-shield-fill"></i> Moderadores</span>
-    </div>
-    <div class="card p-4 mt-2 mb-5 colaboradores-card">
-        <div class="colaboradores-grid">
+    <section class="eq-seccion" aria-labelledby="eq-mods">
+        <div class="eq-seccion-cab">
+            <span class="eq-seccion-icono eq-tono-mod"><i class="bi bi-shield-fill"></i></span>
+            <div>
+                <h2 id="eq-mods">Moderadores</h2>
+                <p>Cuidan de que los contenidos y la comunidad estén en orden.</p>
+            </div>
+        </div>
+        <div class="eq-grid eq-grid--centro">
+            {% set mods = [
+                {"nombre": "Santitub", "img": "/static/dockerlabs/images/agradecimientos/santitub.png", "url": "https://github.com/Santitub",
+                 "tldr": "Santitub es moderador de DockerLabs. ¡Gracias por tu ayuda!"},
+                {"nombre": "Sebastian Viña", "img": "/static/dockerlabs/images/agradecimientos/sebastian.png", "url": "https://github.com/fenixiado/",
+                 "tldr": "Sebastian Viña es moderador de DockerLabs. ¡Gracias por tu ayuda!"},
+            ] %}
+            {% for m in mods %}
+            <a href="{{ m.url }}" target="_blank" rel="noopener noreferrer" class="eq-card" style="--i:{{ loop.index }}"
+               aria-label="{{ m.nombre }}. Abrir perfil" data-tldr="{{ m.tldr }}">
+                <span class="eq-avatar eq-tono-mod"><img src="{{ m.img }}" alt="{{ m.nombre }}" width="96" height="96" loading="lazy"></span>
+                <span class="eq-nombre">{{ m.nombre }}</span>
+                {{ insignias(['mod']) }}
+                {{ enlace(m.url) }}
+            </a>
+            {% endfor %}
+        </div>
+    </section>
 
-            <a href="https://github.com/Santitub" target="_blank" class="colaborador">
-                <img src="/static/dockerlabs/images/agradecimientos/santitub.png" alt="Santitub">
-                <span class="colaborador-name">Santitub</span>
-                <div class="role-badge role-mod">
-                    <i class="bi bi-shield-fill"></i> Moderador
-                </div>
-            </a>
+    <!-- COLABORADORES / ÚNETE -->
+    <section class="eq-seccion" aria-labelledby="eq-colabs">
+        <div class="eq-seccion-cab">
+            <span class="eq-seccion-icono eq-tono-colab"><i class="bi bi-people-fill"></i></span>
+            <div>
+                <h2 id="eq-colabs">Colaboradores</h2>
+                <p>Quienes aportan máquinas, código y mejoras a DockerLabs.</p>
+            </div>
+        </div>
+        <div class="eq-unete" data-tldr="Aquí cabe tu nombre: puedes crear una máquina, proponerla o contribuir con código en GitHub.">
+            <div class="eq-unete-icono"><i class="bi bi-person-plus-fill"></i></div>
+            <h3>Tu nombre podría estar aquí</h3>
+            <p>Todavía no hay colaboradores destacados en esta sección. DockerLabs crece con las aportaciones de la
+                comunidad: no hace falta ser experto, solo ganas de sumar.</p>
+            <div class="eq-unete-acciones">
+                <a href="{{ url_for('main.enviar_maquina') }}" class="dl-btn dl-btn--neutro"><i class="bi bi-tools"></i> Crear y enviar una máquina</a>
+                <a href="https://github.com/Maalfer/dockerlabs?tab=contributing-ov-file" target="_blank" rel="noopener noreferrer" class="dl-btn dl-btn--neutro"><i class="bi bi-github"></i> Contribuir en GitHub</a>
+            </div>
+        </div>
+    </section>
 
-            <a href="https://github.com/fenixiado/" target="_blank" class="colaborador">
-                <img src="/static/dockerlabs/images/agradecimientos/sebastian.png" alt="Sebastian">
-                <span class="colaborador-name">Sebastian Viña</span>
-                <div class="role-badge role-mod">
-                    <i class="bi bi-shield-fill"></i> Moderador
-                </div>
-            </a>
-        </div>
-    </div>
-    
-    <!-- COLABORADORES -->
-    <div class="section-label">
-        <span><i class="bi bi-people-fill"></i> Colaboradores</span>
-    </div>
-    <div class="card p-4 mt-2 mb-5 colaboradores-card">
-        <div class="colaboradores-mosaic">
-            <!-- Los colaboradores se agregarán aquí -->
-        </div>
-        <div class="colaboradores-empty">
-            <i class="bi bi-people"></i>
-            <p>Todavía no hay colaboradores registrados en esta sección.</p>
-            <a href="https://github.com/Maalfer/dockerlabs?tab=contributing-ov-file" target="_blank"
-               class="colaboradores-empty-link">
-                <i class="bi bi-box-arrow-up-right"></i> Descubre cómo colaborar
-            </a>
-        </div>
-    </div>
+    <p class="eq-gracias">Y a toda la comunidad que juega, reporta y comparte: <a href="{{ url_for('main.agradecimientos') }}">¡gracias!</a></p>
+
 </div>
+</div>
+</div>
+<script src="{{ static_v('dockerlabs/js/ballena.js') }}" defer></script>
 {% endblock %}

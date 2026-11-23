@@ -1,18 +1,23 @@
 /* Registro del service worker + utilidades PWA (instalación en Android, guía en iOS). */
 (function () {
   'use strict';
-  if ('serviceWorker' in navigator) {
-    window.addEventListener('load', function () {
+  // El service worker guarda archivos en el dispositivo: solo con el consentimiento de «Preferencias».
+  function consiente() { return !!(window.DLConsent && window.DLConsent.permite('preferencias')); }
+  function registraSW() {
+    if ('serviceWorker' in navigator && consiente()) {
       navigator.serviceWorker.register('/sw.js', { scope: '/' }).catch(function () {});
-    });
+    }
   }
+  window.addEventListener('load', registraSW);
+  window.addEventListener('dl-consent', registraSW);
 
   var standalone = window.matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
   if (standalone) document.documentElement.classList.add('is-pwa');
 
   var DISMISS_KEY = 'dl-install-dismissed';
-  function dismissed() { try { return Date.now() - Number(localStorage.getItem(DISMISS_KEY) || 0) < 14 * 864e5; } catch (e) { return false; } }
-  function remember() { try { localStorage.setItem(DISMISS_KEY, String(Date.now())); } catch (e) {} }
+  var descartadoAhora = false;   // sin consentimiento solo se recuerda mientras dura la página
+  function dismissed() { if (descartadoAhora) return true; if (!consiente()) return false; try { return Date.now() - Number(localStorage.getItem(DISMISS_KEY) || 0) < 14 * 864e5; } catch (e) { return false; } }
+  function remember() { descartadoAhora = true; if (!consiente()) return; try { localStorage.setItem(DISMISS_KEY, String(Date.now())); } catch (e) {} }
 
   function banner(text, actionLabel, onAction) {
     if (standalone || dismissed() || document.getElementById('pwa-install')) return;

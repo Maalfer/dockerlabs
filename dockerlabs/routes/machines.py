@@ -25,7 +25,7 @@ class AddMaquinaRequest(BaseModel):
     imagen: Optional[str] = ""
     destino: Optional[str] = "docker"
     categoria: Optional[str] = ""
-    sistema_operativo: Optional[str] = "linux"
+    sistema_operativo: Optional[str] = "docker"
 
 
 # Imagen de portada por defecto cuando no hay logo subido (logo_path)
@@ -57,12 +57,12 @@ def _sanitize_imagen(value: Optional[str]) -> str:
     return _DEFAULT_IMAGEN
 
 
-_SISTEMAS_OPERATIVOS_VALIDOS = ("linux", "windows", "movil")
+_SISTEMAS_OPERATIVOS_VALIDOS = ("docker", "virtualbox")
 
 
 def _sanitize_sistema_operativo(value: Optional[str]) -> str:
     v = (value or "").strip().lower()
-    return v if v in _SISTEMAS_OPERATIVOS_VALIDOS else "linux"
+    return v if v in _SISTEMAS_OPERATIVOS_VALIDOS else "docker"
 
 
 def _difficulty_to_color_clase(dificultad: str):
@@ -279,6 +279,13 @@ def register_machine_routes(
             db.session.commit()
             if data.destino == "docker":
                 recalcular_ranking_creadores()
+            # Si la máquina venía de un envío de la comunidad, sale sola de la cola de revisión.
+            try:
+                from dockerlabs.routes.pending_admin import marcar_publicadas
+                marcar_publicadas(db, new_machine.nombre, user_id)
+            except Exception:
+                logger.exception("No se pudo marcar como añadido el envío pendiente de %s", data.nombre)
+                db.session.rollback()
             await notify_new_machine(new_machine)
             redirect_url = {
                 "bunker": "/bunkerlabs",
@@ -368,12 +375,16 @@ def register_machine_routes(
         # escribirlo chocaba con el snapshot isolation de MariaDB y lanzaba
         # "Error 1020: Record has changed since last read", tirando la
         # pagina de descarga con un 500.
-        db.session.query(Machine).filter(Machine.id == maquina.id).update(
-            {Machine.descargas: func.coalesce(Machine.descargas, 0) + 1},
-            synchronize_session=False,
-        )
-        db.session.add(MachineDownloadLog(machine_id=maquina.id))
-        db.session.commit()
+        # Solo navegaciones humanas: los bots/crawlers que siguen el enlace
+        # no cuentan como descarga.
+        from dockerlabs.traffic import is_human_navigation
+        if is_human_navigation(request):
+            db.session.query(Machine).filter(Machine.id == maquina.id).update(
+                {Machine.descargas: func.coalesce(Machine.descargas, 0) + 1},
+                synchronize_session=False,
+            )
+            db.session.add(MachineDownloadLog(machine_id=maquina.id))
+            db.session.commit()
 
         current_user_role = session.get("role", "")
         return templates.TemplateResponse(

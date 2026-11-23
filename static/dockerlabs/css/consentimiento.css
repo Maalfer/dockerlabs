@@ -1,0 +1,34 @@
+/* Banner y panel de gestion de cookies */
+.dl-ck-banner { position: fixed; left: 0; right: 0; bottom: 0; z-index: 9500; padding: 1rem; background: rgba(var(--surface-overlay-rgb, 2, 6, 23), .97); border-top: 1px solid var(--border-strong, #334155); box-shadow: 0 -12px 32px rgba(0, 0, 0, .5); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
+.dl-ck-banner[hidden], .dl-ck-modal[hidden] { display: none; }
+.dl-ck-banner-in { max-width: 1100px; margin: 0 auto; display: flex; gap: 1.25rem; align-items: center; justify-content: space-between; flex-wrap: wrap; }
+.dl-ck-texto { flex: 1 1 420px; min-width: 0; color: var(--text-primary, #e2e8f0); }
+.dl-ck-texto strong { display: flex; align-items: center; gap: .5rem; margin-bottom: .25rem; font-size: 1rem; }
+.dl-ck-texto strong i { color: var(--hack-green, #3cff00); }
+.dl-ck-texto p { margin: 0; font-size: .85rem; line-height: 1.55; color: var(--text-muted, #94a3b8); }
+.dl-ck-texto a, .dl-ck-dialogo a { color: var(--accent-cyan, #38bdf8); text-decoration: underline; }
+.dl-ck-acciones { display: flex; gap: .6rem; flex-wrap: wrap; flex: 0 1 auto; }
+.dl-ck-acciones .dl-btn { white-space: nowrap; }
+html.dl-ck-abierto body { padding-bottom: var(--dl-ck-alto, 0px); }
+
+.dl-ck-modal { position: fixed; inset: 0; z-index: 9600; display: flex; align-items: center; justify-content: center; padding: 1rem; background: rgba(var(--surface-overlay-rgb, 2, 6, 23), .85); }
+.dl-ck-dialogo { position: relative; width: 100%; max-width: 620px; max-height: 92vh; overflow-y: auto; padding: 1.75rem 1.75rem 1.5rem; border-radius: 16px; background: var(--background-dark, #0b1220); border: 1px solid var(--border-strong, #334155); box-shadow: 0 24px 48px rgba(0, 0, 0, .7); color: var(--text-primary, #e2e8f0); }
+.dl-ck-dialogo h2 { margin: 0 0 .5rem; font-size: 1.3rem; }
+.dl-ck-intro { margin: 0 0 1rem; font-size: .9rem; line-height: 1.55; color: var(--text-muted, #94a3b8); }
+.dl-ck-x { position: absolute; top: .6rem; right: .8rem; background: none; border: 0; color: var(--text-muted, #94a3b8); font-size: 1.7rem; line-height: 1; cursor: pointer; }
+.dl-ck-x:hover, .dl-ck-x:focus-visible { color: var(--text-primary, #fff); }
+.dl-ck-opcion { display: flex; gap: .8rem; align-items: flex-start; padding: .85rem 1rem; margin-bottom: .7rem; border: 1px solid var(--border-strong, #334155); border-radius: 12px; cursor: pointer; }
+.dl-ck-opcion input { margin-top: .25rem; flex: 0 0 auto; width: 1.1rem; height: 1.1rem; accent-color: var(--hack-green, #3cff00); }
+.dl-ck-opcion input:disabled { cursor: not-allowed; opacity: .7; }
+.dl-ck-opcion strong { font-size: .95rem; }
+.dl-ck-opcion em { margin-left: .4rem; font-size: .72rem; font-style: normal; color: var(--accent-cyan, #38bdf8); }
+.dl-ck-opcion small { display: block; margin-top: .3rem; font-size: .8rem; line-height: 1.5; color: var(--text-muted, #94a3b8); }
+.dl-ck-opcion code { color: var(--hack-green, #3cff00); font-size: .78rem; }
+.dl-ck-nota { margin: .4rem 0 1rem; font-size: .8rem; color: var(--text-muted, #94a3b8); }
+.dl-ck-acciones-modal { justify-content: flex-end; }
+@media (max-width: 720px) {
+    .dl-ck-banner { max-height: 80vh; overflow-y: auto; padding: .9rem; }
+    .dl-ck-acciones { flex-direction: column; width: 100%; }
+    .dl-ck-acciones .dl-btn { width: 100%; justify-content: center; white-space: normal; }
+    .dl-ck-dialogo { padding: 1.4rem 1.1rem 1.2rem; }
+}

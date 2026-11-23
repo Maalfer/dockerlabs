@@ -19,7 +19,7 @@
     var ultimo = pasos.length - 1, actual = 0, abierta = false, focoPrevio = null, tCierre = 0;
 
     /* Primera visita: el botón late suavemente hasta que se abre la guía */
-    try { if (!localStorage.getItem("dl-guia-vista")) btn.classList.add("dl-ayuda-nuevo"); } catch (e) { /* sin storage */ }
+    try { if (!(window.DLConsent && window.DLConsent.permite("preferencias") && localStorage.getItem("dl-guia-vista"))) btn.classList.add("dl-ayuda-nuevo"); } catch (e) { /* sin storage */ }
 
     /* Puntos de navegación */
     pasos.forEach(function (p, i) {
@@ -37,7 +37,7 @@
         if (!B) return;
         B.decir(paso.getAttribute("data-dice") || "");
         switch (paso.getAttribute("data-estado")) {
-            case "hola": B.momento("feliz", 1800); B.soplar(); break;
+            case "hola": B.momento("feliz", 1800); B.soplar(); if (B.gesto) B.gesto("saluda"); break;
             case "feliz": B.momento("feliz", 1800); break;
             case "sopla": B.soplar(); break;
             case "teclea": B.momento("teclea", 2600); break;
@@ -76,7 +76,7 @@
         abierta = true;
         btn.setAttribute("aria-expanded", "true");
         btn.classList.remove("dl-ayuda-nuevo");
-        try { localStorage.setItem("dl-guia-vista", "1"); } catch (e) { /* sin storage */ }
+        try { if (window.DLConsent && window.DLConsent.permite("preferencias")) localStorage.setItem("dl-guia-vista", "1"); } catch (e) { /* sin storage */ }
         ir(actual);
         setTimeout(function () { sig.focus(); }, reducir.matches ? 0 : 120);
     }

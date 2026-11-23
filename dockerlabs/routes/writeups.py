@@ -6,7 +6,7 @@ from typing import List, Optional
 from fastapi import Depends, Request
 from fastapi.responses import JSONResponse, StreamingResponse
 from pydantic import BaseModel
-from sqlalchemy import func
+from sqlalchemy import func, case
 
 from dockerlabs import validators
 from dockerlabs.discord_notify import notify_writeups_batch
@@ -52,6 +52,11 @@ class MaquinaWriteupItem(BaseModel):
     maquina: str
     total: int
     imagen: Optional[str] = None
+    # Campos añadidos para la página /writeups-publicados (los anteriores no cambian)
+    dificultad: Optional[str] = None
+    videos: int = 0
+    textos: int = 0
+    ultimo: Optional[datetime] = None
 
 
 class MaquinasWriteupsResponse(BaseModel):
@@ -833,7 +838,12 @@ def register_writeup_routes(api_router, get_session, verify_csrf_token, db):
         username = (session.get("username") or "").strip()
 
         query = (
-            db.session.query(Writeup.maquina, func.count().label("total"), Machine.imagen, Machine.logo_path, Machine.id)
+            db.session.query(
+                Writeup.maquina, func.count().label("total"), Machine.imagen, Machine.logo_path, Machine.id,
+                Machine.dificultad,
+                func.sum(case((func.lower(Writeup.tipo).like("%v%deo%"), 1), else_=0)).label("videos"),
+                func.max(Writeup.created_at).label("ultimo"),
+            )
             .outerjoin(Machine, Writeup.maquina == Machine.nombre)
             .filter(Writeup.maquina != None, Writeup.maquina != "")  # noqa: E711
         )
@@ -842,10 +852,12 @@ def register_writeup_routes(api_router, get_session, verify_csrf_token, db):
             if filter_mode == "mine" and username:
                 query = query.filter(Writeup.autor == username)
 
-        results = query.group_by(Writeup.maquina, Machine.imagen, Machine.logo_path, Machine.id).order_by(func.lower(Writeup.maquina)).all()
+        results = query.group_by(
+            Writeup.maquina, Machine.imagen, Machine.logo_path, Machine.id, Machine.dificultad
+        ).order_by(func.lower(Writeup.maquina)).all()
 
         maquinas = []
-        for maquina_nombre, total, imagen, logo_path, machine_id in results:
+        for maquina_nombre, total, imagen, logo_path, machine_id, dificultad, videos, ultimo in results:
             imagen_url = None
             
             # Usar el endpoint dinámico que sirve desde el sistema correcto (nuevo o antiguo)
@@ -862,7 +874,11 @@ def register_writeup_routes(api_router, get_session, verify_csrf_token, db):
                     static_path = f"dockerlabs/images/logos/{imagen_rel}"
                 imagen_url = f"/static/{static_path}"
 
-            maquinas.append({"maquina": maquina_nombre, "total": total, "imagen": imagen_url})
+            videos = int(videos or 0)
+            maquinas.append({
+                "maquina": maquina_nombre, "total": total, "imagen": imagen_url,
+                "dificultad": dificultad, "videos": videos, "textos": max(0, total - videos), "ultimo": ultimo,
+            })
 
         return {"maquinas": maquinas}
 

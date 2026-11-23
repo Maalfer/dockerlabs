@@ -16,6 +16,10 @@ class BunkerAccessLogEntry(BaseModel):
 
 class BunkerAccessLogsResponse(BaseModel):
     logs: List[BunkerAccessLogEntry]
+    total: int = 0
+
+
+MAX_LOGS = 300  # el historial puede tener miles de entradas: se devuelven las más recientes
 
 
 def register_bunker_api_routes(api_router, get_session, verify_csrf_token, db):
@@ -25,11 +29,14 @@ def register_bunker_api_routes(api_router, get_session, verify_csrf_token, db):
         if role != "admin":
             raise HTTPException(status_code=403, detail="Acceso denegado")
 
-        logs = BunkerAccessLog.query.filter_by(token_id=token_id).order_by(BunkerAccessLog.accessed_at.desc()).all()
+        consulta = BunkerAccessLog.query.filter_by(token_id=token_id)
+        total = consulta.count()
+        logs = consulta.order_by(BunkerAccessLog.accessed_at.desc(), BunkerAccessLog.id.desc()).limit(MAX_LOGS).all()
         result = []
         for log in logs:
-            result.append({"nombre": log.user_nombre, "fecha": log.accessed_at.strftime("%d-%m-%Y %H:%M:%S")})
-        return {"logs": result}
+            fecha = log.accessed_at.strftime("%d-%m-%Y %H:%M:%S") if log.accessed_at else "-"
+            result.append({"nombre": log.user_nombre, "fecha": fecha})
+        return {"logs": result, "total": total}
 
     @api_router.delete("/bunker/logs/{token_id}")
     def api_delete_bunker_access_logs(
@@ -43,9 +50,9 @@ def register_bunker_api_routes(api_router, get_session, verify_csrf_token, db):
             raise HTTPException(status_code=403, detail="Acceso denegado")
 
         try:
-            BunkerAccessLog.query.filter_by(token_id=token_id).delete()
+            borrados = BunkerAccessLog.query.filter_by(token_id=token_id).delete()
             db.session.commit()
-            return {"message": "Historial eliminado correctamente"}
+            return {"message": "Historial eliminado correctamente", "eliminados": borrados}
         except Exception:
             logger.exception("Error inesperado en api_delete_bunker_access_logs")
             db.session.rollback()

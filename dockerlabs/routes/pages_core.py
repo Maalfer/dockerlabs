@@ -29,12 +29,16 @@ def register_pages_core_routes(
     _GO_DESTINOS = {
         "newsletter": "https://elrincondelhacker.es/newsletter",
         "academia": "https://elrincondelhacker.es/",
+        # Login de BunkerLabs: La Academia aterriza directamente en el catálogo (#cursos) y el
+        # Máster en su página. Destino propio = utm_campaign propia en MailerUp.
+        "academia-bunker": "https://elrincondelhacker.es/#cursos",
+        "master": "https://thebigschool.com/master-ciberseguridad-hacking-etico/",
     }
     _GO_BOTS = ("bot", "crawl", "spider", "curl", "wget", "python-requests", "headless", "preview", "monitor", "facebookexternalhit")
     # Únicos valores que envían las plantillas propias (home.html, base.html). Cualquier otro
     # valor de "o" es ruido de escáneres probando SQLi/XSS en el parámetro y se agrupa en "otro"
     # para no ensuciar /estadisticas con una fila nueva por cada payload distinto.
-    _GO_ORIGENES_VALIDOS = {"footer", "home-boton"}
+    _GO_ORIGENES_VALIDOS = {"footer", "home-boton", "bunker-login"}
 
     @pages_router.get("/go/{destino}", include_in_schema=False)
     def go_externo(destino: str, request: Request, o: str = "footer"):
@@ -43,18 +47,18 @@ def register_pages_core_routes(
             raise HTTPException(status_code=404)
         origen_raw = re.sub(r"[^a-z0-9-]", "", (o or "").lower())[:30] or "footer"
         origen = origen_raw if origen_raw in _GO_ORIGENES_VALIDOS else "otro"
-        ua = request.headers.get("user-agent", "")
-        if ua and not any(b in ua.lower() for b in _GO_BOTS):
+        from dockerlabs.traffic import is_human_navigation, visitor_hash
+        if is_human_navigation(request):
             try:
-                ip = request.headers.get("cf-connecting-ip") or (request.client.host if request.client else "")
-                day = utcnow().strftime("%Y-%m-%d")
-                visitor = hashlib.sha256(f"{os.environ.get('SECRET_KEY', 'dockerlabs')}|{ip}|{ua}|{day}".encode()).hexdigest()[:16]
+                visitor = visitor_hash(request)
                 db.session.add(OutboundClickLog(destino=destino, origen=origen, visitor=visitor))
                 db.session.commit()
             except Exception:
                 db.session.rollback()   # el recuento nunca debe impedir la redirección
         qs = urlencode({"utm_source": "dockerlabs", "utm_medium": origen, "utm_campaign": destino})
-        return RedirectResponse(f"{base}?{qs}", status_code=302, headers={"Cache-Control": "no-store"})
+        base, _, ancla = base.partition("#")      # los parámetros van antes del ancla
+        destino_final = f"{base}?{qs}" + (f"#{ancla}" if ancla else "")
+        return RedirectResponse(destino_final, status_code=302, headers={"Cache-Control": "no-store"})
 
     @pages_router.get("/", response_class=HTMLResponse)
     def index_page(request: Request, session: dict = Depends(get_session)):

@@ -310,3 +310,118 @@
 .pm-reject-form {
     display: contents;
 }
+
+/* =====================================================
+   Cola de revisión: pestañas, filtros, pistas, paginación
+   ===================================================== */
+.pending-header { margin-bottom: 1.5rem; }
+
+.pm-tabs { display: flex; flex-wrap: wrap; gap: .5rem; margin-bottom: 1rem; }
+.pm-tab {
+    display: inline-flex; align-items: center; gap: .45rem;
+    padding: .5rem .95rem; border-radius: 10px;
+    font-family: 'Fira Code', monospace; font-size: .85rem; text-decoration: none;
+    color: var(--text-secondary);
+    background: rgba(var(--surface-overlay-rgb), .7);
+    border: 1px solid rgba(51, 65, 85, .55);
+    transition: border-color .2s ease, color .2s ease, background .2s ease;
+}
+.pm-tab:hover { color: #f1f5f9; border-color: rgba(59, 130, 246, .5); }
+.pm-tab.activa { color: var(--accent-yellow); border-color: var(--accent-yellow); background: rgba(245, 158, 11, .08); }
+.pm-tab-n {
+    min-width: 1.6em; padding: .05rem .4rem; border-radius: 999px; text-align: center;
+    font-size: .75rem; background: rgba(148, 163, 184, .16); color: #e2e8f0;
+}
+.pm-tab.activa .pm-tab-n { background: rgba(245, 158, 11, .2); color: var(--accent-yellow); }
+
+.pm-barra { display: flex; flex-wrap: wrap; align-items: center; gap: .6rem; margin-bottom: .75rem; }
+.pm-barra-hueco, .pm-actions-hueco { flex: 1 1 auto; }
+.pm-buscar {
+    flex: 1 1 280px; max-width: 460px; display: flex; align-items: center; gap: .55rem; margin: 0;
+    padding: 0 .85rem; border-radius: 10px;
+    background: rgba(var(--surface-overlay-rgb), .8); border: 1px solid rgba(51, 65, 85, .7);
+}
+.pm-buscar:focus-within { border-color: var(--accent-yellow); }
+.pm-buscar i { color: var(--text-muted); }
+.pm-buscar input {
+    flex: 1; min-width: 0; padding: .55rem 0; background: transparent; border: 0; outline: 0;
+    color: #f1f5f9; font-family: 'Fira Code', monospace; font-size: .85rem;
+}
+.pm-orden { margin: 0; }
+.pm-orden select {
+    padding: .5rem .7rem; border-radius: 10px; cursor: pointer;
+    background: rgba(var(--surface-overlay-rgb), .8); border: 1px solid rgba(51, 65, 85, .7);
+    color: #e2e8f0; font-family: 'Fira Code', monospace; font-size: .82rem;
+}
+.pm-ayuda { margin: 0 0 1.25rem; color: var(--text-muted); font-family: 'Fira Code', monospace; font-size: .8rem; }
+.pm-rango { margin-bottom: 1rem; color: var(--text-muted); font-size: .82rem; font-family: 'Fira Code', monospace; }
+.pm-rango strong { color: var(--text-secondary); font-weight: 600; }
+
+/* Pistas dentro de la tarjeta */
+.pm-pistas { display: flex; flex-direction: column; gap: .4rem; }
+.pm-pista {
+    display: flex; align-items: flex-start; gap: .45rem; padding: .45rem .7rem; border-radius: 8px;
+    font-size: .78rem; line-height: 1.45; text-decoration: none; border: 1px solid transparent;
+}
+.pm-pista i { margin-top: 1px; }
+.pm-pista--ok     { color: #4ade80; background: rgba(34, 197, 94, .1);  border-color: rgba(34, 197, 94, .3); }
+.pm-pista--aviso  { color: #fbbf24; background: rgba(245, 158, 11, .1); border-color: rgba(245, 158, 11, .3); }
+.pm-pista--aviso:hover { color: #fde68a; border-color: rgba(245, 158, 11, .6); }
+.pm-pista--espera { color: #fca5a5; background: rgba(239, 68, 68, .08); border-color: rgba(239, 68, 68, .28); }
+.pm-card--urgente { border-color: rgba(239, 68, 68, .4); }
+.pm-hace { color: var(--text-muted); font-style: normal; }
+
+/* Botones nuevos */
+.pm-btn:disabled { opacity: .5; cursor: progress; transform: none; }
+.pm-btn-ok { background: rgba(34, 197, 94, .12); border-color: rgba(34, 197, 94, .4); color: #4ade80; }
+.pm-btn-ok:hover { background: rgba(34, 197, 94, .22); border-color: #22c55e; color: #86efac; }
+.pm-btn-neutro { background: rgba(148, 163, 184, .1); border-color: rgba(148, 163, 184, .3); color: #cbd5e1; }
+.pm-btn-neutro:hover { background: rgba(148, 163, 184, .18); border-color: #94a3b8; color: #f1f5f9; }
+.pm-btn-publicar { background: rgba(245, 158, 11, .1); border-color: rgba(245, 158, 11, .4); color: var(--accent-yellow); }
+.pm-btn-publicar:hover { background: rgba(60, 255, 0, .1); border-color: var(--hack-green, #3cff00); color: var(--hack-green, #3cff00); }
+.pm-actions .pm-btn-reject { margin-left: 0; }
+
+/* Entrada / salida de tarjetas */
+.pm-card--ocupada { opacity: .6; pointer-events: none; }
+.pm-card--sale { opacity: 0; transform: scale(.96) translateY(6px); transition: opacity .25s ease, transform .25s ease; }
+
+/* Paginación */
+.pm-pag { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: .4rem; margin-top: 2rem; }
+.pm-pag-btn {
+    display: inline-flex; align-items: center; gap: .35rem; min-width: 2.4rem; justify-content: center;
+    padding: .45rem .8rem; border-radius: 9px; text-decoration: none;
+    font-family: 'Fira Code', monospace; font-size: .82rem; color: var(--text-secondary);
+    background: rgba(var(--surface-overlay-rgb), .75); border: 1px solid rgba(51, 65, 85, .6);
+    transition: border-color .2s ease, color .2s ease;
+}
+a.pm-pag-btn:hover { color: var(--hack-green, #3cff00); border-color: var(--hack-green, #3cff00); }
+.pm-pag-btn.actual { color: #0b1220; background: var(--accent-yellow); border-color: var(--accent-yellow); font-weight: 600; }
+.pm-pag-btn.inactivo { opacity: .4; }
+.pm-pag-puntos { color: var(--text-muted); padding: 0 .2rem; }
+
+/* Aviso flotante con «Deshacer» */
+.pm-toast {
+    position: fixed; right: 20px; bottom: 20px; z-index: 10010; max-width: min(92vw, 460px);
+    display: flex; align-items: center; gap: .9rem; padding: .75rem 1rem; border-radius: 10px;
+    background: #0f172a; color: #f1f5f9; border: 1px solid rgba(34, 197, 94, .55);
+    box-shadow: 0 12px 30px rgba(0, 0, 0, .5); font-size: .88rem;
+    animation: pm-toast-entra .3s ease both;
+}
+.pm-toast--error { border-color: rgba(239, 68, 68, .7); }
+.pm-toast--sale { opacity: 0; transform: translateY(12px); transition: opacity .3s ease, transform .3s ease; }
+.pm-toast button {
+    flex: 0 0 auto; padding: .3rem .7rem; border-radius: 7px; cursor: pointer;
+    background: transparent; border: 1px solid var(--accent-yellow); color: var(--accent-yellow);
+    font-family: 'Fira Code', monospace; font-size: .8rem;
+}
+.pm-toast button:hover { border-color: var(--hack-green, #3cff00); color: var(--hack-green, #3cff00); }
+@keyframes pm-toast-entra { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+
+@media (max-width: 640px) {
+    .pm-buscar { max-width: none; flex-basis: 100%; }
+    .pm-toast { left: 12px; right: 12px; bottom: 12px; }
+    .pm-actions-hueco { display: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+    .pm-card--sale, .pm-toast, .pm-toast--sale { transition: none; animation: none; }
+}

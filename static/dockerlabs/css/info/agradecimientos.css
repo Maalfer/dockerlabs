@@ -1,0 +1,58 @@
+/* =====================================================
+   PAGINA AGRADECIMIENTOS — reutiliza el lenguaje visual
+   de /equipo (equipo.css: .eq-page, .eq-header, .eq-card,
+   .eq-avatar, .eq-unete…). Aqui solo va lo propio.
+   ===================================================== */
+
+/* ---- Texto de introduccion: salida de terminal ---- */
+.ag-intro {
+    display: flex; align-items: flex-start; gap: .9rem;
+    margin: 0 0 2.75rem; padding: 1.15rem 1.35rem;
+    border-radius: 16px;
+    background: var(--surface-dark);
+    border: 1px solid var(--border-strong);
+    border-left: 3px solid var(--hack-green, #3cff00);
+    box-shadow: 0 16px 32px rgba(0, 0, 0, .35);
+    animation: eqEntra .6s both;
+}
+.ag-intro i {
+    flex: 0 0 auto; margin-top: .2rem; font-size: 1.05rem;
+    color: var(--hack-green, #3cff00); text-shadow: 0 0 14px var(--hack-glow, rgba(60, 255, 0, .55));
+}
+.ag-intro p { margin: 0; color: var(--text-secondary); font-size: .95rem; line-height: 1.7; }
+
+/* ---- Rejilla de tarjetas ---- */
+.ag-grid {
+    list-style: none; margin: 0; padding: 0;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+.ag-grid > li { display: flex; min-width: 0; }
+.ag-grid--centro { grid-template-columns: repeat(2, minmax(0, 320px)); justify-content: center; }
+/* Logotipos que no deben recortarse con el circulo (p. ej. VulNyx) */
+.ag-avatar--encajar img { object-fit: contain; padding: 9%; }
+.ag-card { flex: 1 1 auto; min-width: 0; }
+.ag-card .eq-enlace { white-space: nowrap; }
+
+/* ---- Bloque final ---- */
+.ag-unete-titulo {
+    margin: 0 0 .5rem; font-family: 'Fira Code', monospace;
+    font-size: 1.2rem; font-weight: 600; color: var(--text-primary);
+}
+.ag-gracias { margin-top: 2rem; }
+
+/* ---- Responsive ---- */
+@media (max-width: 860px) {
+    .ag-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 640px) {
+    .ag-intro { padding: 1rem; margin-bottom: 2.25rem; gap: .7rem; }
+    .ag-intro p { font-size: .9rem; }
+    .ag-card .eq-enlace { font-size: .72rem; padding: .3rem .65rem; }
+    .ag-unete-titulo { font-size: 1.05rem; }
+}
+@media (max-width: 300px) {
+    .ag-grid { grid-template-columns: 1fr; }
+}
+@media (prefers-reduced-motion: reduce) {
+    .ag-intro { animation: none; }
+}

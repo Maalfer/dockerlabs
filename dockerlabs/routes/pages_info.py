@@ -1,17 +1,17 @@
 """Páginas públicas de información y legales: cada entrada de `_PAGINAS` es
 una ruta y su plantilla."""
 import secrets
+import time
 
 from fastapi import Depends, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
 
 # ruta → plantilla
 _PAGINAS = {
-    "/instrucciones-uso": "dockerlabs/info/instrucciones_uso.html",
     "/soporte": "dockerlabs/info/soporte.html",
-    "/equipo": "dockerlabs/equipo.html",
-    "/como-se-crea-una-maquina": "dockerlabs/info/como_se_crea_una_maquina.html",
+    "/herramientas-comunidad": "dockerlabs/info/herramientas_comunidad.html",
     "/agradecimientos": "dockerlabs/info/agradecimientos.html",
+    "/autoria": "dockerlabs/info/autoria.html",
     "/terminos-condiciones": "dockerlabs/info/terminos-condiciones.html",
     "/politica-privacidad": "politicas/politica_privacidad.html",
     "/politica-cookies": "politicas/politica_cookies.html",
@@ -36,6 +36,40 @@ def register_pages_info_routes(pages_router, get_session, templates, url_for):
             response_class=HTMLResponse,
             name="info" + ruta.replace("/", "_").replace("-", "_"),
         )
+
+    # /equipo: cifras públicas agregadas (máquinas, usuarios, writeups), cacheadas 10 min.
+    _cifras_cache = {"t": 0.0, "datos": None}
+
+    def _cifras() -> dict:
+        ahora = time.time()
+        if _cifras_cache["datos"] is None or ahora - _cifras_cache["t"] > 600:
+            from dockerlabs.models import Machine, User, Writeup
+            try:
+                _cifras_cache["datos"] = {
+                    "maquinas": Machine.query.filter_by(origen="docker").count(),
+                    "usuarios": User.query.count(),
+                    "writeups": Writeup.query.count(),
+                }
+                _cifras_cache["t"] = ahora
+            except Exception:
+                return _cifras_cache["datos"] or {}
+        return _cifras_cache["datos"]
+
+    @pages_router.get("/equipo", response_class=HTMLResponse)
+    def equipo_page(request: Request, session: dict = Depends(get_session)):
+        return templates.TemplateResponse(request, "dockerlabs/equipo.html", _contexto(session, cifras=_cifras()))
+
+    @pages_router.get("/instrucciones-uso", include_in_schema=False)
+    def instrucciones_uso_retirada():
+        # Página retirada: su contenido vive en la guía de ayuda (botón «?» del inicio).
+        # 301 para que los enlaces y resultados de búsqueda antiguos no acaben en un 404.
+        return RedirectResponse(url="/", status_code=301)
+
+    @pages_router.get("/como-se-crea-una-maquina", include_in_schema=False)
+    def como_se_crea_retirada():
+        # Página unificada con /enviar-maquina («Crear y enviar una máquina»).
+        # 301 para que enlaces y resultados de búsqueda antiguos lleguen a la nueva.
+        return RedirectResponse(url="/enviar-maquina", status_code=301)
 
     @pages_router.get("/enviar-maquina", response_class=HTMLResponse)
     def enviar_maquina_page(request: Request, session: dict = Depends(get_session)):

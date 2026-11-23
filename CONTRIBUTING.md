@@ -1,6 +1,6 @@
 # 👷Como contribuir en DockerLabs
-*Desde el equipo de desarrollo de DockerLabs agradecemos tus ganas de colaborar🐋🩵*
-# Índice
+*Gracias por tus ganas de colaborar en DockerLabs🐋🩵*
+## Índice
 - [Antes de empezar](#antes-de-empezar)
 - [Mejores prácticas y recomendaciones](#mejores-prácticas-y-recomendaciones)
 - [Desplegar DockerLabs en local](#desplegar-dockerlabs-en-local)
@@ -11,25 +11,25 @@
 - [Versionado y cómo publicar un release](#versionado-y-cómo-publicar-un-release)
 - [Reportar vulnerabilidades (VDP)](#reportar-vulnerabilidades-vdp)
 
-# Antes de empezar
+## Antes de empezar
 
 Si encuentras un fallo, repórtalo en [Issues](https://github.com/Maalfer/dockerlabs/issues).
 
-# Mejores prácticas y recomendaciones
+## Mejores prácticas y recomendaciones
 Para realizar cambios seguros y que no ocasionen problemas con la plataforma, recomendamos:
 
 - **Probar nuevas integraciones en la plataforma**  
   Verifica que la funcionalidad opere correctamente y que no genere conflictos con otras partes del sistema.  
-  *(Si tienes dudas, puedes realizar la Pull Request igualmente y el equipo de desarrollo debatirá los cambios.)*
+  *(Si tienes dudas, puedes abrir la Pull Request igualmente: los cambios se debaten ahí mismo.)*
 
 - **Documentar detalladamente los cambios en las Pull Request**  
   Explicar claramente las modificaciones realizadas nos ayudará a comprender mejor la funcionalidad propuesta.  
   Una buena documentación también puede agilizar la revisión, evitando la necesidad de analizar el código en profundidad.
 
 
-# Desplegar DockerLabs en local
+## Desplegar DockerLabs en local
 
-## Dependencias
+### Dependencias
 DockerLabs es FastAPI + Uvicorn sobre MariaDB. El repositorio deja un
 [requirements.txt](/requirements.txt) con todas las dependencias exactas que
 hacen funcionar la plataforma — no las dupliques aquí, instala directamente
@@ -48,7 +48,7 @@ Cloudflare.
 pip3 install -r requirements.txt
 ```
 
-## Configurar y desplegar DockerLabs
+### Configurar y desplegar DockerLabs
 Ya tengamos las dependencias instaladas vamos a configurar correctamente la aplicación para poder desplegarla.
 
 También necesitas una base de datos MariaDB/MySQL accesible y un fichero
@@ -56,7 +56,7 @@ También necesitas una base de datos MariaDB/MySQL accesible y un fichero
 plantilla). Si prefieres no instalar nada de esto a mano, usa directamente
 **Docker Compose** (ver `README.md`).
 
-### Desplegar DockerLabs
+#### Desplegar DockerLabs
 Una vez todo preparado podemos lanzar DockerLabs, para ello ejecutaremos el script [run.py](/run.py):
 
 ```bash
@@ -71,13 +71,13 @@ INFO:     ASGI 'lifespan' protocol appears unsupported.
 INFO:     Application startup complete.
 ```
 
-# ¿Qué ocurre después de abrir una Pull Request?
+## ¿Qué ocurre después de abrir una Pull Request?
 
-El equipo de desarrollo de DockerLabs revisará detalladamente todos los cambios propuestos. Aquellos cambios que se consideren innecesarios o que puedan generar problemas serán rechazados.
+El dueño del proyecto revisará detalladamente todos los cambios propuestos. Aquellos cambios que se consideren innecesarios o que puedan generar problemas serán rechazados.
 
 Valoramos y agradecemos todas las contribuciones. Sin embargo, te pedimos que revises cuidadosamente tus cambios para evitar introducir vulnerabilidades de seguridad o conflictos en el código.
 
-# Versionado y cómo publicar un release
+## Versionado y cómo publicar un release
 
 DockerLabs sigue [Versionado Semántico](https://semver.org/lang/es/)
 (`MAJOR.MINOR.PATCH`) desde la `v2.0.0`. La fuente única de verdad es el
@@ -106,11 +106,14 @@ Para publicar una nueva versión (solo cuando el dueño lo pida):
    ```
 5. (Opcional) Crea el [Release en GitHub](https://github.com/Maalfer/dockerlabs/releases/new)
    a partir del tag, pegando la entrada correspondiente del `CHANGELOG.md`.
-6. Despliega el código nuevo en el VPS y reinicia `dockerlabs.service`; la
-   web, el footer y `/api/version` reflejan la nueva versión de inmediato.
+6. Reinicia el servicio (`sudo systemctl restart dockerlabs`). Como
+   `/opt/dockerlabs` es a la vez el VPS y el clon del repo (ver
+   `DEPLOYMENT.md`), el `VERSION` nuevo ya está en disco desde el paso 2 —
+   el restart solo hace que el proceso lo vuelva a leer. La web, el footer y
+   `/api/version` reflejan la nueva versión de inmediato.
 
-# Reportar vulnerabilidades (VDP)
+## Reportar vulnerabilidades (VDP)
 
-Si encuentras una vulnerabilidad de seguridad en nuestra plataforma, puedes reportarla a través de nuestro programa VDP en Secur0:
-
-- https://app.secur0.com/vulnerability-disclosure/Dockerlabs
+Si encuentras una vulnerabilidad de seguridad, **no** abras un issue público:
+sigue el proceso descrito en [`SECURITY.md`](SECURITY.md) (programa VDP en
+Secur0 y, si corresponde, GitHub Security Advisories / CVE).

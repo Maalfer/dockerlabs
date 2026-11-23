@@ -210,81 +210,190 @@
         font-size: 0.875rem;
     }
 
-    .toggle-btn {
-        background: none;
-        border: none;
-        color: #64748b;
-        cursor: pointer;
-        padding: 0.25rem;
-        margin-left: 0.5rem;
-        transition: color 0.2s;
+    /* Resumen, filtros y fechas */
+    .gu-resumen { display: flex; flex-wrap: wrap; gap: .6rem; margin-bottom: 1.25rem; }
+    .gu-dato {
+        display: inline-flex; align-items: baseline; gap: .45rem; padding: .45rem .85rem; border-radius: .6rem;
+        background: #1e293b; border: 1px solid #334155; color: #94a3b8; font-size: .82rem;
+    }
+    .gu-dato strong { color: #e2e8f0; font-size: 1rem; }
+    .gu-filtros { display: flex; flex-wrap: wrap; align-items: end; gap: .75rem; margin-bottom: 1rem; }
+    .gu-filtros label { display: flex; flex-direction: column; gap: .3rem; margin: 0; font-size: .72rem; font-weight: 600;
+        text-transform: uppercase; letter-spacing: .05em; color: #64748b; }
+    .gu-filtros select {
+        padding: .5rem .7rem; background: #1e293b; border: 1px solid #334155; border-radius: .5rem;
+        color: #e2e8f0; font-size: .875rem; cursor: pointer; text-transform: none; letter-spacing: 0; font-weight: 400;
+    }
+    .gu-filtros select:focus { outline: none; border-color: #3b82f6; }
+    .gu-filtros select.activo { border-color: var(--accent-yellow, #f59e0b); }
+    .gu-limpiar { align-self: end; padding: .5rem .8rem; border-radius: .5rem; font-size: .85rem; text-decoration: none;
+        color: #cbd5e1; border: 1px solid #334155; background: transparent; }
+    .gu-limpiar:hover { color: var(--hack-green, #3cff00); border-color: var(--hack-green, #3cff00); }
+    .gu-rango { margin: 0 0 .75rem; color: #64748b; font-size: .82rem; }
+    .gu-tabla-caja { overflow-x: auto; border-radius: .75rem; }
+    .users-table th a { color: inherit; text-decoration: none; display: inline-flex; align-items: center; gap: .3rem; }
+    .users-table th a:hover, .users-table th a.activo { color: var(--accent-yellow, #f59e0b); }
+    .gu-usuario { color: #e2e8f0; text-decoration: none; }
+    a.gu-usuario:hover { color: var(--accent-cyan, #22d3ee); text-decoration: underline; }
+    .gu-email { color: #cbd5e1; text-decoration: none; }
+    .gu-email:hover { color: var(--accent-cyan, #22d3ee); }
+    .gu-fecha { white-space: nowrap; color: #cbd5e1; font-size: .875rem; }
+    .gu-fecha small { display: block; color: #64748b; font-size: .75rem; }
+    .gu-sin { color: #475569; font-size: .85rem; }
+    .pagination a, .pagination span.pag {
+        padding: .5rem .85rem; border: 1px solid #334155; border-radius: .375rem; color: #e2e8f0;
+        background: #1e293b; text-decoration: none; font-size: .875rem;
+    }
+    .pagination a:hover { border-color: #475569; background: #334155; }
+    .pagination span.pag.actual { background: #3b82f6; border-color: #3b82f6; }
+    .pagination span.pag.inactivo { opacity: .45; }
+    @media (max-width: 768px) {
+        .gestion-usuarios-container { padding: 1rem; }
+        .gestion-usuarios-header { flex-direction: column; align-items: stretch; gap: 1rem; }
+        .gu-filtros label { flex: 1 1 45%; }
     }
 
-    .toggle-btn:hover {
-        color: #e2e8f0;
+    /* Acciones por fila y modal de contraseña */
+    .acciones-celda { display: flex; gap: .5rem; flex-wrap: wrap; }
+    .pw-seccion { display: flex; flex-direction: column; gap: .6rem; margin-bottom: 1rem; }
+    .pw-seccion label { font-size: .8rem; color: #94a3b8; }
+    .pw-seccion input {
+        padding: .6rem .75rem; border: 1px solid #334155; border-radius: .5rem;
+        background: #0f172a; color: #e2e8f0; font-size: .9rem;
     }
+    .pw-seccion input:focus { outline: none; border-color: #3b82f6; }
+    .pw-separador {
+        text-align: center; color: #475569; font-size: .75rem; text-transform: uppercase;
+        letter-spacing: .05em; margin: 1.1rem 0; position: relative;
+    }
+    .pw-separador::before, .pw-separador::after {
+        content: ""; position: absolute; top: 50%; width: 42%; height: 1px; background: #334155;
+    }
+    .pw-separador::before { left: 0; }
+    .pw-separador::after { right: 0; }
+    .pw-ayuda { margin: 0 0 .75rem; color: #94a3b8; font-size: .82rem; }
+    .pw-msg { margin: 1rem 0 0; padding: .6rem .75rem; border-radius: .5rem; font-size: .85rem; }
+    .pw-msg.ok { background: rgba(16, 185, 129, .12); color: #34d399; }
+    .pw-msg.err { background: rgba(220, 38, 38, .12); color: #f87171; }
 </style>
 {% endblock %}
 
 {% block content %}
+{% macro th_orden(etiqueta, asc, desc) -%}
+    {%- set siguiente = asc if orden == desc else desc -%}
+    <a href="{{ listado_url(orden=siguiente, page=1) }}" class="{{ 'activo' if orden in (asc, desc) else '' }}" title="Ordenar por {{ etiqueta | lower }}">
+        {{ etiqueta }}
+        {% if orden == desc %}<i class="bi bi-chevron-down"></i>{% elif orden == asc %}<i class="bi bi-chevron-up"></i>{% endif %}
+    </a>
+{%- endmacro %}
 <div class="gestion-usuarios-container">
     <div class="gestion-usuarios-header">
         <h2>Gestión de Usuarios</h2>
         <div class="search-box">
             <i class="bi bi-search"></i>
-            <input type="text" id="userSearchInput" placeholder="Buscar usuario, email o rol..." value="{{ search }}">
+            <input type="search" id="userSearchInput" placeholder="Buscar usuario, email o rol..." value="{{ search }}" aria-label="Buscar usuarios" autocomplete="off">
         </div>
     </div>
+
+    <div class="gu-resumen">
+        <span class="gu-dato"><strong>{{ resumen.total }}</strong> usuarios</span>
+        <span class="gu-dato"><strong>{{ resumen.nuevos }}</strong> registrados en los últimos 7 días</span>
+        <span class="gu-dato" title="El último acceso se registra desde que se activó esta función; {{ resumen.con_registro }} usuarios tienen ya alguno anotado."><strong>{{ resumen.activos }}</strong> con acceso en los últimos 7 días</span>
+    </div>
+
+    <form class="gu-filtros" method="get" action="/gestion-usuarios" id="guFiltros">
+        {% if search %}<input type="hidden" name="search" value="{{ search }}">{% endif %}
+        <label>Ordenar por
+            <select name="orden">
+                {% for clave, texto in ordenes.items() %}
+                <option value="{{ clave }}" {% if orden == clave %}selected{% endif %}>{{ texto }}</option>
+                {% endfor %}
+            </select>
+        </label>
+        <label>Rol
+            <select name="rol" class="{{ 'activo' if rol }}">
+                <option value="">Todos</option>
+                <option value="jugador" {% if rol == 'jugador' %}selected{% endif %}>Jugadores</option>
+                <option value="moderador" {% if rol == 'moderador' %}selected{% endif %}>Moderadores</option>
+                <option value="admin" {% if rol == 'admin' %}selected{% endif %}>Admins</option>
+            </select>
+        </label>
+        <label>Registrado
+            <select name="registro" class="{{ 'activo' if registro }}">
+                <option value="">En cualquier momento</option>
+                <option value="hoy" {% if registro == 'hoy' %}selected{% endif %}>Últimas 24 horas</option>
+                <option value="7" {% if registro == '7' %}selected{% endif %}>Últimos 7 días</option>
+                <option value="30" {% if registro == '30' %}selected{% endif %}>Últimos 30 días</option>
+                <option value="90" {% if registro == '90' %}selected{% endif %}>Últimos 90 días</option>
+            </select>
+        </label>
+        <label>Último acceso
+            <select name="acceso" class="{{ 'activo' if acceso }}">
+                <option value="">Cualquiera</option>
+                <option value="hoy" {% if acceso == 'hoy' %}selected{% endif %}>Últimas 24 horas</option>
+                <option value="7" {% if acceso == '7' %}selected{% endif %}>Últimos 7 días</option>
+                <option value="30" {% if acceso == '30' %}selected{% endif %}>Últimos 30 días</option>
+                <option value="90" {% if acceso == '90' %}selected{% endif %}>Últimos 90 días</option>
+                <option value="nunca" {% if acceso == 'nunca' %}selected{% endif %}>Sin acceso registrado</option>
+            </select>
+        </label>
+        <label>Por página
+            <select name="per_page">
+                {% for n in (10, 25, 50, 100) %}
+                <option value="{{ n }}" {% if per_page == n %}selected{% endif %}>{{ n }}</option>
+                {% endfor %}
+            </select>
+        </label>
+        <noscript><button type="submit" class="gu-limpiar">Aplicar</button></noscript>
+        {% if hay_filtros %}
+        <a href="/gestion-usuarios{% if orden != 'recientes' %}?orden={{ orden }}{% endif %}" class="gu-limpiar"><i class="bi bi-x-circle"></i> Quitar filtros</a>
+        {% endif %}
+    </form>
 
     {% if total == 0 %}
     <div class="empty-state">
         <i class="bi bi-people"></i>
-        <p>No hay usuarios registrados.</p>
+        <p>{% if hay_filtros %}Ningún usuario coincide con esos filtros.{% else %}No hay usuarios registrados.{% endif %}</p>
     </div>
     {% else %}
 
+    <p class="gu-rango">Mostrando {{ inicio }}–{{ fin }} de {{ total }} usuario{{ '' if total == 1 else 's' }}{% if hay_filtros %} (filtrado){% endif %}</p>
+
+    <div class="gu-tabla-caja">
     <table class="users-table">
         <thead>
             <tr>
                 <th>ID</th>
-                <th>
-                    Usuario
-                    <button type="button" class="toggle-btn" onclick="toggleUsers()">
-                        <i class="bi bi-eye" id="toggleUsersIcon"></i>
-                    </button>
-                </th>
+                <th>{{ th_orden("Usuario", "nombre", "nombre") }}</th>
                 {% if current_user_role == 'admin' %}
-                <th>
-                    Email
-                    <button type="button" class="toggle-btn" onclick="toggleEmails()">
-                        <i class="bi bi-eye" id="toggleEmailsIcon"></i>
-                    </button>
-                </th>
+                <th>Email</th>
                 {% endif %}
                 <th>Rol</th>
-                <th>Creado</th>
+                <th>{{ th_orden("Registrado", "antiguos", "recientes") }}</th>
+                <th>{{ th_orden("Último acceso", "inactivos", "acceso") }}</th>
                 {% if current_user_role == 'admin' %}
                 <th>Acciones</th>
                 {% endif %}
             </tr>
         </thead>
         <tbody>
-            {% for usuario in usuarios %}
+            {% for f in filas %}
+            {% set usuario = f.u %}
             <tr>
                 <td>{{ usuario.id }}</td>
-                <td class="user-cell" data-user="{{ usuario.username }}">
-                    <span class="user-censored">•••••••••••••</span>
-                    <span class="user-real" style="display: none;">{{ usuario.username }}</span>
+                <td class="user-cell">
+                    {% if usuario.slug and usuario.perfil_publico %}
+                    <a class="gu-usuario" href="/perfil/{{ usuario.slug }}" title="Ver su perfil público">{{ usuario.username }}</a>
+                    {% else %}
+                    <span class="gu-usuario">{{ usuario.username }}</span>
+                    {% endif %}
                 </td>
                 {% if current_user_role == 'admin' %}
-                <td class="email-cell" data-email="{{ usuario.email }}">
-                    <span class="email-censored">•••••••••••••</span>
-                    <span class="email-real" style="display: none;">{{ usuario.email }}</span>
-                </td>
+                <td class="email-cell"><a class="gu-email" href="mailto:{{ usuario.email }}">{{ usuario.email }}</a></td>
                 {% endif %}
                 <td>
                     {% if current_user_role == 'admin' %}
-                    <select class="role-select" data-user-id="{{ usuario.id }}" data-csrf="{{ csrf_token_value }}">
+                    <select class="role-select" data-user-id="{{ usuario.id }}" data-csrf="{{ csrf_token_value }}" aria-label="Rol de {{ usuario.username }}">
                         <option value="jugador" {% if usuario.role=='jugador' %}selected{% endif %}>Jugador</option>
                         <option value="moderador" {% if usuario.role=='moderador' %}selected{% endif %}>Moderador</option>
                         <option value="admin" {% if usuario.role=='admin' %}selected{% endif %}>Admin</option>
@@ -293,56 +402,86 @@
                     <span class="role-badge {{ usuario.role }}">{{ usuario.role|capitalize }}</span>
                     {% endif %}
                 </td>
-                <td style="color: #94a3b8; font-size: 0.875rem;">{{ usuario.created_at.strftime('%Y-%m-%d') if usuario.created_at else '—' }}</td>
+                <td class="gu-fecha">
+                    {% if usuario.created_at %}{{ usuario.created_at.strftime('%d/%m/%Y %H:%M') }}<small>{{ f.registro_txt }}</small>{% else %}<span class="gu-sin">—</span>{% endif %}
+                </td>
+                <td class="gu-fecha">
+                    {% if usuario.last_seen_at %}{{ f.acceso_txt }}<small>{{ usuario.last_seen_at.strftime('%d/%m/%Y %H:%M') }}</small>{% else %}<span class="gu-sin" title="Aún no ha entrado desde que se registra el último acceso">sin registro</span>{% endif %}
+                </td>
                 {% if current_user_role == 'admin' %}
                 <td>
-                    <button type="button" class="btn-delete delete-user-btn dl-btn dl-btn--peligro" data-user-id="{{ usuario.id }}" data-csrf="{{ csrf_token_value }}">
-                        <i class="bi bi-trash"></i> Eliminar
-                    </button>
+                    <div class="acciones-celda">
+                        <button type="button" class="dl-btn dl-btn--neutro set-password-btn" data-user-id="{{ usuario.id }}" data-username="{{ usuario.username }}" data-csrf="{{ csrf_token_value }}">
+                            <i class="bi bi-key"></i> Contraseña
+                        </button>
+                        <button type="button" class="btn-delete delete-user-btn dl-btn dl-btn--peligro" data-user-id="{{ usuario.id }}" data-username="{{ usuario.username }}" data-csrf="{{ csrf_token_value }}">
+                            <i class="bi bi-trash"></i> Eliminar
+                        </button>
+                    </div>
                 </td>
                 {% endif %}
             </tr>
             {% endfor %}
         </tbody>
     </table>
+    </div>
 
     {% if total_pages > 1 %}
-    <div class="pagination">
-        <button onclick="goToPage({{ page - 1 }})" {% if not has_prev %}disabled{% endif %}>
-            <i class="bi bi-chevron-left"></i> Anterior
-        </button>
-        {% for p in range(1, total_pages + 1) %}
-            {% if p == page %}
-            <button class="current-page">{{ p }}</button>
-            {% elif p <= 3 or p > total_pages - 3 or (p >= page - 1 and p <= page + 1) %}
-            <button onclick="goToPage({{ p }})">{{ p }}</button>
-            {% elif p == 4 or p == total_pages - 3 %}
-            <span style="color: #64748b;">...</span>
-            {% endif %}
+    <nav class="pagination" aria-label="Paginación">
+        {% if has_prev %}<a href="{{ listado_url(page=page - 1) }}" rel="prev"><i class="bi bi-chevron-left"></i> Anterior</a>
+        {% else %}<span class="pag inactivo"><i class="bi bi-chevron-left"></i> Anterior</span>{% endif %}
+        {% for p in paginas %}
+            {% if p is none %}<span style="color: #64748b;">…</span>
+            {% elif p == page %}<span class="pag actual" aria-current="page">{{ p }}</span>
+            {% else %}<a href="{{ listado_url(page=p) }}">{{ p }}</a>{% endif %}
         {% endfor %}
-        <button onclick="goToPage({{ page + 1 }})" {% if not has_next %}disabled{% endif %}>
-            Siguiente <i class="bi bi-chevron-right"></i>
-        </button>
+        {% if has_next %}<a href="{{ listado_url(page=page + 1) }}" rel="next">Siguiente <i class="bi bi-chevron-right"></i></a>
+        {% else %}<span class="pag inactivo">Siguiente <i class="bi bi-chevron-right"></i></span>{% endif %}
         <span class="page-info">Página {{ page }} de {{ total_pages }} ({{ total }} usuarios)</span>
-    </div>
+    </nav>
     {% endif %}
     {% endif %}
+    <p class="gu-rango" style="margin-top:1rem">Las horas se muestran en UTC. El último acceso se anota cuando el usuario navega con la sesión iniciada (con hasta 10 minutos de margen).</p>
 </div>
 
-<script nonce="{{ g.csp_nonce }}">
-    function goToPage(page) {
-        const search = document.getElementById('userSearchInput').value;
-        const url = new URL(window.location);
-        url.searchParams.set('page', page);
-        if (search) {
-            url.searchParams.set('search', search);
-        } else {
-            url.searchParams.delete('search');
-        }
-        window.location.href = url.toString();
-    }
+{% if current_user_role == 'admin' %}
+<div class="overlay" id="pwOverlay">
+    <div class="popup" id="pwPopup" role="dialog" aria-modal="true" aria-labelledby="pwTitulo">
+        <button type="button" class="modal-close-button" id="pwCerrar" aria-label="Cerrar">&times;</button>
+        <div class="modal-header">
+            <h3 class="modal-title" id="pwTitulo">Contraseña de <span id="pwUsuario"></span></h3>
+        </div>
 
+        <div class="pw-seccion">
+            <label for="pwNueva">Nueva contraseña</label>
+            <input type="password" id="pwNueva" autocomplete="new-password">
+            <label for="pwNueva2">Confirmar contraseña</label>
+            <input type="password" id="pwNueva2" autocomplete="new-password">
+            <button type="button" class="dl-btn dl-btn--bloque" id="pwGuardarBtn">Guardar contraseña</button>
+        </div>
+
+        <div class="pw-separador">o</div>
+
+        <div class="pw-seccion">
+            <p class="pw-ayuda">Envía al usuario un correo con un enlace para que establezca su propia contraseña nueva (caduca en 1 hora).</p>
+            <button type="button" class="dl-btn dl-btn--neutro dl-btn--bloque" id="pwResetBtn">
+                <i class="bi bi-envelope"></i> Enviar email de restablecimiento
+            </button>
+        </div>
+
+        <p class="pw-msg" id="pwMsg" role="status" aria-live="polite" hidden></p>
+    </div>
+</div>
+{% endif %}
+
+<script nonce="{{ g.csp_nonce }}">
     document.addEventListener('DOMContentLoaded', function () {
+        // Los desplegables de filtros aplican al cambiar (siempre desde la página 1)
+        const filtros = document.getElementById('guFiltros');
+        if (filtros) filtros.querySelectorAll('select').forEach(function (s) {
+            s.addEventListener('change', function () { filtros.submit(); });
+        });
+
         const searchInput = document.getElementById('userSearchInput');
         let debounceTimer;
 
@@ -387,10 +526,85 @@
             });
         });
 
+        // Contraseña: modal compartido por fila
+        const pwOverlay = document.getElementById('pwOverlay');
+        if (pwOverlay) {
+            const pwUsuario = document.getElementById('pwUsuario');
+            const pwNueva = document.getElementById('pwNueva');
+            const pwNueva2 = document.getElementById('pwNueva2');
+            const pwMsg = document.getElementById('pwMsg');
+            let pwTargetId = null;
+            let pwTargetCsrf = null;
+
+            function pwMostrarMsg(texto, ok) {
+                pwMsg.textContent = texto;
+                pwMsg.className = 'pw-msg ' + (ok ? 'ok' : 'err');
+                pwMsg.hidden = false;
+            }
+
+            function pwCerrar() {
+                pwOverlay.classList.remove('visible');
+                pwNueva.value = '';
+                pwNueva2.value = '';
+                pwMsg.hidden = true;
+            }
+
+            document.querySelectorAll('.set-password-btn').forEach(function (btn) {
+                btn.addEventListener('click', function () {
+                    pwTargetId = this.dataset.userId;
+                    pwTargetCsrf = this.dataset.csrf;
+                    pwUsuario.textContent = this.dataset.username;
+                    pwMsg.hidden = true;
+                    pwNueva.value = '';
+                    pwNueva2.value = '';
+                    pwOverlay.classList.add('visible');
+                });
+            });
+
+            document.getElementById('pwCerrar').addEventListener('click', pwCerrar);
+            pwOverlay.addEventListener('click', function (ev) { if (ev.target === pwOverlay) pwCerrar(); });
+            document.addEventListener('keydown', function (ev) {
+                if (ev.key === 'Escape' && pwOverlay.classList.contains('visible')) pwCerrar();
+            });
+
+            document.getElementById('pwGuardarBtn').addEventListener('click', async function () {
+                if (!pwNueva.value || pwNueva.value !== pwNueva2.value) {
+                    pwMostrarMsg('Las contraseñas no coinciden.', false);
+                    return;
+                }
+                try {
+                    const res = await fetch(`/api/admin/set_user_password/${pwTargetId}`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': pwTargetCsrf },
+                        body: JSON.stringify({ password: pwNueva.value, password2: pwNueva2.value })
+                    });
+                    const data = await res.json();
+                    pwMostrarMsg(data.message || data.error || 'No se pudo actualizar la contraseña.', res.ok);
+                    if (res.ok) { pwNueva.value = ''; pwNueva2.value = ''; }
+                } catch (e) {
+                    pwMostrarMsg('Error de conexión.', false);
+                }
+            });
+
+            document.getElementById('pwResetBtn').addEventListener('click', async function () {
+                try {
+                    const res = await fetch(`/api/admin/send_password_reset/${pwTargetId}`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': pwTargetCsrf },
+                        body: JSON.stringify({})
+                    });
+                    const data = await res.json();
+                    pwMostrarMsg(data.message || data.error || 'No se pudo enviar el email.', res.ok);
+                } catch (e) {
+                    pwMostrarMsg('Error de conexión.', false);
+                }
+            });
+        }
+
         // Delete user
         document.querySelectorAll('.delete-user-btn').forEach(function (btn) {
             btn.addEventListener('click', async function () {
-                if (!confirm('¿Seguro que quieres eliminar este usuario? Esta acción no se puede deshacer.')) return;
+                if (!confirm('¿Seguro que quieres eliminar a «' + (this.dataset.username || 'este usuario') + '»? Esta acción no se puede deshacer.')) return;
                 const userId = this.dataset.userId;
                 const csrf = this.dataset.csrf;
                 try {
@@ -411,21 +625,5 @@
             });
         });
     });
-
-    let emailsVisible = false;
-    function toggleEmails() {
-        emailsVisible = !emailsVisible;
-        document.querySelectorAll('.email-censored').forEach(s => s.style.display = emailsVisible ? 'none' : 'inline');
-        document.querySelectorAll('.email-real').forEach(s => s.style.display = emailsVisible ? 'inline' : 'none');
-        document.getElementById('toggleEmailsIcon').className = emailsVisible ? 'bi bi-eye-slash' : 'bi bi-eye';
-    }
-
-    let usersVisible = false;
-    function toggleUsers() {
-        usersVisible = !usersVisible;
-        document.querySelectorAll('.user-censored').forEach(s => s.style.display = usersVisible ? 'none' : 'inline');
-        document.querySelectorAll('.user-real').forEach(s => s.style.display = usersVisible ? 'inline' : 'none');
-        document.getElementById('toggleUsersIcon').className = usersVisible ? 'bi bi-eye-slash' : 'bi bi-eye';
-    }
 </script>
 {% endblock %}

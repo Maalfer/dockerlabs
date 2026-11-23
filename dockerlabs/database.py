@@ -28,8 +28,8 @@ def _compile_unbounded_varchar(element, compiler, **kw):
 
 engine = create_engine(
     DATABASE_URL,
-    pool_size=10,
-    max_overflow=20,
+    pool_size=5,
+    max_overflow=25,
     pool_recycle=3600,
     pool_pre_ping=True,
     echo=False,

@@ -7,8 +7,6 @@
     <title>{% block title %}BunkerLabs{% endblock %}</title>
 
     <!-- Preconnect: solo Google Fonts (Bootstrap + iconos ya son del mismo origen) -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 
     <!-- Preload de la fuente de iconos (auto-alojada) → coincide con el @font-face del CSS -->
     <link rel="preload" as="font" type="font/woff2" crossorigin
@@ -22,30 +20,28 @@
           media="print" onload="this.media='all'">
     <noscript><link rel="stylesheet" href="{{ static_v('dockerlabs/vendor/bootstrap-icons.min.css') }}"></noscript>
 
-    <!-- Google Fonts: Fira Code + Inter — no bloqueante -->
+    <link rel="stylesheet" href="{{ static_v('dockerlabs/css/consentimiento.css') }}">
+    <script src="{{ static_v('dockerlabs/js/consentimiento.js') }}" defer></script>
+    <!-- Fira Code + Inter alojadas en local — no bloqueante -->
     <link rel="stylesheet"
-        href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap"
+        href="{{ static_v('dockerlabs/css/fonts.css') }}"
         media="print" onload="this.media='all'">
-    <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap"></noscript>
+    <noscript><link rel="stylesheet" href="{{ static_v('dockerlabs/css/fonts.css') }}"></noscript>
 
     <link rel="stylesheet" href="{{ static_v('bunkerlabs/css/bunkerlabs.css') }}">
     <link rel="stylesheet" href="{{ static_v('dockerlabs/css/dl-footer.css') }}">
+    <link rel="stylesheet" href="{{ static_v('dockerlabs/css/cody-logo.css') }}">
     <link rel="icon" href="{{ url_for('static', filename='dockerlabs/images/logos/logo_120.png') }}" type="image/png">
 
-    <script nonce="{{ csp_nonce }}">
-        window.dataLayer = window.dataLayer || [];
-        function gtag() { dataLayer.push(arguments); }
-        gtag('js', new Date());
-        gtag('config', 'G-XXXXXXXXXX');
-    </script>
     <meta name="csrf-token" content="{{ csrf_token_value }}">
+    {% block extra_head %}{% endblock %}
 </head>
 
 <body>
     <header>
         <a href="{{ url_for('index') }}" class="logo">
             <div class="logo-container">
-                <img src="{{ url_for('static', filename='dockerlabs/images/logos/logo_120.png') }}" alt="DockerLabs">
+                {% include "dockerlabs/_cody_logo.html" %}
             </div>
         </a>
         <a href="{{ url_for('index') }}" id="bunkerlabs-link" class="brand-title">
@@ -55,11 +51,15 @@
 
 
         <div class="nav-actions">
-            {% if session.get('bunkerlabs_nombre') %}
+            {# El PIN de BunkerLabs es una llave compartida, no una identidad: aquí se muestra
+               quién eres en DockerLabs (si has iniciado sesión) o el tipo de acceso, nunca el
+               nombre del PIN. #}
+            {% if session.get('bunkerlabs_ok') %}
+            {% set bk_logueado = session.get('user_id') and session.get('username') %}
             <div class="user-dropdown">
-                <div class="user-pill">
-                    <i class="bi bi-person-badge"></i>
-                    <span>{{ session.get('bunkerlabs_nombre') }}</span>
+                <div class="user-pill" title="{{ 'Sesión de DockerLabs' if bk_logueado else ('Acceso de invitado' if session.get('bunkerlabs_guest') else 'Acceso con contraseña, sin sesión de DockerLabs') }}">
+                    <i class="bi {{ 'bi-person-badge' if bk_logueado else 'bi-shield-lock' }}"></i>
+                    <span>{{ session.get('username') if bk_logueado else ('Invitado' if session.get('bunkerlabs_guest') else 'Anónimo') }}</span>
                     <i class="bi bi-chevron-down" style="font-size: 0.7rem; margin-left: 0.3rem;"></i>
                 </div>
                 <div class="dropdown-menu">
@@ -89,17 +89,18 @@
                 <a href="{{ url_for('main.equipo') }}" class="footer-link nowrap">Equipo de DockerLabs</a><span class="footer-sep" aria-hidden="true"> · </span>
                 <a href="{{ url_for('main.politica_privacidad') }}" class="footer-link">Política de Privacidad</a><span class="footer-sep" aria-hidden="true"> · </span>
                 <a href="{{ url_for('main.politica_cookies') }}" class="footer-link">Cookies</a><span class="footer-sep" aria-hidden="true"> · </span>
+                <a href="{{ url_for('main.politica_cookies') }}#gestionar" class="footer-link" data-cookie-prefs>Gestionar cookies</a><span class="footer-sep" aria-hidden="true"> · </span>
                 <a href="{{ url_for('main.condiciones_uso') }}" class="footer-link">Condiciones de Uso</a>
             </p>
 
             <div class="footer-icons">
-                <a href="https://github.com/Maalfer/dockerlabs" class="footer-icon support-tooltip" target="_blank" rel="noopener noreferrer"
+                <a href="https://github.com/Maalfer/dockerlabs" aria-label="DockerLabs en GitHub (se abre en una pestaña nueva)" class="footer-icon support-tooltip" target="_blank" rel="noopener noreferrer"
                     data-tooltip="¿Nos das una ⭐?"><i class="bi bi-github github-pulse"></i></a>
-                <a href="https://es.linkedin.com/in/maalfer1" class="footer-icon" target="_blank" rel="noopener noreferrer"><i
+                <a href="https://es.linkedin.com/in/maalfer1" aria-label="LinkedIn de Mario (se abre en una pestaña nueva)" class="footer-icon" target="_blank" rel="noopener noreferrer"><i
                         class="bi bi-linkedin"></i></a>
-                <a href="https://t.me/elpinguinohack" class="footer-icon" target="_blank" rel="noopener noreferrer"><i
+                <a href="https://t.me/elpinguinohack" aria-label="Canal de Telegram (se abre en una pestaña nueva)" class="footer-icon" target="_blank" rel="noopener noreferrer"><i
                         class="bi bi-telegram"></i></a>
-                <a href="https://discord.gg/dD3yVejBUR" class="footer-icon" target="_blank" rel="noopener noreferrer"><i
+                <a href="https://discord.gg/dD3yVejBUR" aria-label="Servidor de Discord (se abre en una pestaña nueva)" class="footer-icon" target="_blank" rel="noopener noreferrer"><i
                         class="bi bi-discord"></i></a>
             </div>
         </div>
@@ -143,15 +144,37 @@
             const bunkerlabsText = document.querySelector('.brand-text');
             
             if (bunkerlabsBrand && bunkerlabsText) {
-                bunkerlabsBrand.addEventListener('mouseenter', function() {
-                    const hoverText = bunkerlabsText.getAttribute('data-hover');
-                    bunkerlabsText.textContent = hoverText;
-                });
-                
-                bunkerlabsBrand.addEventListener('mouseleave', function() {
-                    const originalText = bunkerlabsText.getAttribute('data-original');
-                    bunkerlabsText.textContent = originalText;
-                });
+                // Parte el título en letras: las que cambian llevan la letra de destino
+                // en data-alt (la pinta el CSS con ::after). Coreografía en bunkerlabs.css.
+                var deTxt = bunkerlabsText.getAttribute('data-original') || bunkerlabsText.textContent;
+                var aTxt = bunkerlabsText.getAttribute('data-hover') || '';
+                if (deTxt.length === aTxt.length) {
+                    bunkerlabsBrand.setAttribute('aria-label', deTxt);
+                    bunkerlabsText.textContent = '';
+                    for (var bi = 0; bi < deTxt.length; bi++) {
+                        var c = document.createElement('span');
+                        c.className = 'bt-c';
+                        c.setAttribute('aria-hidden', 'true');
+                        var a = document.createElement('span');
+                        a.className = 'bt-a';
+                        a.textContent = deTxt[bi];
+                        c.appendChild(a);
+                        if (deTxt[bi] !== aTxt[bi]) { c.classList.add('bt-cambia'); c.setAttribute('data-alt', aTxt[bi]); }
+                        c.style.setProperty('--i', bi);
+                        bunkerlabsText.appendChild(c);
+                    }
+                    bunkerlabsBrand.classList.add('bt-listo');
+                    var btAlt = function (si) { return function () { bunkerlabsBrand.classList.toggle('es-alt', si); }; };
+                    bunkerlabsBrand.addEventListener('mouseenter', btAlt(true));
+                    bunkerlabsBrand.addEventListener('mouseleave', btAlt(false));
+                    bunkerlabsBrand.addEventListener('focus', btAlt(true));
+                    bunkerlabsBrand.addEventListener('blur', btAlt(false));
+                    // al volver atrás desde DockerLabs (bfcache) el título no debe quedarse cambiado
+                    window.addEventListener('pageshow', btAlt(false));
+                } else {
+                    bunkerlabsBrand.addEventListener('mouseenter', function () { bunkerlabsText.textContent = aTxt; });
+                    bunkerlabsBrand.addEventListener('mouseleave', function () { bunkerlabsText.textContent = deTxt; });
+                }
 
                 // En pantallas táctiles no hay hover: al tocar, el título se
                 // transforma un instante en su destino (igual que el hover de
@@ -161,13 +184,10 @@
                     if (!t || !window.matchMedia('(hover: none)').matches || e.metaKey || e.ctrlKey) return;
                     e.preventDefault();
                     var destino = bunkerlabsBrand.href;
-                    // fija el texto del destino (el mouseleave del hover lo restauraría)
-                    t.setAttribute('data-original', t.getAttribute('data-hover'));
-                    t.textContent = t.getAttribute('data-hover');
-                    t.style.color = '#8b5cf6';
-                    t.style.textShadow = '0 0 15px rgba(139, 92, 246, 0.45)';
+                    // muestra la transición completa hacia el destino y después navega
+                    bunkerlabsBrand.classList.add('es-alt');
                     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) { window.location.href = destino; return; }
-                    setTimeout(function () { window.location.href = destino; }, 320);
+                    setTimeout(function () { window.location.href = destino; }, 520);
                 });
             }
         });

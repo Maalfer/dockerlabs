@@ -188,3 +188,7 @@ En [CONTRIBUTING.md](/CONTRIBUTING.md) indicamos todos los detalles para poder c
   <h2>🌟 Historia de Estrellas</h2>
   <img src="https://api.star-history.com/svg?repos=Maalfer/dockerlabs&type=Date" alt="Star History Chart" width="100%">
 </div>
+
+## Autoría
+
+DockerLabs es un proyecto de Mario Álvarez Fernández («El Pingüino de Mario»). Ver [AUTORIA.md](AUTORIA.md) y <https://dockerlabs.es/autoria>.

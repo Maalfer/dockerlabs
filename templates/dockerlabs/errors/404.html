@@ -1,6 +1,7 @@
 {% extends "dockerlabs/base.html" %}
 
 {% block extra_css %}
+<link rel="stylesheet" href="{{ static_v('dockerlabs/css/auth-ballena.css') }}">
 <link rel="stylesheet" href="{{ static_v('dockerlabs/css/errors/404.css') }}"
       media="print" onload="this.media='all'">
 <noscript><link rel="stylesheet" href="{{ static_v('dockerlabs/css/errors/404.css') }}"></noscript>
@@ -12,6 +13,9 @@
 {% endblock %}
 
 {% block content %}
+<div class="dl-con-cody">
+{% with ballena_contexto = "info", ballena_mensajes = {"idle": "Uy… esta página no existe. Vuelve al inicio y seguimos hackeando."}, ballena_lectura = true %}{% include "dockerlabs/auth/_ballena.html" %}{% endwith %}
+<div class="dl-con-cody-pagina">
 <div class="error-page-container">
   <div class="error-card">
     <div class="error-content-flex">
@@ -36,4 +40,7 @@
     </div>
   </div>
 </div>
+</div>
+</div>
+<script src="{{ static_v('dockerlabs/js/ballena.js') }}" defer></script>
 {% endblock %}

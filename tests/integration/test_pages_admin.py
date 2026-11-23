@@ -43,25 +43,31 @@ class TestGestionUsuarios:
         r = client.get("/gestion-usuarios?page=1&per_page=20")
         assert r.status_code == 200
 
-    def test_non_numeric_page_param_crashes_with_500(self, client, login_as, db):
-        """HALLAZGO REAL: `page = int(request.query_params.get("page", 1))` no
-        atrapa el ValueError de un valor no numérico: sube sin manejar y un
-        cliente real recibiría un 500. Se documenta tal cual se comporta hoy,
-        sin tocar el source. El `client` fixture normal no sirve para
-        comprobar el status code: por defecto RELANZA en el proceso de test
-        cualquier excepción no controlada del servidor (raise_server_exceptions,
-        pensado para depuración), así que aquí se usa un TestClient aparte con
-        esa opción desactivada (comportamiento del test client, no de la app)
-        para poder ver el 500 real en vez de un ValueError en pytest."""
-        from fastapi.testclient import TestClient
-        import asgi
+    def test_non_numeric_page_param_falls_back_to_first_page(self, client, login_as, db):
+        # Antes: int("abc") sin atrapar → 500. Ahora se ignora y se sirve la página 1.
+        login_as(make_user(db, role="admin"))
+        assert client.get("/gestion-usuarios?page=abc&per_page=xyz").status_code == 200
 
-        admin = make_user(db, role="admin")
+    def test_orders_and_filters(self, client, login_as, db):
+        from datetime import timedelta
+        from dockerlabs.tiempo import utcnow
+        admin = make_user(db, role="admin", username="zz-admin")
+        viejo = make_user(db, role="jugador", username="aa-veterano")
+        viejo.created_at = utcnow() - timedelta(days=400)
+        viejo.last_seen_at = utcnow() - timedelta(days=200)
+        db.session.commit()
         login_as(admin)
 
-        with TestClient(asgi.app, raise_server_exceptions=False, cookies=client.cookies) as c:
-            r = c.get("/gestion-usuarios?page=abc")
-        assert r.status_code == 500
+        html = client.get("/gestion-usuarios?orden=antiguos").text
+        assert html.index("aa-veterano") < html.index("zz-admin")
+        html = client.get("/gestion-usuarios?orden=recientes").text
+        assert html.index("zz-admin") < html.index("aa-veterano")
+        # nombres y correos a la vista, sin censura
+        assert "user-censored" not in html and "•••" not in html
+        assert "aa-veterano" not in client.get("/gestion-usuarios?registro=30").text
+        assert "aa-veterano" not in client.get("/gestion-usuarios?acceso=30").text
+        assert "aa-veterano" in client.get("/gestion-usuarios?rol=jugador&orden=inactivos").text
+        assert client.get("/gestion-usuarios?orden=loquesea&rol=x&acceso=y&registro=z").status_code == 200
 
     def test_search_filters_by_username(self, client, login_as, db):
         admin = make_user(db, role="admin")
@@ -149,6 +155,63 @@ class TestGestionMaquinas:
         assert r2.status_code == 200
         assert target.nombre in r2.text
 
+    def test_bunker_tab_lists_only_bunker_machines(self, client, login_as, db):
+        admin = make_user(db, role="admin")
+        login_as(admin)
+        d = make_machine(db, nombre="SoloEnDocker", origen="docker")
+        b = make_machine(db, nombre="SoloEnBunker", origen="bunker")
+
+        docker = client.get("/gestion-maquinas")
+        assert d.nombre in docker.text and b.nombre not in docker.text
+        bunker = client.get("/gestion-maquinas?plataforma=bunker")
+        assert b.nombre in bunker.text and d.nombre not in bunker.text
+
+    def test_dificultad_filter(self, client, login_as, db):
+        login_as(make_user(db, role="admin"))
+        facil = make_machine(db, nombre="FiltroFacil", dificultad="Fácil")
+        dificil = make_machine(db, nombre="FiltroDificil", dificultad="Difícil")
+        r = client.get("/gestion-maquinas?dificultad=Difícil")
+        assert dificil.nombre in r.text and facil.nombre not in r.text
+
+    def test_invalid_params_are_sanitized(self, client, login_as, db):
+        login_as(make_user(db, role="admin"))
+        make_machine(db, nombre="ParamsRaros")
+        r = client.get("/gestion-maquinas?page=-5&per_page=100000&plataforma=hack&dificultad=zzz")
+        assert r.status_code == 200
+        assert "ParamsRaros" in r.text
+
+    def test_search_wildcards_are_literal(self, client, login_as, db):
+        login_as(make_user(db, role="admin"))
+        make_machine(db, nombre="Alpha")
+        r = client.get("/gestion-maquinas?search=%25")      # «%» no debe comportarse como comodín
+        assert r.status_code == 200
+        assert "Alpha" not in r.text
+
+    def test_delete_button_only_for_staff(self, client, login_as, db):
+        autor = make_user(db, role="jugador", username="autor_btn")
+        make_machine(db, nombre="MiMaquinaBtn", autor="autor_btn")
+        login_as(autor)
+        assert 'data-accion="eliminar"' not in client.get("/gestion-maquinas").text
+        login_as(make_user(db, role="admin"))
+        assert 'data-accion="eliminar"' in client.get("/gestion-maquinas").text
+
+    def test_pagination_links_keep_filters_urlencoded(self, client, login_as, db):
+        login_as(make_user(db, role="admin"))
+        for i in range(25):
+            make_machine(db, nombre=f"Pag{i:02d}&co", autor="Ana")
+        r = client.get("/gestion-maquinas?search=Pag&per_page=10")
+        assert 'aria-label="Paginación del listado"' in r.text
+        assert "search=Pag" in r.text and "per_page=10" in r.text
+        assert "page=2" in r.text
+
+    def test_page_has_main_landmark_and_labelled_controls(self, client, login_as, db):
+        login_as(make_user(db, role="admin"))
+        make_machine(db, nombre="Etiquetada")
+        html = client.get("/gestion-maquinas").text
+        assert "<main" in html
+        assert 'aria-label="Dificultad de Etiquetada"' in html
+        assert 'alt="Logo de Etiquetada"' in html or 'aria-label="Sin logo"' in html
+
 
 class TestPendingMachines:
     @pytest.mark.parametrize("role", ["admin", "moderador"])
@@ -164,6 +227,32 @@ class TestPendingMachines:
         r = client.get("/pending-machines", follow_redirects=False)
         assert r.status_code == 302
         assert r.headers["location"] == "/"
+
+    def test_queue_shows_only_pending_and_archive_has_the_rest(self, client, login_as, db):
+        from tests.factories import make_pending_machine_submission
+        login_as(make_user(db, role="admin"))
+        make_pending_machine_submission(db, nombre="EnCola")
+        make_pending_machine_submission(db, nombre="YaAnadida", estado="aprobado")
+        cola = client.get("/pending-machines").text
+        assert "EnCola" in cola and "YaAnadida" not in cola
+        archivo = client.get("/pending-machines?estado=aprobado").text
+        assert "YaAnadida" in archivo and "EnCola" not in archivo
+
+    def test_pagination_and_search(self, client, login_as, db):
+        from tests.factories import make_pending_machine_submission
+        login_as(make_user(db, role="moderador"))
+        for i in range(13):
+            make_pending_machine_submission(db, nombre=f"Maq{i:02d}")
+
+        def tarjetas(url):
+            return client.get(url).text.count('data-accion="eliminar"')
+
+        html = client.get("/pending-machines").text
+        assert html.count('data-accion="eliminar"') == 12
+        assert 'rel="next"' in html
+        assert tarjetas("/pending-machines?page=2") == 1
+        assert client.get("/pending-machines?page=abc").status_code == 200
+        assert tarjetas("/pending-machines?q=Maq07") == 1
 
 
 class TestUserPending:
@@ -239,9 +328,15 @@ class TestEstadisticas:
         assert r.status_code == 200
 
 
+class TestPaginaRetirada:
+    def test_instrucciones_uso_redirige_al_inicio(self, client):
+        r = client.get("/instrucciones-uso", follow_redirects=False)
+        assert r.status_code == 301
+        assert r.headers["location"] == "/"
+
+
 class TestPublicStaticPages:
     @pytest.mark.parametrize("path", [
-        "/instrucciones-uso",
         "/soporte",
         "/equipo",
         "/terminos-condiciones",

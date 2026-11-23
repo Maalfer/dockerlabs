@@ -1,6 +1,13 @@
 {% extends "dockerlabs/base.html" %}
 
+{% block extra_css %}
+<link rel="stylesheet" href="{{ static_v('dockerlabs/css/auth-ballena.css') }}">
+{% endblock %}
+
 {% block content %}
+<div class="dl-con-cody">
+{% with ballena_contexto = "info", ballena_mensajes = {"idle": "Aquí ves el estado de las máquinas que has enviado.", "fin": "Si alguna tarda en revisarse, avisa en el Discord."}, ballena_lectura = true %}{% include "dockerlabs/auth/_ballena.html" %}{% endwith %}
+<div class="dl-con-cody-pagina">
 
 <div class="container mt-5">
 
@@ -60,5 +67,7 @@
 
     </div>
 </div>
-
+</div>
+</div>
+<script src="{{ static_v('dockerlabs/js/ballena.js') }}" defer></script>
 {% endblock %}

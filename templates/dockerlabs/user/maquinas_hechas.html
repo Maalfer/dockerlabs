@@ -1,6 +1,7 @@
 {% extends "dockerlabs/base.html" %}
 
 {% block extra_css %}
+<link rel="stylesheet" href="{{ static_v('dockerlabs/css/auth-ballena.css') }}">
 <link rel="stylesheet" href="{{ static_v('dockerlabs/css/user/maquinas_hechas.css') }}"
       media="print" onload="this.media='all'">
 <noscript><link rel="stylesheet" href="{{ static_v('dockerlabs/css/user/maquinas_hechas.css') }}"></noscript>
@@ -9,6 +10,9 @@
 {% block title %}Máquinas Completadas - DockerLabs{% endblock %}
 
 {% block content %}
+<div class="dl-con-cody">
+{% with ballena_contexto = "info", ballena_mensajes = {"idle": "Estas son las máquinas que ya has resuelto. ¡Buen trabajo!", "fin": "¿A por la siguiente? Cada máquina cuenta."}, ballena_lectura = true %}{% include "dockerlabs/auth/_ballena.html" %}{% endwith %}
+<div class="dl-con-cody-pagina">
 
 
 <div class="completed-machines-container">
@@ -96,5 +100,7 @@
     </div>
     {% endif %}
 </div>
-
+</div>
+</div>
+<script src="{{ static_v('dockerlabs/js/ballena.js') }}" defer></script>
 {% endblock %}

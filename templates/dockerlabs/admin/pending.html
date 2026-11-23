@@ -9,30 +9,106 @@
 {% endblock %}
 
 {% block content %}
-<div class="pending-wrap">
+{% set PESTANAS = [
+    ("pendiente", "Pendientes", "bi-clock"),
+    ("aprobado", "Añadidas", "bi-check-lg"),
+    ("rechazado", "Rechazadas", "bi-x-lg"),
+    ("todas", "Todas", "bi-archive"),
+] %}
+<div class="pending-wrap" id="pm-app" data-estado="{{ estado }}" data-csrf="{{ csrf_token_value }}">
 
     <div class="pending-header">
         <span class="terminal-prompt">$</span>
         <h1>pending-machines</h1>
-        <span class="pending-count">
+        <span class="pending-count" id="pm-resumen">
             <i class="bi bi-hdd-stack"></i>
-            {{ machines | length }} máquina{{ 's' if machines | length != 1 else '' }}
+            <span data-cuenta="pendiente">{{ counts.pendiente }}</span> por revisar
         </span>
     </div>
 
-    {% if machines | length == 0 %}
+    <!-- Pestañas por estado -->
+    <nav class="pm-tabs" aria-label="Estado de los envíos">
+        {% for clave, etiqueta, icono in PESTANAS %}
+        <a href="{{ listado_url(estado=clave, page=1, orden='') }}" class="pm-tab{% if estado == clave %} activa{% endif %}"
+           {% if estado == clave %}aria-current="page"{% endif %}>
+            <i class="bi {{ icono }}"></i> {{ etiqueta }}
+            <span class="pm-tab-n" data-cuenta="{{ clave }}">{{ counts[clave] }}</span>
+        </a>
+        {% endfor %}
+    </nav>
+
+    <!-- Buscar, ordenar y limpiar -->
+    <form class="pm-barra" method="get" action="/pending-machines" id="pm-filtros" role="search">
+        {% if estado != "pendiente" %}<input type="hidden" name="estado" value="{{ estado }}">{% endif %}
+        <label class="pm-buscar">
+            <i class="bi bi-search" aria-hidden="true"></i>
+            <input type="search" name="q" value="{{ q }}" placeholder="Buscar por nombre, autor, Discord o etiqueta…"
+                   aria-label="Buscar envíos" autocomplete="off" maxlength="100">
+        </label>
+        <label class="pm-orden">
+            <span class="visually-hidden">Ordenar</span>
+            <select name="orden" id="pm-orden" aria-label="Ordenar">
+                <option value="antiguas" {% if orden == "antiguas" %}selected{% endif %}>Más antiguas primero</option>
+                <option value="recientes" {% if orden == "recientes" %}selected{% endif %}>Más recientes primero</option>
+                <option value="nombre" {% if orden == "nombre" %}selected{% endif %}>Por nombre (A-Z)</option>
+            </select>
+        </label>
+        <button type="submit" class="pm-btn pm-btn-neutro"><i class="bi bi-funnel"></i> Filtrar</button>
+        {% if q %}<a href="{{ listado_url(q='', page=1) }}" class="pm-btn pm-btn-neutro"><i class="bi bi-x-circle"></i> Quitar búsqueda</a>{% endif %}
+
+        {% if estado in ("aprobado", "rechazado") and counts[estado] > 0 %}
+        <span class="pm-barra-hueco"></span>
+        <button type="button" class="pm-btn pm-btn-reject" data-limpiar="{{ estado }}" data-dias="30"
+                title="Elimina solo los revisados hace más de 30 días">
+            <i class="bi bi-clock-history"></i> Limpiar anteriores a 30 días
+        </button>
+        <button type="button" class="pm-btn pm-btn-reject" data-limpiar="{{ estado }}" data-total="{{ counts[estado] }}">
+            <i class="bi bi-trash3"></i> Limpiar {{ "añadidas" if estado == "aprobado" else "rechazadas" }} ({{ counts[estado] }})
+        </button>
+        {% endif %}
+    </form>
+
+    <p class="pm-ayuda">
+        {% if estado == "pendiente" %}
+        // cola de revisión: al marcar una máquina como añadida o rechazarla sale de aquí y queda archivada en su pestaña.
+        {% elif estado == "aprobado" %}
+        // archivo de máquinas ya añadidas. Su autor las sigue viendo como «Aprobada» en «Mis máquinas enviadas» hasta que se limpian.
+        {% elif estado == "rechazado" %}
+        // envíos rechazados. Su autor los ve como «Rechazada»; puedes devolverlos a la cola o limpiarlos.
+        {% else %}
+        // todos los envíos, en cualquier estado.
+        {% endif %}
+    </p>
+
+    {% if not items %}
     <div class="pending-empty">
+        {% if q %}
+        <i class="bi bi-search"></i>
+        <p>Ningún envío coincide con «{{ q }}»</p>
+        <span>// prueba con otro término o cambia de pestaña</span>
+        {% elif estado == "pendiente" %}
         <i class="bi bi-check2-circle"></i>
         <p>No hay máquinas pendientes de revisión</p>
         <span>// todo está al día</span>
+        {% else %}
+        <i class="bi bi-inbox"></i>
+        <p>No hay nada en esta pestaña</p>
+        <span>// archivo vacío</span>
+        {% endif %}
     </div>
     {% else %}
 
-    <div class="pending-grid">
-        {% for m in machines %}
+    <div class="pm-rango">
+        Mostrando <strong>{{ inicio }}–{{ fin }}</strong> de <strong>{{ total }}</strong>
+        {% if q %} para «{{ q }}»{% endif %}
+    </div>
 
+    <div class="pending-grid">
+        {% for it in items %}
+        {% set m = it.m %}
         {% set diff_key = m.dificultad | lower | replace('á','a') | replace('é','e') | replace('í','i') | replace('ó','o') | replace('ú','u') | replace(' ','-') %}
-        <div class="pm-card" data-diff="{{ m.dificultad | lower }}">
+        <div class="pm-card{% if it.urgente %} pm-card--urgente{% endif %}" data-diff="{{ m.dificultad | lower }}"
+             data-id="{{ m.id }}" data-estado="{{ m.estado }}" data-nombre="{{ m.nombre }}">
 
             <div class="pm-card-accent"></div>
 
@@ -49,14 +125,34 @@
                         {% if m.estado == "pendiente" %}
                             <span class="badge-pill badge-pending"><i class="bi bi-clock"></i> pendiente</span>
                         {% elif m.estado == "aprobado" %}
-                            <span class="badge-pill badge-approved"><i class="bi bi-check-lg"></i> aprobado</span>
+                            <span class="badge-pill badge-approved"><i class="bi bi-check-lg"></i> añadida</span>
                         {% elif m.estado == "rechazado" %}
-                            <span class="badge-pill badge-rejected"><i class="bi bi-x-lg"></i> rechazado</span>
+                            <span class="badge-pill badge-rejected"><i class="bi bi-x-lg"></i> rechazada</span>
                         {% endif %}
 
                         <span class="badge-pill badge-diff-{{ diff_key }}">{{ m.dificultad }}</span>
                     </div>
                 </div>
+
+                <!-- Pistas -->
+                {% if (it.publicada and m.estado == "pendiente") or it.repetida or it.urgente %}
+                <div class="pm-pistas">
+                    {% if it.publicada and m.estado == "pendiente" %}
+                    <span class="pm-pista pm-pista--ok" title="Existe una máquina publicada con este mismo nombre">
+                        <i class="bi bi-patch-check"></i> Ya está publicada en {{ "BunkerLabs" if it.publicada.origen == "bunker" else "DockerLabs" }}: puedes marcarla como añadida
+                    </span>
+                    {% endif %}
+                    {% if it.repetida %}
+                    <a class="pm-pista pm-pista--aviso" href="{{ listado_url(estado='todas', q=m.nombre, page=1, orden='') }}"
+                       title="Hay más de un envío con este nombre: ver todos">
+                        <i class="bi bi-card-text"></i> Enviada más de una vez
+                    </a>
+                    {% endif %}
+                    {% if it.urgente %}
+                    <span class="pm-pista pm-pista--espera"><i class="bi bi-hourglass-split"></i> Lleva {{ it.dias }} días esperando</span>
+                    {% endif %}
+                </div>
+                {% endif %}
 
                 <!-- Description -->
                 {% if m.descripcion %}
@@ -99,7 +195,14 @@
                     {% if m.submitted_at %}
                     <div class="pm-meta-row">
                         <i class="bi bi-calendar3"></i>
-                        <span>{{ m.submitted_at.strftime('%d %b %Y · %H:%M') }}</span>
+                        <span>Enviada el {{ m.submitted_at.strftime('%d/%m/%Y · %H:%M') }} <em class="pm-hace">({{ it.espera }})</em></span>
+                    </div>
+                    {% endif %}
+
+                    {% if m.estado != "pendiente" and m.reviewed_at %}
+                    <div class="pm-meta-row">
+                        <i class="bi bi-clipboard-check"></i>
+                        <span>Revisada el {{ m.reviewed_at.strftime('%d/%m/%Y · %H:%M') }}{% if it.revisor %} por {{ it.revisor }}{% endif %}</span>
                     </div>
                     {% endif %}
                 </div>
@@ -120,22 +223,60 @@
                     </a>
                     {% endif %}
 
-                    {% if m.estado == "pendiente" %}
-                    <form method="POST" action="{{ url_for('main.reject_machine', machine_id=m.id) }}" class="pm-reject-form">
-                        <input type="hidden" name="csrf_token" value="{{ csrf_token_value }}">
-                        <button type="submit" class="pm-btn pm-btn-reject"
-                                onclick="return confirm('¿Eliminar la máquina ' + {{ m.nombre | tojson | forceescape }} + '? Esta acción no se puede deshacer.')">
-                            <i class="bi bi-trash3"></i> Eliminar
-                        </button>
-                    </form>
+                    {% if m.estado == "pendiente" and current_user_role == "admin" and not it.publicada %}
+                    <a href="/add-maquina?{{ {'nombre': m.nombre, 'descripcion': m.descripcion or '', 'link_descarga': m.link_maquina or ''} | urlencode }}"
+                       class="pm-btn pm-btn-publicar" title="Abre el formulario de alta con estos datos; al publicarla sale sola de la cola">
+                        <i class="bi bi-cloud-upload"></i> Publicar
+                    </a>
                     {% endif %}
+
+                    <span class="pm-actions-hueco"></span>
+
+                    {% if m.estado == "pendiente" %}
+                    <button type="button" class="pm-btn pm-btn-ok" data-accion="estado" data-valor="aprobado">
+                        <i class="bi bi-check2-circle"></i> Marcar como añadida
+                    </button>
+                    <button type="button" class="pm-btn pm-btn-neutro" data-accion="estado" data-valor="rechazado">
+                        <i class="bi bi-dash-circle"></i> Rechazar
+                    </button>
+                    {% else %}
+                    <button type="button" class="pm-btn pm-btn-neutro" data-accion="estado" data-valor="pendiente">
+                        <i class="bi bi-arrow-counterclockwise"></i> Devolver a pendientes
+                    </button>
+                    {% endif %}
+                    <button type="button" class="pm-btn pm-btn-reject" data-accion="eliminar" title="Eliminar el envío definitivamente" aria-label="Eliminar {{ m.nombre }}">
+                        <i class="bi bi-trash3"></i>
+                    </button>
                 </div>
 
             </div>
         </div>
-
         {% endfor %}
     </div>
+
+    {% if total_pages > 1 %}
+    <nav class="pm-pag" aria-label="Paginación">
+        {% if page > 1 %}
+        <a class="pm-pag-btn" href="{{ listado_url(page=page - 1) }}" rel="prev"><i class="bi bi-chevron-left"></i> Anterior</a>
+        {% else %}
+        <span class="pm-pag-btn inactivo" aria-disabled="true"><i class="bi bi-chevron-left"></i> Anterior</span>
+        {% endif %}
+        {% for p in paginas %}
+            {% if p is none %}
+            <span class="pm-pag-puntos" aria-hidden="true">…</span>
+            {% elif p == page %}
+            <span class="pm-pag-btn actual" aria-current="page">{{ p }}</span>
+            {% else %}
+            <a class="pm-pag-btn" href="{{ listado_url(page=p) }}">{{ p }}</a>
+            {% endif %}
+        {% endfor %}
+        {% if page < total_pages %}
+        <a class="pm-pag-btn" href="{{ listado_url(page=page + 1) }}" rel="next">Siguiente <i class="bi bi-chevron-right"></i></a>
+        {% else %}
+        <span class="pm-pag-btn inactivo" aria-disabled="true">Siguiente <i class="bi bi-chevron-right"></i></span>
+        {% endif %}
+    </nav>
+    {% endif %}
 
     {% endif %}
 

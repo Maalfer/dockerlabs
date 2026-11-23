@@ -405,20 +405,16 @@
                 <div class="form-section" id="sistema-operativo-section">
                     <div class="form-section-title">Plataforma</div>
                     <div class="dest-tabs">
-                        <button type="button" class="os-tab active" data-value="linux" onclick="setSistemaOperativo('linux', this)">
-                            <span class="dest-icon">🐧</span>
-                            <span class="dest-label">Linux</span>
+                        <button type="button" class="os-tab active" data-value="docker" onclick="setSistemaOperativo('docker', this)">
+                            <span class="dest-icon">🐳</span>
+                            <span class="dest-label">Docker</span>
                         </button>
-                        <button type="button" class="os-tab" data-value="windows" onclick="setSistemaOperativo('windows', this)">
-                            <span class="dest-icon">🪟</span>
-                            <span class="dest-label">Windows</span>
-                        </button>
-                        <button type="button" class="os-tab" data-value="movil" onclick="setSistemaOperativo('movil', this)">
-                            <span class="dest-icon">📱</span>
-                            <span class="dest-label">Móvil</span>
+                        <button type="button" class="os-tab" data-value="virtualbox" onclick="setSistemaOperativo('virtualbox', this)">
+                            <span class="dest-icon">📦</span>
+                            <span class="dest-label">VirtualBox</span>
                         </button>
                     </div>
-                    <input type="hidden" name="sistema_operativo" id="sistema_operativo" value="linux">
+                    <input type="hidden" name="sistema_operativo" id="sistema_operativo" value="docker">
                 </div>
 
                 <!-- Content -->
@@ -628,6 +624,16 @@ async function submitForm() {
         btnLoader.style.display = 'none';
     }
 }
+
+// Alta desde la cola de revisión (/pending-machines → «Publicar»): rellena lo que ya
+// envió el autor. Al publicar, el envío con ese mismo nombre sale solo de la cola.
+(function () {
+    var p = new URLSearchParams(location.search);
+    ['nombre', 'descripcion', 'link_descarga'].forEach(function (id) {
+        var el = document.getElementById(id), v = p.get(id);
+        if (el && v && !el.value) el.value = v.slice(0, id === 'descripcion' ? 5000 : 500);
+    });
+})();
 </script>
 
 {% endblock %}

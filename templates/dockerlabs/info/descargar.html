@@ -14,13 +14,13 @@
 
 {% block content %}
 <div class="dl-con-cody">
-{% with ballena_mensajes = {"idle": "Soy Cody. Te explico cómo ponerla en marcha ↓", "fin": "¡A hackear! Si te atascas, mira sus writeups."}, ballena_lectura = true %}{% include "dockerlabs/auth/_ballena.html" %}{% endwith %}
+{% with ballena_contexto = "info", ballena_mensajes = {"idle": "Soy Cody. Te explico cómo ponerla en marcha ↓", "fin": "¡A hackear! Si te atascas, mira sus writeups."}, ballena_lectura = true %}{% include "dockerlabs/auth/_ballena.html" %}{% endwith %}
 <div class="dl-con-cody-pagina">
 <div class="descargar-container">
 
     <div class="descargar-header">
         <h1>Descargar <span class="maquina-nombre">{{ maquina.nombre }}</span></h1>
-        {% if maquina.sistema_operativo == 'windows' %}
+        {% if maquina.sistema_operativo == 'virtualbox' %}
         <p>Antes de descargar, así se despliega la máquina en VirtualBox.</p>
         {% else %}
         <p>Antes de descargar, así se despliega la máquina en tu Kali Linux.</p>
@@ -31,25 +31,34 @@
 
         <div class="descargar-grid">
 
-            <div class="instrucciones-box" data-tldr="{% if maquina.sistema_operativo == 'windows' %}Extrae el .ova del .zip, impórtalo en VirtualBox y arráncala.{% else %}Descomprime el .zip y ejecuta auto_deploy.sh: en segundos tendrás la IP. Ctrl + C la elimina.{% endif %}">
+            <div class="instrucciones-box" data-tldr="{% if maquina.sistema_operativo == 'virtualbox' %}Extrae el .zip, abre el .ova con VirtualBox Manager, pon su red en Adaptador puente e inícialo.{% else %}Descomprime el .zip y ejecuta auto_deploy.sh: en segundos tendrás la IP. Ctrl + C la elimina.{% endif %}">
                 <div class="section-title">
                     🧭 Cómo desplegar la máquina
                 </div>
 
-                {% if maquina.sistema_operativo == 'windows' %}
+                {% if maquina.sistema_operativo == 'virtualbox' %}
                 <ol class="pasos">
                     <li>
-                        La máquina se descarga en formato <code>.zip</code>. Extrae su contenido:
-                        dentro encontrarás el archivo <code>.ova</code> de la máquina.
+                        La máquina se descarga en formato <code>.zip</code>. Haz clic derecho
+                        sobre el archivo y pulsa <strong>Extraer todo…</strong> para descomprimirlo.
                     </li>
                     <li>
-                        Abre <strong>VirtualBox</strong> y pulsa <strong>Open</strong> (o
-                        <em>Archivo → Importar servicio virtualizado</em>) para importar el
-                        <code>.ova</code> que acabas de extraer.
+                        Dentro de la carpeta extraída encontrarás el archivo <code>.ova</code> de
+                        la máquina. Haz clic derecho sobre él → <strong>Abrir con</strong> →
+                        <strong>VirtualBox Manager</strong>: así se importa automáticamente.
                     </li>
                     <li>
-                        Cuando termine de importarse, selecciónala en el listado de VirtualBox e
-                        iníciala. ¡Ya puedes empezar a hackearla!
+                        Cuando termine de importarse, selecciónala en el listado de VirtualBox y
+                        pulsa <strong>Configuración</strong>.
+                    </li>
+                    <li>
+                        Ve a la pestaña <strong>Red</strong>, marca <strong>Habilitar adaptador de
+                        red</strong> y cambia el modo a <strong>Adaptador puente</strong>: así la
+                        máquina obtendrá una IP en tu propia red y podrás acceder a ella.
+                    </li>
+                    <li>
+                        Guarda los cambios e <strong>inicia</strong> la máquina. ¡Ya puedes
+                        empezar a hackearla!
                     </li>
                 </ol>
 
@@ -96,19 +105,31 @@
                 </p>
             </div>
 
-            {% if maquina.sistema_operativo == 'windows' %}
+            {% if maquina.sistema_operativo == 'virtualbox' %}
             <div class="captura-box captura-box-multi">
                 <figure class="captura-item">
-                    <img class="captura-img" src="{{ static_v('dockerlabs/images/descargar/windows-extraer-ova.png') }}"
-                         alt="Carpeta con el archivo .ova extraído junto al .zip original, en el gestor de archivos"
+                    <img class="captura-img" src="{{ static_v('dockerlabs/images/descargar/virtualbox-1-extraer.png') }}"
+                         alt="Menú contextual del .zip descargado con la opción «Extraer todo…» señalada"
                          loading="lazy">
-                    <figcaption>1. Extrae el <code>.ova</code> del <code>.zip</code> descargado</figcaption>
+                    <figcaption>1. Extrae el contenido del <code>.zip</code> descargado</figcaption>
                 </figure>
                 <figure class="captura-item">
-                    <img class="captura-img" src="{{ static_v('dockerlabs/images/descargar/windows-importar-virtualbox.png') }}"
-                         alt="Máquina Windows importada en VirtualBox, lista para iniciarse"
+                    <img class="captura-img" src="{{ static_v('dockerlabs/images/descargar/virtualbox-2-abrir-con.png') }}"
+                         alt="Menú contextual del archivo .ova con «Abrir con → VirtualBox Manager» señalado"
                          loading="lazy">
-                    <figcaption>2. Impórtalo en VirtualBox y arráncala</figcaption>
+                    <figcaption>2. Abre el <code>.ova</code> con <strong>VirtualBox Manager</strong> para importarlo</figcaption>
+                </figure>
+                <figure class="captura-item">
+                    <img class="captura-img" src="{{ static_v('dockerlabs/images/descargar/virtualbox-3-configuracion.png') }}"
+                         alt="Máquina importada seleccionada en VirtualBox con el botón «Configuración» señalado"
+                         loading="lazy">
+                    <figcaption>3. Selecciónala y entra en <strong>Configuración</strong></figcaption>
+                </figure>
+                <figure class="captura-item">
+                    <img class="captura-img" src="{{ static_v('dockerlabs/images/descargar/virtualbox-4-red-puente.png') }}"
+                         alt="Pestaña Red de la configuración con «Habilitar adaptador de red» y el modo «Adaptador puente» señalados"
+                         loading="lazy">
+                    <figcaption>4. En <strong>Red</strong>, actívalo en modo <strong>Adaptador puente</strong></figcaption>
                 </figure>
             </div>
             {% else %}

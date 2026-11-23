@@ -91,7 +91,38 @@ def register_image_routes(api_router, pages_router):
             return FileResponse(default_path)
         raise HTTPException(status_code=404, detail="Imagen no encontrada")
 
-    def _serve_machine_logo_logic(machine_id: int):
+    _LADOS_MINIATURA = (64, 96, 128)
+
+    def _miniatura_logo(base_dir: str, logo_path: str, lado: int):
+        """Miniatura WebP del logo, cacheada en disco (uploads/logos/thumbs).
+
+        El nombre del logo lleva la marca de tiempo de su subida, así que cada
+        logo nuevo genera una miniatura nueva y la antigua nunca queda desfasada.
+        Devuelve la ruta o None si no se pudo generar (se sirve el original).
+        """
+        nombre = os.path.basename(logo_path or "")
+        origen = os.path.join(base_dir, "uploads", "logos", nombre)
+        if not nombre or not os.path.isfile(origen):
+            return None
+        carpeta = os.path.join(base_dir, "uploads", "logos", "thumbs")
+        destino = os.path.join(carpeta, f"{os.path.splitext(nombre)[0]}_{lado}.webp")
+        if os.path.isfile(destino):
+            return destino
+        try:
+            from PIL import Image
+            os.makedirs(carpeta, exist_ok=True)
+            with Image.open(origen) as im:
+                if im.mode not in ("RGB", "RGBA"):
+                    im = im.convert("RGBA")
+                im.thumbnail((lado, lado))
+                temporal = f"{destino}.{os.getpid()}.tmp"
+                im.save(temporal, "WEBP", quality=82, method=4)
+            os.replace(temporal, destino)   # atómico: dos peticiones a la vez no se pisan
+            return destino
+        except Exception:
+            return None
+
+    def _serve_machine_logo_logic(machine_id: int, lado: int = 0, version: str = ""):
 
         base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 
@@ -110,8 +141,16 @@ def register_image_routes(api_router, pages_router):
                 try:
                     full_path = os.path.join(base_dir, machine.logo_path)
                     if os.path.exists(full_path):
+                        # Con ?v=<nombre del fichero> la URL cambia en cada subida: se puede
+                        # cachear un año. Sin versión se mantiene la revalidación de siempre.
+                        inmutable = bool(version) and version == os.path.basename(machine.logo_path)
+                        cache = "public, max-age=31536000, immutable" if inmutable else "no-cache"
+                        if lado in _LADOS_MINIATURA:
+                            mini = _miniatura_logo(base_dir, machine.logo_path, lado)
+                            if mini:
+                                return FileResponse(mini, media_type="image/webp", headers={"Cache-Control": cache})
                         mime = machine.logo_mime or "image/jpeg"
-                        return FileResponse(full_path, media_type=mime, headers={"Cache-Control": "no-cache"})
+                        return FileResponse(full_path, media_type=mime, headers={"Cache-Control": cache})
                 except Exception:
                     pass
 
@@ -141,6 +180,6 @@ def register_image_routes(api_router, pages_router):
         return _serve_profile_image_logic(user_id)
 
     @pages_router.get("/img/maquina/{machine_id}")
-    def serve_machine_logo(machine_id: int):
-        return _serve_machine_logo_logic(machine_id)
+    def serve_machine_logo(machine_id: int, s: int = 0, v: str = ""):
+        return _serve_machine_logo_logic(machine_id, s, v)
 

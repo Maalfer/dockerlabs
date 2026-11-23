@@ -1,72 +1,141 @@
 {% extends 'dockerlabs/base.html' %}
 
+{% block title %}Soporte - DockerLabs{% endblock %}
+
 {% block extra_css %}
 <link rel="stylesheet" href="{{ static_v('dockerlabs/css/info/soporte.css') }}"
       media="print" onload="this.media='all'">
 <noscript><link rel="stylesheet" href="{{ static_v('dockerlabs/css/info/soporte.css') }}"></noscript>
+<link rel="stylesheet" href="{{ static_v('dockerlabs/css/auth-ballena.css') }}">
 {% endblock %}
 
-{% block title %}Soporte - DockerLabs{% endblock %}
-
-{% block extra_head %}
-{% endblock %}
+{# Comando con botón de copiar #}
+{% macro comando(texto) %}
+<div class="sp-cmd">
+    <code><span class="sp-cmd-prompt" aria-hidden="true">❯</span> {{ texto }}</code>
+    <button type="button" class="sp-copiar" data-copiar="{{ texto }}" aria-label="Copiar comando: {{ texto }}">
+        <i class="bi bi-clipboard" aria-hidden="true"></i> <span>Copiar</span>
+    </button>
+</div>
+{% endmacro %}
 
 {% block content %}
-<div class="soporte-container">
+<div class="dl-con-cody">
+{% with ballena_contexto = "soporte", ballena_mensajes = {"idle": "¿Algo no va bien? Te cuento cómo conseguir ayuda rápido ↓", "fin": "¡Listo! Cuanto más detalle des, antes te ayudamos. 🐳"}, ballena_lectura = true %}{% include "dockerlabs/auth/_ballena.html" %}{% endwith %}
+<div class="dl-con-cody-pagina">
+<div class="sp-page">
 
-    <div class="soporte-header">
-        <h1>Soporte <span class="emoji">🛠️</span></h1>
-        <p>¿Tienes algún problema en la plataforma?</p>
+    <div class="sp-header">
+        <span class="terminal-prompt">$</span>
+        <div>
+            <h1>soporte<span class="sp-cursor">_</span></h1>
+            <p>¿Tienes algún problema en la plataforma? Estamos para ayudarte.</p>
+        </div>
     </div>
 
-    <div class="soporte-card">
-
-        <div class="contact-box">
-
-            <div class="section-title">
-                📩 Soporte por Email
+    <!-- CANALES -->
+    <section class="sp-seccion" aria-labelledby="sp-canales"
+             data-tldr="¡Hola, soy Cody! Escríbenos por email o abre un ticket en el Discord: respondemos en menos de 48 horas.">
+        <div class="sp-seccion-cab">
+            <span class="sp-seccion-icono sp-tono-cian"><i class="bi bi-send"></i></span>
+            <div>
+                <h2 id="sp-canales">Cómo contactarnos</h2>
+                <p>Elige el canal que prefieras. Intentamos responder en menos de 48 horas.</p>
             </div>
-
-            <a href="mailto:mario@elrincondelhacker.es" class="email-link">
-                mario@elrincondelhacker.es
-            </a>
-
         </div>
 
-        <div class="contact-box">
+        <div class="sp-grid">
+            <article class="sp-card" style="--i:0">
+                <span class="sp-icono sp-tono-amarillo"><i class="bi bi-envelope"></i></span>
+                <h3>Soporte por email</h3>
+                <p>Cuéntanos qué te pasa y qué has probado ya.</p>
+                <a href="mailto:mario@elrincondelhacker.es" class="sp-mail">mario@elrincondelhacker.es</a>
+                <div class="sp-acciones">
+                    <a href="mailto:mario@elrincondelhacker.es" class="dl-btn dl-btn--neutro"><i class="bi bi-envelope"></i> Escribir</a>
+                    <button type="button" class="dl-btn dl-btn--neutro sp-copiar sp-copiar--btn" data-copiar="mario@elrincondelhacker.es" aria-label="Copiar el correo de soporte">
+                        <i class="bi bi-clipboard" aria-hidden="true"></i> <span>Copiar</span>
+                    </button>
+                </div>
+            </article>
 
-            <div class="section-title">
-                <i class="bi bi-discord"></i>
-                Soporte en Discord
-            </div>
-
-            <p style="color: var(--text-secondary); margin-bottom: 0.8rem;">
-                Únete al servidor de <strong>DockerLabs</strong> y crea un ticket en:
-            </p>
-
-            <div class="discord-channel">
-                <i class="bi bi-ticket-detailed"></i>
-                #ticket-support
-            </div>
-
-            <br>
-
-            <a href="https://discord.gg/dD3yVejBUR" target="_blank" class="discord-btn dl-btn dl-btn--grande">
-                <i class="bi bi-box-arrow-up-right"></i> Unirme a Discord
-            </a>
-
+            <article class="sp-card" style="--i:1">
+                <span class="sp-icono sp-tono-morado"><i class="bi bi-discord"></i></span>
+                <h3>Soporte en Discord</h3>
+                <p>Únete al servidor de <strong>DockerLabs</strong> y abre un ticket en:</p>
+                <span class="sp-canal"><i class="bi bi-ticket-detailed"></i> #ticket-support</span>
+                <div class="sp-acciones">
+                    <a href="https://discord.gg/dD3yVejBUR" target="_blank" rel="noopener noreferrer" class="dl-btn dl-btn--neutro"><i class="bi bi-box-arrow-up-right"></i> Unirme a Discord</a>
+                </div>
+            </article>
         </div>
 
-        <p class="soporte-info">
-            Intentamos responder en menos de 48 horas.<br>
-            Incluye capturas o detalles técnicos si el problema es relacionado con laboratorios.
-        </p>
+        <div class="sp-seguridad" style="--i:2"
+             data-tldr="¿Has encontrado una vulnerabilidad? Repórtala por el programa VDP. ¡Gracias por avisar!">
+            <span class="sp-icono sp-icono--chico sp-tono-verde"><i class="bi bi-shield-check"></i></span>
+            <div>
+                <h3>¿Has encontrado una vulnerabilidad en DockerLabs?</h3>
+                <p>No la publiques: repórtala de forma responsable a través de nuestro programa VDP.</p>
+            </div>
+            <a href="https://app.secur0.com/programs/vdp/Dockerlabs" target="_blank" rel="noopener noreferrer" class="dl-btn dl-btn--neutro"><i class="bi bi-box-arrow-up-right"></i> Programa VDP</a>
+        </div>
+    </section>
 
-        <p class="soporte-info">
-            Si no recibe respuesta en el periodo de 48 horas comuníquelo por el servidor de Discord, puede ocurrir que su correo se haya movido automáticamente a la bandeja de spam ocasionando que el equipo de DockerLabs no lo vea.
-        </p>
+    <!-- ANTES DE ESCRIBIR -->
+    <section class="sp-seccion" aria-labelledby="sp-antes"
+             data-tldr="Antes de escribir, prueba estos tres comandos: arreglan la mayoría de fallos de Docker.">
+        <div class="sp-seccion-cab">
+            <span class="sp-seccion-icono sp-tono-amarillo"><i class="bi bi-tools"></i></span>
+            <div>
+                <h2 id="sp-antes">Antes de escribir, prueba esto</h2>
+                <p>Estos tres pasos solucionan la mayoría de errores al desplegar un laboratorio.</p>
+            </div>
+        </div>
 
-    </div>
+        <ol class="sp-pasos">
+            <li style="--i:0">
+                <div class="sp-paso-txt"><strong>Reinicia Docker</strong><span>Un servicio colgado es la causa más habitual.</span></div>
+                {{ comando('sudo systemctl restart docker') }}
+            </li>
+            <li style="--i:1">
+                <div class="sp-paso-txt"><strong>Detén los contenedores en marcha</strong><span>Ojo: esto para <em>todos</em> los contenedores que tengas en ejecución.</span></div>
+                {{ comando('sudo docker stop $(docker ps -q)') }}
+            </li>
+            <li style="--i:2">
+                <div class="sp-paso-txt"><strong>Elimina los contenedores parados</strong><span>Libera nombres y redes que puedan estar en conflicto.</span></div>
+                {{ comando('sudo docker container prune -f') }}
+            </li>
+        </ol>
+        <p class="sp-nota"><i class="bi bi-arrow-repeat" aria-hidden="true"></i> Después vuelve a lanzar la máquina con <code>sudo bash auto_deploy.sh maquina.tar</code>. Si sigue fallando, escríbenos con los datos de abajo.</p>
+    </section>
+
+    <!-- QUÉ INCLUIR -->
+    <section class="sp-seccion" aria-labelledby="sp-incluir"
+             data-tldr="Cuanto más detalle des, antes podremos ayudarte: la máquina, tu sistema, el comando y el error completo.">
+        <div class="sp-seccion-cab">
+            <span class="sp-seccion-icono sp-tono-verde"><i class="bi bi-clipboard-check"></i></span>
+            <div>
+                <h2 id="sp-incluir">Qué incluir en tu mensaje</h2>
+                <p>Un buen reporte ahorra horas de ida y vuelta.</p>
+            </div>
+        </div>
+        <ul class="sp-checks">
+            <li style="--i:0"><i class="bi bi-box-seam"></i><div><strong>La máquina</strong><span>El nombre exacto del laboratorio que da problemas.</span></div></li>
+            <li style="--i:1"><i class="bi bi-cpu"></i><div><strong>Tu sistema</strong><span>Distribución y versión (Kali, Ubuntu…) y tu versión de Docker: <code>docker --version</code>.</span></div></li>
+            <li style="--i:2"><i class="bi bi-terminal"></i><div><strong>El comando y el error</strong><span>Lo que ejecutaste y el mensaje completo, no solo la última línea.</span></div></li>
+            <li style="--i:3"><i class="bi bi-camera"></i><div><strong>Capturas de pantalla</strong><span>Si el problema es con un laboratorio, una captura aclara mucho.</span></div></li>
+        </ul>
+    </section>
+
+    <!-- NOTA -->
+    <aside class="sp-aviso" data-tldr="¿Sin respuesta tras 48 horas? Avísanos por Discord: tu correo pudo acabar en spam.">
+        <i class="bi bi-info-circle" aria-hidden="true"></i>
+        <p>Si no recibes respuesta en 48 horas, avísanos por el servidor de Discord: puede que tu correo haya ido
+            a la carpeta de spam y el equipo no lo haya visto.</p>
+    </aside>
 
 </div>
+</div>
+</div>
+<script src="{{ static_v('dockerlabs/js/soporte.js') }}" defer></script>
+<script src="{{ static_v('dockerlabs/js/ballena.js') }}" defer></script>
 {% endblock %}

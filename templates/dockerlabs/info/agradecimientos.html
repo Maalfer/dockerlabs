@@ -1,55 +1,106 @@
 {% extends "dockerlabs/base.html" %}
 
+{% block title %}Agradecimientos - DockerLabs{% endblock %}
+
 {% block extra_css %}
-<link rel="stylesheet" href="{{ static_v('dockerlabs/css/equipo.css') }}"
-      media="print" onload="this.media='all'">
-<noscript><link rel="stylesheet" href="{{ static_v('dockerlabs/css/equipo.css') }}"></noscript>
+<link rel="stylesheet" href="{{ static_v('dockerlabs/css/auth-ballena.css') }}">
+<link rel="stylesheet" href="{{ static_v('dockerlabs/css/equipo.css') }}">
+<link rel="stylesheet" href="{{ static_v('dockerlabs/css/info/agradecimientos.css') }}">
 {% endblock %}
 
+{# Tarjeta de una persona o comunidad agradecida. #}
+{% macro tarjeta(a, tono, indice) %}
+<li>
+    <a href="{{ a.url }}" target="_blank" rel="noopener noreferrer" class="eq-card ag-card" style="--i:{{ indice }}"
+       aria-label="{{ a.nombre }}. Abrir {{ 'GitHub' if 'github.com' in a.url else 'su web' }} en una pestaña nueva">
+        <span class="eq-avatar eq-tono-{{ tono }}{% if a.encajar %} ag-avatar--encajar{% endif %}"><img src="{{ a.img }}" alt="{{ a.alt }}" width="96" height="96" loading="lazy" decoding="async"></span>
+        <span class="eq-nombre">{{ a.nombre }}</span>
+        {% if 'github.com' in a.url %}
+        <span class="eq-enlace"><i class="bi bi-github" aria-hidden="true"></i> GitHub <i class="bi bi-box-arrow-up-right" aria-hidden="true"></i></span>
+        {% else %}
+        <span class="eq-enlace"><i class="bi bi-link-45deg" aria-hidden="true"></i> Web <i class="bi bi-box-arrow-up-right" aria-hidden="true"></i></span>
+        {% endif %}
+    </a>
+</li>
+{% endmacro %}
+
 {% block content %}
+<div class="dl-con-cody">
+{% with ballena_contexto = "info", ballena_mensajes = {"idle": "Soy Cody. Te presento a quienes han echado una aleta a DockerLabs ↓", "fin": "¡Gracias a todos! ¿Te animas a ser el siguiente?"}, ballena_lectura = true %}{% include "dockerlabs/auth/_ballena.html" %}{% endwith %}
+<div class="dl-con-cody-pagina">
+<div class="eq-page ag-page">
 
-
-<div class="container mt-5 equipo-page">
-    <h1 class="title">Agradecimientos</h1>
-
-    <p class="mt-4">
-        Queremos dar las gracias a todas las personas y comunidades que colaboran con DockerLabs,
-        ya sea creando máquinas, aportando ideas, ayudando a mejorar la plataforma o detectando bugs.
-        Sin su apoyo, este proyecto no sería posible.
-    </p>
-
-    <div class="card p-4 mt-4 mb-5 colaboradores-card">
-        <div class="colaboradores-grid">
-            <a href="https://github.com/D1se0" target="_blank" class="colaborador glow-dise0">
-                <img src="/static/dockerlabs/images/agradecimientos/diseo.png" alt="D1se0">
-                <span>D1se0</span>
-            </a>
-
-            <a href="https://thehackerslabs.com/" target="_blank" class="colaborador glow-thl">
-                <img src="/static/dockerlabs/images/agradecimientos/thl.png" alt="The Hackers Labs">
-                <span>The Hackers Labs</span>
-            </a>
-
-            <a href="https://hackmyvm.eu/" target="_blank" class="colaborador glow-hackmyvm">
-                <img src="/static/dockerlabs/images/agradecimientos/hmv.png" alt="HackMyVM">
-                <span>HackMyVM</span>
-            </a>
-
-            <a href="https://github.com/0xR00" target="_blank" class="colaborador glow-pylon">
-                <img src="/static/dockerlabs/images/agradecimientos/pylon.jpg" alt="0xR00">
-                <span>0xR0_</span>
-            </a>
-
-            <a href="https://github.com/Santitub" target="_blank" class="colaborador glow-santitub">
-                <img src="/static/dockerlabs/images/agradecimientos/santitub.png" alt="Santitub">
-                <span>Santitub</span>
-            </a>
-
-            <a href="https://github.com/Maciferna" target="_blank" class="colaborador glow-maciferna">
-                <img src="/static/dockerlabs/images/agradecimientos/maci.png" alt="Maciiii__">
-                <span>Maciiii__</span>
-            </a>
+    <div class="eq-header">
+        <span class="terminal-prompt" aria-hidden="true">$</span>
+        <div>
+            <h1>agradecimientos<span class="eq-cursor" aria-hidden="true">_</span></h1>
+            <p>Gracias a quienes hacen posible DockerLabs.</p>
         </div>
     </div>
+
+    <div class="ag-intro">
+        <i class="bi bi-heart" aria-hidden="true"></i>
+        <p>
+            Queremos dar las gracias a todas las personas y comunidades que colaboran con DockerLabs,
+            ya sea creando máquinas, aportando ideas, ayudando a mejorar la plataforma o detectando bugs.
+            Sin su apoyo, este proyecto no sería posible.
+        </p>
+    </div>
+
+    <!-- PERSONAS -->
+    <section class="eq-seccion" aria-labelledby="ag-personas" data-tldr="Personas que han aportado máquinas, ideas, mejoras y reportes de bugs.">
+        <div class="eq-seccion-cab">
+            <span class="eq-seccion-icono eq-tono-colab"><i class="bi bi-people-fill" aria-hidden="true"></i></span>
+            <div>
+                <h2 id="ag-personas">Personas</h2>
+                <p>Quienes han aportado máquinas, ideas, mejoras y reportes de bugs.</p>
+            </div>
+        </div>
+        {% set personas = [
+            {"nombre": "D1se0", "alt": "D1se0", "img": "/static/dockerlabs/images/agradecimientos/diseo.png", "url": "https://github.com/D1se0"},
+            {"nombre": "0xR0_", "alt": "0xR00", "img": "/static/dockerlabs/images/agradecimientos/pylon.jpg", "url": "https://github.com/0xR00"},
+            {"nombre": "Santitub", "alt": "Santitub", "img": "/static/dockerlabs/images/agradecimientos/santitub.png", "url": "https://github.com/Santitub"},
+            {"nombre": "Maciiii__", "alt": "Maciiii__", "img": "/static/dockerlabs/images/agradecimientos/maci.png", "url": "https://github.com/Maciferna"},
+        ] %}
+        <ul class="eq-grid ag-grid">
+            {% for a in personas %}{{ tarjeta(a, 'colab', loop.index0) }}{% endfor %}
+        </ul>
+    </section>
+
+    <!-- COMUNIDADES -->
+    <section class="eq-seccion" aria-labelledby="ag-comunidades" data-tldr="Plataformas amigas con máquinas vulnerables para seguir practicando.">
+        <div class="eq-seccion-cab">
+            <span class="eq-seccion-icono eq-tono-dev"><i class="bi bi-stars" aria-hidden="true"></i></span>
+            <div>
+                <h2 id="ag-comunidades">Comunidades</h2>
+                <p>Plataformas amigas de máquinas vulnerables para practicar hacking.</p>
+            </div>
+        </div>
+        {% set comunidades = [
+            {"nombre": "HackMyVM", "alt": "HackMyVM", "img": "/static/dockerlabs/images/agradecimientos/hmv.png", "url": "https://hackmyvm.eu/"},
+            {"nombre": "VulNyx", "alt": "VulNyx", "img": static_v('dockerlabs/images/agradecimientos/vulnyx.png'), "url": "https://vulnyx.com/machines/", "encajar": true},
+        ] %}
+        <ul class="eq-grid ag-grid ag-grid--centro">
+            {% for a in comunidades %}{{ tarjeta(a, 'dev', loop.index0) }}{% endfor %}
+        </ul>
+    </section>
+
+    <!-- SÚMATE -->
+    <section class="eq-unete" aria-labelledby="ag-sumate" data-tldr="Tú también puedes sumar: crea una máquina o cuéntanos qué mejorarías.">
+        <div class="eq-unete-icono"><i class="bi bi-person-plus-fill" aria-hidden="true"></i></div>
+        <h2 id="ag-sumate" class="ag-unete-titulo">¿Quieres echar una mano?</h2>
+        <p>DockerLabs crece con las aportaciones de la comunidad: crea una máquina, propón la tuya
+            o cuéntanos qué mejorarías.</p>
+        <div class="eq-unete-acciones">
+            <a href="{{ url_for('main.enviar_maquina') }}" class="dl-btn"><i class="bi bi-tools" aria-hidden="true"></i> Crear y enviar una máquina</a>
+            <a href="{{ url_for('main.equipo') }}" class="dl-btn dl-btn--neutro"><i class="bi bi-people" aria-hidden="true"></i> Conocer al equipo</a>
+        </div>
+    </section>
+
+    <p class="eq-gracias ag-gracias">Y a toda la comunidad que juega, reporta y comparte: ¡gracias!</p>
+
 </div>
+</div>
+</div>
+<script src="{{ static_v('dockerlabs/js/ballena.js') }}" defer></script>
 {% endblock %}

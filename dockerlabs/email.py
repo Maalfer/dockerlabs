@@ -271,3 +271,44 @@ def send_password_reset_email(to_addr: str, username: str, token: str, base_url:
 </body>
 </html>"""
     return _send(to_addr, subject, html)
+
+
+def send_account_deleted_notice(to_addr: str, username: str) -> bool:
+    """Confirmación de que la cuenta se ha eliminado (también avisa si no fue el titular)."""
+    subject = "Tu cuenta de DockerLabs ha sido eliminada"
+    html = f"""<!DOCTYPE html>
+<html lang="es">
+<head><meta charset="UTF-8"><title>Cuenta eliminada</title></head>
+<body style="margin:0;padding:0;background:#0f172a;font-family:Arial,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#0f172a;padding:40px 0;">
+    <tr><td align="center">
+      <table width="600" cellpadding="0" cellspacing="0" style="background:#1e293b;border-radius:12px;overflow:hidden;max-width:600px;width:100%;">
+        <tr><td style="background:linear-gradient(135deg,#1e40af,#7c3aed);padding:40px;text-align:center;">
+          <h1 style="color:#ffffff;margin:0;font-size:28px;font-weight:700;">DockerLabs</h1>
+          <p style="color:#bfdbfe;margin:8px 0 0;font-size:14px;">Cuenta eliminada</p>
+        </td></tr>
+        <tr><td style="padding:40px;">
+          <h2 style="color:#f1f5f9;font-size:22px;margin:0 0 16px;">Hasta pronto, {username}</h2>
+          <p style="color:#94a3b8;font-size:16px;line-height:1.6;margin:0 0 16px;">
+            Tu cuenta de DockerLabs y los datos asociados (perfil, progreso, diplomas y writeups) se han
+            eliminado de forma definitiva. Las máquinas que hubieras creado siguen disponibles sin tu nombre.
+          </p>
+          <div style="background:rgba(217,119,6,0.12);border-left:3px solid #d97706;border-radius:8px;padding:16px;margin:0 0 24px;">
+            <p style="color:#fcd34d;font-size:13px;line-height:1.6;margin:0;">
+              <strong>&iquest;No has sido t&uacute;?</strong> Escr&iacute;benos cuanto antes a
+              mario@elrincondelhacker.es desde este mismo correo.
+            </p>
+          </div>
+          <p style="color:#94a3b8;font-size:14px;line-height:1.6;margin:0;">
+            Si alg&uacute;n d&iacute;a quieres volver, ser&aacute;s bienvenido: podr&aacute;s crear una cuenta nueva cuando quieras.
+          </p>
+        </td></tr>
+        <tr><td style="background:#0f172a;padding:20px;text-align:center;">
+          <p style="color:#475569;font-size:12px;margin:0;">DockerLabs &middot; dockerlabs.es</p>
+        </td></tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>"""
+    return _send(to_addr, subject, html)

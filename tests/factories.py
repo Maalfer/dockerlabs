@@ -275,3 +275,15 @@ def make_email_change_token(db, *, user_id, new_email, **overrides):
     db.session.add(row)
     db.session.commit()
     return row
+
+
+# Cabeceras de una navegación real de navegador. El contador de visitas, los
+# clics salientes y las descargas (dockerlabs/traffic.py) solo cuentan
+# navegaciones humanas; el TestClient por defecto (UA "testclient") no lo es.
+NAV_HEADERS = {
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.0.0 Safari/537.36",
+    "Accept-Language": "es-ES,es;q=0.9",
+    "Sec-Fetch-Mode": "navigate",
+    "Sec-Fetch-Dest": "document",
+    "X-Real-IP": "203.0.113.7",
+}

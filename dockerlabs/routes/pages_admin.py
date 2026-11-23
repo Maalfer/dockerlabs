@@ -1,5 +1,6 @@
 import math
 from datetime import datetime, timedelta
+from urllib.parse import urlencode
 
 import secrets
 from fastapi import Depends, Request
@@ -10,6 +11,9 @@ from dockerlabs.models import (Category, Certificate, CertificateRequestLog,
     CompletedMachine, Machine, MachineDownloadLog, PendingMachineSubmission,
     Rating, User, Writeup, PageVisitLog, OutboundClickLog)
 from dockerlabs.tiempo import utcnow
+
+
+_DIFICULTADES = ("Muy Fácil", "Fácil", "Medio", "Difícil")
 
 
 def _parse_date_flexible(date_str: str):
@@ -259,39 +263,145 @@ def register_pages_admin_routes(
         if not ok:
             return redirect
 
-        page = int(request.query_params.get("page", 1))
-        per_page = int(request.query_params.get("per_page", 10))
-        search = request.query_params.get("search", "").strip()
+        qp = request.query_params
 
+        def entero(nombre, defecto):
+            try:
+                return int(qp.get(nombre, defecto))
+            except (TypeError, ValueError):
+                return defecto
+
+        ORDENES = {
+            "recientes": "Últimos registros",
+            "antiguos": "Registros más antiguos",
+            "acceso": "Último acceso (más reciente)",
+            "inactivos": "Más tiempo sin entrar",
+            "nombre": "Nombre (A-Z)",
+        }
+        PERIODOS = {"hoy": 1, "7": 7, "30": 30, "90": 90}
+
+        per_page = min(max(entero("per_page", 25), 5), 100)
+        search = (qp.get("search") or "").strip()[:100]
+        orden = qp.get("orden") if qp.get("orden") in ORDENES else "recientes"
+        rol = qp.get("rol") if qp.get("rol") in ("admin", "moderador", "jugador") else ""
+        registro = qp.get("registro") if qp.get("registro") in PERIODOS else ""
+        acceso = qp.get("acceso") if qp.get("acceso") in (*PERIODOS, "nunca") else ""
+
+        ahora = utcnow()
         query = User.query
         if search:
-            query = query.filter((User.username.ilike(f"%{search}%")) | (User.email.ilike(f"%{search}%")) | (User.role.ilike(f"%{search}%")))
+            patron = "%" + search.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_") + "%"
+            query = query.filter(or_(
+                User.username.ilike(patron, escape="\\"),
+                User.email.ilike(patron, escape="\\"),
+                User.role.ilike(patron, escape="\\"),
+            ))
+        if rol:
+            query = query.filter(User.role == rol)
+        if registro:
+            query = query.filter(User.created_at >= ahora - timedelta(days=PERIODOS[registro]))
+        if acceso == "nunca":
+            query = query.filter(User.last_seen_at.is_(None))
+        elif acceso:
+            query = query.filter(User.last_seen_at >= ahora - timedelta(days=PERIODOS[acceso]))
 
         total = query.count()
-        usuarios = query.order_by(User.id.asc()).offset((page - 1) * per_page).limit(per_page).all()
-        total_pages = (total + per_page - 1) // per_page
-        has_prev = page > 1
-        has_next = page < total_pages
+        total_pages = max(1, (total + per_page - 1) // per_page)
+        page = min(max(entero("page", 1), 1), total_pages)
+
+        # Quien no tiene último acceso registrado va siempre al final de esos dos órdenes.
+        sin_acceso = User.last_seen_at.is_(None)
+        criterio = {
+            "recientes": (User.created_at.desc(), User.id.desc()),
+            "antiguos": (User.created_at.asc(), User.id.asc()),
+            "acceso": (sin_acceso.asc(), User.last_seen_at.desc(), User.id.desc()),
+            "inactivos": (sin_acceso.asc(), User.last_seen_at.asc(), User.id.asc()),
+            "nombre": (func.lower(User.username).asc(), User.id.asc()),
+        }[orden]
+        usuarios = query.order_by(*criterio).offset((page - 1) * per_page).limit(per_page).all()
+
+        def hace(fecha):
+            if not fecha:
+                return ""
+            seg = max(0, (ahora - fecha).total_seconds())
+            if seg < 3600:
+                return "hace un momento" if seg < 120 else f"hace {int(seg // 60)} min"
+            if seg < 86400:
+                return f"hace {int(seg // 3600)} h"
+            dias = int(seg // 86400)
+            if dias == 1:
+                return "ayer"
+            if dias < 60:
+                return f"hace {dias} días"
+            if dias < 730:
+                return f"hace {dias // 30} meses"
+            return f"hace {dias // 365} años"
+
+        filas = [{"u": u, "registro_txt": hace(u.created_at), "acceso_txt": hace(u.last_seen_at)} for u in usuarios]
+
+        semana = ahora - timedelta(days=7)
+        resumen = {
+            "total": User.query.count(),
+            "nuevos": User.query.filter(User.created_at >= semana).count(),
+            "activos": User.query.filter(User.last_seen_at >= semana).count(),
+            "con_registro": User.query.filter(User.last_seen_at.isnot(None)).count(),
+        }
+
+        def listado_url(**cambios):
+            """URL del listado conservando filtros; los valores por defecto se omiten."""
+            params = {"search": search, "orden": orden, "rol": rol, "registro": registro,
+                      "acceso": acceso, "per_page": per_page, "page": page}
+            params.update(cambios)
+            limpio = {
+                k: v for k, v in params.items()
+                if v not in ("", None)
+                and not (k == "page" and v == 1)
+                and not (k == "orden" and v == "recientes")
+                and not (k == "per_page" and v == 25)
+            }
+            return "/gestion-usuarios" + ("?" + urlencode(limpio) if limpio else "")
+
+        paginas, previa = [], 0
+        for p in sorted({1, total_pages, *range(max(1, page - 1), min(total_pages, page + 1) + 1)}):
+            if p - previa > 1:
+                paginas.append(None)
+            paginas.append(p)
+            previa = p
 
         csrf_token = session.get("csrf_token") or secrets.token_urlsafe(32)
-        return templates.TemplateResponse(
+        respuesta = templates.TemplateResponse(
             request,
             "dockerlabs/admin/gestion_usuarios.html",
             {
                 "usuarios": usuarios,
+                "filas": filas,
+                "resumen": resumen,
                 "session": session,
                 "csrf_token_value": csrf_token,
                 "page": page,
                 "per_page": per_page,
                 "total": total,
                 "total_pages": total_pages,
-                "has_prev": has_prev,
-                "has_next": has_next,
+                "paginas": paginas,
+                "has_prev": page > 1,
+                "has_next": page < total_pages,
+                "inicio": (page - 1) * per_page + 1 if usuarios else 0,
+                "fin": (page - 1) * per_page + len(usuarios),
                 "search": search,
+                "orden": orden,
+                "ordenes": ORDENES,
+                "rol": rol,
+                "registro": registro,
+                "acceso": acceso,
+                "hay_filtros": bool(search or rol or registro or acceso),
+                "listado_url": listado_url,
                 "url_for": url_for,
                 "current_user_role": session.get("role", ""),
             },
         )
+        # Datos personales: que ni el navegador ni intermediarios los reutilicen sin revalidar.
+        respuesta.headers["Cache-Control"] = "private, no-store"
+        return respuesta
 
     @pages_router.get("/gestion-maquinas", response_class=HTMLResponse)
     def gestion_maquinas_page(
@@ -300,6 +410,8 @@ def register_pages_admin_routes(
         page: int = 1,
         per_page: int = 20,
         search: str = "",
+        plataforma: str = "docker",
+        dificultad: str = "",
     ):
         ok, redirect = require_auth_and_role(session, ["admin", "moderador", "jugador"])
         if not ok:
@@ -307,6 +419,13 @@ def register_pages_admin_routes(
 
         current_username = session.get("username", "")
         role = session.get("role", "")
+
+        # Parámetros saneados: una URL manipulada no debe provocar consultas enormes
+        # ni listados vacíos por una plataforma o dificultad inventadas.
+        search = (search or "").strip()[:100]
+        plataforma = plataforma if plataforma in ("docker", "bunker") else "docker"
+        dificultad = dificultad if dificultad in _DIFICULTADES else ""
+        per_page = min(max(per_page, 5), 100)
 
         def build_query(origen):
             query = Machine.query.filter_by(origen=origen)
@@ -316,81 +435,267 @@ def register_pages_admin_routes(
                 else:
                     return query.filter(False)
             if search:
-                search_term = f"%{search}%"
-                query = query.filter(or_(Machine.nombre.ilike(search_term), Machine.autor.ilike(search_term), Machine.dificultad.ilike(search_term)))
+                # Los comodines de LIKE del texto buscado se escapan: «100%» o «a_b»
+                # se buscan literalmente.
+                escapado = search.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
+                term = f"%{escapado}%"
+                query = query.filter(or_(
+                    Machine.nombre.ilike(term, escape="\\"),
+                    Machine.autor.ilike(term, escape="\\"),
+                    Machine.dificultad.ilike(term, escape="\\"),
+                ))
+            if dificultad:
+                query = query.filter(Machine.dificultad == dificultad)
             return query.order_by(Machine.id.asc())
 
-        docker_query = build_query("docker")
-        bunker_query = build_query("bunker")
-        docker_total = docker_query.count()
-        bunker_total = bunker_query.count()
+        totales = {"docker": build_query("docker").count(), "bunker": build_query("bunker").count()}
+        total = totales[plataforma]
+        total_pages = max(1, math.ceil(total / per_page))
+        page = min(max(page, 1), total_pages)
 
-        maquinas_docker = docker_query.limit(per_page).offset((page - 1) * per_page).all()
-        maquinas_bunker = bunker_query.limit(per_page).offset((page - 1) * per_page).all()
+        # Solo se lee y se pinta la plataforma activa: la otra se abre por su pestaña.
+        maquinas = build_query(plataforma).limit(per_page).offset((page - 1) * per_page).all()
 
-        docker_pages = math.ceil(docker_total / per_page) if per_page > 0 else 1
-        bunker_pages = math.ceil(bunker_total / per_page) if per_page > 0 else 1
-        docker_has_prev = page > 1
-        docker_has_next = page < docker_pages
-        bunker_has_prev = page > 1
-        bunker_has_next = page < bunker_pages
+        ids = [m.id for m in maquinas]
+        categorias = {}
+        if ids:
+            categorias = {
+                c.machine_id: c.categoria
+                for c in Category.query.filter(Category.origen == plataforma, Category.machine_id.in_(ids)).all()
+            }
 
-        categorias_map = {}
-        if maquinas_docker:
-            docker_ids = [m.id for m in maquinas_docker]
-            docker_cats = Category.query.filter_by(origen="docker").filter(Category.machine_id.in_(docker_ids)).all()
-            docker_lookup = {c.machine_id: c.categoria for c in docker_cats}
-            for m in maquinas_docker:
-                categorias_map[("docker", m.id)] = docker_lookup.get(m.id, "")
+        # Campos largos o no editables en la tabla: viajan en un único JSON (no en
+        # cientos de inputs ocultos) y el JS los reenvía tal cual al guardar.
+        datos = {
+            str(m.id): {
+                "autor": m.autor,
+                "enlace_autor": m.enlace_autor or "",
+                "fecha": m.fecha or "",
+                "imagen": m.imagen or "",
+                "descripcion": m.descripcion or "",
+                "link_descarga": m.link_descarga or "",
+                "categoria": categorias.get(m.id, ""),
+            }
+            for m in maquinas
+        }
 
-        if maquinas_bunker:
-            bunker_ids = [m.id for m in maquinas_bunker]
-            if bunker_ids:
-                bunker_cats = Category.query.filter(Category.origen == "bunker", Category.machine_id.in_(bunker_ids)).all()
-                bunker_lookup = {c.machine_id: c.categoria for c in bunker_cats}
-                for m in maquinas_bunker:
-                    categorias_map[("bunker", m.id)] = bunker_lookup.get(m.id, "")
+        def listado_url(**cambios):
+            """URL del listado conservando filtros; los valores por defecto se omiten."""
+            params = {
+                "plataforma": plataforma,
+                "search": search,
+                "dificultad": dificultad,
+                "per_page": per_page if per_page != 20 else "",
+                "page": page,
+            }
+            params.update(cambios)
+            limpio = {
+                k: v for k, v in params.items()
+                if v not in ("", None)
+                and not (k == "page" and v == 1)
+                and not (k == "plataforma" and v == "docker")
+            }
+            return "/gestion-maquinas" + ("?" + urlencode(limpio) if limpio else "")
 
-        current_user_role = session.get("role", "")
+        def ventana_paginas(actual, ultima, vecinos=1):
+            """[1, None, 4, 5, 6, None, 11]: None = puntos suspensivos."""
+            paginas = sorted({1, ultima, *range(max(1, actual - vecinos), min(ultima, actual + vecinos) + 1)})
+            salida, previa = [], 0
+            for p in paginas:
+                if p - previa > 1:
+                    salida.append(None)
+                salida.append(p)
+                previa = p
+            return salida
+
+        inicio = (page - 1) * per_page + 1 if maquinas else 0
+        fin = inicio + len(maquinas) - 1 if maquinas else 0
+
         csrf_token = session.get("csrf_token") or secrets.token_urlsafe(32)
-        return templates.TemplateResponse(
+        respuesta = templates.TemplateResponse(
             request,
             "dockerlabs/admin/gestion_maquinas.html",
             {
-                "maquinas_docker": maquinas_docker,
-                "maquinas_bunker": maquinas_bunker,
-                "categorias_map": categorias_map,
-                "csrf_token_value": csrf_token,
+                "maquinas": maquinas,
+                "categorias": categorias,
+                "datos": datos,
+                "plataforma": plataforma,
+                "docker_total": totales["docker"],
+                "bunker_total": totales["bunker"],
+                "total": total,
                 "page": page,
                 "per_page": per_page,
+                "total_pages": total_pages,
+                "paginas": ventana_paginas(page, total_pages),
+                "inicio": inicio,
+                "fin": fin,
                 "search": search,
-                "docker_total": docker_total,
-                "bunker_total": bunker_total,
-                "docker_pages": docker_pages,
-                "bunker_pages": bunker_pages,
-                "docker_has_prev": docker_has_prev,
-                "docker_has_next": docker_has_next,
-                "bunker_has_prev": bunker_has_prev,
-                "bunker_has_next": bunker_has_next,
+                "dificultad": dificultad,
+                "dificultades": _DIFICULTADES,
+                "listado_url": listado_url,
+                "csrf_token_value": csrf_token,
                 "url_for": url_for,
-                "current_user_role": current_user_role,
+                "current_user_role": role,
                 "session": session,
             },
         )
+        # Datos de administración: que ni el navegador ni intermediarios los reutilicen sin revalidar.
+        respuesta.headers["Cache-Control"] = "private, no-cache"
+        return respuesta
 
     @pages_router.get("/pending-machines", response_class=HTMLResponse)
-    def pending_machines_page(request: Request, session: dict = Depends(get_session)):
+    def pending_machines_page(
+        request: Request,
+        estado: str = "pendiente",
+        q: str = "",
+        orden: str = "",
+        page: str = "1",
+        session: dict = Depends(get_session),
+    ):
+        """Cola de revisión de envíos. Por defecto solo los pendientes; los
+        añadidos y rechazados quedan archivados en sus pestañas."""
         ok, redirect = require_auth_and_role(session, ["admin", "moderador"])
         if not ok:
             return redirect
-        machines = PendingMachineSubmission.query.order_by(PendingMachineSubmission.submitted_at.desc()).all()
+
+        from dockerlabs.routes.pending_admin import contar_por_estado
+
+        P = PendingMachineSubmission
+        POR_PAGINA = 12
+        if estado not in ("pendiente", "aprobado", "rechazado", "todas"):
+            estado = "pendiente"
+        q = (q or "").strip()[:100]
+        # La cola se atiende por orden de llegada; el archivo, lo último revisado arriba.
+        orden_defecto = "antiguas" if estado == "pendiente" else "recientes"
+        if orden not in ("recientes", "antiguas", "nombre"):
+            orden = orden_defecto
+        try:
+            pagina = max(1, int(page))
+        except (TypeError, ValueError):
+            pagina = 1
+
+        consulta = P.query
+        if estado != "todas":
+            consulta = consulta.filter(P.estado == estado)
+        if q:
+            patron = "%" + q.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_") + "%"
+            consulta = consulta.filter(or_(
+                P.nombre.ilike(patron, escape="\\"),
+                P.autor_solicitante.ilike(patron, escape="\\"),
+                P.discord_user.ilike(patron, escape="\\"),
+                P.descripcion.ilike(patron, escape="\\"),
+                P.tags.ilike(patron, escape="\\"),
+            ))
+        total = consulta.count()
+        total_pages = max(1, math.ceil(total / POR_PAGINA))
+        pagina = min(pagina, total_pages)
+
+        fecha_archivo = func.coalesce(P.reviewed_at, P.submitted_at)
+        if orden == "nombre":
+            criterio = (func.lower(P.nombre).asc(), P.id.asc())
+        elif estado == "pendiente" or estado == "todas":
+            criterio = (P.submitted_at.asc(), P.id.asc()) if orden == "antiguas" else (P.submitted_at.desc(), P.id.desc())
+        else:
+            criterio = (fecha_archivo.asc(), P.id.asc()) if orden == "antiguas" else (fecha_archivo.desc(), P.id.desc())
+        envios = consulta.order_by(*criterio).offset((pagina - 1) * POR_PAGINA).limit(POR_PAGINA).all()
+
+        # Pistas para revisar más rápido: ¿ya está publicada?, ¿se ha enviado dos veces?
+        nombres = {(m.nombre or "").strip().lower() for m in envios if m.nombre}
+        publicadas, repetidos = {}, {}
+        if nombres:
+            for mid, nombre, origen in db.session.query(Machine.id, Machine.nombre, Machine.origen).filter(
+                    func.lower(func.trim(Machine.nombre)).in_(nombres)).all():
+                publicadas[(nombre or "").strip().lower()] = {"id": mid, "origen": origen or "docker"}
+            for clave, n in db.session.query(func.lower(func.trim(P.nombre)), func.count(P.id)).filter(
+                    func.lower(func.trim(P.nombre)).in_(nombres)).group_by(func.lower(func.trim(P.nombre))).all():
+                repetidos[clave] = n
+
+        ahora = utcnow()
+
+        def hace(fecha):
+            if not fecha:
+                return "", 0
+            dias = max(0, (ahora - fecha).days)
+            if dias == 0:
+                horas = int((ahora - fecha).total_seconds() // 3600)
+                return ("hace menos de una hora" if horas < 1 else f"hace {horas} h"), 0
+            if dias == 1:
+                return "ayer", 1
+            if dias < 60:
+                return f"hace {dias} días", dias
+            return f"hace {dias // 30} meses", dias
+
+        revisores = {}
+        ids_rev = {m.reviewed_by for m in envios if m.reviewed_by}
+        if ids_rev:
+            revisores = dict(db.session.query(User.id, User.username).filter(User.id.in_(ids_rev)).all())
+
+        items = []
+        for m in envios:
+            clave = (m.nombre or "").strip().lower()
+            texto, dias = hace(m.submitted_at)
+            items.append({
+                "m": m,
+                "publicada": publicadas.get(clave),
+                "repetida": repetidos.get(clave, 1) > 1,
+                "espera": texto,
+                "dias": dias,
+                "urgente": m.estado == "pendiente" and dias >= 14,
+                "revisor": revisores.get(m.reviewed_by, ""),
+            })
+
+        def listado_url(**cambios):
+            """URL de la cola conservando filtros; los valores por defecto se omiten."""
+            params = {"estado": estado, "q": q, "orden": orden, "page": pagina}
+            params.update(cambios)
+            defecto_orden = "antiguas" if params["estado"] == "pendiente" else "recientes"
+            limpio = {
+                k: v for k, v in params.items()
+                if v not in ("", None)
+                and not (k == "page" and v == 1)
+                and not (k == "estado" and v == "pendiente")
+                and not (k == "orden" and v == defecto_orden)
+            }
+            return "/pending-machines" + ("?" + urlencode(limpio) if limpio else "")
+
+        def ventana(actual, ultima, vecinos=1):
+            paginas = sorted({1, ultima, *range(max(1, actual - vecinos), min(ultima, actual + vecinos) + 1)})
+            salida, previa = [], 0
+            for p in paginas:
+                if p - previa > 1:
+                    salida.append(None)
+                salida.append(p)
+                previa = p
+            return salida
+
         current_user_role = session.get("role", "")
         csrf_token = session.get("csrf_token") or secrets.token_urlsafe(32)
-        return templates.TemplateResponse(
+        respuesta = templates.TemplateResponse(
             request,
             "dockerlabs/admin/pending.html",
-            {"machines": machines, "session": session, "url_for": url_for, "current_user_role": current_user_role, "csrf_token_value": csrf_token},
+            {
+                "items": items,
+                "machines": envios,
+                "counts": contar_por_estado(db),
+                "estado": estado,
+                "q": q,
+                "orden": orden,
+                "orden_defecto": orden_defecto,
+                "page": pagina,
+                "total": total,
+                "total_pages": total_pages,
+                "paginas": ventana(pagina, total_pages),
+                "inicio": (pagina - 1) * POR_PAGINA + 1 if envios else 0,
+                "fin": (pagina - 1) * POR_PAGINA + len(envios),
+                "listado_url": listado_url,
+                "session": session,
+                "url_for": url_for,
+                "current_user_role": current_user_role,
+                "csrf_token_value": csrf_token,
+            },
         )
+        respuesta.headers["Cache-Control"] = "private, no-cache"
+        return respuesta
 
     @pages_router.get("/user-pending", response_class=HTMLResponse)
     def user_pending_page(request: Request, session: dict = Depends(get_session)):
@@ -538,9 +843,11 @@ def register_pages_admin_routes(
             "total_en_rango": len(ob_filtered),
             "unicos_en_rango": len({o.visitor for o in ob_filtered}),
             "newsletter": len([o for o in ob_filtered if o.destino == "newsletter"]),
-            "academia": len([o for o in ob_filtered if o.destino == "academia"]),
+            "academia": len([o for o in ob_filtered if o.destino in ("academia", "academia-bunker")]),
+            "master": len([o for o in ob_filtered if o.destino == "master"]),
             "newsletter_by_day": _bucketize([o for o in ob_filtered if o.destino == "newsletter"], lambda o: o.created_at, start, end),
-            "academia_by_day": _bucketize([o for o in ob_filtered if o.destino == "academia"], lambda o: o.created_at, start, end),
+            "academia_by_day": _bucketize([o for o in ob_filtered if o.destino in ("academia", "academia-bunker")], lambda o: o.created_at, start, end),
+            "master_by_day": _bucketize([o for o in ob_filtered if o.destino == "master"], lambda o: o.created_at, start, end),
             "por_origen": [{"destino": d, "origen": og, "clics": len(v), "unicos": len({x.visitor for x in v})}
                            for (d, og), v in sorted(_by.items(), key=lambda kv: -len(kv[1]))],
             "since": ob_min.strftime("%d/%m/%Y") if ob_min else None,

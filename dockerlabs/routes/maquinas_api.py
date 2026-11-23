@@ -174,6 +174,14 @@ def register_maquinas_api_routes(api_router, get_session, verify_csrf_token, BAS
                         os.remove(old_path)
                     except Exception:
                         pass
+                # Miniaturas del logo anterior: ya no sirven.
+                try:
+                    import glob
+                    parte = os.path.splitext(os.path.basename(maq.logo_path))[0]
+                    for mini in glob.glob(os.path.join(almacenamiento_dir, "thumbs", parte + "_*.webp")):
+                        os.remove(mini)
+                except Exception:
+                    pass
 
             maq.logo_path = f"uploads/logos/{final_filename}"
             maq.logo_data = None
@@ -187,7 +195,8 @@ def register_maquinas_api_routes(api_router, get_session, verify_csrf_token, BAS
         return {
             "message": "Logo subido correctamente",
             "filename": final_filename,
-            "image_url": f"/img/maquina/{machine_id}?t={ts}"
+            "image_url": f"/img/maquina/{machine_id}?t={ts}",
+            "thumb_url": f"/img/maquina/{machine_id}?s=96&v={final_filename}"
         }
 
     @api_router.get("/get_users")

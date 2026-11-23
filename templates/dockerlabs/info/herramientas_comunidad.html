@@ -1,0 +1,87 @@
+{% extends 'dockerlabs/base.html' %}
+
+{% block title %}Herramientas de Comunidad - DockerLabs{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ static_v('dockerlabs/css/info/soporte.css') }}"
+      media="print" onload="this.media='all'">
+<noscript><link rel="stylesheet" href="{{ static_v('dockerlabs/css/info/soporte.css') }}"></noscript>
+<link rel="stylesheet" href="{{ static_v('dockerlabs/css/info/herramientas_comunidad.css') }}">
+<link rel="stylesheet" href="{{ static_v('dockerlabs/css/auth-ballena.css') }}">
+{% endblock %}
+
+{# Tarjeta de una herramienta de la comunidad #}
+{% macro tarjeta(h, indice) %}
+<article class="sp-card" style="--i:{{ indice }}">
+    <span class="sp-icono sp-tono-cian"><i class="bi {{ h.icono or 'bi-terminal' }}" aria-hidden="true"></i></span>
+    <h3>{{ h.nombre }}</h3>
+    <p>{{ h.descripcion }}</p>
+    <span class="hc-autor"><i class="bi bi-person" aria-hidden="true"></i> {{ h.autor }}</span>
+    <div class="sp-acciones">
+        <a href="{{ h.url }}" target="_blank" rel="noopener noreferrer" class="dl-btn dl-btn--neutro">
+            <i class="bi bi-github" aria-hidden="true"></i> Ver en GitHub
+        </a>
+    </div>
+</article>
+{% endmacro %}
+
+{% block content %}
+<div class="dl-con-cody">
+{% with ballena_contexto = "info", ballena_mensajes = {"idle": "Soy Cody. Aquí te enseño herramientas que la propia comunidad ha creado para DockerLabs ↓", "fin": "¿Tienes una herramienta propia? ¡Cuéntanosla por soporte!"}, ballena_lectura = true %}{% include "dockerlabs/auth/_ballena.html" %}{% endwith %}
+<div class="dl-con-cody-pagina">
+<div class="sp-page">
+
+    <div class="sp-header">
+        <span class="terminal-prompt">$</span>
+        <div>
+            <h1>herramientas de comunidad<span class="sp-cursor">_</span></h1>
+            <p>Proyectos de la comunidad para automatizar el uso de DockerLabs.</p>
+        </div>
+    </div>
+
+    <section class="sp-seccion" aria-labelledby="hc-herramientas"
+             data-tldr="Herramientas no oficiales hechas por la comunidad para automatizar tareas en DockerLabs, como listar o descargar máquinas desde la terminal.">
+        <div class="sp-seccion-cab">
+            <span class="sp-seccion-icono sp-tono-cian"><i class="bi bi-box-seam"></i></span>
+            <div>
+                <h2 id="hc-herramientas">Herramientas disponibles</h2>
+                <p>Proyectos no oficiales, creados y mantenidos por la comunidad.</p>
+            </div>
+        </div>
+
+        {% set herramientas = [
+            {
+                "nombre": "DockerLabs CLI",
+                "autor": "luigi70289",
+                "icono": "bi-terminal",
+                "descripcion": "Script en Bash para listar, buscar y descargar máquinas de DockerLabs desde la terminal, por nombre, por dificultad o al azar.",
+                "url": "https://github.com/luigi70289/Dockerlabs-CLI",
+            },
+        ] %}
+        <div class="hc-grid">
+            {% for h in herramientas %}{{ tarjeta(h, loop.index0) }}{% endfor %}
+        </div>
+    </section>
+
+    <aside class="sp-aviso" data-tldr="Son proyectos no oficiales de la comunidad, no mantenidos por el equipo de DockerLabs. Úsalos bajo tu responsabilidad y respetando las condiciones de uso.">
+        <i class="bi bi-info-circle" aria-hidden="true"></i>
+        <p>Estas herramientas son <strong>proyectos no oficiales</strong> hechos por la comunidad, no mantenidos por
+            el equipo de DockerLabs. Revísalas antes de usarlas y respeta siempre las
+            <a href="{{ url_for('main.condiciones_uso') }}">condiciones de uso</a> de la plataforma.</p>
+    </aside>
+
+    <div class="sp-seguridad" style="--i:1"
+         data-tldr="¿Has creado una herramienta para la comunidad de DockerLabs? Escríbenos por soporte para añadirla aquí.">
+        <span class="sp-icono sp-icono--chico sp-tono-verde"><i class="bi bi-plus-circle"></i></span>
+        <div>
+            <h3>¿Has creado una herramienta para DockerLabs?</h3>
+            <p>Escríbenos por soporte y la añadimos a esta lista.</p>
+        </div>
+        <a href="{{ url_for('main.soporte') }}" class="dl-btn dl-btn--neutro"><i class="bi bi-envelope"></i> Contactar</a>
+    </div>
+
+</div>
+</div>
+</div>
+<script src="{{ static_v('dockerlabs/js/ballena.js') }}" defer></script>
+{% endblock %}

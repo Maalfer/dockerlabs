@@ -13,7 +13,7 @@
 
 {% block content %}
 <div class="dl-con-cody">
-{% with ballena_mensajes = {"idle": "Aquí están tus diplomas. Te lo explico ↓", "fin": "¡A por el siguiente diploma!"}, ballena_lectura = true %}{% include "dockerlabs/auth/_ballena.html" %}{% endwith %}
+{% with ballena_contexto = "certificados", ballena_mensajes = {"idle": "Aquí están tus diplomas. Te lo explico ↓", "fin": "¡A por el siguiente diploma!"}, ballena_lectura = true %}{% include "dockerlabs/auth/_ballena.html" %}{% endwith %}
 <div class="dl-con-cody-pagina">
 <div class="dashboard-container">
     <div class="dashboard-header">

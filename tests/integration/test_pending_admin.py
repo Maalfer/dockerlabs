@@ -142,3 +142,67 @@ class TestReject:
         csrf = login_as(admin)
         r = client.post("/api/admin/pending-machines/999999/reject", headers={"X-CSRFToken": csrf})
         assert r.status_code == 404
+
+
+class TestEstado:
+    def _post(self, client, sub_id, estado, csrf):
+        return client.post(f"/api/admin/pending-machines/{sub_id}/estado", json={"estado": estado},
+                           headers={"X-CSRFToken": csrf})
+
+    def test_moderador_can_reject_and_restore(self, client, login_as, db):
+        from dockerlabs.models import PendingMachineSubmission
+
+        mod = _moderador(db)
+        sub = make_pending_machine_submission(db)
+        sub_id = sub.id
+        csrf = login_as(mod)
+
+        r = self._post(client, sub_id, "rechazado", csrf)
+        assert r.status_code == 200
+        assert r.json()["counts"]["rechazado"] == 1
+        db.session.expire_all()
+        row = db.session.get(PendingMachineSubmission, sub_id)
+        assert row.estado == "rechazado" and row.reviewed_at is not None and row.reviewed_by == mod.id
+
+        r = self._post(client, sub_id, "pendiente", csrf)
+        assert r.status_code == 200
+        db.session.expire_all()
+        row = db.session.get(PendingMachineSubmission, sub_id)
+        assert row.estado == "pendiente" and row.reviewed_at is None and row.reviewed_by is None
+
+    def test_invalid_state_is_rejected(self, client, login_as, db):
+        sub = make_pending_machine_submission(db)
+        csrf = login_as(_admin(db))
+        assert self._post(client, sub.id, "publicada", csrf).status_code == 400
+
+    def test_jugador_is_forbidden(self, client, login_as, db):
+        sub = make_pending_machine_submission(db)
+        csrf = login_as(_jugador(db))
+        assert self._post(client, sub.id, "aprobado", csrf).status_code == 403
+
+
+class TestLimpiar:
+    def test_only_deletes_requested_state_and_never_pending(self, client, login_as, db):
+        from dockerlabs.models import PendingMachineSubmission
+
+        make_pending_machine_submission(db, estado="aprobado")
+        make_pending_machine_submission(db, estado="aprobado")
+        make_pending_machine_submission(db, estado="rechazado")
+        make_pending_machine_submission(db, estado="pendiente")
+        csrf = login_as(_admin(db))
+
+        r = client.post("/api/admin/pending-machines/limpiar", json={"estado": "aprobado"}, headers={"X-CSRFToken": csrf})
+        assert r.status_code == 200
+        assert r.json()["eliminadas"] == 2
+        db.session.expire_all()
+        assert sorted(p.estado for p in PendingMachineSubmission.query.all()) == ["pendiente", "rechazado"]
+
+        r = client.post("/api/admin/pending-machines/limpiar", json={"estado": "pendiente"}, headers={"X-CSRFToken": csrf})
+        assert r.status_code == 400
+        db.session.expire_all()
+        assert PendingMachineSubmission.query.count() == 2
+
+    def test_jugador_is_forbidden(self, client, login_as, db):
+        csrf = login_as(_jugador(db))
+        r = client.post("/api/admin/pending-machines/limpiar", json={"estado": "aprobado"}, headers={"X-CSRFToken": csrf})
+        assert r.status_code == 403

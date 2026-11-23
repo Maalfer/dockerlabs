@@ -3,12 +3,16 @@
 {% block title %}Términos y Condiciones de Uso del Material - DockerLabs{% endblock %}
 
 {% block extra_css %}
+<link rel="stylesheet" href="{{ static_v('dockerlabs/css/auth-ballena.css') }}">
 <link rel="stylesheet" href="{{ static_v('dockerlabs/css/politicas/politicas-comun.css') }}"
       media="print" onload="this.media='all'">
 <noscript><link rel="stylesheet" href="{{ static_v('dockerlabs/css/politicas/politicas-comun.css') }}"></noscript>
 {% endblock %}
 
 {% block content %}
+<div class="dl-con-cody">
+{% with ballena_contexto = "info", ballena_mensajes = {"idle": "Soy Cody. Te resumo cómo puedes usar el material de DockerLabs ↓", "fin": "En resumen: úsalo para aprender y enseñar, y cita siempre la fuente."}, ballena_lectura = true %}{% include "dockerlabs/auth/_ballena.html" %}{% endwith %}
+<div class="dl-con-cody-pagina">
 <div class="policy-container">
 
     <div class="policy-header">
@@ -21,7 +25,7 @@
 
     <div class="policy-card">
 
-        <section class="policy-section">
+        <section class="policy-section" data-tldr="Uso de DockerLabs.">
             <h2><span class="policy-section-num">1</span> Uso de DockerLabs</h2>
             <p>DockerLabs está diseñado como una plataforma educativa que puede ser utilizada para enseñar y
                 aprender en diversas instituciones, tanto comerciales como gratuitas. Sin embargo, es fundamental
@@ -34,7 +38,7 @@
                 ningún proyecto en la nube que aloje las máquinas ya existentes de la plataforma.</p>
         </section>
 
-        <section class="policy-section">
+        <section class="policy-section" data-tldr="Apertura de Plataformas Similares a DockerLabs.">
             <h2><span class="policy-section-num">2</span> Apertura de Plataformas Similares a DockerLabs</h2>
             <p>El script <code>auto_deploy.sh</code> está destinado exclusivamente para el uso en proyectos
                 personales y con fines educativos. En caso de utilizarse para fines comerciales, se deberá hacer
@@ -68,4 +72,7 @@
         </div>
     </div>
 </div>
+</div>
+</div>
+<script src="{{ static_v('dockerlabs/js/ballena.js') }}" defer></script>
 {% endblock %}

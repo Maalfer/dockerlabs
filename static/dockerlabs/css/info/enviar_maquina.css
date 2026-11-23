@@ -1,6 +1,6 @@
 /* Estilos para página de enviar máquina */
 .submit-wrapper {
-    margin-top: 50px;
+    margin-top: 28px;
     text-align: center;
 }
 
@@ -120,3 +120,32 @@ label {
     display: inline-block;
     color: var(--text-secondary);
 }
+
+
+/* Página única «Crear y enviar una máquina» */
+.em-indice { display: flex; flex-wrap: wrap; gap: .5rem; margin-top: 1.25rem; }
+.em-indice a {
+    display: inline-flex; align-items: center; gap: .5rem; padding: .4rem .8rem; border-radius: 999px;
+    font-size: .85rem; text-decoration: none; color: var(--text-secondary);
+    background: rgba(var(--surface-overlay-rgb), .7); border: 1px solid rgba(51, 65, 85, .7);
+    transition: color .2s ease, border-color .2s ease;
+}
+.em-indice a span {
+    display: inline-flex; align-items: center; justify-content: center; width: 1.4rem; height: 1.4rem; border-radius: 50%;
+    font-size: .72rem; font-weight: 700; color: var(--accent-cyan); background: rgba(34, 211, 238, .12);
+}
+.em-indice a:hover, .em-indice a:focus-visible { color: var(--hack-green); border-color: var(--hack-green); }
+.enviar_maquina-card[id] { scroll-margin-top: 96px; }
+.em-reglas h3 { font-size: 1.05rem; font-weight: 700; margin: 1.4rem 0 .5rem; letter-spacing: .02em; }
+.em-reglas h3:first-child { margin-top: 0; }
+.em-reglas .alert-warning { margin: .75rem 0; }
+.em-reglas .alert-warning .bi { margin-right: .5rem; }
+.em-sub { font-size: 1.1rem; font-weight: 700; text-align: center; padding-top: 1.5rem; border-top: 1px solid rgba(51, 65, 85, .5); }
+.em-yt-icono { color: #ff4d4d; }
+.dl-yt { border-radius: 10px; overflow: hidden; background: #0b1220; border: 1px solid rgba(255,255,255,.1); }
+.dl-yt-puerta { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1rem; padding: 1.5rem; text-align: center; }
+.dl-yt-boton { font-size: 1.1rem; }
+.dl-yt-boton .bi { color: #ff4d4d; margin-right: .4rem; }
+.dl-yt-aviso { max-width: 460px; margin: 0; font-size: .8rem; color: var(--text-muted, #94a3b8); }
+.dl-yt iframe { width: 100%; height: 100%; border: 0; }
+@media (prefers-reduced-motion: no-preference) { html:has(.em-indice) { scroll-behavior: smooth; } }

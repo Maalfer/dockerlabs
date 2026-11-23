@@ -2,126 +2,83 @@
 
 {% block title %}BunkerLabs - Acceso{% endblock %}
 
+{% block extra_head %}
+<meta name="description" content="Acceso a BunkerLabs: laboratorios de hacking a medida, basados en vulnerabilidades reales y en entornos realistas, exclusivos para alumnos.">
+{% endblock %}
+
 {% block content %}
+<link rel="stylesheet" href="{{ static_v('dockerlabs/css/auth-ballena.css') }}">
 <link rel="stylesheet" href="{{ static_v('bunkerlabs/css/bunkerlabs-login.css') }}">
 
-<div class="bunker-container">
-    <div class="bunker-box bunker-box-wide">
+{# Cody en modo «guía»: el texto del bocadillo lo dicta bunkerlabs/js/login.js (explica BunkerLabs en varios mensajes y reacciona a la contraseña y a los errores) #}
+<div class="bk-escena dl-auth">
+    {% with ballena_contexto = "bunker", ballena_guia = true, ballena_mensajes = {"idle": "¡Hola! Soy Cody. Muchos de los laboratorios de BunkerLabs se basan en vulnerabilidades reales.", "pass": "Tranquilo, no miro.", "ver": "Bueno… solo un poquito.", "envio": "Comprobando la contraseña…", "clic": "¡Splash!"} %}{% include "dockerlabs/auth/_ballena.html" %}{% endwith %}
 
-        <div class="bunker-info-panel">
-            <div class="bunker-info-badge">
-                <i class="bi bi-shield-fill-check"></i>
-                Acceso restringido
-            </div>
-
-            <h2 class="bunker-info-title">
-                Laboratorios<br><span>a medida</span>
-            </h2>
-
-            <p class="bunker-info-desc">
-                BunkerLabs alberga entornos creados a medida, inspirados en
-                vulnerabilidades de entornos reales. Son de acceso
-                <strong>exclusivo</strong> para alumnos de:
-            </p>
-
-            <div class="bunker-info-links">
-                <a href="https://elrincondelhacker.es/academia" target="_blank" class="bunker-info-link">
-                    <span class="bunker-link-icon"><i class="bi bi-mortarboard-fill"></i></span>
-                    <span class="bunker-link-text">
-                        <strong>La Academia</strong>
-                        <small>elrincondelhacker.es/formaciones</small>
-                    </span>
-                    <i class="bi bi-arrow-right ms-auto"></i>
-                </a>
-
-                <a href="https://thebigschool.com/master-ciberseguridad-hacking-etico/" target="_blank" class="bunker-info-link">
-                    <span class="bunker-link-icon"><i class="bi bi-people-fill"></i></span>
-                    <span class="bunker-link-text">
-                        <strong>Máster Hacking Ético</strong>
-                        <small>thebigschool.com/master-ciberseguridad-hacking-etico</small>
-                    </span>
-                    <i class="bi bi-arrow-right ms-auto"></i>
-                </a>
-
-                <div class="bunker-info-link bunker-info-link--plain">
-                    <span class="bunker-link-icon"><i class="bi bi-building-fill"></i></span>
-                    <span class="bunker-link-text">
-                        <strong>Otras instituciones</strong>
-                        <small>Con acceso concedido por el equipo</small>
-                    </span>
-                </div>
-            </div>
-
-        </div>
-
-        <!-- Columna Derecha: Formulario -->
-        <div class="login-section">
-            <div class="bunker-header">
-                <div class="bunker-icon">
-                    <i class="bi bi-shield-lock"></i>
-                </div>
-                <h2>Acceso BunkerLabs</h2>
-                <p class="bunker-subtitle">Área restringida - Acceso autorizado</p>
-            </div>
-
-            {% if error %}
-            <div class="alert alert-danger bunker-alert">
-                <i class="bi bi-exclamation-triangle"></i>
-                {{ error }}
-            </div>
-            {% endif %}
-
-            <form method="post" class="bunker-form">
-                <input type="hidden" name="csrf_token" value="{{ csrf_token_value }}">
-                {% if maquina %}<input type="hidden" name="maquina" value="{{ maquina }}">{% endif %}
-                <div class="form-group">
-                    <label for="password" class="bunker-label">
-                        <i class="bi bi-key"></i>
-                        Contraseña de acceso
-                    </label>
-                    <input type="password" id="password" name="password" class="bunker-input" required
-                        placeholder="Ingresa la contraseña de BunkerLabs">
-                </div>
-
-                <button type="submit" class="bunker-btn">
-                    <i class="bi bi-door-open"></i>
-                    Acceder a BunkerLabs
-                </button>
-            </form>
-
-            <div class="bunker-info-footer" style="margin: 0;">
-                <i class="bi bi-lock-fill"></i>
-                Necesitas una contraseña de acceso facilitada por tu instructor.
-            </div>
-
-            <div class="bunker-footer">
-                <p class="bunker-warning" style="font-size: 0.9rem; line-height: 1.5;">
-                    <i class="bi bi-info-circle"></i>
-                    Puedes acceder en modo de prueba a BunkerLabs a través de este
-                    <a href="{{ url_for('bunkerlabs.bunkerlabs_guest') }}{% if maquina %}?maquina={{ maquina | urlencode }}{% endif %}"
-                        style="color: #a78bfa; text-decoration: underline; font-weight: 600;">enlace</a>.
-                </p>
+    <section class="bk-tarjeta" aria-labelledby="bk-titulo">
+        <div class="bk-cab">
+            <span class="bk-icono" aria-hidden="true"><i class="bi bi-shield-lock"></i></span>
+            <div>
+                <h1 id="bk-titulo">BunkerLabs</h1>
+                <p>Laboratorios a medida para aprender hacking en entornos realistas.</p>
             </div>
         </div>
 
-    </div>
+        {% if error %}
+        <p class="bk-error" id="bk-error" role="alert"><i class="bi bi-exclamation-triangle" aria-hidden="true"></i> <span>{{ error }}</span></p>
+        {% endif %}
+
+        <form method="post" class="bk-form" id="bk-form">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token_value }}">
+            {% if maquina %}<input type="hidden" name="maquina" value="{{ maquina }}">{% endif %}
+
+            <div class="bk-campo">
+                <label for="password">Contraseña de acceso</label>
+                <input type="password" id="password" name="password" class="bk-input" required
+                       autocomplete="current-password" placeholder="La que te dio tu instructor"
+                       aria-describedby="bk-ayuda{% if error %} bk-error{% endif %}"{% if error %} aria-invalid="true"{% endif %}>
+                <p id="bk-ayuda" class="bk-sr">Te la facilita tu instructor.</p>
+            </div>
+
+            <button type="submit" class="bk-btn" id="bk-enviar">
+                <i class="bi bi-door-open" aria-hidden="true"></i> <span>Acceder</span>
+            </button>
+        </form>
+
+        {# Siempre visible: es la vía de entrada para quien aún no tiene contraseña. Los enlaces pasan por /go/… para contar los clics (y atribuir los leads en MailerUp). #}
+        <section class="bk-acceso" aria-labelledby="bk-acceso-tit">
+            <h2 id="bk-acceso-tit">¿Aún no tienes acceso?</h2>
+            <p>El acceso es <strong>exclusivo</strong> para alumnos de:</p>
+            <ul class="bk-formaciones">
+                <li>
+                    <a class="bk-formacion" href="/go/academia-bunker?o=bunker-login" target="_blank" rel="noopener noreferrer">
+                        <span class="bk-formacion-icono" aria-hidden="true"><i class="bi bi-mortarboard-fill"></i></span>
+                        <span class="bk-formacion-texto"><strong>La Academia</strong><small>de El Rincón del Hacker</small></span>
+                        <span class="bk-formacion-cta" aria-hidden="true"><span class="bk-cta-txt">Descubrir</span><i class="bi bi-arrow-right"></i></span>
+                        <span class="bk-sr">(se abre en una pestaña nueva)</span>
+                    </a>
+                </li>
+                <li>
+                    <a class="bk-formacion" href="/go/master?o=bunker-login" target="_blank" rel="noopener noreferrer">
+                        <span class="bk-formacion-icono" aria-hidden="true"><i class="bi bi-people-fill"></i></span>
+                        <span class="bk-formacion-texto"><strong>Máster en Hacking Ético</strong><small>de The Big School</small></span>
+                        <span class="bk-formacion-cta" aria-hidden="true"><span class="bk-cta-txt">Descubrir</span><i class="bi bi-arrow-right"></i></span>
+                        <span class="bk-sr">(se abre en una pestaña nueva)</span>
+                    </a>
+                </li>
+            </ul>
+            <p class="bk-otras">Y otras instituciones con acceso concedido por el equipo.</p>
+        </section>
+
+        <p class="bk-prueba">
+            ¿Solo quieres echar un vistazo?
+            <a href="{{ url_for('bunkerlabs.bunkerlabs_guest') }}{% if maquina %}?maquina={{ maquina | urlencode }}{% endif %}">Entra con este enlace<span class="bk-sr"> al modo de prueba</span></a>.
+        </p>
+    </section>
 </div>
 {% endblock %}
 
 {% block scripts %}
 {{ super() }}
-<script nonce="{{ g.csp_nonce }}">
-    document.addEventListener('DOMContentLoaded', function () {
-        const passwordInput = document.getElementById('password');
-        const bunkerBox = document.querySelector('.bunker-box');
-
-        passwordInput.addEventListener('focus', function () {
-            bunkerBox.classList.add('input-focused');
-        });
-
-        passwordInput.addEventListener('blur', function () {
-            bunkerBox.classList.remove('input-focused');
-        });
-    });
-</script>
+<script src="{{ static_v('dockerlabs/js/ballena.js') }}" defer></script>
+<script src="{{ static_v('bunkerlabs/js/login.js') }}" defer></script>
 {% endblock %}

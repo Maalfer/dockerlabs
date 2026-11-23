@@ -1102,3 +1102,78 @@ header {
         padding: 1rem 1.1rem !important;
     }
 }
+
+/* ==========================================================================
+   Título del header: DockerLabs ⇄ BunkerLabs
+   El script de base.html parte el texto en letras. Las que cambian (Doc → Bun)
+   ruedan como un contador, una tras otra; las que se quedan (kerLabs) se tiñen
+   en onda de izquierda a derecha, y una línea de luz recorre la base.
+   La letra de destino va en ::after (data-alt) para no alterar el texto real.
+   ========================================================================== */
+.brand-title.bt-listo { position: relative; }
+.brand-title.bt-listo .brand-text { color: inherit; text-shadow: none; perspective: 320px; }
+.brand-title .bt-c {
+    display: inline-block;
+    position: relative;
+    color: #fff;
+    text-shadow: 0 0 10px rgba(255, 255, 255, .2);
+    transition: color .5s ease, text-shadow .5s ease;
+    transition-delay: calc(var(--i) * 38ms);
+}
+.brand-title .bt-a,
+.brand-title .bt-cambia::after {
+    display: inline-block;
+    transition: transform .55s cubic-bezier(.22, 1, .36, 1), opacity .3s ease, filter .3s ease;
+    transition-delay: calc(var(--i) * 70ms);
+    backface-visibility: hidden;
+    will-change: transform, opacity;
+}
+.brand-title .bt-a { transform-origin: 50% 100%; }
+.brand-title .bt-cambia::after {
+    content: attr(data-alt);
+    position: absolute;
+    left: 0; top: 0;
+    transform-origin: 50% 0;
+    transform: translateY(62%) rotateX(-85deg);
+    opacity: 0;
+    filter: blur(3px);
+}
+/* estado BunkerLabs */
+.brand-title.es-alt .bt-c {
+    color: #b9a3ff;
+    text-shadow: 0 0 14px rgba(139, 92, 246, .55), 0 0 2px rgba(196, 181, 253, .5);
+}
+.brand-title.es-alt .bt-cambia .bt-a {
+    transform: translateY(-62%) rotateX(85deg);
+    opacity: 0;
+    filter: blur(3px);
+}
+.brand-title.es-alt .bt-cambia::after {
+    transform: none;
+    opacity: 1;
+    filter: none;
+    transition-delay: calc(var(--i) * 70ms + 60ms);
+}
+/* línea de luz bajo el título: entra por la izquierda y, al volver, sale por la derecha */
+.brand-title.bt-listo::after {
+    content: "";
+    position: absolute;
+    left: 0; right: 0; bottom: -5px;
+    height: 2px;
+    border-radius: 2px;
+    background: linear-gradient(90deg, rgba(139, 92, 246, 0), #8b5cf6 25%, #c4b5fd 50%, #8b5cf6 75%, rgba(139, 92, 246, 0));
+    box-shadow: 0 0 10px rgba(139, 92, 246, .6);
+    transform: scaleX(0);
+    transform-origin: 100% 50%;
+    opacity: 0;
+    transition: transform .55s cubic-bezier(.22, 1, .36, 1), opacity .35s ease;
+    pointer-events: none;
+}
+.brand-title.bt-listo.es-alt::after { transform: scaleX(1); transform-origin: 0 50%; opacity: 1; }
+@media (max-width: 768px) {
+    .brand-title.bt-listo::after { content: none; }   /* el título va recortado junto al logo */
+}
+@media (prefers-reduced-motion: reduce) {
+    .brand-title, .brand-title .bt-c, .brand-title .bt-a,
+    .brand-title .bt-cambia::after, .brand-title.bt-listo::after { transition: none !important; }
+}

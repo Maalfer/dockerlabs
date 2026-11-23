@@ -11,7 +11,7 @@
 
 {% block content %}
 <div class="dl-con-cody">
-{% with ballena_mensajes = {"idle": "Soy Cody. Te resumo cada sección mientras lees ↓", "fin": "¡Leído hasta el final! Pocos leen la letra pequeña."}, ballena_lectura = true %}{% include "dockerlabs/auth/_ballena.html" %}{% endwith %}
+{% with ballena_contexto = "legal", ballena_mensajes = {"idle": "Soy Cody. Te resumo cada sección mientras lees ↓", "fin": "¡Leído hasta el final! Pocos leen la letra pequeña."}, ballena_lectura = true %}{% include "dockerlabs/auth/_ballena.html" %}{% endwith %}
 <div class="dl-con-cody-pagina">
 <div class="policy-container">
 
@@ -25,63 +25,173 @@
     </div>
 
     <div class="policy-card">
-        <p class="policy-lead">En <strong>DockerLabs</strong>, nos comprometemos a proteger tu privacidad y tus
-            datos personales. Esta Política de Privacidad explica cómo recopilamos, usamos y protegemos tu
-            información, en cumplimiento con el Reglamento General de Protección de Datos (RGPD).</p>
+        <p class="policy-meta">Última actualización: 6 de noviembre de 2026</p>
+        <p class="policy-lead">En <strong>DockerLabs</strong> te explicamos con claridad qué datos personales tratamos, para qué, durante cuánto tiempo y qué derechos tienes, conforme al Reglamento (UE) 2016/679 (RGPD), la Ley Orgánica 3/2018 (LOPDGDD) y la Ley 34/2002 (LSSI-CE).</p>
 
-        <section class="policy-section" data-tldr="Quien cuida tus datos es Mario Álvarez. Contacto: info@elrincondelhacker.es.">
+        <section class="policy-section" data-tldr="Quien cuida tus datos es Mario Álvarez. Contacto: mario@elrincondelhacker.es.">
             <h2><span class="policy-section-num">1</span> Responsable del Tratamiento</h2>
+            <p>El responsable del tratamiento de tus datos personales en DockerLabs es:</p>
             <ul>
-                <li><strong>Responsable:</strong> Mario Álvarez Fernandez</li>
-                <li><strong>Email:</strong> info@elrincondelhacker.es</li>
-                <li><strong>Contacto:</strong> A través de los canales oficiales de la plataforma.</li>
+                <li><strong>Responsable:</strong> Mario Álvarez Fernández</li>
+                <li><strong>Domicilio:</strong> Calle Fernando Morán, 5, 33401, Avilés (Asturias, España)</li>
+                <li><strong>Correo electrónico:</strong> mario@elrincondelhacker.es</li>
+                <li><strong>Sitio web:</strong> https://dockerlabs.es</li>
+            </ul>
+            <p>No hemos designado un Delegado de Protección de Datos porque no es obligatorio para esta actividad.</p>
+        </section>
+
+        <section class="policy-section" data-tldr="Guardamos tu usuario, email y contraseña cifrada, tu progreso y lo que decidas añadir a tu perfil.">
+            <h2><span class="policy-section-num">2</span> Datos que Tratamos</h2>
+            <p>Tratamos las siguientes categorías de datos, según cómo uses la plataforma:</p>
+            <ul>
+                <li><strong>Datos de cuenta (obligatorios):</strong> nombre de usuario, correo electrónico y
+                    contraseña. La contraseña se almacena cifrada (hash) y no es accesible ni siquiera para los
+                    administradores.</li>
+                <li><strong>Actividad en la plataforma:</strong> máquinas resueltas, puntuaciones y rankings,
+                    writeups que envíes, reportes, notificaciones y diplomas generados.</li>
+                <li><strong>Datos de perfil (opcionales):</strong> biografía, enlaces a tus redes (LinkedIn,
+                    GitHub, YouTube), imagen de perfil y el nombre que quieras que figure en tus diplomas. Solo
+                    los facilitas si tú quieres.</li>
+                <li><strong>Datos técnicos:</strong> dirección IP, navegador y páginas visitadas en los registros
+                    del servidor web; y un identificador anónimo diario para estadísticas (ver apartado 7).</li>
+            </ul>
+            <p>No pedimos datos bancarios, teléfono ni dirección postal. No tomamos decisiones automatizadas ni
+                elaboramos perfiles con efectos jurídicos sobre ti.</p>
+        </section>
+
+        <section class="policy-section" data-tldr="Para qué: crear tu cuenta, contarte el progreso y mandarte avisos de seguridad. Base legal: el servicio que pides.">
+            <h2><span class="policy-section-num">3</span> Finalidades y Base Jurídica</h2>
+            <ul>
+                <li><strong>Crear y gestionar tu cuenta</strong>, permitirte iniciar sesión y recuperar la
+                    contraseña. Base jurídica: ejecución del servicio que solicitas al registrarte (art. 6.1.b
+                    RGPD).</li>
+                <li><strong>Registrar tu progreso, rankings, diplomas y perfil público.</strong> Base jurídica:
+                    ejecución del servicio (art. 6.1.b RGPD) y, para los datos de perfil opcionales, tu
+                    consentimiento al rellenarlos (art. 6.1.a).</li>
+                <li><strong>Enviarte correos del servicio</strong> (activación de cuenta, cambio de contraseña o
+                    de correo, avisos de seguridad). Base jurídica: art. 6.1.b RGPD. No tienen carácter
+                    comercial.</li>
+                <li><strong>Atender tus consultas de soporte</strong> por correo o por Discord. Base jurídica: tu
+                    consentimiento al escribirnos y nuestro interés legítimo en resolver la incidencia (art. 6.1.a y
+                    6.1.f RGPD). Si usas Discord, esa plataforma trata tus datos conforme a su propia política. Conservamos
+                    la conversación mientras sea necesaria para resolverla y, después, hasta 3 años por posibles
+                    reclamaciones.</li>
+                <li><strong>Seguridad y estadísticas básicas</strong> (evitar abusos, ataques y medir el uso de la
+                    web de forma agregada). Base jurídica: interés legítimo (art. 6.1.f RGPD).</li>
+            </ul>
+            <p>No usamos tus datos para publicidad ni los vendemos. Si te suscribes a la newsletter, ese
+                tratamiento es independiente y se rige por la política de privacidad de
+                <a href="https://elrincondelhacker.es/politica-privacidad" target="_blank" rel="noopener">elrincondelhacker.es</a>.</p>
+        </section>
+
+        <section class="policy-section" data-tldr="Tu perfil es público por defecto: usuario, bio, enlaces y progreso. Puedes ocultarlo desde tu perfil.">
+            <h2><span class="policy-section-num">4</span> Qué es Público</h2>
+            <p>Tu <strong>nombre de usuario</strong> y tu <strong>puntuación</strong> aparecen en los rankings.
+                Si tienes el perfil público activado, cualquier persona puede ver en
+                <code>/u/tu-usuario</code> tu nombre de usuario, tu biografía, tus enlaces, tu imagen de perfil y
+                tu progreso. Puedes desactivarlo en cualquier momento desde la configuración de tu perfil. Tu
+                correo electrónico <strong>nunca</strong> se muestra públicamente.</p>
+            <p>Te recomendamos no usar tu nombre real como usuario ni incluir datos personales sensibles en tu
+                biografía.</p>
+        </section>
+
+        <section class="policy-section" data-tldr="Solo lo imprescindible: el servidor, el correo y la web hermana de la newsletter. No vendemos datos.">
+            <h2><span class="policy-section-num">5</span> Destinatarios y Encargados</h2>
+            <p>No cedemos tus datos a terceros salvo obligación legal. Para prestar el servicio contamos con
+                proveedores que actúan como <strong>encargados del tratamiento</strong> y solo tratan los datos
+                siguiendo nuestras instrucciones:</p>
+            <ul>
+                <li><strong>Proveedor de alojamiento (VPS)</strong>, con servidores en España: alberga la
+                    plataforma y su base de datos.</li>
+                <li><strong>Servidor de correo propio</strong>, desde el que enviamos los mensajes del servicio.</li>
+                <li><strong>Cloudflare, Inc.</strong> (EE. UU.): servicio de red de entrega y protección frente a
+                    ataques y bots. Todo el tráfico de la web pasa por sus servidores, por lo que trata tu dirección
+                    IP y los datos técnicos de la conexión (navegador, página solicitada) para entregarte la web y
+                    protegerla, y puede generar estadísticas agregadas de tráfico.</li>
+            </ul>
+            <p>Cuando haces clic en el botón «Newsletter» o en enlaces similares, sales hacia
+                elrincondelhacker.es (mismo responsable); en ese momento tu navegador se conecta con ese sitio.
+                También podrás encontrar enlaces a sitios de terceros (GitHub, Discord, Telegram, LinkedIn,
+                YouTube, etc.), cuyas políticas de privacidad son ajenas a DockerLabs.</p>
+            <p>Si decides reproducir el vídeo de YouTube de la página «Cómo se crea una máquina», tu navegador se
+                conectará con Google (YouTube), que puede tratar datos como tu IP. Hasta que lo pidas, no se carga
+                nada de YouTube.</p>
+        </section>
+
+        <section class="policy-section" data-tldr="Cloudflare (EE. UU.) ve tu IP al servirte la web, bajo el marco UE-EE. UU. Las fuentes son nuestras, no de Google.">
+            <h2><span class="policy-section-num">6</span> Transferencias Internacionales</h2>
+            <p>Al pasar el tráfico de la web por <strong>Cloudflare, Inc.</strong> (EE. UU.), tu dirección IP y los
+                datos técnicos de la conexión pueden tratarse fuera del Espacio Económico Europeo. Cloudflare está
+                adherida al <strong>Marco de Privacidad de Datos UE-EE. UU.</strong> (decisión de adecuación de la
+                Comisión Europea de 10 de julio de 2023) y ofrece además cláusulas contractuales tipo en su acuerdo
+                de tratamiento de datos. Puedes consultar su política en
+                <a href="https://www.cloudflare.com/privacypolicy/" target="_blank" rel="noopener">cloudflare.com/privacypolicy</a>.</p>
+            <p>Las tipografías de la web se sirven desde nuestro propio servidor, sin conectar con Google. La única
+                otra conexión posible con un tercero de EE. UU. es la reproducción voluntaria del vídeo de YouTube
+                descrita en el apartado anterior, que realiza directamente Google bajo su propia política.</p>
+        </section>
+
+        <section class="policy-section" data-tldr="Cuánto tiempo: mientras tengas cuenta. Los registros técnicos con tu IP, 30 días como máximo.">
+            <h2><span class="policy-section-num">7</span> Plazos de Conservación</h2>
+            <ul>
+                <li><strong>Datos de cuenta, actividad y perfil:</strong> mientras mantengas tu cuenta. Si la
+                    eliminas, se borran de la base de datos y desaparecen de las copias de seguridad cuando estas
+                    se renuevan por su rotación normal.</li>
+                <li><strong>Registros del servidor web</strong> (IP, navegador, URL): 14 días. Los registros de la
+                    aplicación, que pueden incluir la IP y la URL solicitada, se conservan como máximo 30 días.</li>
+                <li><strong>Identificador anónimo de estadísticas y registro de clics salientes:</strong> no
+                    contienen tu IP ni datos que te identifiquen directamente y se conservan de forma agregada.</li>
+                <li><strong>Obligaciones legales:</strong> si la ley nos exige conservar algún dato, se mantendrá
+                    bloqueado durante el plazo de prescripción de responsabilidades y después se eliminará.</li>
             </ul>
         </section>
 
-        <section class="policy-section" data-tldr="Solo guardamos tu usuario y tu email. La contraseña va hasheada: ni los admins la ven.">
-            <h2><span class="policy-section-num">2</span> Datos que Recopilamos</h2>
-            <p>Para el funcionamiento de la plataforma y la gestión de usuarios, <strong>únicamente</strong>
-                recopilamos y almacenamos los siguientes datos personales:</p>
-            <ul>
-                <li><strong>Nombre de usuario (Username):</strong> Para identificarte en la plataforma, rankings
-                    y resolución de máquinas.</li>
-                <li><strong>Correo electrónico:</strong> Para la recuperación de contraseñas y notificaciones
-                    importantes del servicio.</li>
-            </ul>
-            <p>No recopilamos nombres reales, direcciones, teléfonos ni datos bancarios. La contraseña se
-                almacena de forma encriptada (hasheada) y es inaccesible incluso para los administradores.</p>
+        <section class="policy-section" data-tldr="Medimos visitas sin guardar tu IP: usamos un código anónimo que cambia cada día.">
+            <h2><span class="policy-section-num">8</span> Estadísticas sin Cookies</h2>
+            <p>Para saber cuántas personas usan la web y cuántas pasan a elrincondelhacker.es, calculamos un
+                identificador resumido (hash truncado) a partir de la IP y el navegador mezclados con la fecha del
+                día. Cambia cada día, no se puede revertir para conocer tu IP y no se almacenan cookies para ello.
+                No usamos Google Analytics ni otras herramientas de análisis de terceros.</p>
         </section>
 
-        <section class="policy-section" data-tldr="Tus datos sirven para tu cuenta, tu progreso en el ranking y avisos de seguridad.">
-            <h2><span class="policy-section-num">3</span> Finalidad del Tratamiento</h2>
-            <p>Sus datos personales se tratan con las siguientes finalidades:</p>
-            <ul>
-                <li>Gestionar su registro y acceso a la plataforma "DockerLabs".</li>
-                <li>Mantener un registro de su progreso en los laboratorios (puntos y rankings).</li>
-                <li>Enviar comunicaciones relacionadas con la seguridad de su cuenta (ej. recuperación de
-                    contraseña).</li>
-            </ul>
+        <section class="policy-section" data-tldr="Puedes acceder, corregir, borrar, limitar, oponerte o llevarte tus datos escribiendo a mario@elrincondelhacker.es.">
+            <h2><span class="policy-section-num">9</span> Tus Derechos</h2>
+            <p>Tienes derecho a: <strong>acceder</strong> a tus datos, <strong>rectificarlos</strong>,
+                <strong>suprimirlos</strong>, <strong>limitar</strong> su tratamiento, <strong>oponerte</strong>
+                a él, solicitar su <strong>portabilidad</strong> y <strong>retirar tu consentimiento</strong>
+                cuando el tratamiento se base en él, sin que ello afecte a lo anterior.</p>
+            <p>Puedes <strong>eliminar tu cuenta tú mismo</strong> en cualquier momento desde tu panel de usuario (sección «Zona de peligro»): se borran tus datos personales y se anonimiza la autoría de las máquinas que hayas creado. Para el resto de derechos, o si lo prefieres, puedes ejercerlos escribiendo a <strong>mario@elrincondelhacker.es</strong> desde el correo con el
+                que te registraste, indicando el derecho que quieres ejercer. Podemos pedirte que acredites tu
+                identidad si hay dudas razonables. Responderemos en el plazo máximo de un mes (ampliable dos meses
+                más en casos complejos, avisándote).</p>
+            <p>Si consideras que no hemos atendido correctamente tus derechos, puedes presentar una reclamación
+                ante la <strong>Agencia Española de Protección de Datos</strong> (<a href="https://www.aepd.es"
+                target="_blank" rel="noopener">www.aepd.es</a>).</p>
         </section>
 
-        <section class="policy-section" data-tldr="Base legal: tu consentimiento. Se guardan mientras tengas cuenta y puedes pedir borrarlos.">
-            <h2><span class="policy-section-num">4</span> Legitimación y Conservación</h2>
-            <p>La base legal para el tratamiento de sus datos es el <strong>consentimiento</strong> del usuario
-                al registrarse voluntariamente en la plataforma. Los datos se conservarán mientras el usuario
-                mantenga su cuenta activa. Puede solicitar la eliminación de su cuenta y sus datos en cualquier
-                momento.</p>
+        <section class="policy-section" data-tldr="Hay que tener 14 años o más para registrarse.">
+            <h2><span class="policy-section-num">10</span> Menores de Edad</h2>
+            <p>Conforme al artículo 7 de la LOPDGDD, para registrarte debes tener <strong>al menos 14
+                años</strong>. Si eres menor de esa edad, necesitas el consentimiento de tus padres o tutores. Si
+                detectamos una cuenta creada incumpliendo este requisito, la eliminaremos.</p>
         </section>
 
-        <section class="policy-section" data-tldr="Tus datos no se ceden a nadie, salvo obligación legal.">
-            <h2><span class="policy-section-num">5</span> Cesión de Datos</h2>
-            <p>Sus datos (nombre de usuario y correo) <strong>no se cederán a terceros</strong> bajo ningún
-                concepto, salvo obligación legal.</p>
+        <section class="policy-section" data-tldr="Contraseñas cifradas, conexión HTTPS y acceso restringido.">
+            <h2><span class="policy-section-num">11</span> Seguridad</h2>
+            <p>Aplicamos medidas técnicas y organizativas adecuadas: conexiones cifradas (HTTPS/TLS),
+                contraseñas almacenadas con hash, cookie de sesión protegida (HttpOnly, Secure, SameSite),
+                protección frente a ataques habituales y acceso restringido a los datos. Si se produjera una
+                brecha de seguridad que afecte a tus derechos y libertades, te la comunicaremos sin dilación
+                indebida y la notificaremos a la AEPD cuando proceda.</p>
         </section>
 
-        <section class="policy-section" data-tldr="Puedes acceder, corregir o borrar tus datos cuando quieras.">
-            <h2><span class="policy-section-num">6</span> Derechos del Usuario</h2>
-            <p>Tiene derecho a acceder, rectificar y suprimir sus datos, así como a limitar u oponerse a su
-                tratamiento. Para ejercer estos derechos, puede ponerse en contacto con la administración de la
-                plataforma.</p>
+        <section class="policy-section" data-tldr="Si cambiamos esta política, lo anunciaremos aquí con la nueva fecha.">
+            <h2><span class="policy-section-num">12</span> Cambios en esta Política</h2>
+            <p>Podemos actualizar esta política para adaptarla a cambios legales o del servicio. La versión
+                vigente es siempre la publicada en esta página, con su fecha de actualización. Si los cambios
+                afectan de forma relevante a tus datos, te lo comunicaremos por correo electrónico.</p>
+            <p>Más información sobre el almacenamiento en tu dispositivo en nuestra
+                <a href="{{ url_for('main.politica_cookies') }}">Política de Cookies</a>.</p>
         </section>
 
         <div class="policy-back">

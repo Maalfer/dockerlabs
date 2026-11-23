@@ -98,8 +98,8 @@
         <div class="chart-card" style="grid-column: 1 / -1;">
             <div class="chart-title">
                 <i class="bi bi-box-arrow-up-right" style="color: #ec4899;"></i>
-                Clics hacia elrincondelhacker.es{% if filtro.granularity == 'week' %} por Semana{% elif filtro.granularity == 'month' %} por Mes{% else %} por Día{% endif %}
-                ({{ outbound_stats.newsletter }} Newsletter · {{ outbound_stats.academia }} Academia · {{ outbound_stats.unicos_en_rango }} visitantes únicos {{ filtro.label }})
+                Clics salientes (Newsletter, Academia y Máster){% if filtro.granularity == 'week' %} por Semana{% elif filtro.granularity == 'month' %} por Mes{% else %} por Día{% endif %}
+                ({{ outbound_stats.newsletter }} Newsletter · {{ outbound_stats.academia }} Academia · {{ outbound_stats.master }} Máster · {{ outbound_stats.unicos_en_rango }} visitantes únicos {{ filtro.label }})
             </div>
             {% if outbound_stats.since %}<div style="font-size:.8rem;opacity:.7;margin:0 0 .5rem 0;">Registrando desde el {{ outbound_stats.since }} · sin bots · los que se suscriben quedan en MailerUp con origen «dockerlabs»</div>{% else %}<div style="font-size:.8rem;opacity:.7;margin:0 0 .5rem 0;">Aún sin clics registrados.</div>{% endif %}
             <div class="chart-container">
@@ -607,7 +607,8 @@
             labels: getLabels(outboundStats.newsletter_by_day || {}).map(fmtLabel),
             datasets: [
                 { label: 'Newsletter', data: getData(outboundStats.newsletter_by_day || {}), borderColor: '#ec4899', backgroundColor: 'rgba(236,72,153,0.15)', fill: true, tension: 0.3, pointRadius: 2, pointHoverRadius: 6 },
-                { label: 'Academia', data: getData(outboundStats.academia_by_day || {}), borderColor: '#3b82f6', backgroundColor: 'rgba(59,130,246,0.1)', fill: false, tension: 0.3, pointRadius: 2, pointHoverRadius: 6 }
+                { label: 'Academia', data: getData(outboundStats.academia_by_day || {}), borderColor: '#3b82f6', backgroundColor: 'rgba(59,130,246,0.1)', fill: false, tension: 0.3, pointRadius: 2, pointHoverRadius: 6 },
+                { label: 'Máster', data: getData(outboundStats.master_by_day || {}), borderColor: '#a78bfa', backgroundColor: 'rgba(167,139,250,0.1)', fill: false, tension: 0.3, pointRadius: 2, pointHoverRadius: 6 }
             ]
         },
         options: {

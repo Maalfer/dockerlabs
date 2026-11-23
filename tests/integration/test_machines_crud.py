@@ -12,7 +12,7 @@ Rutas cubiertas (todas montadas o bien en `api_router`, prefijo `/api`, o en
 import pytest
 
 from tests.conftest import csrf_headers
-from tests.factories import make_machine, make_user
+from tests.factories import NAV_HEADERS, make_machine, make_user
 
 pytestmark = pytest.mark.integration
 
@@ -346,14 +346,14 @@ class TestAddMaquinaApi:
 class TestDescargarMaquina:
     def test_public_no_login_needed(self, client, db):
         maquina = make_machine(db, origen="docker")
-        r = client.get(f"/maquinas/{maquina.id}/descargar")
+        r = client.get(f"/maquinas/{maquina.id}/descargar", headers=NAV_HEADERS)
         assert r.status_code == 200
 
     def test_increments_counter_and_logs_each_call(self, client, db):
         from dockerlabs.models import Machine, MachineDownloadLog
         maquina = make_machine(db, origen="docker")
         for _ in range(3):
-            r = client.get(f"/maquinas/{maquina.id}/descargar")
+            r = client.get(f"/maquinas/{maquina.id}/descargar", headers=NAV_HEADERS)
             assert r.status_code == 200
         db.session.rollback()
         assert db.session.get(Machine, maquina.id).descargas == 3

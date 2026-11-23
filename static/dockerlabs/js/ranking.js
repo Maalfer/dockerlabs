@@ -404,6 +404,44 @@ function injectRankingStyles() {
                 padding-top: 0.75rem;
                 border-top: 1px solid rgba(148, 163, 184, 0.12);
             }
+            /* Ayuda de la clasificación («?» junto al título) */
+            .ranking-search-container[hidden], #ranking-list-container[hidden], .rk-ayuda[hidden] { display: none !important; }
+            .rk-titulo-fila { display: flex; align-items: center; justify-content: center; gap: 0.55rem; }
+            .rk-ayuda-btn {
+                display: inline-grid; place-items: center; flex: 0 0 auto; width: 30px; height: 30px; padding: 0;
+                border: 1px solid rgba(148, 163, 184, 0.6); border-radius: 50%;
+                background: rgba(255, 255, 255, 0.07); color: #e2e8f0; font: 700 0.95rem/1 inherit; cursor: pointer;
+                transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+            }
+            .rk-ayuda-btn:hover { background: rgba(59, 130, 246, 0.3); border-color: #93c5fd; color: #fff; }
+            .rk-ayuda-btn:focus-visible, .rk-volver:focus-visible, .rk-ayuda a:focus-visible { outline: 3px solid #93c5fd; outline-offset: 2px; }
+            .rk-ayuda-btn[aria-expanded="true"] { background: #1d4ed8; border-color: #1d4ed8; color: #fff; }
+            @media (pointer: coarse) { .rk-ayuda-btn { width: 40px; height: 40px; } }
+
+            .rk-ayuda {
+                text-align: left; font-size: 0.9rem; line-height: 1.55; color: #cbd5e1;
+                max-height: max(180px, calc(85vh - 190px)); overflow-y: auto; padding-right: 0.25rem;
+                scrollbar-width: thin; scrollbar-color: rgba(59, 130, 246, 0.35) transparent;
+            }
+            .rk-ayuda h2 { margin: 0 0 0.6rem; font-size: 1rem; color: #fff; outline: none; }
+            .rk-ayuda h3 { margin: 1rem 0 0.45rem; font-size: 0.74rem; letter-spacing: 0.07em; text-transform: uppercase; color: #94a3b8; }
+            .rk-ayuda p { margin: 0 0 0.5rem; }
+            .rk-ayuda a { color: #7dd3fc; text-underline-offset: 3px; }
+            .rk-ayuda strong { color: #fff; }
+            .rk-puntos { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.4rem; margin: 0.6rem 0 0; padding: 0; list-style: none; }
+            .rk-puntos li { display: flex; align-items: center; justify-content: space-between; padding: 0.45rem 0.75rem; border: 1px solid rgba(148, 163, 184, 0.28); border-radius: 10px; background: rgba(255, 255, 255, 0.04); cursor: default; }
+            .rk-puntos b { color: #4ade80; }
+            .rk-pasos { margin: 0; padding-left: 1.75rem; }
+            .rk-pasos li { margin: 0.4rem 0; }
+            .rk-nota { margin: 0.8rem 0 0; font-size: 0.8rem; color: #a3b1c6; }
+            .rk-tuyo { margin-top: 1rem; padding: 0.8rem 0.95rem; border: 1px solid rgba(96, 165, 250, 0.5); border-radius: 12px; background: rgba(59, 130, 246, 0.1); }
+            .rk-tuyo h3 { margin-top: 0; color: #bfdbfe; }
+            .rk-tuyo ul { margin: 0.35rem 0 0; padding-left: 1.15rem; }
+            .rk-tuyo li { margin: 0.25rem 0; cursor: default; }
+            .rk-volver { width: 100%; min-height: 42px; margin-top: 1rem; border: 1px solid rgba(148, 163, 184, 0.6); border-radius: 10px; background: rgba(255, 255, 255, 0.07); color: #f1f5f9; font: 600 0.9rem inherit; cursor: pointer; }
+            .rk-volver:hover { background: rgba(255, 255, 255, 0.14); }
+            @media (max-width: 420px) { .rk-puntos { grid-template-columns: 1fr; } }
+            @media (prefers-reduced-motion: reduce) { .rk-ayuda-btn { transition: none; } }
         `;
         document.head.appendChild(style);
     }
@@ -693,6 +731,193 @@ function openAuthorProfileModal(authorName) {
 }
 
 
+/* ───────────────────────────────────────────────────────────────────────────
+   Ayuda de las clasificaciones: icono «?» junto al título.
+   Cambia el modal a una vista de ayuda con las reglas reales de puntos, los
+   pasos para subir puestos y un bloque personalizado (tu puesto y a cuál te
+   llevaría tu siguiente writeup / máquina), calculado con los datos del propio
+   ranking y con el mismo desempate (alfabético) que el servidor.
+   ─────────────────────────────────────────────────────────────────────────── */
+function rkNombre(item, tipo) { return String((tipo === 'writeups' ? item.nombre : item.autor) || ''); }
+function rkValor(item, tipo) { return Number(tipo === 'writeups' ? item.puntos : item.maquinas) || 0; }
+function rkPlural(n, uno, varios) { return n + ' ' + (n === 1 ? uno : varios); }
+
+/* Puesto que tendría `usuario` si su marcador pasara a `valor`. */
+function rkPuestoCon(data, tipo, usuario, valor) {
+    const u = usuario.toLowerCase();
+    let puesto = 1;
+    data.forEach(function (it) {
+        const n = rkNombre(it, tipo).toLowerCase();
+        if (n === u) return;
+        const v = rkValor(it, tipo);
+        if (v > valor || (v === valor && n < u)) puesto++;
+    });
+    return puesto;
+}
+
+const RK_HTML_WRITEUPS =
+    '<p>Aquí puntúa quien comparte sus soluciones. <strong>Cada writeup publicado suma puntos</strong> según la dificultad de la máquina:</p>' +
+    '<ul class="rk-puntos">' +
+    '<li><span>Muy fácil</span><b>+1</b></li><li><span>Fácil</span><b>+2</b></li>' +
+    '<li><span>Medio</span><b>+3</b></li><li><span>Difícil</span><b>+4</b></li></ul>' +
+    '<h3>Cómo subir puestos</h3>' +
+    '<ol class="rk-pasos">' +
+    '<li><strong>Resuelve una máquina</strong> de DockerLabs.</li>' +
+    '<li><strong>Sube tu writeup</strong> con el botón de subir (<i class="bi bi-upload" aria-hidden="true"></i> «Subir writeup») de su tarjeta. Tienes que haber iniciado sesión.</li>' +
+    '<li><strong>El equipo lo revisa.</strong> Cuando se aprueba y se publica, se suman tus puntos y la clasificación se actualiza.</li></ol>' +
+    '<p class="rk-nota">Da igual que sea texto o vídeo: lo que cuenta es la dificultad de la máquina. En caso de empate, se ordena alfabéticamente.</p>';
+
+const RK_HTML_AUTORES =
+    '<p>Aquí puntúa quien crea máquinas. <strong>Cada máquina publicada en DockerLabs suma 1</strong> a su autor (las de BunkerLabs no cuentan).</p>' +
+    '<h3>Cómo subir puestos</h3>' +
+    '<ol class="rk-pasos">' +
+    '<li><strong>Crea tu máquina.</strong> Si no sabes por dónde empezar, mira <a href="/enviar-maquina">Crear y enviar una máquina</a>.</li>' +
+    '<li><strong>Envíala</strong> desde el formulario de <a href="/enviar-maquina#enviar">esa misma página</a>.</li>' +
+    '<li><strong>El equipo la revisa.</strong> Cuando se aprueba y se publica en DockerLabs, sumas una máquina y subes en la clasificación.</li></ol>' +
+    '<p class="rk-nota">En caso de empate, se ordena alfabéticamente.</p>';
+
+function rkMontarAyuda(popupDiv, closeButton, tipo, cerrarModal) {
+    const esWriteups = tipo === 'writeups';
+    const previo = document.activeElement;
+    let data = null;
+    const q = function (sel) { return popupDiv.querySelector(sel); };   // siempre se vuelve a buscar: el .catch del modal reescribe el HTML
+
+    // El modal pasa a ser un diálogo accesible: nombre, rol y cierre por teclado.
+    popupDiv.setAttribute('role', 'dialog');
+    popupDiv.setAttribute('aria-modal', 'true');
+    const titulo = q('.modal-title');
+    if (titulo) { titulo.id = 'rk-titulo'; popupDiv.setAttribute('aria-labelledby', 'rk-titulo'); }
+    closeButton.type = 'button';
+    closeButton.setAttribute('aria-label', 'Cerrar clasificación');
+
+    const panel = document.createElement('div');
+    panel.id = 'rk-ayuda-panel';
+    panel.className = 'rk-ayuda';
+    panel.hidden = true;
+    panel.setAttribute('role', 'region');
+    panel.setAttribute('aria-label', 'Cómo funciona la clasificación');
+    const buscador = q('.ranking-search-container');
+    buscador.parentNode.insertBefore(panel, buscador);
+
+    function abierta() { const b = q('.rk-ayuda-btn'); return !!b && b.getAttribute('aria-expanded') === 'true'; }
+
+    function parrafo(html) { const p = document.createElement('p'); p.className = 'rk-tuyo-linea'; p.innerHTML = html; return p; }
+    function esc(t) { return String(t).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+
+    /* Bloque «tu situación»: solo con datos reales; nunca promete nada que no se pueda calcular. */
+    function personal() {
+        const caja = document.createElement('div');
+        caja.className = 'rk-tuyo';
+        const titulo = document.createElement('h3');
+        titulo.textContent = 'Tu situación';
+        caja.append(titulo);
+        const usuario = (typeof currentUser !== 'undefined' ? String(currentUser || '') : '').trim();
+        if (!usuario) {
+            caja.append(parrafo('<a href="/login">Inicia sesión</a> para ver tu puesto y a cuál subirías con tu próximo ' + (esWriteups ? 'writeup' : 'envío') + '.'));
+            return caja;
+        }
+        if (!data) { caja.append(parrafo('Calculando tu posición…')); return caja; }
+
+        const idx = data.findIndex(function (it) { return rkNombre(it, tipo).toLowerCase() === usuario.toLowerCase(); });
+        const mio = idx >= 0 ? rkValor(data[idx], tipo) : 0;
+        const puesto = idx + 1;
+
+        if (esWriteups) {
+            if (idx >= 0) {
+                caja.append(parrafo('Estás en el puesto <strong>#' + puesto + '</strong> con <strong>' + rkPlural(mio, 'punto', 'puntos') + '</strong>.'));
+                if (puesto > 1) {
+                    const sup = data[puesto - 2], falta = rkValor(sup, tipo) - mio;
+                    if (falta > 0) caja.append(parrafo('Te ' + (falta === 1 ? 'falta ' : 'faltan ') + '<strong>' + rkPlural(falta, 'punto', 'puntos') + '</strong> para alcanzar a ' + esc(rkNombre(sup, tipo)) + '.'));
+                } else {
+                    caja.append(parrafo('¡Vas primero! Mantén la ventaja subiendo más writeups.'));
+                }
+            } else {
+                caja.append(parrafo('Todavía no estás en la clasificación. Tu primer writeup publicado te haría entrar.'));
+            }
+            const ul = document.createElement('ul');
+            [[4, 'una máquina difícil'], [2, 'una fácil']].forEach(function (par) {
+                const nuevo = rkPuestoCon(data, tipo, usuario, mio + par[0]);
+                const base = 'Un writeup de ' + par[1] + ' (<strong>+' + par[0] + '</strong>) ';
+                const li = document.createElement('li');
+                if (idx < 0 || nuevo < puesto) {
+                    li.innerHTML = base + 'te llevaría al puesto <strong>#' + nuevo + '</strong>.';
+                } else {
+                    // No cambia de puesto: se dice cuánto falta para alcanzar al siguiente, que es lo útil.
+                    const sup = puesto > 1 ? data[puesto - 2] : null;
+                    const resto = sup ? rkValor(sup, tipo) - (mio + par[0]) : 0;
+                    li.innerHTML = resto > 0
+                        ? base + 'te acercaría: te quedarían <strong>' + rkPlural(resto, 'punto', 'puntos') + '</strong> para alcanzar a ' + esc(rkNombre(sup, tipo)) + '.'
+                        : base + 'te mantendría en el puesto <strong>#' + nuevo + '</strong> con más ventaja.';
+                }
+                ul.append(li);
+            });
+            caja.append(ul);
+        } else {
+            if (idx >= 0) {
+                caja.append(parrafo('Estás en el puesto <strong>#' + puesto + '</strong> con <strong>' + rkPlural(mio, 'máquina', 'máquinas') + '</strong>.'));
+                const nuevo = rkPuestoCon(data, tipo, usuario, mio + 1);
+                caja.append(parrafo(nuevo < puesto
+                    ? 'Con una máquina más subirías al puesto <strong>#' + nuevo + '</strong>.'
+                    : 'Con una máquina más seguirías en el puesto <strong>#' + nuevo + '</strong>, pero sumarías ventaja.'));
+            } else {
+                const nuevo = rkPuestoCon(data, tipo, usuario, 1);
+                caja.append(parrafo('Todavía no estás en la clasificación. Tu primera máquina publicada te haría entrar en el puesto <strong>#' + nuevo + '</strong>.'));
+            }
+        }
+        return caja;
+    }
+
+    function pintar() {
+        const p = q('#rk-ayuda-panel');
+        if (!p) return;
+        p.replaceChildren();
+        const h = document.createElement('h2');
+        h.tabIndex = -1;
+        h.textContent = '¿Cómo funciona esta clasificación?';
+        const cuerpo = document.createElement('div');
+        cuerpo.innerHTML = esWriteups ? RK_HTML_WRITEUPS : RK_HTML_AUTORES;
+        const volver = document.createElement('button');
+        volver.type = 'button';
+        volver.className = 'rk-volver';
+        volver.textContent = 'Volver a la clasificación';
+        p.append(h, cuerpo, personal(), volver);
+    }
+
+    function alternar(forzar) {
+        const abrir = typeof forzar === 'boolean' ? forzar : !abierta();
+        const boton = q('.rk-ayuda-btn'), p = q('#rk-ayuda-panel');
+        if (!boton || !p) return;
+        boton.setAttribute('aria-expanded', abrir ? 'true' : 'false');
+        p.hidden = !abrir;
+        [q('.ranking-search-container'), q('#ranking-list-container')].forEach(function (el) { if (el) el.hidden = abrir; });
+        if (abrir) { pintar(); const h = p.querySelector('h2'); if (h) h.focus(); }
+        else boton.focus();
+    }
+
+    // Delegación: el botón sobrevive aunque el modal reescriba su HTML.
+    popupDiv.addEventListener('click', function (e) {
+        if (e.target.closest('.rk-ayuda-btn')) alternar();
+        else if (e.target.closest('.rk-volver')) alternar(false);
+    });
+
+    function alTeclear(e) {
+        if (e.key !== 'Escape') return;
+        e.stopPropagation();
+        if (abierta()) alternar(false); else cerrarModal();
+    }
+    document.addEventListener('keydown', alTeclear);
+    setTimeout(function () { closeButton.focus({ preventScroll: true }); }, 60);
+
+    return {
+        setData: function (d) { data = d; if (abierta()) pintar(); },
+        destruir: function () {
+            document.removeEventListener('keydown', alTeclear);
+            if (previo && previo.isConnected && previo.focus) previo.focus({ preventScroll: true });
+        },
+    };
+}
+
+
 function ranking() {
     injectRankingStyles();
 
@@ -709,7 +934,11 @@ function ranking() {
 
     const navAndSearchHTML = `
         <div class="modal-header">
-            <h1 class="modal-title">Clasificación</h1>
+            <div class="rk-titulo-fila">
+                <h1 class="modal-title">Clasificación</h1>
+                <button type="button" class="rk-ayuda-btn" aria-expanded="false" aria-controls="rk-ayuda-panel"
+                        aria-label="¿Cómo funciona esta clasificación?" title="¿Cómo funciona?"><span aria-hidden="true">?</span></button>
+            </div>
             <div class="modal-subtitle">Writeups de la comunidad</div>
         </div>
 
@@ -725,6 +954,7 @@ function ranking() {
 
     popupDiv.innerHTML = navAndSearchHTML;
     popupDiv.appendChild(closeButton);
+    const rkAyuda = rkMontarAyuda(popupDiv, closeButton, 'writeups', () => closePopup());
 
     fetch('/api/ranking_writeups')
         .then(res => {
@@ -733,6 +963,7 @@ function ranking() {
         })
         .then(data => {
             data.sort((a, b) => b.puntos - a.puntos);
+            rkAyuda.setData(data);
             // Posición global precalculada: no cambia al filtrar ni paginar.
             data.forEach((item, i) => { item._rank = i + 1; });
 
@@ -822,6 +1053,7 @@ function ranking() {
     overlayDiv.onclick = (e) => { if (e.target === overlayDiv) closePopup(); };
 
     function closePopup() {
+        rkAyuda.destruir();
         popupDiv.classList.remove('visible');
         overlayDiv.classList.remove('visible');
         setTimeout(() => {
@@ -848,7 +1080,11 @@ function rankingautores() {
 
     const navAndSearchHTML = `
         <div class="modal-header">
-            <h1 class="modal-title">Clasificación Autores</h1>
+            <div class="rk-titulo-fila">
+                <h1 class="modal-title">Clasificación Autores</h1>
+                <button type="button" class="rk-ayuda-btn" aria-expanded="false" aria-controls="rk-ayuda-panel"
+                        aria-label="¿Cómo funciona esta clasificación?" title="¿Cómo funciona?"><span aria-hidden="true">?</span></button>
+            </div>
             <div class="modal-subtitle">Máquinas Creadas</div>
         </div>
 
@@ -864,6 +1100,7 @@ function rankingautores() {
 
     popupDiv.innerHTML = navAndSearchHTML;
     popupDiv.appendChild(closeButton);
+    const rkAyuda = rkMontarAyuda(popupDiv, closeButton, 'autores', () => closePopup());
 
     fetch('/api/ranking_autores')
         .then(res => {
@@ -873,6 +1110,7 @@ function rankingautores() {
         .then(data => {
             // Sort by machines count (descending)
             data.sort((a, b) => b.maquinas - a.maquinas);
+            rkAyuda.setData(data);
             // Posición global precalculada: no cambia al filtrar ni paginar.
             data.forEach((item, i) => { item._rank = i + 1; });
 
@@ -962,6 +1200,7 @@ function rankingautores() {
     overlayDiv.onclick = (e) => { if (e.target === overlayDiv) closePopup(); };
 
     function closePopup() {
+        rkAyuda.destruir();
         popupDiv.classList.remove('visible');
         overlayDiv.classList.remove('visible');
         setTimeout(() => {

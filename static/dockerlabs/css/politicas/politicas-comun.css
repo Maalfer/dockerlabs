@@ -199,3 +199,12 @@
     .policy-header { gap: 0.7rem; }
     .policy-header h1 { font-size: 1.4rem; }
 }
+
+/* Fecha de actualización y tablas (política de cookies) */
+.policy-meta { margin: 0 0 1rem; color: var(--text-muted); font-size: .85rem; }
+.policy-table-wrap { overflow-x: auto; margin: 1rem 0; -webkit-overflow-scrolling: touch; }
+.policy-table { width: 100%; border-collapse: collapse; font-size: .9rem; line-height: 1.5; }
+.policy-table th, .policy-table td { padding: .6rem .75rem; text-align: left; vertical-align: top; border-bottom: 1px solid var(--border-subtle); }
+.policy-table th { color: var(--text-primary); font-weight: 600; white-space: nowrap; }
+.policy-table td { color: var(--text-secondary, var(--text-primary)); }
+.policy-table code { color: var(--hack-green, #3cff00); word-break: break-all; }

@@ -108,11 +108,9 @@ async def visit_counter_middleware(request: Request, call_next):
         if (request.method == "GET" and response.status_code == 200
                 and not path.startswith(_VISIT_SKIP_PREFIXES)
                 and response.headers.get("content-type", "").startswith("text/html")):
-            ua = request.headers.get("user-agent", "")
-            if ua and not any(b in ua.lower() for b in _BOT_MARKERS):
-                ip = request.headers.get("cf-connecting-ip") or (request.client.host if request.client else "")
-                day = time.strftime("%Y-%m-%d", time.gmtime())
-                visitor = hashlib.sha256(f"{_VISIT_SALT}|{ip}|{ua}|{day}".encode()).hexdigest()[:16]
+            from dockerlabs.traffic import is_human_navigation, visitor_hash
+            if is_human_navigation(request):
+                visitor = visitor_hash(request)
                 await run_in_threadpool(_record_visit, visitor)
     except Exception:
         pass
@@ -127,12 +125,12 @@ async def security_headers_middleware(request: Request, call_next):
 
     response.headers['Content-Security-Policy-Report-Only'] = (
         f"default-src 'self'; "
-        f"style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; "
-        f"script-src 'self' 'nonce-{nonce}' 'unsafe-hashes' https://www.googletagmanager.com; "
+        f"style-src 'self' 'unsafe-inline'; "
+        f"script-src 'self' 'nonce-{nonce}' 'unsafe-hashes'; "
         f"img-src 'self' data: https:; "
-        f"font-src 'self' https://fonts.gstatic.com; "
+        f"font-src 'self'; "
         f"connect-src 'self'; "
-        f"frame-src 'self' https://www.youtube.com; "
+        f"frame-src 'self' https://www.youtube-nocookie.com; "
         f"frame-ancestors 'self'; "
         f"object-src 'none'; "
         f"base-uri 'self'; "

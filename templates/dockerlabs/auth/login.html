@@ -15,7 +15,7 @@
 {% with texto_cargando = "Iniciando sesión..." %}{% include "dockerlabs/auth/_cargando.html" %}{% endwith %}
 
 <div class="login-container dl-auth">
-    {% with ballena_mensajes = {"idle": "¡Hola de nuevo! Te estaba esperando.", "user": "¿Quién anda por ahí?", "error": "Uy, eso no cuadra. ¿Probamos otra vez?", "envio": "Comprobando credenciales…", "pass": "Tranquilo, no miro.", "ver": "Bueno… solo un poquito.", "clic": "¡Splash!", "espera": "Respira hondo… y espera un poquito."} %}{% include "dockerlabs/auth/_ballena.html" %}{% endwith %}
+    {% with ballena_contexto = "login", ballena_mensajes = {"idle": "¡Hola de nuevo! Te estaba esperando.", "user": "¿Quién anda por ahí?", "error": "Uy, eso no cuadra. ¿Probamos otra vez?", "envio": "Comprobando credenciales…", "pass": "Tranquilo, no miro.", "ver": "Bueno… solo un poquito.", "clic": "¡Splash!", "espera": "Respira hondo… y espera un poquito."} %}{% include "dockerlabs/auth/_ballena.html" %}{% endwith %}
     <div class="login-box">
         <div class="login-header">
             <h2>Iniciar Sesión</h2>

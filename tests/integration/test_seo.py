@@ -98,3 +98,24 @@ class TestStaticRootFiles:
         path = os.path.join(self._BASE_DIR, "static", "dockerlabs", "pwa", "manifest.webmanifest")
         r = client.get("/manifest.webmanifest")
         assert r.status_code == (200 if os.path.isfile(path) else 404)
+
+
+class TestAutoria:
+    def test_security_txt(self, client):
+        for ruta in ("/.well-known/security.txt", "/security.txt"):
+            r = client.get(ruta)
+            assert r.status_code == 200
+            assert "Contact: mailto:" in r.text and "Expires: " in r.text
+
+    def test_autoria_page(self, client):
+        r = client.get("/autoria")
+        assert r.status_code == 200
+        assert "Mario Álvarez Fernández" in r.text and "Docker, Inc." in r.text
+        assert "/autoria" in client.get("/sitemap.xml").text
+
+    def test_reserved_usernames(self):
+        from dockerlabs.validators import es_nombre_reservado
+        for nombre in ("Admin", "4dm1n", "ad_min", "DockerLabs_Oficial", "soporte", "el_pinguino_de_mario"):
+            assert es_nombre_reservado(nombre), nombre
+        for nombre in ("mario", "pepe_hacker", "administrativo", "rootkit"):
+            assert not es_nombre_reservado(nombre), nombre

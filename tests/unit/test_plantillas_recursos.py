@@ -58,7 +58,7 @@ def test_scripts_en_linea_llevan_nonce():
         for n, linea in enumerate(plantilla.read_text(encoding="utf-8").splitlines(), 1):
             for m in _RE_SCRIPT.finditer(linea):
                 attrs = m.group(1)
-                if "src=" in attrs or "nonce=" in attrs or "application/ld+json" in attrs:
+                if "src=" in attrs or "nonce=" in attrs or "application/ld+json" in attrs or "application/json" in attrs:
                     continue
                 sin_nonce.append(f"{plantilla.relative_to(RAIZ)}:{n}")
     assert not sin_nonce, "scripts en línea sin nonce:\n" + "\n".join(sin_nonce)

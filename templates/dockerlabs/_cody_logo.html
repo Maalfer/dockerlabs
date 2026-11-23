@@ -1,0 +1,82 @@
+{# Cody como logotipo de los headers de DockerLabs y BunkerLabs (sustituye al PNG solo ahí;
+   favicon, PWA y tarjetas sociales siguen con el logo de siempre). Misma composición que el
+   logotipo original: disco gris azulado con remolino de agua, la ballena saliendo del agua en
+   diagonal, salpicadura abajo a la izquierda y burbujas a la derecha. Parpadea de vez en
+   cuando y, al pasar el cursor, da un salto (estilos en static/dockerlabs/css/cody-logo.css). Ids y
+   clases con prefijo hc para no chocar con la ballena grande cuando ambas están en la página. #}
+<svg class="hc" xmlns="http://www.w3.org/2000/svg" viewBox="40 -5 180 180" width="60" height="60" role="img" aria-label="DockerLabs" focusable="false">
+    <defs>
+        <radialGradient id="hcMar" cx=".62" cy=".62" r=".62"><stop offset="0" stop-color="#5cc0dc"/><stop offset=".7" stop-color="#3a9cc2"/><stop offset="1" stop-color="#2b7fa8"/></radialGradient>
+        <linearGradient id="hcCuerpo" gradientUnits="userSpaceOnUse" x1="0" y1="38" x2="0" y2="152"><stop offset="0" stop-color="#2c5796"/><stop offset=".45" stop-color="#1c3868"/><stop offset="1" stop-color="#132850"/></linearGradient>
+        <linearGradient id="hcCrema" gradientUnits="userSpaceOnUse" x1="0" y1="98" x2="0" y2="152"><stop offset="0" stop-color="#fbe9cf"/><stop offset="1" stop-color="#e6bd90"/></linearGradient>
+        <clipPath id="hcDisco"><circle cx="130" cy="85" r="89"/></clipPath>
+        <clipPath id="hcBody"><path d="M47 99 C56 79 90 45 150 40 C192 37 226 56 232 86 C233.5 93 233 98 230.5 101 C229.4 102.6 228.6 105 227 108 C217 134 190 151 150 151 C108 151 80 142 64 126 C57 119 50 110 47 99 Z"/></clipPath>
+        <clipPath id="hcOjo"><ellipse cx="190" cy="92" rx="8.2" ry="9.4"/></clipPath>
+    </defs>
+    <!-- disco gris azulado y remolino de agua, como en el logotipo original -->
+    <circle cx="130" cy="85" r="89" fill="#86b6cb"/>
+    <g clip-path="url(#hcDisco)">
+        <ellipse cx="140" cy="97" rx="80" ry="77" fill="url(#hcMar)"/>
+        <path d="M188 33 A 74 74 0 0 1 208 103" fill="none" stroke="#7fd6ea" stroke-width="5" stroke-linecap="round" opacity=".55"/>
+        <!-- burbujas a la derecha -->
+        <g class="hc-burbujas" fill="#bfeefa" fill-opacity=".35" stroke="#e9fbff" stroke-width="2.2">
+            <circle class="hc-b1" cx="200" cy="119" r="6.2"/>
+            <circle class="hc-b2" cx="192" cy="99" r="4"/>
+            <circle class="hc-b3" cx="208" cy="87" r="2.6"/>
+            <circle class="hc-b4" cx="182" cy="137" r="3"/>
+        </g>
+        <!-- Cody saliendo del agua en diagonal -->
+        <g class="hc-salto">
+        <g transform="translate(120 101) rotate(-35) scale(.94) translate(-140 -96)">
+            <g class="hc-cuerpo">
+                <path fill="#152c57" stroke="#081327" stroke-width="5" stroke-linejoin="round" paint-order="stroke" transform="translate(66 -6) rotate(-30 125 150)" d="M112 142 C110 153 104 163 94 170 C112 172 131 163 140 147 Z"/>
+                <path fill="#081327" stroke="#081327" stroke-width="5.4" stroke-linejoin="round" d="M47 99 C56 79 90 45 150 40 C192 37 226 56 232 86 C233.5 93 233 98 230.5 101 C229.4 102.6 228.6 105 227 108 C217 134 190 151 150 151 C108 151 80 142 64 126 C57 119 50 110 47 99 Z"/>
+                <path fill="#234a86" stroke="#081327" stroke-width="5.4" stroke-linejoin="round" paint-order="stroke" d="M140 46 C137 32 127 17 114 11 C111 10 109 12 109 15 C112 26 109 38 102 48 L102 60 L140 60 Z"/>
+                <path d="M133 40 C131 31 125 22 118 17" fill="none" stroke="#49b4ea" stroke-width="3.4" stroke-linecap="round" opacity=".9"/>
+                <path fill="url(#hcCuerpo)" d="M47 99 C56 79 90 45 150 40 C192 37 226 56 232 86 C233.5 93 233 98 230.5 101 C229.4 102.6 228.6 105 227 108 C217 134 190 151 150 151 C108 151 80 142 64 126 C57 119 50 110 47 99 Z"/>
+                <g clip-path="url(#hcBody)">
+                    <path fill="url(#hcCrema)" d="M244 94 L230 98 C216 103 198 103.5 184 102 C170 100.5 158 100 146 102.5 C126 107 102 109 80 105 C68 103 58 99 50 95 L40 95 L40 184 L250 184 Z"/>
+                    <path fill="#d7a373" opacity=".7" d="M40 122 C70 136 110 142 140 141 C172 140 204 130 240 110 L250 184 L40 184 Z"/>
+                    <path fill="#49b4ea" opacity=".95" d="M139 50.5 C162 41.5 194 45.5 212 63 C191 52.5 164 49.5 139 50.5 Z"/>
+                    <path fill="#3d9bd6" opacity=".7" d="M84 66 C96 56 110 51 124 49 C112 54 98 61 88 70 Z"/>
+                    <ellipse cx="160" cy="110" rx="11" ry="5.5" fill="#fff" opacity=".5"/>
+                </g>
+                <ellipse class="hc-mejilla" cx="191" cy="110" rx="7" ry="4.2" fill="#f472b6" opacity=".65"/>
+                <g class="hc-ojo">
+                    <ellipse cx="190" cy="92" rx="8.2" ry="9.4" fill="#0b1324"/>
+                    <g clip-path="url(#hcOjo)">
+                        <circle cx="192.8" cy="88.2" r="3.5" fill="#fff"/>
+                        <circle cx="187.2" cy="96" r="1.5" fill="#fff" opacity=".85"/>
+                    </g>
+                    <rect class="hc-parpado" x="180.8" y="81.6" width="18.4" height="20.8" rx="9.2" fill="#234a80"/>
+                </g>
+                <path class="hc-ojo-feliz" d="M181.8 95 Q190 83.8 198.2 95" fill="none" stroke="#0b1324" stroke-width="3.8" stroke-linecap="round"/>
+                <path class="hc-boca" d="M201.5 108.2 Q208.5 117 215.5 108.2" fill="none" stroke="#4a3628" stroke-width="3" stroke-linecap="round"/>
+                <g class="hc-aleta"><g transform="translate(128 116) rotate(108) scale(.72)">
+                    <path fill="#152c57" stroke="#081327" stroke-width="5" stroke-linejoin="round" paint-order="stroke" d="M-5 -5 C8 -10 30 -11 46 -6 C55 -3 58 6 52 11 C41 17 16 14 1 9 C-6 6 -9 -1 -5 -5 Z"/>
+                    <path d="M10 -3 C22 -6 36 -6 45 -2" fill="none" stroke="#3d9bd6" stroke-width="2.6" stroke-linecap="round" opacity=".8"/>
+                </g></g>
+            </g>
+        </g>
+        </g>
+        <!-- agua y salpicadura abajo a la izquierda (tapa la cola, como en el logo) -->
+        <path fill="#1f6d97" d="M37 135 C70 123 94 151 124 147 C154 143 180 151 223 137 L223 180 L37 180 Z"/>
+        <path fill="#2f8fba" opacity=".9" d="M37 147 C72 137 100 161 130 157 C160 153 186 163 223 151 L223 180 L37 180 Z"/>
+        <g class="hc-espuma" transform="translate(78 141) scale(.98) translate(-78 -141) translate(-4 2)">
+            <!-- salpicadura: lenguas de agua que saltan, no una nube -->
+            <g transform="translate(80 145)">
+                <path fill="#9fe3f5" fill-opacity=".75" d="M-36 8 C-40 -4 -36 -14 -30 -22 C-29 -12 -25 -6 -20 -2 C-22 -14 -18 -26 -10 -34 C-9 -22 -4 -12 2 -6 C2 -16 7 -24 15 -29 C14 -18 18 -9 24 -3 C27 -9 31 -13 36 -15 C35 -6 37 2 40 8 C16 15 -14 15 -36 8 Z"/>
+                <path fill="#f2fdff" fill-opacity=".92" d="M-30 9 C-33 0 -30 -8 -26 -14 C-25 -7 -22 -2 -17 2 C-18 -9 -14 -19 -8 -25 C-8 -15 -3 -6 3 0 C4 -8 8 -15 13 -19 C13 -10 17 -3 22 2 C25 -2 28 -5 31 -6 C31 0 33 5 35 9 C14 14 -12 14 -30 9 Z"/>
+                <path fill="none" stroke="#ffffff" stroke-opacity=".85" stroke-width="1.6" stroke-linecap="round" d="M-40 10 C-20 17 18 17 44 9"/>
+            </g>
+            <circle class="hc-gota hc-g1" cx="56" cy="115" r="3.4" fill="#e8fbff"/>
+            <circle class="hc-gota hc-g2" cx="78" cy="105" r="2.6" fill="#e8fbff"/>
+            <circle class="hc-gota hc-g3" cx="100" cy="115" r="3" fill="#e8fbff"/>
+            <circle class="hc-gota hc-g4" cx="120" cy="131" r="2.4" fill="#e8fbff"/>
+            <circle class="hc-gota hc-g5" cx="46" cy="133" r="2.2" fill="#e8fbff"/>
+            <circle class="hc-gota hc-g2" cx="68" cy="97" r="1.8" fill="#e8fbff"/>
+            <circle class="hc-gota hc-g4" cx="110" cy="121" r="1.8" fill="#e8fbff"/>
+        </g>
+    </g>
+    <circle class="hc-aro" cx="130" cy="85" r="87.6" fill="none" stroke="#d9f4ff" stroke-width="2.8" opacity=".9"/>
+</svg>

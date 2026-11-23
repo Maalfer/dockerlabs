@@ -21,7 +21,7 @@ import uuid
 
 import pytest
 
-from tests.factories import make_bunker_token, make_machine, make_user
+from tests.factories import NAV_HEADERS, make_bunker_token, make_machine, make_user
 
 pytestmark = pytest.mark.integration
 
@@ -245,7 +245,7 @@ class TestDescargarMaquina:
         cookie = auth.encode_session_cookie({"bunkerlabs_ok": True, "bunkerlabs_guest": True})
         client.cookies.set("session", cookie)
 
-        r = client.get(f"/bunkerlabs/maquinas/{maquina.id}/descargar")
+        r = client.get(f"/bunkerlabs/maquinas/{maquina.id}/descargar", headers=NAV_HEADERS)
         assert r.status_code == 200
 
         db.session.rollback()
@@ -260,7 +260,7 @@ class TestDescargarMaquina:
         cookie = auth.encode_session_cookie({"bunkerlabs_ok": True})
         client.cookies.set("session", cookie)
 
-        r = client.get(f"/bunkerlabs/maquinas/{maquina.id}/descargar")
+        r = client.get(f"/bunkerlabs/maquinas/{maquina.id}/descargar", headers=NAV_HEADERS)
         assert r.status_code == 200
 
         db.session.rollback()
@@ -340,6 +340,38 @@ class TestDeleteToken:
         # tocando el objeto expirado.
         assert BunkerAccessToken.query.filter_by(id=token_id).first() is None
 
+    def test_token_with_access_history_is_deleted_with_its_logs(self, client, login_as, db):
+        # Regresión: la FK de bunker_access_logs hacía fallar el borrado con un 500.
+        from bunkerlabs.models import BunkerAccessLog, BunkerAccessToken
+        admin = make_user(db, role="admin")
+        token = make_bunker_token(db)
+        token_id = token.id
+        db.session.add(BunkerAccessLog(token_id=token_id, user_nombre="alguien"))
+        db.session.commit()
+        csrf = login_as(admin)
+
+        r = client.post(f"/bunkerlabs/gestion/{token_id}/delete",
+                        headers={"X-CSRFToken": csrf, "Accept": "application/json"})
+        assert r.status_code == 200 and r.json()["success"] is True
+
+        db.session.rollback()
+        assert BunkerAccessToken.query.filter_by(id=token_id).first() is None
+        assert BunkerAccessLog.query.filter_by(token_id=token_id).count() == 0
+
+    def test_toggle_deactivates_and_reactivates(self, client, login_as, db):
+        from bunkerlabs.models import BunkerAccessToken
+        admin = make_user(db, role="admin")
+        token = make_bunker_token(db)
+        token_id = token.id
+        csrf = login_as(admin)
+
+        r = client.post(f"/bunkerlabs/gestion/{token_id}/toggle", headers={"X-CSRFToken": csrf})
+        assert r.status_code == 200 and r.json()["activo"] is False
+        db.session.rollback()
+        assert BunkerAccessToken.query.filter_by(id=token_id).first().activo == 0
+        r = client.post(f"/bunkerlabs/gestion/{token_id}/toggle", headers={"X-CSRFToken": csrf})
+        assert r.json()["activo"] is True
+
     def test_without_csrf_rejected(self, client, login_as, db):
         admin = make_user(db, role="admin")
         token = make_bunker_token(db)
@@ -355,3 +387,35 @@ class TestDeleteToken:
 
         r = client.post(f"/bunkerlabs/gestion/{token.id}/delete", headers={"X-CSRFToken": csrf})
         assert r.status_code == 403
+
+
+class TestPinEsLlaveNoIdentidad:
+    def test_pin_label_is_never_stored_in_session_nor_shown(self, client, db, auth):
+        token = make_bunker_token(db, nombre="EtiquetaInternaDelPin", token="pin-llave-1")
+        r = client.post("/bunkerlabs/login", data={"password": "pin-llave-1"}, follow_redirects=False)
+        assert r.status_code == 302
+        payload = auth.get_session_serializer().loads(client.cookies.get("session"))
+        assert payload.get("bunkerlabs_ok") is True and payload.get("bunkerlabs_id") == token.id
+        assert "bunkerlabs_nombre" not in payload
+        html = client.get("/bunkerlabs").text
+        assert "EtiquetaInternaDelPin" not in html and "Anónimo" in html
+
+    def test_deactivated_pin_revokes_access(self, client, db):
+        from bunkerlabs.models import BunkerAccessToken
+        token = make_bunker_token(db, token="pin-llave-2")
+        token_id = token.id
+        client.post("/bunkerlabs/login", data={"password": "pin-llave-2"}, follow_redirects=False)
+        assert client.get("/bunkerlabs", follow_redirects=False).status_code == 200
+        db.session.rollback()
+        db.session.query(BunkerAccessToken).filter_by(id=token_id).update({"activo": 0})
+        db.session.commit()
+        r = client.get("/bunkerlabs", follow_redirects=False)
+        assert r.status_code == 302 and r.headers["location"] == "/bunkerlabs/login"
+
+    def test_guest_can_upgrade_with_pin(self, client, db, auth):
+        make_bunker_token(db, token="pin-llave-3")
+        client.get("/bunkerlabs/guest", follow_redirects=False)
+        assert client.get("/bunkerlabs/login", follow_redirects=False).status_code == 200
+        client.post("/bunkerlabs/login", data={"password": "pin-llave-3"}, follow_redirects=False)
+        payload = auth.get_session_serializer().loads(client.cookies.get("session"))
+        assert payload.get("bunkerlabs_ok") is True and not payload.get("bunkerlabs_guest")

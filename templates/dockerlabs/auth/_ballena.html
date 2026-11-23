@@ -2,7 +2,7 @@
    Inspirada en el logo de DockerLabs: lomo azul marino, vientre crema, aleta dorsal.
    Decorativa: aria-hidden. El bocadillo (terminal) muestra frases motivacionales
    (ballena.js) y reacciones puntuales cuyos textos llegan por `ballena_mensajes`. #}
-<aside class="dl-ballena" aria-hidden="true" data-mensajes='{{ ballena_mensajes | tojson }}'{% if ballena_lectura %} data-lectura{% endif %}{% if ballena_guia %} data-guia{% endif %}>
+<aside class="dl-ballena" aria-hidden="true" data-mensajes='{{ ballena_mensajes | tojson }}' data-frases="{{ static_v('dockerlabs/data/frases.json') }}" data-contexto="{{ ballena_contexto | default('') }}"{% if ballena_lectura %} data-lectura{% endif %}{% if ballena_guia %} data-guia{% endif %}>
     <div class="dl-bocadillo">
         <p class="dl-bocadillo-txt"><span class="dl-prompt">$</span>Paso a paso se llega a root.</p>
         <p class="dl-bocadillo-autor" hidden></p>
@@ -13,85 +13,120 @@
     </div>
     <svg class="ballena" viewBox="0 0 240 172" focusable="false">
         <defs>
-            <linearGradient id="bgCuerpo" gradientUnits="userSpaceOnUse" x1="0" y1="40" x2="0" y2="150">
-                <stop offset="0" stop-color="#4a76b3"/><stop offset=".5" stop-color="#2c4c80"/><stop offset="1" stop-color="#1c335c"/>
+            <linearGradient id="bgCuerpo" gradientUnits="userSpaceOnUse" x1="0" y1="38" x2="0" y2="152">
+                <stop offset="0" stop-color="#2d5a9e"/><stop offset=".45" stop-color="#1d3a6b"/><stop offset="1" stop-color="#142a52"/>
             </linearGradient>
-            <linearGradient id="bgAleta" gradientUnits="userSpaceOnUse" x1="0" y1="110" x2="0" y2="160">
-                <stop offset="0" stop-color="#335789"/><stop offset="1" stop-color="#1b3156"/>
+            <linearGradient id="bgDorsal" gradientUnits="userSpaceOnUse" x1="0" y1="10" x2="0" y2="52">
+                <stop offset="0" stop-color="#24498a"/><stop offset="1" stop-color="#1a3566"/>
             </linearGradient>
-            <linearGradient id="bgCrema" gradientUnits="userSpaceOnUse" x1="0" y1="96" x2="0" y2="150">
-                <stop offset="0" stop-color="#fbeedb"/><stop offset="1" stop-color="#e6c79e"/>
+            <linearGradient id="bgCola" gradientUnits="userSpaceOnUse" x1="0" y1="-48" x2="0" y2="6">
+                <stop offset="0" stop-color="#2a5290"/><stop offset="1" stop-color="#1b3665"/>
             </linearGradient>
-            <linearGradient id="bgBrillo" gradientUnits="userSpaceOnUse" x1="120" y1="42" x2="150" y2="96">
-                <stop offset="0" stop-color="#fff" stop-opacity=".35"/><stop offset="1" stop-color="#fff" stop-opacity="0"/>
+            <linearGradient id="bgAleta" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="46" y2="0">
+                <stop offset="0" stop-color="#1d3a6b"/><stop offset="1" stop-color="#13284f"/>
+            </linearGradient>
+            <linearGradient id="bgCrema" gradientUnits="userSpaceOnUse" x1="0" y1="100" x2="0" y2="152">
+                <stop offset="0" stop-color="#fff4e2"/><stop offset="1" stop-color="#f1d6b1"/>
             </linearGradient>
             <radialGradient id="bgLuz" cx=".5" cy=".5" r=".5">
                 <stop offset="0" stop-color="#3cff00" stop-opacity=".2"/><stop offset="1" stop-color="#3cff00" stop-opacity="0"/>
             </radialGradient>
             <clipPath id="bcCuerpo">
-                <path d="M52 98 C60 62 108 40 160 42 C206 44 230 72 228 102 C226 132 198 148 156 148 C116 148 82 138 60 118 C54 112 50 104 52 98 Z"/>
+                <path d="M47 99 C56 79 90 45 150 40 C192 37 226 56 232 86 C233.5 93 233 98 230.5 101 C229.4 102.6 228.6 105 227 108 C217 134 190 151 150 151 C108 151 80 142 64 126 C57 119 50 110 47 99 Z"/>
             </clipPath>
+            <clipPath id="bcOjo"><ellipse cx="190" cy="92" rx="7.6" ry="8.8"/></clipPath>
             <clipPath id="bcOlas"><rect x="0" y="120" width="240" height="60"/></clipPath>
+
+            <!-- Chorro de bits del espiráculo: verde hacker en el centro, cian en los bordes -->
+            <linearGradient id="bAguaCentro" gradientUnits="userSpaceOnUse" x1="150" y1="43" x2="150" y2="-2">
+                <stop offset="0" stop-color="#eafff0" stop-opacity=".95"/>
+                <stop offset=".26" stop-color="#9dffb0" stop-opacity=".9"/>
+                <stop offset=".6" stop-color="#3cff00" stop-opacity=".55"/>
+                <stop offset="1" stop-color="#1f9900" stop-opacity="0"/>
+            </linearGradient>
+            <linearGradient id="bAguaLados" gradientUnits="userSpaceOnUse" x1="150" y1="43" x2="150" y2="2">
+                <stop offset="0" stop-color="#eafeff" stop-opacity=".9"/>
+                <stop offset=".45" stop-color="#7ce9f5" stop-opacity=".55"/>
+                <stop offset="1" stop-color="#22d3ee" stop-opacity="0"/>
+            </linearGradient>
+            <radialGradient id="bAguaLuz">
+                <stop offset="0" stop-color="#c3ffce" stop-opacity=".55"/>
+                <stop offset=".55" stop-color="#3cff00" stop-opacity=".2"/>
+                <stop offset="1" stop-color="#3cff00" stop-opacity="0"/>
+            </radialGradient>
+            <filter id="bAguaDifusa" x="-60%" y="-60%" width="220%" height="220%">
+                <feGaussianBlur stdDeviation="1.5"/>
+            </filter>
         </defs>
 
-        <!-- chorro binario -->
-        <g class="b-chorro" fill="#3cff00" font-family="Fira Code, ui-monospace, monospace" font-size="11" font-weight="700" text-anchor="middle">
-            <text class="b-bit b-bit-1" x="150" y="40">1</text>
-            <text class="b-bit b-bit-2" x="150" y="40">0</text>
-            <text class="b-bit b-bit-3" x="150" y="40">1</text>
-            <text class="b-bit b-bit-4" x="150" y="40">0</text>
-            <text class="b-bit b-bit-5" x="150" y="40">1</text>
-            <text class="b-bit b-bit-6" x="150" y="40">1</text>
-            <text class="b-bit b-bit-7" x="150" y="40">0</text>
-            <text class="b-bit b-bit-8" x="150" y="40">1</text>
-            <text class="b-bit b-bit-9" x="150" y="40">0</text>
-        </g>
-
-        <!-- burbujas -->
-        <g class="b-burbujas" fill="none" stroke="#7dd3fc" stroke-width="1.2">
-            <circle class="b-burbuja b-burbuja-1" cx="36" cy="150" r="3"/>
-            <circle class="b-burbuja b-burbuja-2" cx="228" cy="152" r="2.2"/>
-            <circle class="b-burbuja b-burbuja-3" cx="20" cy="140" r="1.8"/>
+        <!-- burbujas, con su brillo como las del logo -->
+        <g class="b-burbujas" fill="none" stroke-linecap="round">
+            <g class="b-burbuja b-burbuja-1"><circle cx="36" cy="150" r="3.2" fill="#38bdf8" fill-opacity=".18" stroke="#7dd3fc" stroke-width="1.3"/><path d="M34.2 149.2 A2 2 0 0 1 36.2 147.9" stroke="#e0f7ff" stroke-width="1"/><circle cx="42.5" cy="155" r="1.5" fill="#38bdf8" fill-opacity=".18" stroke="#7dd3fc" stroke-width="1"/></g>
+            <g class="b-burbuja b-burbuja-2"><circle cx="228" cy="152" r="2.4" fill="#38bdf8" fill-opacity=".18" stroke="#7dd3fc" stroke-width="1.2"/><path d="M226.7 151.4 A1.5 1.5 0 0 1 228.1 150.5" stroke="#e0f7ff" stroke-width=".9"/><circle cx="223" cy="157" r="1.3" fill="#38bdf8" fill-opacity=".18" stroke="#7dd3fc" stroke-width=".9"/></g>
+            <g class="b-burbuja b-burbuja-3"><circle cx="20" cy="140" r="2" fill="#38bdf8" fill-opacity=".18" stroke="#7dd3fc" stroke-width="1.1"/><path d="M18.9 139.5 A1.2 1.2 0 0 1 20.1 138.8" stroke="#e0f7ff" stroke-width=".8"/></g>
         </g>
 
         <g class="b-sacude">
             <g class="b-flota">
-                <!-- aleta dorsal -->
-                <path fill="url(#bgAleta)" d="M108 54 C112 40 121 29 134 24 C131 34 131 44 136 52 Z"/>
+                <!-- aleta pectoral del otro costado, asomando bajo el vientre como en el logo -->
+                <path fill="#1b3768" stroke="#0a1630" stroke-width="4.2" stroke-linejoin="round" paint-order="stroke" d="M112 142 C110 151 105 158 97 163 C111 165 128 159 138 147 Z"/>
+                <!-- silueta: el contorno marino del logo, sin costuras entre cuerpo, cola y aleta dorsal -->
+                <path fill="#0a1630" stroke="#0a1630" stroke-width="4.6" stroke-linejoin="round" d="M47 99 C56 79 90 45 150 40 C192 37 226 56 232 86 C233.5 93 233 98 230.5 101 C229.4 102.6 228.6 105 227 108 C217 134 190 151 150 151 C108 151 80 142 64 126 C57 119 50 110 47 99 Z"/>
+                <!-- aleta dorsal, alta y echada hacia atrás -->
+                <path fill="url(#bgDorsal)" stroke="#0a1630" stroke-width="4.6" stroke-linejoin="round" paint-order="stroke" d="M140 46 C137 32 127 17 114 11 C111 10 109 12 109 15 C112 26 109 38 102 48 L102 60 L140 60 Z"/>
+                <path d="M133 40 C131 31 125 22 118 17" fill="none" stroke="#39a9e4" stroke-width="3" stroke-linecap="round" opacity=".85"/>
                 <!-- cola -->
                 <g class="b-cola">
-                    <path transform="translate(60 106) rotate(-52)" fill="url(#bgCuerpo)"
-                          d="M-10 4 C-9 -12 -7 -22 -5 -29 C-11 -35 -21 -39 -30 -37 C-23 -46 -10 -48 0 -39 C10 -48 23 -46 30 -37 C21 -39 11 -35 5 -29 C7 -22 9 -12 10 4 Z"/>
+                    <g transform="translate(60 106) rotate(-52)">
+                        <path fill="url(#bgCola)" stroke="#0a1630" stroke-width="4.6" stroke-linejoin="round" paint-order="stroke"
+                              d="M-9 6 C-8 -10 -6 -21 -4 -28 C-10 -35 -21 -40 -32 -37 C-25 -47 -10 -50 0 -40 C10 -50 25 -47 32 -37 C21 -40 10 -35 4 -28 C6 -21 8 -10 9 6 Z"/>
+                        <path d="M-24 -41 C-17 -44 -9 -43 -4 -38 M9 -43 C15 -45 21 -44 25 -41" fill="none" stroke="#39a9e4" stroke-width="2.2" stroke-linecap="round" opacity=".7"/>
+                    </g>
                 </g>
 
                 <!-- cuerpo -->
-                <path fill="url(#bgCuerpo)" d="M52 98 C60 62 108 40 160 42 C206 44 230 72 228 102 C226 132 198 148 156 148 C116 148 82 138 60 118 C54 112 50 104 52 98 Z"/>
+                <path fill="url(#bgCuerpo)" d="M47 99 C56 79 90 45 150 40 C192 37 226 56 232 86 C233.5 93 233 98 230.5 101 C229.4 102.6 228.6 105 227 108 C217 134 190 151 150 151 C108 151 80 142 64 126 C57 119 50 110 47 99 Z"/>
                 <g clip-path="url(#bcCuerpo)">
-                    <!-- vientre y mandíbula color crema, como en el logo -->
-                    <path fill="url(#bgCrema)" d="M70 160 C100 134 150 116 196 108 C212 105 224 100 232 92 L250 180 L70 180 Z"/>
-                    <path d="M132 134 Q160 126 196 122 M142 143 Q168 135 200 132" fill="none" stroke="#d6b183" stroke-width="1.5" stroke-linecap="round" opacity=".7"/>
-                    <!-- reflejo cian del lomo -->
-                    <path d="M100 62 C124 50 154 46 182 52" fill="none" stroke="#38bdf8" stroke-width="4" stroke-linecap="round" opacity=".55"/>
-                    <path d="M92 74 C104 64 116 58 128 55" fill="none" stroke="url(#bgBrillo)" stroke-width="6" stroke-linecap="round"/>
+                    <!-- sombra del costado -->
+                    <path fill="#0d1f44" opacity=".38" d="M40 96 C76 116 128 121 160 106 C184 95 214 97 240 90 L240 132 L40 132 Z"/>
+                    <!-- mandíbula y vientre crema, con la sombra tostada del logo -->
+                    <path fill="url(#bgCrema)" d="M244 96 L230 99.5 C216 104.5 198 105 184 103.5 C175 102.5 166 104.5 163 111 C159 121 146 127 128 128 C104 129 78 124 54 110 L40 110 L40 184 L250 184 Z"/>
+                    <path fill="#d9a877" opacity=".75" d="M40 126 C70 136 110 140 140 139 C170 138 200 128 240 108 L250 184 L40 184 Z"/>
+                    <!-- brillos cian del lomo -->
+                    <path fill="#38a8e2" opacity=".85" d="M141 50.5 C162 42 192 46 210 63 C190 52.5 164 49.5 141 50.5 Z"/>
+                    <path fill="#2f8fcf" opacity=".6" d="M84 66 C96 56 110 51 124 49 C112 54 98 61 88 70 Z"/>
+                    <path d="M160 49.5 C172 48.5 184 51 194 56" fill="none" stroke="#bfe9ff" stroke-width="1.5" stroke-linecap="round" opacity=".7"/>
+                    <circle cx="214.5" cy="68.5" r="1.4" fill="#8fd6f7" opacity=".85"/><circle cx="219" cy="74.5" r=".9" fill="#8fd6f7" opacity=".7"/>
+                    <path d="M196 107.2 C206 107.6 216 106 224 103.2" fill="none" stroke="#fffdf8" stroke-width="1.6" stroke-linecap="round" opacity=".8"/>
                 </g>
+                <!-- espiráculo -->
+                <ellipse cx="150" cy="42.6" rx="3" ry="1.1" fill="#0a1630"/>
 
                 <!-- luz verde de la pantalla sobre la cara -->
                 <ellipse class="b-luz" cx="200" cy="114" rx="34" ry="24" fill="url(#bgLuz)"/>
 
                 <!-- cara -->
                 <g class="b-cara">
-                    <ellipse class="b-mejilla" cx="201" cy="110" rx="7.5" ry="4.2" fill="#f472b6" opacity=".5"/>
+                    <ellipse class="b-mejilla" cx="192" cy="109.4" rx="6" ry="3.5" fill="#f472b6" opacity=".55"/>
                     <g class="b-ojo-normal">
-                        <ellipse cx="190" cy="92" rx="7" ry="8" fill="#0b1324"/>
-                        <g class="b-pupila">
-                            <circle cx="192.3" cy="88.8" r="2.6" fill="#fff"/>
-                            <circle cx="188.3" cy="95" r="1.1" fill="#fff" opacity=".8"/>
+                        <ellipse cx="190" cy="92" rx="7.6" ry="8.8" fill="#0b1324"/>
+                        <path d="M183.6 94.6 Q190 103.6 196.4 94.6 Q190 99.4 183.6 94.6 Z" fill="#3f74bd" opacity=".7"/>
+                        <g clip-path="url(#bcOjo)">
+                            <g class="b-pupila">
+                                <circle cx="192.4" cy="88.4" r="3" fill="#fff"/>
+                                <circle cx="187.6" cy="95.4" r="1.3" fill="#fff" opacity=".85"/>
+                                <circle cx="193.6" cy="94.2" r=".7" fill="#fff" opacity=".6"/>
+                            </g>
                         </g>
-                        <rect class="b-parpado" x="181.5" y="83.2" width="17" height="18" rx="8" fill="#335a8f"/>
+                        <rect class="b-parpado" x="181.4" y="82.6" width="17.2" height="19" rx="8.6" fill="url(#bgCuerpo)"/>
                     </g>
-                    <path class="b-ojo-feliz" d="M183 94 Q190 85 197 94" fill="none" stroke="#0b1324" stroke-width="3" stroke-linecap="round"/>
-                    <path class="b-boca b-boca-sonrie" d="M208 113 Q215 119 222 111" fill="none" stroke="#5b4636" stroke-width="2.2" stroke-linecap="round"/>
-                    <path class="b-boca b-boca-triste" d="M209 117 Q215 111 221 116" fill="none" stroke="#5b4636" stroke-width="2.2" stroke-linecap="round"/>
+                    <path class="b-ojo-feliz" d="M182.6 94.5 Q190 84.5 197.4 94.5" fill="none" stroke="#0b1324" stroke-width="3.2" stroke-linecap="round"/>
+                    <path class="b-ojo-dormido" d="M183 91.6 Q190 98.8 197 91.6" fill="none" stroke="#0b1324" stroke-width="3.2" stroke-linecap="round"/>
+                    <path class="b-boca b-boca-sonrie" d="M202 108.6 Q208.5 116.4 215 108.6" fill="none" stroke="#4a3628" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path class="b-boca b-boca-triste" d="M202.5 114.4 Q208.5 108 214.5 114.4" fill="none" stroke="#4a3628" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+                    <ellipse class="b-boca b-boca-o" cx="208.5" cy="112" rx="2.7" ry="3.3" fill="#4a3628"/>
+                    <!-- gota de sudor (apuro) -->
+                    <g transform="translate(213 74)"><path class="b-sudor" d="M0 -4.4 C2 -1.5 3.1 .3 3.1 1.9 A3.1 3.1 0 0 1 -3.1 1.9 C-3.1 .3 -2 -1.5 0 -4.4 Z" fill="#a5e1ff" stroke="#0a1630" stroke-width="1.1" stroke-linejoin="round"/></g>
                 </g>
 
                 <!-- portátil -->
@@ -105,6 +140,7 @@
                         <text class="b-pt b-pt-err" x="197" y="140" fill="#f87171">x_x</text>
                         <text class="b-pt b-pt-ok" x="197" y="140" fill="#3cff00">^_^</text>
                         <text class="b-pt b-pt-pct" x="197" y="140" fill="#3cff00" font-size="9">0%</text>
+                        <text class="b-pt b-pt-zz" x="197" y="140" fill="#3cff00" font-size="9">zzZ</text>
                     </g>
                     <g class="b-pt b-pt-code" fill="#3cff00">
                         <rect class="b-linea b-linea-1" x="183" y="129" width="16" height="2.4" rx="1.2"/>
@@ -116,15 +152,125 @@
                 </g>
 
                 <!-- aleta: teclea en el portátil y se sube a tapar el ojo con la contraseña -->
-                <path class="b-aleta" fill="url(#bgAleta)" d="M170 118 C167 134 155 147 138 150 C139 139 149 125 160 115 C163 113 168 114 170 118 Z"/>
+                <g class="b-aleta">
+                    <g transform="translate(165 117) rotate(129.3)">
+                        <path fill="url(#bgAleta)" stroke="#0a1630" stroke-width="4.2" stroke-linejoin="round" paint-order="stroke"
+                              d="M-4 -3 C6 -6.5 24 -7 37 -4 C44 -2 46.5 5 42 9 C33 13.5 13 11.5 1 7.5 C-4 5.5 -7 0 -4 -3 Z"/>
+                        <path d="M8 -1.5 C17 -3.5 28 -3.5 36 -1" fill="none" stroke="#39a9e4" stroke-width="2.2" stroke-linecap="round" opacity=".8"/>
+                    </g>
+                </g>
+
+                <!-- Chorro de bits: sale del espiráculo, se abre en abanico y cae en ceros y unos -->
+                <g class="b-chorro">
+                    <!-- halo de luz verde sobre el lomo -->
+                    <ellipse class="b-chorro-luz" cx="150" cy="39" rx="35" ry="21" fill="url(#bAguaLuz)"/>
+                    <!-- anillo de pulso digital en la base, a trazos como un radar -->
+                    <ellipse class="b-chorro-base" cx="150" cy="42.4" rx="3.2" ry="1.2"
+                             fill="none" stroke="#8cff9e" stroke-width="1.1" stroke-dasharray="1.6 1.3"/>
+
+                    <!-- píxeles de datos que coronan el chorro (antes niebla de agua) -->
+                    <g class="b-niebla" fill="#baffc9" filter="url(#bAguaDifusa)">
+                        <rect x="122" y="3" width="12" height="12" rx="1.8" style="--d:.06s"/>
+                        <rect x="134.2" y="-2.8" width="9.6" height="9.6" rx="1.4" style="--d:.02s"/>
+                        <rect x="144.8" y="-9.2" width="10.4" height="10.4" rx="1.5" style="--d:0s"/>
+                        <rect x="156.4" y="-2.6" width="9.2" height="9.2" rx="1.4" style="--d:.04s"/>
+                        <rect x="166.4" y="3.4" width="11.2" height="11.2" rx="1.7" style="--d:.08s"/>
+                        <rect x="132.4" y="13.4" width="7.2" height="7.2" rx="1.1" style="--d:.12s"/>
+                        <rect x="160.4" y="13.4" width="7.2" height="7.2" rx="1.1" style="--d:.1s"/>
+                    </g>
+
+                    <!-- plumas de energía: verde hacker al centro, cian en los bordes -->
+                    <g class="b-plumas">
+                        <path class="b-pluma b-pluma-l2" fill="url(#bAguaLados)"
+                              d="M148.6 43 C147.4 36 145 30 142.2 25.6 C140 22 138.5 19 137.8 16.6 C137.5 15.5 138.4 15 139.1 15.8 C141 18.2 143.2 21.6 145.2 25.4 C147.4 29.6 149 36 149.6 43 Z"/>
+                        <path class="b-pluma b-pluma-r2" fill="url(#bAguaLados)"
+                              d="M151.4 43 C152.6 36 155 30 157.8 25.6 C160 22 161.5 19 162.2 16.6 C162.5 15.5 161.6 15 160.9 15.8 C159 18.2 156.8 21.6 154.8 25.4 C152.6 29.6 151 36 150.4 43 Z"/>
+                        <path class="b-pluma b-pluma-l" fill="url(#bAguaLados)"
+                              d="M147.6 43 C146 35 142.8 27 138.4 20 C134.4 13.5 131 7.5 129.1 2.8 C128.6 1.6 129.5 .9 130.3 1.9 C133.6 6.2 137.2 11.8 140.6 17.4 C145.6 25.5 149.2 34 150.2 43 Z"/>
+                        <path class="b-pluma b-pluma-r" fill="url(#bAguaLados)"
+                              d="M152.4 43 C154 35 157.2 27 161.6 20 C165.6 13.5 169 7.5 170.9 2.8 C171.4 1.6 170.5 .9 169.7 1.9 C166.4 6.2 162.8 11.8 159.4 17.4 C154.4 25.5 150.8 34 149.8 43 Z"/>
+                        <path class="b-pluma b-pluma-c" fill="url(#bAguaCentro)"
+                              d="M148.3 43 C147.9 35 148.2 27 149 19 C149.6 13 150 7 150.3 2.5 C150.45 .9 151.15 .9 151.3 2.5 C151.7 7 152.2 13 152.7 19 C153.4 27 153.4 35 152.9 43 Z"/>
+                        <path class="b-pluma b-pluma-c b-pluma-brillo" fill="none" stroke="#eaffea"
+                              stroke-width="1" stroke-linecap="round" opacity=".85"
+                              d="M150.6 41 C150.2 32 150.3 23 150.5 14 C150.6 9 150.7 5 150.75 1.4"/>
+                    </g>
+
+                    <!-- lluvia de bits: ceros y unos grandes y legibles que suben y caen
+                         (cian en los bordes, verde hacker al centro) -->
+                    <g class="b-gotas" font-family="Fira Code, ui-monospace, monospace" font-weight="700" text-anchor="middle">
+                        <text class="b-gota" fill="#22d3ee" x="150" y="43.5" font-size="14"   style="--dx:-26px;--dy:-40px;--dur:1.6s;--delay:.10s">1</text>
+                        <text class="b-gota" fill="#22d3ee" x="150" y="43.5" font-size="11"   style="--dx:-20px;--dy:-52px;--dur:1.7s;--delay:.06s">0</text>
+                        <text class="b-gota" fill="#3cff00" x="150" y="43.5" font-size="13"   style="--dx:-14px;--dy:-58px;--dur:1.75s;--delay:.02s">1</text>
+                        <text class="b-gota" fill="#3cff00" x="150" y="43.5" font-size="9"    style="--dx:-9px;--dy:-46px;--dur:1.5s;--delay:.16s">0</text>
+                        <text class="b-gota" fill="#3cff00" x="150" y="43.5" font-size="16"   style="--dx:-4px;--dy:-60px;--dur:1.8s;--delay:0s">0</text>
+                        <text class="b-gota" fill="#3cff00" x="150" y="43.5" font-size="10"   style="--dx:2px;--dy:-54px;--dur:1.6s;--delay:.12s">1</text>
+                        <text class="b-gota" fill="#3cff00" x="150" y="43.5" font-size="12.5" style="--dx:7px;--dy:-61px;--dur:1.8s;--delay:.03s">0</text>
+                        <text class="b-gota" fill="#3cff00" x="150" y="43.5" font-size="9"    style="--dx:12px;--dy:-49px;--dur:1.55s;--delay:.18s">1</text>
+                        <text class="b-gota" fill="#22d3ee" x="150" y="43.5" font-size="15"   style="--dx:17px;--dy:-56px;--dur:1.7s;--delay:.08s">1</text>
+                        <text class="b-gota" fill="#22d3ee" x="150" y="43.5" font-size="11"   style="--dx:23px;--dy:-43px;--dur:1.5s;--delay:.14s">0</text>
+                        <text class="b-gota" fill="#22d3ee" x="150" y="43.5" font-size="13"   style="--dx:28px;--dy:-34px;--dur:1.45s;--delay:.2s">1</text>
+                        <text class="b-gota" fill="#22d3ee" x="150" y="43.5" font-size="9"    style="--dx:-30px;--dy:-30px;--dur:1.5s;--delay:.22s">0</text>
+                        <text class="b-gota" fill="#3cff00" x="150" y="43.5" font-size="8"    style="--dx:-12px;--dy:-36px;--dur:1.4s;--delay:.24s">0</text>
+                        <text class="b-gota" fill="#3cff00" x="150" y="43.5" font-size="8"    style="--dx:10px;--dy:-38px;--dur:1.4s;--delay:.26s">1</text>
+                        <text class="b-gota" fill="#3cff00" x="150" y="43.5" font-size="9"    style="--dx:0px;--dy:-30px;--dur:1.35s;--delay:.28s">0</text>
+                        <text class="b-gota" fill="#22d3ee" x="150" y="43.5" font-size="7.5"  style="--dx:-22px;--dy:-62px;--dur:1.85s;--delay:.1s">1</text>
+                        <text class="b-gota" fill="#22d3ee" x="150" y="43.5" font-size="8"    style="--dx:20px;--dy:-64px;--dur:1.9s;--delay:.05s">0</text>
+                        <text class="b-gota" fill="#22d3ee" x="150" y="43.5" font-size="7.5"  style="--dx:31px;--dy:-50px;--dur:1.7s;--delay:.12s">1</text>
+                        <text class="b-gota" fill="#3cff00" x="150" y="43.5" font-size="10"   style="--dx:-17px;--dy:-45px;--dur:1.65s;--delay:.09s">0</text>
+                        <text class="b-gota" fill="#3cff00" x="150" y="43.5" font-size="9.5"  style="--dx:15px;--dy:-42px;--dur:1.6s;--delay:.11s">1</text>
+                        <text class="b-gota" fill="#22d3ee" x="150" y="43.5" font-size="11"   style="--dx:-6px;--dy:-52px;--dur:1.75s;--delay:.07s">1</text>
+                        <text class="b-gota" fill="#22d3ee" x="150" y="43.5" font-size="12"   style="--dx:5px;--dy:-58px;--dur:1.8s;--delay:.04s">0</text>
+                    </g>
+
+                    <!-- destellos de luz en la cresta -->
+                    <g class="b-destellos" fill="#e6ffe9">
+                        <g transform="translate(129 1)"><path class="b-destello" style="--d:.1s"
+                              d="M0 -3.2 C.35 -1.2 .8 -.8 3 0 C.8 .8 .35 1.2 0 3.2 C-.35 1.2 -.8 .8 -3 0 C-.8 -.8 -.35 -1.2 0 -3.2 Z"/></g>
+                        <g transform="translate(150 -7)"><path class="b-destello" style="--d:.03s"
+                              d="M0 -3.6 C.4 -1.4 .9 -.9 3.4 0 C.9 .9 .4 1.4 0 3.6 C-.4 1.4 -.9 .9 -3.4 0 C-.9 -.9 -.4 -1.4 0 -3.6 Z"/></g>
+                        <g transform="translate(171 1)"><path class="b-destello" style="--d:.16s"
+                              d="M0 -3.2 C.35 -1.2 .8 -.8 3 0 C.8 .8 .35 1.2 0 3.2 C-.35 1.2 -.8 .8 -3 0 C-.8 -.8 -.35 -1.2 0 -3.2 Z"/></g>
+                        <g transform="translate(139 14)"><path class="b-destello" style="--d:.22s"
+                              d="M0 -2.2 C.25 -.8 .55 -.55 2 0 C.55 .55 .25 .8 0 2.2 C-.25 .8 -.55 .55 -2 0 C-.55 -.55 -.25 -.8 0 -2.2 Z"/></g>
+                    </g>
+                </g>
+
             </g>
         </g>
 
-        <!-- olas -->
+        <!-- candados del gesto "quiere": guiño a la ciberseguridad en vez de corazones -->
+        <g fill="#3cff00">
+            <g class="b-candado b-candado-1" transform="translate(216 50) scale(1.3)">
+                <path d="M-2.6 -1.2 V-3 a2.6 2.6 0 0 1 5.2 0 V-1.2" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
+                <rect x="-3.4" y="-1.2" width="6.8" height="5.6" rx="1.2" fill="currentColor"/>
+                <circle cx="0" cy=".6" r=".8" fill="#0a1630"/>
+                <rect x="-.35" y=".5" width=".7" height="1.6" rx=".35" fill="#0a1630"/>
+            </g>
+            <g class="b-candado b-candado-2" transform="translate(230 66) scale(.85)">
+                <path d="M-2.6 -1.2 V-3 a2.6 2.6 0 0 1 5.2 0 V-1.2" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
+                <rect x="-3.4" y="-1.2" width="6.8" height="5.6" rx="1.2" fill="currentColor"/>
+                <circle cx="0" cy=".6" r=".8" fill="#0a1630"/>
+                <rect x="-.35" y=".5" width=".7" height="1.6" rx=".35" fill="#0a1630"/>
+            </g>
+        </g>
+
+        <!-- reacciones: sorpresa (!) y sueño (z z z) -->
+        <g font-family="Fira Code, ui-monospace, monospace" font-weight="700" text-anchor="middle">
+            <text class="b-signo" x="227" y="60" font-size="22" fill="#fde047" stroke="#0a1630" stroke-width="3.2" stroke-linejoin="round" paint-order="stroke">!</text>
+            <text class="b-zeta b-zeta-1" x="214" y="52" font-size="11" fill="#bfe3ff">z</text>
+            <text class="b-zeta b-zeta-2" x="214" y="52" font-size="11" fill="#bfe3ff">z</text>
+            <text class="b-zeta b-zeta-3" x="214" y="52" font-size="11" fill="#bfe3ff">Z</text>
+        </g>
+
+        <!-- agua y olas -->
         <g clip-path="url(#bcOlas)">
-            <path class="b-ola b-ola-1" fill="none" stroke="#38bdf8" stroke-width="2.6" stroke-linecap="round" opacity=".55"
+            <ellipse cx="142" cy="164" rx="78" ry="4.5" fill="#031022" opacity=".35"/>
+            <path class="b-ola b-ola-2" fill="#0ea5e9" opacity=".13"
+                  d="M-40 165 q10 -6 20 0 t20 0 t20 0 t20 0 t20 0 t20 0 t20 0 t20 0 t20 0 t20 0 t20 0 t20 0 t20 0 t20 0 t20 0 t20 0 V190 H-40 Z"/>
+            <path class="b-ola b-ola-1" fill="none" stroke="#38bdf8" stroke-width="2.6" stroke-linecap="round" opacity=".6"
                   d="M-40 162 q10 -6 20 0 t20 0 t20 0 t20 0 t20 0 t20 0 t20 0 t20 0 t20 0 t20 0 t20 0 t20 0 t20 0 t20 0 t20 0 t20 0"/>
-            <path class="b-ola b-ola-2" fill="none" stroke="#22d3ee" stroke-width="2" stroke-linecap="round" opacity=".3"
+            <path class="b-ola b-ola-2" fill="none" stroke="#22d3ee" stroke-width="2" stroke-linecap="round" opacity=".35"
                   d="M-40 169 q10 -5 20 0 t20 0 t20 0 t20 0 t20 0 t20 0 t20 0 t20 0 t20 0 t20 0 t20 0 t20 0 t20 0 t20 0 t20 0 t20 0"/>
         </g>
     </svg>

@@ -11,7 +11,7 @@
 
 {% block content %}
 <div class="dl-con-cody">
-{% with ballena_mensajes = {"idle": "Soy Cody. ¿Cookies? Solo la imprescindible. Te lo resumo ↓", "fin": "¡Fin! Ni una cookie de rastreo, palabra de ballena."}, ballena_lectura = true %}{% include "dockerlabs/auth/_ballena.html" %}{% endwith %}
+{% with ballena_contexto = "legal", ballena_mensajes = {"idle": "Soy Cody. ¿Cookies? Solo la imprescindible. Te lo resumo ↓", "fin": "¡Fin! Ni una cookie de rastreo, palabra de ballena."}, ballena_lectura = true %}{% include "dockerlabs/auth/_ballena.html" %}{% endwith %}
 <div class="dl-con-cody-pagina">
 <div class="policy-container">
 
@@ -25,36 +25,102 @@
     </div>
 
     <div class="policy-card">
-        <p class="policy-lead">En <strong>DockerLabs</strong> utilizamos cookies para facilitar el uso de nuestra
-            página web y mejorar la experiencia del usuario. A continuación, detallamos qué son las cookies,
-            cuáles utilizamos y cómo puedes gestionarlas.</p>
+        <p class="policy-meta">Última actualización: 6 de noviembre de 2026</p>
+        <p class="policy-lead">Esta política te explica qué información guarda DockerLabs en tu dispositivo, para qué sirve y cómo puedes gestionarla o retirar tu consentimiento en cualquier momento.</p>
 
-        <section class="policy-section" data-tldr="Una cookie es un archivito que recuerda cosas como tu sesión.">
+        <section class="policy-section" data-tldr="Una cookie o el almacenamiento local guardan pequeños datos en tu dispositivo.">
             <h2><span class="policy-section-num">1</span> ¿Qué son las Cookies?</h2>
-            <p>Las cookies son pequeños archivos de texto que los sitios web almacenan en su ordenador o
-                dispositivo móvil cuando los visita. Permiten que el sitio web recuerde sus acciones y
-                preferencias (como el inicio de sesión) durante un período de tiempo, para que no tenga que
-                volver a introducirlas cada vez que vuelve al sitio o navega de una página a otra.</p>
+            <p>Las cookies son pequeños archivos que un sitio web guarda en tu dispositivo al visitarlo. Existen
+                también tecnologías equivalentes, como el almacenamiento local del navegador
+                (<code>localStorage</code>) o la caché de las aplicaciones web. Esta política las trata
+                conjuntamente conforme al artículo 22.2 de la Ley 34/2002 (LSSI-CE) y la guía de la AEPD.</p>
+            <p>Titular del sitio y responsable: Mario Álvarez Fernández, mario@elrincondelhacker.es. Más datos en la
+                <a href="{{ url_for('main.politica_privacidad') }}">Política de Privacidad</a>.</p>
         </section>
 
-        <section class="policy-section" data-tldr="Solo usamos una cookie técnica: «session». Nada de publicidad ni rastreo.">
-            <h2><span class="policy-section-num">2</span> Cookies que Utilizamos</h2>
-            <p>DockerLabs utiliza únicamente <strong>cookies técnicas y de sesión</strong>, necesarias para el
-                correcto funcionamiento de la plataforma:</p>
+        <section class="policy-section" data-tldr="Solo guardamos lo necesario para iniciar sesión; lo demás, solo si tú lo permites. Sin publicidad ni rastreo.">
+            <h2><span class="policy-section-num">2</span> Qué Guardamos en tu Dispositivo</h2>
+            <p>DockerLabs <strong>no utiliza cookies analíticas, publicitarias ni de terceros</strong>. Los
+                elementos que guardamos se dividen en dos categorías:</p>
+            <div class="policy-table-wrap">
+            <table class="policy-table">
+                <thead><tr><th>Nombre</th><th>Categoría</th><th>Finalidad</th><th>Duración</th></tr></thead>
+                <tbody>
+                    <tr><td><code>session</code></td><td>Necesaria · cookie propia</td>
+                        <td>Mantiene tu sesión una vez has iniciado sesión. Es <em>HttpOnly</em>, <em>Secure</em> y <em>SameSite=Lax</em>. Solo existe si inicias sesión.</td>
+                        <td>Hasta cerrar el navegador; deja de ser válida a los 30 días.</td></tr>
+                    <tr><td><code>dl-consentimiento</code></td><td>Necesaria · almacenamiento local propio</td>
+                        <td>Recuerda la elección que hagas sobre las cookies para no preguntarte en cada página.</td>
+                        <td>12 meses.</td></tr>
+                    <tr><td><code>dl-guia-vista</code></td><td>Preferencias · requiere tu consentimiento</td>
+                        <td>Recuerda que ya has abierto la guía de ayuda de la página de inicio.</td>
+                        <td>Hasta que lo borres.</td></tr>
+                    <tr><td><code>dl-cody-vistas</code></td><td>Preferencias · requiere tu consentimiento</td>
+                        <td>Guarda un código de las últimas frases mostradas por Cody para no repetirlas. No contiene datos personales.</td>
+                        <td>Hasta que lo borres.</td></tr>
+                    <tr><td><code>dl-install-dismissed</code></td><td>Preferencias · requiere tu consentimiento</td>
+                        <td>Recuerda que has descartado el aviso «Instalar app» para no insistirte.</td>
+                        <td>14 días.</td></tr>
+                    <tr><td>Caché de la app (<code>sw.js</code>)</td><td>Preferencias · requiere tu consentimiento</td>
+                        <td>Guarda archivos de la web en tu dispositivo para que cargue más rápido y funcione sin conexión (service worker).</td>
+                        <td>Hasta que se actualice la web o lo borres.</td></tr>
+                </tbody>
+            </table>
+            </div>
+            <p>Excepcionalmente, si Cloudflare (nuestro servicio de protección frente a ataques y bots) te muestra
+                una comprobación de seguridad, puede instalar una cookie técnica de seguridad
+                (<code>cf_clearance</code> o <code>__cf_bm</code>) durante un tiempo breve, estrictamente necesaria para
+                protegerte y proteger la web; no se usa con fines publicitarios ni de seguimiento.</p>
+            <p>Todos los elementos de la tabla son propios, no se envían a ningún tercero y no se usan para elaborar
+                perfiles. Si solo navegas sin iniciar sesión y sin aceptar las cookies de preferencias, solo se guarda
+                tu elección (<code>dl-consentimiento</code>).</p>
+        </section>
+
+        <section class="policy-section" data-tldr="Las necesarias no piden permiso. Las de preferencias están desactivadas hasta que las aceptes, y puedes retirarlas cuando quieras.">
+            <h2><span class="policy-section-num">3</span> Base Legal y Consentimiento</h2>
+            <p>Las cookies <strong>necesarias</strong> están exentas de consentimiento por ser imprescindibles para
+                prestar el servicio que solicitas (iniciar sesión) y para recordar tu propia elección.</p>
+            <p>Las de <strong>preferencias</strong> se encuentran <strong>desactivadas por defecto</strong>: solo las
+                usamos si las aceptas expresamente en el aviso que aparece al entrar o en «Gestionar cookies». Puedes
+                <strong>aceptarlas, rechazarlas o retirar tu consentimiento en cualquier momento</strong>, con la misma
+                facilidad con la que lo diste; al rechazarlas o retirarlas, eliminamos de tu dispositivo todo lo que
+                hubiéramos guardado. Rechazarlas no limita el acceso a ninguna funcionalidad esencial de la web. Tu
+                elección se conserva 12 meses y, pasado ese tiempo, volveremos a preguntarte.</p>
+        </section>
+
+        <section class="policy-section" data-tldr="Cambia tu elección cuando quieras con «Gestionar cookies», en el pie de página.">
+            <h2><span class="policy-section-num">4</span> Gestionar tu Consentimiento</h2>
+            <p id="gestionar">Abre el panel de preferencias para aceptar, rechazar o cambiar tu elección:</p>
+            <p><button type="button" class="dl-btn dl-btn--neutro" data-cookie-prefs><i class="bi bi-sliders"></i> Gestionar cookies</button></p>
+            <p>También encontrarás el enlace «Gestionar cookies» en el pie de todas las páginas. Además, puedes
+                permitir, bloquear o eliminar cookies y almacenamiento local desde tu navegador:
+                <a href="https://support.google.com/chrome/answer/95647" target="_blank" rel="noopener">Chrome</a>,
+                <a href="https://support.mozilla.org/es/kb/Borrar%20cookies" target="_blank" rel="noopener">Firefox</a>,
+                <a href="https://support.apple.com/es-es/guide/safari/sfri11471/mac" target="_blank" rel="noopener">Safari</a>,
+                <a href="https://support.microsoft.com/es-es/microsoft-edge/eliminar-las-cookies-en-microsoft-edge-63947406-40ac-c3b8-57b9-2a946a29ae09" target="_blank" rel="noopener">Edge</a>.
+                Si bloqueas la cookie <code>session</code>, no podrás iniciar sesión.</p>
+        </section>
+
+        <section class="policy-section" data-tldr="Contenido de terceros: YouTube solo se carga si pulsas «reproducir». Las fuentes son nuestras.">
+            <h2><span class="policy-section-num">5</span> Contenido de Terceros</h2>
             <ul>
-                <li><strong>session:</strong> Una cookie esencial para gestionar su sesión de usuario una vez ha
-                    iniciado sesión. Nos permite identificarle mientras navega por la plataforma para que no tenga
-                    que autenticarse en cada página.</li>
+                <li><strong>YouTube:</strong> el vídeo de la página «Cómo se crea una máquina» no se carga hasta que
+                    pulsas el botón de reproducir. Al hacerlo, YouTube (Google) puede instalar cookies propias y
+                    tratar tus datos según su <a href="https://policies.google.com/privacy" target="_blank"
+                    rel="noopener">política de privacidad</a>.</li>
+                <li><strong>Cloudflare:</strong> la web se sirve a través de su red de protección y entrega; ver la
+                    <a href="{{ url_for('main.politica_privacidad') }}">Política de Privacidad</a> para los datos que trata.</li>
+                <li><strong>Tipografías:</strong> se sirven desde nuestro propio servidor; no se conecta con Google
+                    Fonts.</li>
+                <li><strong>Enlaces externos</strong> (GitHub, Discord, Telegram, LinkedIn, elrincondelhacker.es…):
+                    al visitarlos, esos sitios aplican su propia política de cookies.</li>
             </ul>
-            <p>No utilizamos cookies de terceros, publicitarias ni de rastreo de comportamiento para fines
-                comerciales.</p>
         </section>
 
-        <section class="policy-section" data-tldr="Si bloqueas las cookies, no podrás iniciar sesión.">
-            <h2><span class="policy-section-num">3</span> Gestión de Cookies</h2>
-            <p>Dado que nuestras cookies son estrictamente necesarias para el funcionamiento del área de usuarios
-                (login y registro), si decide bloquearlas a través de la configuración de su navegador, es
-                posible que no pueda iniciar sesión o utilizar correctamente la plataforma.</p>
+        <section class="policy-section" data-tldr="Si añadiéramos otras cookies, lo avisaríamos y te pediríamos permiso antes.">
+            <h2><span class="policy-section-num">6</span> Cambios</h2>
+            <p>Si en el futuro incorporáramos cookies que no sean estrictamente necesarias, actualizaríamos esta
+                política y te pediríamos tu consentimiento previo y expreso antes de instalarlas.</p>
         </section>
 
         <div class="policy-back">

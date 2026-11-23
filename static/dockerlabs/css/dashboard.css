@@ -633,3 +633,50 @@
         flex-direction: column;
     }
 }
+/* ---- Zona de peligro y asistente de eliminacion de cuenta ---- */
+.danger-section { margin-top: 2rem; background: rgba(127, 29, 29, .12); border: 1px solid rgba(239, 68, 68, .35); border-radius: 15px; padding: 2rem; }
+.danger-section .section-header { border-bottom-color: rgba(239, 68, 68, .35); }
+.danger-section .section-header h2 i { color: #f87171; }
+.danger-content { display: flex; align-items: center; justify-content: space-between; gap: 1.5rem; flex-wrap: wrap; }
+.danger-texto { flex: 1 1 320px; }
+.danger-texto h3 { margin: 0 0 .4rem; font-size: 1.05rem; color: var(--text-primary); }
+.danger-texto p { margin: 0; color: var(--text-muted); font-size: .92rem; line-height: 1.55; }
+.danger-nota { margin: 0; color: var(--text-muted); font-size: .9rem; }
+
+.borrar-dialog { max-width: 680px; max-height: 92vh; overflow-y: auto; position: relative; margin: 1rem; border-color: rgba(239, 68, 68, .45); }
+.borrar-paso-indicador { margin: 0 0 .25rem; font-size: .75rem; letter-spacing: .08em; text-transform: uppercase; color: var(--text-muted); }
+.borrar-titulo { display: flex; align-items: center; gap: .6rem; margin: 0 0 1rem; font-size: 1.35rem; color: #f87171; }
+.borrar-intro { color: var(--text-primary); line-height: 1.6; margin: 0 0 1rem; }
+.borrar-columnas { display: grid; grid-template-columns: 1fr 1fr; gap: .9rem; margin-bottom: 1.1rem; }
+.borrar-caja { border-radius: 12px; padding: .9rem 1rem; font-size: .88rem; line-height: 1.5; border: 1px solid transparent; }
+.borrar-caja h4 { margin: 0 0 .5rem; font-size: .92rem; display: flex; align-items: center; gap: .4rem; }
+.borrar-caja ul { margin: 0; padding-left: 1.1rem; color: var(--text-primary); }
+.borrar-caja li { margin-bottom: .25rem; }
+.borrar-caja--borra { background: rgba(239, 68, 68, .08); border-color: rgba(239, 68, 68, .3); }
+.borrar-caja--borra h4 { color: #f87171; }
+.borrar-caja--queda { background: rgba(56, 189, 248, .07); border-color: rgba(56, 189, 248, .25); }
+.borrar-caja--queda h4 { color: #38bdf8; }
+.borrar-mini { margin: .6rem 0 0; font-size: .8rem; color: var(--text-muted); }
+.borrar-checks { display: flex; flex-direction: column; gap: .6rem; margin-bottom: 1.25rem; }
+.borrar-checks label { display: flex; align-items: flex-start; gap: .6rem; cursor: pointer; font-size: .92rem; line-height: 1.45; color: var(--text-primary); }
+.borrar-checks input { margin-top: .2rem; flex: 0 0 auto; width: 1.05rem; height: 1.05rem; accent-color: #ef4444; }
+.borrar-acciones { display: flex; justify-content: space-between; align-items: center; gap: .75rem; flex-wrap: wrap; margin-top: 1rem; }
+.borrar-acciones .dl-btn[disabled] { opacity: .45; cursor: not-allowed; }
+.borrar-valor { font-family: var(--font-mono, ui-monospace, monospace); color: #fca5a5; background: rgba(239, 68, 68, .1); padding: .05rem .4rem; border-radius: 5px; user-select: all; }
+.borrar-error { margin: .5rem 0 0; padding: .6rem .8rem; border-radius: 8px; background: rgba(239, 68, 68, .12); border: 1px solid rgba(239, 68, 68, .4); color: #fca5a5; font-size: .88rem; }
+.borrar-ultima { display: flex; gap: 1rem; align-items: flex-start; padding: 1.1rem 1.2rem; border-radius: 12px; background: rgba(239, 68, 68, .12); border: 1px solid rgba(239, 68, 68, .5); }
+.borrar-ultima i { font-size: 1.8rem; color: #f87171; flex: 0 0 auto; }
+.borrar-ultima p { margin: 0; line-height: 1.6; color: var(--text-primary); }
+.borrar-atras3 { text-align: center; margin-top: 1rem; }
+.borrar-enlace { background: none; border: 0; padding: 0; color: var(--text-muted); font: inherit; text-decoration: underline; cursor: pointer; }
+.borrar-despedida { text-align: center; padding: 1rem .5rem; }
+.borrar-despedida i { font-size: 2.6rem; color: #2dd4bf; }
+.borrar-despedida h4 { margin: .6rem 0; color: var(--text-primary); }
+.borrar-despedida p { color: var(--text-muted); line-height: 1.6; }
+@media (max-width: 640px) {
+    .danger-section { padding: 1.5rem; }
+    .borrar-columnas { grid-template-columns: 1fr; }
+    .borrar-dialog { padding: 1.25rem 1.1rem; }
+    .borrar-acciones { flex-direction: column-reverse; align-items: stretch; }
+    .borrar-acciones .dl-btn { width: 100%; justify-content: center; }
+}

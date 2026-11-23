@@ -147,12 +147,13 @@ body .pagination-btn:focus-visible { outline: 2px solid var(--hack-green); outli
 
 /* ==========================================================================
    4. ESPACIO BAJO EL HEADER FIJO
-   El body reserva exactamente la altura del header fijo en cada tramo
-   (44 / 50 / 72 px).
+   El body reserva la altura del header fijo en cada tramo. Con el logotipo de
+   Cody (58 / 40 / 35 px + 16 px de padding) el header mide ~75 / 57 / 52 px, así
+   que se reservan 84 / 64 / 58 px para que quede aire antes del panel de filtros.
    ========================================================================== */
-body { padding-top: 72px; }
-@media (max-width: 768px) { body { padding-top: 50px; } }
-@media (max-width: 480px) { body { padding-top: 44px; } }
+body { padding-top: 84px; }
+@media (max-width: 768px) { body { padding-top: 64px; } }
+@media (max-width: 480px) { body { padding-top: 58px; } }
 
 /* Ritmo vertical común: el título de una página de contenido empieza a 40 px
    del header en escritorio y a 24 px en móvil. */
@@ -363,32 +364,32 @@ body > :is(.dashboard-container, .stats-container, .container, .pp-wrap, main) {
     .pp-ident { flex-basis: 100% !important; }
 }
 
-/* Writeups recibidos y gestión de máquinas: tablas → tarjetas en móvil.
+/* Writeups recibidos y reportes: tablas → tarjetas en móvil.
    Cada celda muestra su etiqueta (::before) y los campos siguen siendo
    editables; los filtros por columna se ocultan (queda el buscador). */
 @media (max-width: 640px) {
-    :is(#tabla-writeups-recibidos, #tabla-reportes, #tablaDocker, #tablaBunker) { display: block; min-width: 0 !important; width: 100%; }
-    :is(#tabla-writeups-recibidos, #tabla-reportes, #tablaDocker, #tablaBunker) thead { display: none; }
-    :is(#tabla-writeups-recibidos, #tabla-reportes, #tablaDocker, #tablaBunker) tbody { display: block; }
-    :is(#tabla-writeups-recibidos, #tabla-reportes, #tablaDocker, #tablaBunker) tbody > tr {
+    :is(#tabla-writeups-recibidos, #tabla-reportes) { display: block; min-width: 0 !important; width: 100%; }
+    :is(#tabla-writeups-recibidos, #tabla-reportes) thead { display: none; }
+    :is(#tabla-writeups-recibidos, #tabla-reportes) tbody { display: block; }
+    :is(#tabla-writeups-recibidos, #tabla-reportes) tbody > tr {
         display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: .65rem .75rem; align-items: end;
         padding: .9rem .95rem; margin-bottom: .7rem;
         background: rgba(15, 23, 42, .6); border: 1px solid var(--border-strong); border-radius: 12px;
     }
-    :is(#tabla-writeups-recibidos, #tabla-reportes, #tablaDocker, #tablaBunker) tbody > tr > td {
+    :is(#tabla-writeups-recibidos, #tabla-reportes) tbody > tr > td {
         display: block; min-width: 0 !important; width: auto !important; padding: 0 !important; border: 0 !important; background: none !important;
     }
-    :is(#tabla-writeups-recibidos, #tabla-reportes, #tablaDocker, #tablaBunker) tbody > tr > td::before {
+    :is(#tabla-writeups-recibidos, #tabla-reportes) tbody > tr > td::before {
         display: block; margin-bottom: .3rem;
         color: #64748b; font-family: 'Fira Code', monospace; font-size: .68rem; font-weight: 600;
         letter-spacing: .06em; text-transform: uppercase;
     }
     /* filas de carga o vacías: una sola celda a todo el ancho, sin etiqueta */
-    :is(#tabla-writeups-recibidos, #tabla-reportes, #tablaDocker, #tablaBunker) tbody > tr > td[colspan] { grid-column: 1 / -1; text-align: center; }
-    :is(#tabla-writeups-recibidos, #tabla-reportes, #tablaDocker, #tablaBunker) tbody > tr > td[colspan]::before { content: none; }
-    :is(#tabla-writeups-recibidos, #tabla-reportes, #tablaDocker, #tablaBunker) :is(input, select) { width: 100%; }
-    :is(#tabla-writeups-recibidos, #tabla-reportes, #tablaDocker, #tablaBunker) td:last-child { grid-column: 1 / -1; }
-    :is(#tabla-writeups-recibidos, #tabla-reportes, #tablaDocker, #tablaBunker) td:last-child > .d-flex { justify-content: flex-end; }
+    :is(#tabla-writeups-recibidos, #tabla-reportes) tbody > tr > td[colspan] { grid-column: 1 / -1; text-align: center; }
+    :is(#tabla-writeups-recibidos, #tabla-reportes) tbody > tr > td[colspan]::before { content: none; }
+    :is(#tabla-writeups-recibidos, #tabla-reportes) :is(input, select) { width: 100%; }
+    :is(#tabla-writeups-recibidos, #tabla-reportes) td:last-child { grid-column: 1 / -1; }
+    :is(#tabla-writeups-recibidos, #tabla-reportes) td:last-child > .d-flex { justify-content: flex-end; }
 
     /* Writeups recibidos: logo y máquina arriba, autor debajo */
     #tabla-writeups-recibidos tbody > tr { grid-template-columns: 44px minmax(0, 1fr) minmax(0, 1fr); }
@@ -411,12 +412,4 @@ body > :is(.dashboard-container, .stats-container, .container, .pp-wrap, main) {
     #tabla-reportes td:nth-child(5) { grid-column: 1 / -1; }
     #tabla-reportes td:nth-child(5)::before { content: "Fecha"; }
 
-    /* Gestión de máquinas (Docker y Bunker) */
-    :is(#tablaDocker, #tablaBunker) td:nth-child(1) { grid-column: 1 / -1; }
-    :is(#tablaDocker, #tablaBunker) td:nth-child(2)::before { content: "Dificultad"; }
-    :is(#tablaDocker, #tablaBunker) td:nth-child(3)::before { content: "Autor"; }
-    :is(#tablaDocker, #tablaBunker) td:nth-child(4)::before { content: "Logo"; }
-    #tablaDocker td:nth-child(5)::before { content: "Categoría"; }
-    #tablaDocker td:nth-child(6)::before { content: "Plataforma"; }
-    #tablaBunker td:nth-child(5)::before { content: "Invitado"; }
 }

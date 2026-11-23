@@ -234,9 +234,8 @@ const CATEGORY_COUNT_BUTTONS = [
 
 const OS_COUNT_BUTTONS = [
     { id: 'os-todas', value: '' },
-    { id: 'os-linux', value: 'linux' },
-    { id: 'os-windows', value: 'windows' },
-    { id: 'os-movil', value: 'movil' }
+    { id: 'os-docker', value: 'docker' },
+    { id: 'os-virtualbox', value: 'virtualbox' }
 ];
 
 function updateAllButtonCounts() {

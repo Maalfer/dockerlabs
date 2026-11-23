@@ -14,7 +14,7 @@
 
 {% block content %}
 <div class="dl-con-cody">
-{% with ballena_mensajes = {"idle": "Este es tu centro de control. Te explico cada parte ↓", "fin": "¡Todo en orden! Vuelve cuando quieras cambiar algo."}, ballena_lectura = true %}{% include "dockerlabs/auth/_ballena.html" %}{% endwith %}
+{% with ballena_contexto = "panel", ballena_mensajes = {"idle": "Este es tu centro de control. Te explico cada parte ↓", "fin": "¡Todo en orden! Vuelve cuando quieras cambiar algo."}, ballena_lectura = true %}{% include "dockerlabs/auth/_ballena.html" %}{% endwith %}
 <div class="dl-con-cody-pagina">
 <div class="dashboard-container">
     <div class="dashboard-header">
@@ -168,6 +168,26 @@
                         </button>
                     </div>
                 </form>
+            </div>
+        </div>
+
+        <div class="danger-section" data-tldr="Zona de peligro: aquí puedes eliminar tu cuenta para siempre. Te pediré varias confirmaciones para evitar accidentes.">
+            <div class="section-header">
+                <h2><i class="bi bi-exclamation-triangle"></i> Zona de peligro</h2>
+            </div>
+            <div class="danger-content">
+                <div class="danger-texto">
+                    <h3>Eliminar mi cuenta</h3>
+                    <p>Borra de forma <strong>permanente</strong> tu cuenta y tus datos personales. Esta acción no se puede deshacer.
+                        Antes de eliminarla te explicaremos qué ocurre y te pediremos varias confirmaciones.</p>
+                </div>
+                {% if current_user_role == 'admin' %}
+                <p class="danger-nota"><i class="bi bi-info-circle"></i> Eres administrador: para eliminar tu cuenta pídeselo a otro administrador.</p>
+                {% else %}
+                <button type="button" id="btnAbrirBorrado" class="dl-btn dl-btn--peligro">
+                    <i class="bi bi-trash3"></i> Eliminar mi cuenta…
+                </button>
+                {% endif %}
             </div>
         </div>
 
@@ -368,6 +388,96 @@
     </div>
 </div>
 
+{# Eliminación de cuenta: asistente de 3 pasos + despedida. La lógica está en borrar_cuenta.js
+   y el servidor vuelve a validarlo todo (/api/delete_account). #}
+{% if current_user_role != 'admin' %}
+<div id="borrarCuentaModal" class="claim-modal" data-usuario="{{ session.get('username') | e }}" aria-hidden="true">
+    <div class="claim-modal-dialog borrar-dialog" role="dialog" aria-modal="true" aria-labelledby="borrarTitulo">
+        <button type="button" class="modal-close-button" id="borrarCerrar" aria-label="Cancelar y cerrar">&times;</button>
+        <p class="borrar-paso-indicador" id="borrarIndicador" aria-live="polite">Paso 1 de 3</p>
+        <h3 id="borrarTitulo" class="borrar-titulo"><i class="bi bi-exclamation-octagon-fill"></i> <span>Eliminar tu cuenta</span></h3>
+
+        <div data-paso="1">
+            <p class="borrar-intro">Antes de continuar, esto es exactamente lo que ocurrirá:</p>
+            <div class="borrar-columnas">
+                <div class="borrar-caja borrar-caja--borra">
+                    <h4><i class="bi bi-x-circle-fill"></i> Se borra para siempre</h4>
+                    <ul>
+                        <li>Tu cuenta, correo y contraseña</li>
+                        <li>Tu progreso y valoraciones de máquinas</li>
+                        <li>Tus diplomas (el PDF y su verificación pública dejarán de funcionar)</li>
+                        <li>Tu perfil, foto, biografía y enlaces</li>
+                        <li>Tus writeups publicados y tus notificaciones</li>
+                        <li>Tu posición en los rankings</li>
+                    </ul>
+                </div>
+                <div class="borrar-caja borrar-caja--queda">
+                    <h4><i class="bi bi-person-dash-fill"></i> Se conserva sin tu nombre</h4>
+                    <ul>
+                        <li>Las máquinas que hayas creado seguirán disponibles para la comunidad, firmadas como «Usuario eliminado»</li>
+                    </ul>
+                    <p class="borrar-mini">Tu nombre de usuario quedará libre y otra persona podría registrarlo.</p>
+                </div>
+            </div>
+            <div class="borrar-checks">
+                <label><input type="checkbox" class="borrar-check"> <span>Entiendo que la eliminación es <strong>permanente e irreversible</strong>.</span></label>
+                <label><input type="checkbox" class="borrar-check"> <span>Entiendo que mis <strong>diplomas</strong> dejarán de ser verificables.</span></label>
+                <label><input type="checkbox" class="borrar-check"> <span>He leído qué datos se borran y cuáles se conservan sin mi nombre.</span></label>
+            </div>
+            <div class="borrar-acciones">
+                <button type="button" class="dl-btn dl-btn--neutro" data-cancelar><i class="bi bi-arrow-left"></i> No, conservar mi cuenta</button>
+                <button type="button" class="dl-btn dl-btn--peligro" id="borrarSiguiente1" disabled>Continuar <i class="bi bi-arrow-right"></i></button>
+            </div>
+        </div>
+
+        <div data-paso="2" hidden>
+            <p class="borrar-intro">Confirma que eres tú. Escribe estos tres datos tal como se indican:</p>
+            <div class="form-group">
+                <label for="borrarUsuario">1. Tu nombre de usuario: <strong class="borrar-valor" id="borrarUsuarioEsperado"></strong></label>
+                <input type="text" id="borrarUsuario" class="form-control" autocomplete="off" autocapitalize="off" spellcheck="false">
+            </div>
+            <div class="form-group">
+                <label for="borrarFrase">2. Escribe la frase: <strong class="borrar-valor">ELIMINAR MI CUENTA</strong></label>
+                <input type="text" id="borrarFrase" class="form-control" autocomplete="off" autocapitalize="characters" spellcheck="false">
+            </div>
+            <div class="form-group">
+                <label for="borrarPassword">3. Tu contraseña actual</label>
+                <input type="password" id="borrarPassword" class="form-control" autocomplete="current-password">
+            </div>
+            <p class="borrar-error" id="borrarError" role="alert" hidden></p>
+            <div class="borrar-acciones">
+                <button type="button" class="dl-btn dl-btn--neutro" id="borrarAtras2"><i class="bi bi-arrow-left"></i> Atrás</button>
+                <button type="button" class="dl-btn dl-btn--peligro" id="borrarSiguiente2" disabled>Continuar <i class="bi bi-arrow-right"></i></button>
+            </div>
+        </div>
+
+        <div data-paso="3" hidden>
+            <div class="borrar-ultima" role="alert">
+                <i class="bi bi-exclamation-triangle-fill"></i>
+                <p><strong>Última oportunidad.</strong> Al pulsar el botón rojo tu cuenta
+                    <strong id="borrarUltimaUsuario"></strong> se eliminará <strong>ahora mismo y para siempre</strong>.
+                    No hay forma de recuperarla.</p>
+            </div>
+            <p class="borrar-error" id="borrarError3" role="alert" hidden></p>
+            <div class="borrar-acciones">
+                <button type="button" class="dl-btn dl-btn--neutro dl-btn--grande" data-cancelar>No, quiero conservar mi cuenta</button>
+                <button type="button" class="dl-btn dl-btn--peligro" id="borrarConfirmar" disabled>Eliminar definitivamente</button>
+            </div>
+            <p class="borrar-mini borrar-atras3"><button type="button" class="borrar-enlace" id="borrarAtras3">← Volver al paso anterior</button></p>
+        </div>
+
+        <div data-paso="4" hidden>
+            <div class="borrar-despedida">
+                <i class="bi bi-check-circle-fill"></i>
+                <h4>Tu cuenta ha sido eliminada</h4>
+                <p>Te hemos enviado un correo de confirmación. Gracias por haber formado parte de DockerLabs.</p>
+                <p class="borrar-mini">Te llevamos al inicio en unos segundos… <a href="/">Ir ahora</a></p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
 <div id="sendNotificationModal" class="claim-modal">
     <div class="claim-modal-dialog" style="max-width: 900px;">
         <button type="button" class="modal-close-button" onclick="closeSendNotificationModal()">&times;</button>
@@ -416,6 +526,7 @@
 
 {% block scripts %}
 <script src="{{ static_v('dockerlabs/js/dashboard.js') }}"></script>
+<script src="{{ static_v('dockerlabs/js/borrar_cuenta.js') }}" defer></script>
 <script nonce="{{ g.csp_nonce }}">
 (function () {
     const stats = document.getElementById('perfilStats');

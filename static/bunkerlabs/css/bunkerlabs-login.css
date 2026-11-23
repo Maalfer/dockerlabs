@@ -1,213 +1,150 @@
-/* Base layout */
-.bunker-box {
-    max-width: 480px !important;
-    padding: 0 !important;
-    margin: 0 auto;
-    overflow: hidden;
-}
+/* =====================================================================
+   BunkerLabs · acceso
+   Minimalista: una tarjeta centrada y Cody al lado. Sin degradados ni
+   paneles dobles. Cody (auth-ballena.css) toma sus colores del tema de
+   DockerLabs; aquí se le dan las variables que BunkerLabs no define.
+   ===================================================================== */
 
-/* Wide two-column variant */
-.bunker-box-wide {
-    max-width: 900px !important;
-    display: flex !important;
+.bk-escena {
+    /* variables que usa auth-ballena.css */
+    --hack-green: #3cff00;
+    --hack-glow: rgba(60, 255, 0, .55);
+    --hack-border: #1a3f1a;
+    --surface-overlay-rgb: 15, 12, 30;
+    --primary-blue-light: #60a5fa;
+    --text-secondary: #cbd5e1;
+    --text-muted: #94a3b8;
+    --accent-yellow: #f59e0b;
+    --accent-cyan: #22d3ee;
+
+    --bk-acento: #a78bfa;
+    --bk-acento-fuerte: #6d28d9;      /* texto blanco encima: 7,1:1 */
+    --bk-borde: rgba(167, 139, 250, .22);
+    --bk-campo-borde: rgba(167, 150, 220, .65);   /* ≥ 3:1: se ve dónde escribir */
+    --bk-texto: #e2e8f0;
+    --bk-suave: #a9b4c8;               /* ≥ 7:1 sobre el fondo */
+
+    flex: 1 0 auto;
+    display: flex;
     flex-direction: row;
-    align-items: stretch;
-    margin: 0 auto;
-    overflow: hidden;
-}
-
-/* Login form column */
-.login-section {
-    display: flex;
-    flex-direction: column;
-    gap: 1.5rem;
-    padding: 2.25rem 3rem;
-    background: #1e293b;
-    flex: 1;
-    min-width: 300px;
-}
-
-/* ── Info Panel ── */
-.bunker-info-panel {
-    flex: 1.1;
-    background: linear-gradient(145deg, #0f172a 0%, #0d1f35 60%, #0a1628 100%);
-    padding: 2.25rem 2.5rem;
-    display: flex;
-    flex-direction: column;
-    gap: 1.75rem;
-    position: relative;
-    overflow: hidden;
-    border-right: 1px solid rgba(139, 92, 246, 0.15);
-}
-
-.bunker-info-panel::before {
-    content: '';
-    position: absolute;
-    top: -80px;
-    right: -80px;
-    width: 260px;
-    height: 260px;
-    background: radial-gradient(circle, rgba(139, 92, 246, 0.12) 0%, transparent 70%);
-    border-radius: 50%;
-    pointer-events: none;
-}
-
-.bunker-info-panel::after {
-    content: '';
-    position: absolute;
-    bottom: -60px;
-    left: -60px;
-    width: 200px;
-    height: 200px;
-    background: radial-gradient(circle, rgba(34, 211, 238, 0.07) 0%, transparent 70%);
-    border-radius: 50%;
-    pointer-events: none;
-}
-
-.bunker-info-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.35rem 0.85rem;
-    background: rgba(139, 92, 246, 0.12);
-    border: 1px solid rgba(139, 92, 246, 0.3);
-    border-radius: 999px;
-    color: #a78bfa;
-    font-size: 0.78rem;
-    font-weight: 600;
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
-    width: fit-content;
-    position: relative;
-    z-index: 1;
-}
-
-.bunker-info-title {
-    font-size: 2rem;
-    font-weight: 800;
-    line-height: 1.15;
-    color: #f1f5f9;
-    margin: 0;
-    letter-spacing: -0.02em;
-    position: relative;
-    z-index: 1;
-}
-
-.bunker-info-title span {
-    background: linear-gradient(135deg, #a78bfa 0%, #22d3ee 100%);
-    -webkit-background-clip: text;
-    background-clip: text;
-    -webkit-text-fill-color: transparent;
-}
-
-.bunker-info-desc {
-    font-size: 0.9rem;
-    color: #94a3b8;
-    line-height: 1.65;
-    margin: 0;
-    position: relative;
-    z-index: 1;
-}
-
-.bunker-info-desc strong {
-    color: #e2e8f0;
-}
-
-/* Access links */
-.bunker-info-links {
-    display: flex;
-    flex-direction: column;
-    gap: 0.75rem;
-    position: relative;
-    z-index: 1;
-}
-
-.bunker-info-link {
-    display: flex;
-    align-items: center;
-    gap: 0.85rem;
-    padding: 0.85rem 1rem;
-    background: rgba(255, 255, 255, 0.03);
-    border: 1px solid rgba(255, 255, 255, 0.07);
-    border-radius: 12px;
-    text-decoration: none;
-    color: #e2e8f0;
-    transition: all 0.25s ease;
-}
-
-a.bunker-info-link:hover {
-    background: rgba(139, 92, 246, 0.1);
-    border-color: rgba(139, 92, 246, 0.35);
-    transform: translateX(4px);
-    color: #f8fafc;
-}
-
-.bunker-info-link--plain {
-    cursor: default;
-    opacity: 0.75;
-}
-
-.bunker-link-icon {
-    width: 38px;
-    height: 38px;
-    background: rgba(139, 92, 246, 0.12);
-    border: 1px solid rgba(139, 92, 246, 0.2);
-    border-radius: 10px;
-    display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 1rem;
-    color: #a78bfa;
-    flex-shrink: 0;
+    gap: clamp(32px, 5vw, 72px);
+    min-height: calc(100vh - 170px);
+    padding: 24px 16px;
+    color: var(--bk-texto);
 }
 
-.bunker-link-text {
-    display: flex;
-    flex-direction: column;
-    gap: 0.1rem;
-    flex: 1;
+/* ───────────── Tarjeta ───────────── */
+.bk-tarjeta {
+    width: 100%;
+    max-width: 460px;
+    padding: 1.75rem 1.75rem 1.4rem;
+    border: 1px solid var(--bk-borde);
+    border-radius: 18px;
+    background: rgba(26, 27, 38, .72);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    box-shadow: 0 18px 40px rgba(0, 0, 0, .35);
 }
 
-.bunker-link-text strong {
-    font-size: 0.88rem;
-    font-weight: 600;
-    color: #f1f5f9;
+.bk-cab { display: flex; align-items: center; gap: .9rem; margin-bottom: 1.15rem; }
+.bk-icono {
+    flex: 0 0 auto; display: grid; place-items: center; width: 46px; height: 46px;
+    border-radius: 12px; font-size: 1.3rem; color: var(--bk-acento);
+    background: rgba(139, 92, 246, .12); border: 1px solid var(--bk-borde);
+}
+.bk-cab h1 { margin: 0; font-size: 1.5rem; font-weight: 700; color: #fff; line-height: 1.2; }
+.bk-cab p { margin: .2rem 0 0; font-size: .85rem; line-height: 1.45; color: var(--bk-suave); }
+
+/* ───────────── Formulario ───────────── */
+.bk-form { display: flex; flex-direction: column; gap: .95rem; }
+.bk-campo label { display: block; margin-bottom: .4rem; font-size: .85rem; font-weight: 600; color: var(--bk-texto); }
+.bk-input {
+    width: 100%; min-height: 48px; padding: .75rem 1rem; border: 1px solid var(--bk-campo-borde); border-radius: 10px;
+    background: rgba(255, 255, 255, .05); color: #fff; font: inherit; font-size: .95rem;
+    transition: border-color .15s ease, background-color .15s ease;
+}
+.bk-input::placeholder { color: #8b97ad; }
+.bk-input:hover { border-color: #c4b5fd; }
+.bk-input:focus { outline: 3px solid #c4b5fd; outline-offset: 2px; border-color: #c4b5fd; background: rgba(255, 255, 255, .08); }
+.bk-input[aria-invalid="true"] { border-color: #f87171; }
+
+.bk-btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: .55rem; width: 100%; min-height: 48px;
+    border: 0; border-radius: 10px; background: var(--bk-acento-fuerte); color: #fff; font: inherit; font-size: .98rem; font-weight: 700; cursor: pointer;
+    transition: background-color .15s ease;
+}
+.bk-btn:hover { background: #5b21b6; }
+.bk-btn:focus-visible { outline: 3px solid #c4b5fd; outline-offset: 3px; }
+.bk-btn[disabled] { opacity: .7; cursor: progress; }
+
+.bk-error {
+    display: flex; align-items: flex-start; gap: .6rem; margin: 0 0 1rem; padding: .7rem .9rem;
+    border: 1px solid #f87171; border-radius: 10px; background: rgba(185, 28, 28, .22); color: #fecaca; font-size: .9rem; line-height: 1.45;
+}
+.bk-error i { margin-top: .15rem; }
+
+/* ───────────── Secundario ───────────── */
+.bk-prueba { margin: 1rem 0 0; font-size: .85rem; line-height: 1.5; color: var(--bk-suave); text-align: center; }
+.bk-tarjeta a { color: #c4b5fd; text-underline-offset: 3px; }
+.bk-tarjeta a:hover { color: #ddd6fe; }
+.bk-tarjeta a:focus-visible { outline: 3px solid #c4b5fd; outline-offset: 3px; border-radius: 4px; }
+
+/* ───────────── ¿Aún no tienes acceso? · formaciones (siempre visibles) ───────────── */
+.bk-acceso { margin-top: 1.2rem; padding-top: 1.1rem; border-top: 1px solid var(--bk-borde); }
+.bk-acceso h2 { margin: 0; font-size: .95rem; font-weight: 700; color: #fff; line-height: 1.3; }
+.bk-acceso > p:first-of-type { margin: .2rem 0 .7rem; font-size: .82rem; line-height: 1.45; color: var(--bk-suave); }
+.bk-acceso strong { color: #fff; }
+.bk-formaciones { display: flex; flex-direction: column; gap: .5rem; margin: 0; padding: 0; list-style: none; }
+
+/* Enlaces discretos: casi transparentes en reposo; el realce solo aparece al acercarse o enfocar.
+   Toda la fila es clicable (≥ 52 px de alto: cómodo también con el pulgar). */
+.bk-tarjeta a.bk-formacion {
+    display: flex; align-items: center; gap: .75rem; min-height: 52px; padding: .55rem .8rem;
+    border: 1px solid rgba(167, 139, 250, .22); border-radius: 12px; color: #fff; text-decoration: none;
+    background: rgba(255, 255, 255, .03);
+    transition: transform .18s ease, border-color .18s ease, background-color .18s ease;
+}
+.bk-tarjeta a.bk-formacion:hover {
+    transform: translateY(-1px); border-color: rgba(196, 181, 253, .7); color: #fff;
+    background: rgba(139, 92, 246, .14);
+}
+.bk-tarjeta a.bk-formacion:focus-visible { outline: 3px solid #c4b5fd; outline-offset: 3px; }
+.bk-formacion-icono {
+    flex: 0 0 auto; display: grid; place-items: center; width: 34px; height: 34px; border-radius: 9px;
+    font-size: .95rem; color: #c4b5fd; background: rgba(139, 92, 246, .14); border: 1px solid rgba(196, 181, 253, .2);
+}
+.bk-formacion-texto { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: .05rem; }
+.bk-formacion-texto strong { font-size: .9rem; font-weight: 600; line-height: 1.25; }
+.bk-formacion-texto small { font-size: .74rem; color: #aab6cb; }
+.bk-formacion-cta { flex: 0 0 auto; display: inline-flex; align-items: center; gap: .35rem; font-size: .78rem; font-weight: 600; color: #c4b5fd; }
+.bk-formacion-cta i { transition: transform .18s ease; }
+.bk-tarjeta a.bk-formacion:hover .bk-formacion-cta { color: #ede9fe; }
+.bk-tarjeta a.bk-formacion:hover .bk-formacion-cta i { transform: translateX(3px); }
+.bk-otras { margin: .6rem 0 0; font-size: .78rem; line-height: 1.4; color: var(--bk-suave); }
+
+.bk-sr { position: absolute; width: 1px; height: 1px; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+/* ───────────── Tablet y móvil: Cody encima, pequeña, junto a su bocadillo ───────────── */
+@media (max-width: 880px) {
+    .bk-escena { flex-direction: column; justify-content: flex-start; gap: 10px; min-height: 0; padding: 14px 14px 110px; }
+    .bk-tarjeta { padding: 1.5rem 1.25rem 1.2rem; }
 }
 
-.bunker-link-text small {
-    font-size: 0.75rem;
-    color: #64748b;
+@media (max-width: 480px) {
+    .bk-formacion-icono { width: 32px; height: 32px; }
+    .bk-cta-txt { display: none; }
+    .bk-cab h1 { font-size: 1.3rem; }
+    .bk-cab p { font-size: .8rem; }
 }
 
-.bunker-info-footer {
-    margin-top: auto;
-    padding: 0.85rem 1rem;
-    background: rgba(34, 211, 238, 0.05);
-    border: 1px solid rgba(34, 211, 238, 0.12);
-    border-radius: 10px;
-    font-size: 0.8rem;
-    color: #67e8f9;
-    display: flex;
-    align-items: center;
-    gap: 0.6rem;
-    position: relative;
-    z-index: 1;
+@media (prefers-reduced-motion: reduce) {
+    .bk-input, .bk-btn, .bk-tarjeta a.bk-formacion, .bk-formacion-cta i { transition: none; }
+    .bk-tarjeta a.bk-formacion:hover { transform: none; }
+    .bk-tarjeta a.bk-formacion:hover .bk-formacion-cta i { transform: none; }
 }
 
-/* Responsive */
-@media (max-width: 768px) {
-    .bunker-box-wide {
-        flex-direction: column;
-        max-width: 500px !important;
-    }
-
-    .bunker-info-panel {
-        border-right: none;
-        border-bottom: 1px solid rgba(139, 92, 246, 0.15);
-        padding: 2rem 1.75rem;
-    }
-
-    .bunker-info-title {
-        font-size: 1.6rem;
-    }
+@media (forced-colors: active) {
+    .bk-tarjeta, .bk-input, .bk-btn { border: 1px solid ButtonText; }
 }

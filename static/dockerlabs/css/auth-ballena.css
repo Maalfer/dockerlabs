@@ -146,20 +146,7 @@
 .ballena.tapa .b-pupila { opacity: 0; }
 .ballena.reojo .b-pupila { transform: translate(2.6px, 2px); }
 
-/* Chorro */
-.ballena .b-chorro { transform-origin: 150px 44px; transform: scale(.3, 0); opacity: 0; }
-.ballena.sopla .b-chorro { animation: b-sopla 1.7s cubic-bezier(.2, .8, .3, 1); }
-@keyframes b-sopla {
-    0%   { transform: scale(.3, 0); opacity: 0; }
-    22%  { transform: scale(1, 1.08); opacity: 1; }
-    65%  { transform: scale(1.05, 1); opacity: .95; }
-    100% { transform: scale(1.15, .85) translateY(6px); opacity: 0; }
-}
-.ballena .b-gota { transform-box: fill-box; transform-origin: center; }
-.ballena.sopla .b-gota-1 { animation: b-gota-i 1.7s ease-out; }
-.ballena.sopla .b-gota-2 { animation: b-gota-d 1.7s ease-out; }
-@keyframes b-gota-i { 0%, 20% { transform: translate(0, 0); } 100% { transform: translate(-8px, 14px); } }
-@keyframes b-gota-d { 0%, 20% { transform: translate(0, 0); } 100% { transform: translate(8px, 14px); } }
+/* El chorro de agua vive en «Chorro de agua: ...» más abajo (sustituye al antiguo chorro binario). */
 
 /* Contenta (clic / registro correcto) */
 .ballena.feliz .b-ojo-normal { opacity: 0; }
@@ -300,7 +287,7 @@
 .dl-recover .btn-login { font-size: .92rem; }
 
 /* ==========================================================================
-   Ballena hacker: chorro binario, portátil con brillo y bocadillo de terminal
+   Ballena hacker: chorro de agua, portátil con brillo y bocadillo de terminal
    ========================================================================== */
 
 /* Aleta apoyada en el teclado */
@@ -309,25 +296,98 @@
 .ballena.teclea .b-aleta { animation: b-aleta-teclea .22s ease-in-out infinite alternate; }
 @keyframes b-aleta-teclea { from { transform: rotate(-62deg); } to { transform: rotate(-54deg); } }
 
-/* Chorro de unos y ceros */
-.ballena .b-chorro { transform: none; opacity: 1; }
-.ballena.sopla .b-chorro { animation: none; }
-.ballena .b-bit { opacity: 0; }
-.ballena.sopla .b-bit { animation: b-bit 1.3s ease-out both; }
-@keyframes b-bit {
-    0%   { opacity: 0; transform: translate(0, 4px) scale(.6); }
-    20%  { opacity: 1; }
-    100% { opacity: 0; transform: translate(var(--dx), var(--dy)) scale(1); }
+/* ---- Chorro de bits -----------------------------------------------------
+   Sale del espiráculo (150, 42): plumas de energía que se abren en abanico,
+   una lluvia de ceros y unos que suben y caen (cian en los bordes, verde
+   hacker al centro), niebla difusa y destellos. Toda la coreografía dura
+   2,3 s y SOLO se dispara al azar, cada 9-18 s (ballena.js: soplar()); nunca
+   al acariciarla ni al hacerle clic. Sin .sopla todo queda a opacity 0.
+   ----------------------------------------------------------------------- */
+.ballena .b-chorro { transform-origin: 150px 42px; }
+.ballena .b-chorro-luz,
+.ballena .b-chorro-base,
+.ballena .b-niebla > *,
+.ballena .b-pluma,
+.ballena .b-gota,
+.ballena .b-destello { opacity: 0; }
+
+/* Las plumas crecen desde la mismísima base del espiráculo */
+.ballena .b-pluma { transform-origin: 150px 42.5px; }
+/* Plumas más finas que un chorro de agua: quedan como una estela de luz
+   detrás de los bits, no como el protagonista. */
+.ballena .b-plumas {
+    filter: drop-shadow(0 0 1.4px var(--hack-glow));
+    transform-box: fill-box; transform-origin: 50% 100%; transform: scaleX(.74);
 }
-.ballena .b-bit-1 { --dx: 0px;   --dy: -42px; }
-.ballena .b-bit-2 { --dx: -15px; --dy: -30px; animation-delay: .1s !important; }
-.ballena .b-bit-3 { --dx: 15px;  --dy: -30px; animation-delay: .15s !important; }
-.ballena .b-bit-4 { --dx: -4px;  --dy: -50px; animation-delay: .3s !important; }
-.ballena .b-bit-5 { --dx: -26px; --dy: -18px; animation-delay: .35s !important; }
-.ballena .b-bit-6 { --dx: 26px;  --dy: -18px; animation-delay: .4s !important; }
-.ballena .b-bit-7 { --dx: 7px;   --dy: -46px; animation-delay: .5s !important; }
-.ballena .b-bit-8 { --dx: -13px; --dy: -38px; animation-delay: .6s !important; }
-.ballena .b-bit-9 { --dx: 13px;  --dy: -36px; animation-delay: .65s !important; }
+/* Los bits son los protagonistas: doble resplandor para que se lean nítidos */
+.ballena .b-gotas { filter: drop-shadow(0 0 1.8px rgba(60, 255, 0, .85)) drop-shadow(0 0 .5px #eafff0); }
+.ballena .b-chorro-base,
+.ballena .b-chorro-luz,
+.ballena .b-niebla > *,
+.ballena .b-gota,
+.ballena .b-destello { transform-box: fill-box; transform-origin: center; }
+
+/* Anillo de salpicadura en la base */
+.ballena.sopla .b-chorro-base { animation: b-chorro-base 2.3s cubic-bezier(.2, .8, .3, 1) both; }
+@keyframes b-chorro-base {
+    0%   { opacity: .85; transform: scale(.35, 1); }
+    22%  { opacity: .4;  transform: scale(2.6, 1.4); }
+    100% { opacity: 0;   transform: scale(3.6, 1.8); }
+}
+
+/* Halo de luz que ilumina el lomo */
+.ballena.sopla .b-chorro-luz { animation: b-chorro-luz 2.3s ease-out both; }
+@keyframes b-chorro-luz {
+    0%   { opacity: 0;   transform: scale(.4); }
+    14%  { opacity: .8;  transform: scale(1.04); }
+    55%  { opacity: .45; transform: scale(1.12); }
+    100% { opacity: 0;   transform: scale(1.3); }
+}
+
+/* Niebla que corona el chorro */
+.ballena.sopla .b-niebla > * { animation: b-niebla 2.3s ease-out both; animation-delay: var(--d, 0s); }
+@keyframes b-niebla {
+    0%   { opacity: 0;   transform: translateY(7px) scale(.25); }
+    18%  { opacity: .5; }
+    55%  { opacity: .32; transform: translateY(-3px) scale(1.15); }
+    100% { opacity: 0;   transform: translateY(-10px) scale(2); }
+}
+
+/* Plumas: brotan rápido, se mecen y se deshacen hacia arriba */
+.ballena.sopla .b-pluma { animation: b-pluma 2.3s cubic-bezier(.16, .84, .32, 1) both; }
+.ballena.sopla .b-pluma-l,
+.ballena.sopla .b-pluma-r { animation-delay: .03s; }
+.ballena.sopla .b-pluma-l2,
+.ballena.sopla .b-pluma-r2 { animation-delay: .08s; }
+@keyframes b-pluma {
+    0%   { opacity: 0;   transform: scale(.5, .12); }
+    9%   { opacity: .55; transform: scale(.92, 1.06); }
+    16%  { transform: scale(1, 1); }
+    28%  { transform: scale(1.04, 1.02) translateX(-.6px); }
+    46%  { transform: scale(.98, 1.01) translateX(.8px); }
+    66%  { opacity: .4;   transform: scale(1.06, .98); }
+    100% { opacity: 0;   transform: scale(1.35, .7) translateY(5px); }
+}
+
+/* Gotas: suben hasta su altura, se quedan un instante y caen difuminándose */
+.ballena.sopla .b-gota { animation: b-gota-agua var(--dur, 1.55s) cubic-bezier(.22, .68, .3, 1) var(--delay, 0s) both; }
+@keyframes b-gota-agua {
+    0%   { opacity: 0;   transform: translate(0, 3px) scale(.35); }
+    10%  { opacity: 1; }
+    48%  { opacity: .96; transform: translate(var(--dx, 0px), var(--dy, -48px)) scale(1); }
+    62%  { transform: translate(calc(var(--dx, 0px) * 1.12), calc(var(--dy, -48px) * .92)) scale(.94); }
+    100% { opacity: 0;   transform: translate(calc(var(--dx, 0px) * 1.4), calc(var(--dy, -48px) + 44px)) scale(.75); }
+}
+
+/* Destellos que giran y se apagan en la cresta */
+.ballena.sopla .b-destello { animation: b-destello 2.3s ease-out both; animation-delay: var(--d, .1s); }
+@keyframes b-destello {
+    0%   { opacity: 0;   transform: scale(.2) rotate(0deg); }
+    12%  { opacity: 1;   transform: scale(1.15) rotate(55deg); }
+    26%  { opacity: .85; transform: scale(.9) rotate(100deg); }
+    48%  { opacity: 0;   transform: scale(.3) rotate(150deg); }
+    100% { opacity: 0;   transform: scale(.3) rotate(150deg); }
+}
 
 /* Burbujas que suben despacio */
 .ballena .b-burbuja { animation: b-burbuja 5s ease-in infinite; opacity: 0; }
@@ -466,3 +526,234 @@
 .dl-otra:focus-visible { outline: 2px solid var(--hack-green); outline-offset: 2px; }
 /* Botón de ver contraseña: neutro; pulsado en ámbar (acción activa) */
 .dl-ojo[aria-pressed="true"] { color: var(--accent-yellow); }
+
+/* ==========================================================================
+   Gestos espontáneos: ballena.js lanza uno de vez en cuando (clase temporal
+   en el svg). Mueven .b-sacude, que en reposo está libre, para sumarse al
+   vaivén de .b-flota. Nunca conviven con tapa / reojo.
+   ========================================================================== */
+.ballena .b-candado { opacity: 0; transform-box: fill-box; transform-origin: center; }
+.ballena.saluda .b-sacude, .ballena.voltereta .b-sacude, .ballena.nada .b-sacude,
+.ballena.ladea .b-sacude, .ballena.quiere .b-sacude { transform-origin: 140px 100px; }
+.ballena.saluda .b-ojo-normal, .ballena.voltereta .b-ojo-normal, .ballena.quiere .b-ojo-normal { opacity: 0; }
+.ballena.saluda .b-ojo-feliz, .ballena.voltereta .b-ojo-feliz, .ballena.quiere .b-ojo-feliz { opacity: 1; }
+
+/* Saluda con la aleta */
+.ballena.saluda:not(.tapa):not(.reojo) .b-aleta { animation: b-saluda 2.4s ease-in-out both; }
+@keyframes b-saluda {
+    0%, 100% { transform: rotate(-62deg); }
+    20%, 46%, 72% { transform: rotate(146deg); }
+    33%, 59% { transform: rotate(114deg); }
+}
+.ballena.saluda .b-sacude { animation: b-saluda-cuerpo 2.4s ease-in-out; }
+@keyframes b-saluda-cuerpo {
+    0%, 100% { transform: translateY(0) rotate(0); }
+    20%, 72% { transform: translateY(-2px) rotate(-4deg); }
+}
+
+/* Voltereta hacia atrás: .b-flota salta y .b-sacude gira */
+.ballena.voltereta .b-flota { animation: b-brinco 1.5s both; }
+@keyframes b-brinco {
+    0%   { transform: translateY(0); animation-timing-function: ease-in-out; }
+    14%  { transform: translateY(5px); animation-timing-function: cubic-bezier(.2, .7, .4, 1); }
+    50%  { transform: translateY(-36px); animation-timing-function: cubic-bezier(.6, 0, .8, .3); }
+    86%  { transform: translateY(0); animation-timing-function: ease-out; }
+    93%  { transform: translateY(3px); animation-timing-function: ease-in-out; }
+    100% { transform: translateY(0); }
+}
+.ballena.voltereta .b-sacude { animation: b-giro 1.5s cubic-bezier(.45, 0, .55, 1) both; }
+@keyframes b-giro { 0%, 12% { transform: rotate(0); } 88%, 100% { transform: rotate(-360deg); } }
+
+/* Nada: coge impulso y da un pequeño sprint */
+.ballena.nada .b-sacude { animation: b-nada 2.6s ease-in-out; }
+@keyframes b-nada {
+    0%, 100% { transform: translateX(0) rotate(0); }
+    22% { transform: translateX(-14px) rotate(-4deg); }
+    58% { transform: translateX(18px) rotate(3deg); }
+    80% { transform: translateX(5px) rotate(-1deg); }
+}
+.ballena.nada .b-cola { animation: b-cola-rapida .34s ease-in-out infinite; }
+@keyframes b-cola-rapida { 0%, 100% { transform: rotate(8deg); } 50% { transform: rotate(-16deg); } }
+
+/* Curiosea: ladea el cuerpo y mira a un lado y a otro */
+.ballena.ladea .b-sacude { animation: b-ladea 2.8s ease-in-out; }
+@keyframes b-ladea {
+    0%, 100% { transform: rotate(0); }
+    18%, 42% { transform: rotate(-7deg); }
+    60%, 82% { transform: rotate(5deg); }
+}
+.ballena.ladea:not(.tapa):not(.reojo) .b-pupila { animation: b-otea 2.8s ease-in-out; }
+@keyframes b-otea {
+    0%, 100% { transform: translate(var(--ox), var(--oy)); }
+    18%, 42% { transform: translate(-2.4px, -2px); }
+    60%, 82% { transform: translate(2.6px, -1.6px); }
+}
+
+/* Candados: brinquito y dos candaditos que suben (en vez de corazoncitos) */
+.ballena.quiere .b-sacude { animation: b-brinquito .7s ease-in-out 2; }
+@keyframes b-brinquito { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
+.ballena.quiere .b-mejilla { opacity: .85; }
+.ballena.quiere .b-candado { animation: b-candado 2.1s ease-out both; }
+.ballena.quiere .b-candado-2 { animation-delay: .35s; }
+@keyframes b-candado {
+    0%   { opacity: 0; transform: translateY(8px) scale(.2) rotate(-10deg); }
+    18%  { opacity: 1; transform: translateY(0) scale(1.2) rotate(6deg); }
+    30%  { opacity: 1; transform: translateY(-4px) scale(1) rotate(-4deg); }
+    100% { opacity: 0; transform: translateY(-30px) scale(.9) rotate(8deg); }
+}
+
+/* ==========================================================================
+   Reacciones a lo que hace el usuario (ballena.js): asiente, niega, se
+   asombra, se apura, sospecha, teclea en modo turbo, se deja mimar, se
+   ilusiona con el botón de enviar y se queda dormida si no pasa nada.
+   ========================================================================== */
+.ballena .b-ojo-dormido, .ballena .b-boca-o, .ballena .b-sudor, .ballena .b-signo, .ballena .b-zeta { opacity: 0; }
+.ballena .b-sudor, .ballena .b-signo, .ballena .b-zeta { transform-box: fill-box; transform-origin: center; }
+.ballena .b-ojo-normal { transform-origin: 190px 92px; transition: opacity .2s ease, transform .18s ease; }
+.ballena .b-ojo-dormido, .ballena .b-mejilla { transition: opacity .25s ease; }
+.ballena.asiente .b-sacude, .ballena.niega .b-sacude, .ballena.asombro .b-sacude { transform-origin: 140px 100px; }
+
+/* Asiente: dos cabezadas con el ojo contento */
+.ballena.asiente .b-ojo-normal { opacity: 0; }
+.ballena.asiente .b-ojo-feliz { opacity: 1; }
+.ballena.asiente .b-sacude { animation: b-asiente .9s ease-in-out; }
+@keyframes b-asiente {
+    0%, 100% { transform: rotate(0); }
+    22%, 62% { transform: rotate(6deg) translateY(2px); }
+    42%, 82% { transform: rotate(-1.5deg); }
+}
+
+/* Niega: «no, no» sin llegar a ponerse triste */
+.ballena.niega .b-sacude { animation: b-niega .7s ease-in-out; }
+@keyframes b-niega {
+    0%, 100% { transform: translateX(0) rotate(0); }
+    20%, 60% { transform: translateX(-4px) rotate(-2deg); }
+    40%, 80% { transform: translateX(4px) rotate(2deg); }
+}
+
+/* Asombro: ojo muy abierto, boquita en «o», respingo y un «!» */
+.ballena.asombro .b-ojo-normal { transform: scale(1.17); }
+.ballena.asombro .b-parpado { animation: none; }
+.ballena.asombro .b-boca-sonrie { opacity: 0; }
+.ballena.asombro .b-boca-o { opacity: 1; }
+.ballena.asombro .b-sacude { animation: b-respingo .5s cubic-bezier(.3, 1.5, .5, 1); }
+@keyframes b-respingo {
+    0%, 100% { transform: translate(0, 0) rotate(0); }
+    35% { transform: translate(-4px, -5px) rotate(-3deg); }
+}
+.ballena.asombro .b-signo { opacity: 1; animation: b-signo 1.3s ease-out both; }
+@keyframes b-signo {
+    0%   { opacity: 0; transform: translateY(7px) scale(.3) rotate(-12deg); }
+    16%  { opacity: 1; transform: translateY(0) scale(1.25) rotate(8deg); }
+    28%  { opacity: 1; transform: translateY(0) scale(1) rotate(0); }
+    78%  { opacity: 1; transform: translateY(0) scale(1); }
+    100% { opacity: 0; transform: translateY(-6px) scale(.9); }
+}
+
+/* Apuro: le cae una gotita de sudor (también con el ojo tapado) */
+.ballena.apuro .b-sudor { opacity: 1; animation: b-sudor 1.1s ease-in 2 both; }
+@keyframes b-sudor {
+    0%   { opacity: 0; transform: translateY(-5px) scale(.5); }
+    22%  { opacity: 1; transform: translateY(0) scale(1); }
+    70%  { opacity: 1; transform: translateY(8px) scale(1); }
+    100% { opacity: 0; transform: translateY(13px) scale(.8); }
+}
+.ballena.apuro .b-mejilla { opacity: .25; }
+
+/* Sospecha: entorna el párpado y se inclina con desconfianza */
+.ballena.sospecha .b-parpado { animation: none; transform: scaleY(.45); transition: transform .2s ease; }
+.ballena.sospecha .b-sacude { transform-origin: 140px 100px; animation: b-sospecha 2.8s ease-in-out; }
+@keyframes b-sospecha {
+    0%, 100% { transform: rotate(0); }
+    12%, 86% { transform: rotate(-4deg); }
+}
+
+/* Turbo: cuando escribes muy rápido, ella también */
+.ballena.turbo.teclea .b-aleta { animation-duration: .1s; }
+.ballena.turbo.teclea .b-linea { animation-duration: .2s; }
+.ballena.turbo .b-cola { animation: b-cola-rapida .34s ease-in-out infinite; }
+
+/* Mimo: al acariciarla con el ratón se pone contenta y colorada */
+.ballena.mimo .b-ojo-normal { opacity: 0; }
+.ballena.mimo .b-ojo-feliz { opacity: 1; }
+.ballena.mimo .b-mejilla { opacity: .9; }
+.ballena.mimo .b-cola { animation: b-cola-rapida .5s ease-in-out infinite; }
+
+/* Ilusión: mueve la cola cuando vas hacia el botón de enviar o de descarga */
+.ballena.ilusion .b-cola { animation: b-cola-rapida .34s ease-in-out infinite; }
+
+/* Sueño: si no pasa nada un buen rato, echa una cabezadita */
+.ballena.duerme .b-ojo-normal, .ballena.duerme .b-ojo-feliz { opacity: 0; }
+.ballena.duerme .b-ojo-dormido { opacity: 1; }
+.ballena.duerme .b-aleta { animation: none; }
+.ballena.duerme .b-luz { animation: none; opacity: .35; }
+.ballena.duerme .b-pt:not(.b-pt-zz) { opacity: 0; }
+.ballena.duerme .b-pt-zz { opacity: 1; }
+.ballena.duerme .b-zeta { animation: b-zeta 3s ease-out infinite; }
+.ballena.duerme .b-zeta-2 { animation-delay: 1s; }
+.ballena.duerme .b-zeta-3 { animation-delay: 2s; }
+@keyframes b-zeta {
+    0%   { opacity: 0; transform: translate(0, 6px) scale(.5); }
+    20%  { opacity: .95; }
+    100% { opacity: 0; transform: translate(12px, -24px) scale(1.5); }
+}
+
+/* ==========================================================================
+   Fondo de login / registro / recuperar. El degradado del body está pensado
+   para páginas largas (en la home casi todo lo que se ve es su parte clara);
+   aquí la página mide una pantalla y se quedaba casi negra. Se reparte el
+   mismo degradado sobre la altura visible y se acaba en un azul más claro.
+   ========================================================================== */
+body:has(.dl-auth.login-container, .dl-auth.register-container) {
+    background:
+        radial-gradient(ellipse 130% 100% at 50% 0%, #2f3f58 0%, #1a2942 48%, #111c31 100%) fixed;
+}
+
+/* ==========================================================================
+   Cursor de mano sobre Cody: deja claro que se le puede acariciar.
+   Mano abierta al pasar por encima; con candados mientras la acaricias
+   (clase .mimo, que pone ballena.js) o al pulsar. PNG a 1x y 2x porque los
+   cursores SVG no funcionan en todos los navegadores; punto activo en la palma.
+   ========================================================================== */
+.dl-ballena .ballena {
+    cursor: url("../images/cursores/mano.png") 13 16, grab;
+    cursor: -webkit-image-set(url("../images/cursores/mano.png") 1x, url("../images/cursores/mano-2x.png") 2x) 13 16, grab;
+    cursor: image-set(url("../images/cursores/mano.png") 1x, url("../images/cursores/mano-2x.png") 2x) 13 16, grab;
+}
+.dl-ballena .ballena.mimo,
+.dl-ballena .ballena:active {
+    cursor: url("../images/cursores/mano-caricia.png") 13 16, grabbing;
+    cursor: -webkit-image-set(url("../images/cursores/mano-caricia.png") 1x, url("../images/cursores/mano-caricia-2x.png") 2x) 13 16, grabbing;
+    cursor: image-set(url("../images/cursores/mano-caricia.png") 1x, url("../images/cursores/mano-caricia-2x.png") 2x) 13 16, grabbing;
+}
+
+/* La mano que acaricia (ballena.js): sustituye al cursor mientras el ratón está sobre Cody.
+   Capas: .dl-mano la coloca el script · .dl-mano-giro se inclina según el movimiento ·
+   .dl-mano-pose hace el vaivén de la caricia y el apretón del clic. */
+.ballena.con-mano, .ballena.con-mano * { cursor: none !important; }
+.dl-mano {
+    position: fixed; left: 0; top: 0; z-index: 2147483000; width: 26px; height: 26px;
+    margin: -16px 0 0 -13px;               /* el punto activo es el centro de la palma */
+    pointer-events: none; opacity: 0; transition: opacity .14s ease; will-change: transform;
+}
+.dl-mano.visible { opacity: 1; }
+.dl-mano.zona-agua { opacity: .82; }
+.dl-mano-giro { transform-origin: 50% 88%; }
+.dl-mano-pose { transform-origin: 50% 82%; transition: transform .12s ease; }
+.dl-mano svg { display: block; width: 100%; height: 100%; filter: drop-shadow(0 2px 2px rgba(0, 0, 0, .4)); }
+.dl-mano.acaricia .dl-mano-pose { animation: dl-mano-caricia .36s ease-in-out infinite alternate; }
+@keyframes dl-mano-caricia {
+    from { transform: rotate(-9deg) translateY(0) scaleY(1); }
+    to   { transform: rotate(8deg) translateY(1.6px) scaleY(.93); }
+}
+.dl-mano.pulsa .dl-mano-pose { animation: none; transform: scale(.84) translateY(1px); }
+.dl-mano-candado {
+    position: fixed; z-index: 2147482999; width: 12px; height: 13px; margin: -7px 0 0 -6px; pointer-events: none;
+    animation: dl-mano-candado .95s ease-out forwards;
+}
+.dl-mano-candado svg { display: block; width: 100%; height: 100%; filter: drop-shadow(0 0 2px var(--hack-glow, rgba(60, 255, 0, .6))) drop-shadow(0 1px 1px rgba(0, 0, 0, .35)); }
+@keyframes dl-mano-candado {
+    0%   { opacity: 0; transform: translate(0, 0) scale(.3); }
+    18%  { opacity: 1; transform: translate(0, -5px) scale(1.15); }
+    100% { opacity: 0; transform: translate(var(--dx, 0), -36px) scale(.8) rotate(var(--r, 0deg)); }
+}

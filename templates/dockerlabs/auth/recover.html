@@ -9,7 +9,7 @@
 
 {% block content %}
 <div class="login-container dl-auth dl-recover">
-    {% with ballena_mensajes = {"error": "Uy, algo ha fallado. ¿Revisas el correo?", "ok": "¡Enviado! Mira tu bandeja (y la carpeta de spam).", "envio": "Preparando el enlace…", "pass": "Tranquilo, no miro.", "ver": "Bueno… solo un poquito."} %}{% include "dockerlabs/auth/_ballena.html" %}{% endwith %}
+    {% with ballena_contexto = "recuperar", ballena_mensajes = {"error": "Uy, algo ha fallado. ¿Revisas el correo?", "ok": "¡Enviado! Mira tu bandeja (y la carpeta de spam).", "envio": "Preparando el enlace…", "pass": "Tranquilo, no miro.", "ver": "Bueno… solo un poquito."} %}{% include "dockerlabs/auth/_ballena.html" %}{% endwith %}
     <div class="login-box">
         <div class="login-header">
             <h2>Recuperar contraseña</h2>

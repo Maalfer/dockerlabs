@@ -12,10 +12,10 @@
         </div>
 
         <div class="dl-guia-cuerpo">
-            {% with ballena_mensajes = {"idle": "¡Hola! Soy Cody. ¿Te echo una aleta?"}, ballena_guia = true %}{% include "dockerlabs/auth/_ballena.html" %}{% endwith %}
+            {% with ballena_contexto = "home", ballena_mensajes = {"idle": "¡Hola! Soy Cody. ¿Te echo una aleta?"}, ballena_guia = true %}{% include "dockerlabs/auth/_ballena.html" %}{% endwith %}
 
             <div class="dl-guia-panel">
-                <p class="dl-guia-contador" aria-live="polite"><span class="dl-guia-n">1</span>/8</p>
+                <p class="dl-guia-contador" aria-live="polite"><span class="dl-guia-n">1</span>/9</p>
 
                 <section class="dl-guia-paso" data-dice="¡Hola! Soy Cody, la ballena de DockerLabs. ¿Primera vez por aquí? Te lo enseño todo en un par de minutos." data-estado="hola">
                     <h2>¿Qué es DockerLabs?</h2>
@@ -42,7 +42,7 @@
                     <p>Un Linux (Kali, Parrot, Ubuntu…) con <strong>Docker</strong> instalado. En Debian, Kali o Ubuntu:</p>
                     <div class="dl-guia-cmd"><code>sudo apt install docker.io</code><button type="button" class="dl-guia-copiar" data-copy="sudo apt install docker.io" aria-label="Copiar comando"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V6a2 2 0 0 1 2-2h9"/></svg></button></div>
                     <figure class="dl-guia-captura"><button type="button" class="dl-guia-zoom-btn" aria-label="Ampliar captura: Terminal instalando Docker con sudo apt install docker.io"><img src="{{ static_v('dockerlabs/images/guia/docker.webp') }}" width="873" height="217" alt="Terminal instalando Docker con sudo apt install docker.io" loading="lazy" decoding="async"><span class="dl-guia-lupa" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><circle cx="11" cy="11" r="6"/><path d="M20 20l-4.5-4.5M11 8.5v5M8.5 11h5"/></svg></span></button><figcaption>Si ya lo tienes instalado, <code>apt</code> te dirá que está en su versión más reciente.</figcaption></figure>
-                    <p class="dl-guia-nota">¿No lo tienes? Tranquilo: el script <code>auto_deploy.sh</code> detecta si falta Docker y lo instala por ti. Las máquinas Windows se descargan como <code>.ova</code> y se importan en VirtualBox.</p>
+                    <p class="dl-guia-nota">¿No lo tienes? Tranquilo: el script <code>auto_deploy.sh</code> detecta si falta Docker y lo instala por ti. Las máquinas de VirtualBox se descargan como <code>.ova</code> y se importan en VirtualBox.</p>
                 </section>
 
                 <section class="dl-guia-paso" data-dice="Empieza por las «Muy fácil». Todas las ballenas empezaron nadando en la orilla." data-estado="normal" hidden>
@@ -80,12 +80,25 @@
                     <p>Investiga cada servicio, encuentra la vulnerabilidad, entra en la máquina y escala privilegios hasta ser <code>root</code>.</p>
                 </section>
 
+                <section class="dl-guia-paso" data-dice="¿Se te ocurre una máquina genial? ¡La comunidad la espera!" data-estado="feliz" hidden>
+                    <h2>Crea tu propia máquina</h2>
+                    <p>Cuando ya domines el proceso, puedes <strong>crear tu propia máquina</strong> y publicarla en DockerLabs para que la resuelva toda la comunidad.</p>
+                    <ol class="dl-guia-objetivos">
+                        <li><span>1</span><div>Diseña el flujo, los servicios vulnerables y la documentación.</div></li>
+                        <li><span>2</span><div>Pruébala a fondo y empaquétala en <code>TAR</code> o <code>ZIP</code> siguiendo las reglas para creadores.</div></li>
+                    </ol>
+                    <p>El mismo script <code>auto_deploy.sh</code> que usas para jugar te sirve para probar tu máquina antes de enviarla:</p>
+                    <a href="{{ url_for('static', filename='dockerlabs/scripts/auto_deploy.sh') }}" class="dl-guia-cta dl-btn dl-btn--grande" download>
+                        <svg class="dl-guia-cta-ic" aria-hidden="true" focusable="false"><use href="#ic-download"/></svg> Descargar auto_deploy.sh
+                    </a>
+                    <p class="dl-guia-nota">Instrucciones completas, reglas para creadores y vídeo paso a paso en <a href="/enviar-maquina" target="_blank" rel="noopener">Crear y enviar una máquina</a>.</p>
+                </section>
+
                 <section class="dl-guia-paso" data-dice="¿Atascado? Pedir ayuda también es de hackers." data-estado="feliz" hidden>
                     <h2>¿Atascado? No pasa nada</h2>
                     <ul class="dl-guia-recursos">
                         <li><span class="dl-guia-ic dl-guia-ic-morado"><svg aria-hidden="true"><use href="#ic-writeup"/></svg></span><div><strong>Writeups</strong>: soluciones de la comunidad para cada máquina.</div></li>
                         <li><span class="dl-guia-ic dl-guia-ic-verde"><svg aria-hidden="true"><use href="#ic-upload"/></svg></span><div><strong>Sube tu writeup</strong> cuando la resuelvas y aparece en el ranking.</div></li>
-                        <li><span class="dl-guia-ic dl-guia-ic-cian"><i class="bi bi-book" aria-hidden="true"></i></span><div><a href="{{ url_for('main.instrucciones_uso') }}">Instrucciones de uso</a> y solución de errores.</div></li>
                         <li><span class="dl-guia-ic dl-guia-ic-cian"><i class="bi bi-discord" aria-hidden="true"></i></span><div>Pregunta en el <a href="https://discord.gg/dD3yVejBUR" target="_blank" rel="noopener noreferrer">Discord de la comunidad</a>.</div></li>
                         <li><span class="dl-guia-ic dl-guia-ic-ambar"><i class="bi bi-mortarboard-fill" aria-hidden="true"></i></span><div>¿Quieres aprender desde cero? Pásate por la <a href="/go/academia?o=guia" target="_blank" rel="noopener">Academia</a>.</div></li>
                     </ul>

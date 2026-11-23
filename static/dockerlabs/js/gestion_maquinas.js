@@ -1,487 +1,415 @@
-function mostrarPanelMaquinas(origen) {
-    const panelDocker = document.getElementById('panel-docker');
-    const panelBunker = document.getElementById('panel-bunker');
-    const btnDocker = document.getElementById('btn-docker');
-    const btnBunker = document.getElementById('btn-bunker');
+/* Gestión de máquinas (/gestion-maquinas).
+   - Todo por delegación de eventos: el HTML no lleva manejadores inline.
+   - Diálogos nativos <dialog>: foco atrapado, Esc y fondo inerte los gestiona el navegador.
+   - Los avisos van a regiones aria-live para que los lectores de pantalla los anuncien.
+   - La búsqueda es un formulario GET normal (ya no recarga la página al teclear). */
+(() => {
+    'use strict';
 
-    if (origen === 'docker') {
-        panelDocker.style.display = 'block';
-        panelBunker.style.display = 'none';
+    const tabla = document.getElementById('gm-tabla');
+    const origen = tabla ? tabla.dataset.origen : 'docker';
+    const nombrePlataforma = origen === 'bunker' ? 'BunkerLabs' : 'DockerLabs';
+    const MAX_LOGO = 2 * 1024 * 1024;           // mismo límite que el servidor
+    const TIPOS_LOGO = /^image\//;
 
-        btnDocker.classList.add('active');
-        btnBunker.classList.remove('active', 'bunker-active');
-    } else {
-        panelDocker.style.display = 'none';
-        panelBunker.style.display = 'block';
+    let datos = {};
+    try { datos = JSON.parse(document.getElementById('gm-datos')?.textContent || '{}'); } catch (e) { datos = {}; }
 
-        btnBunker.classList.add('active', 'bunker-active');
-        btnDocker.classList.remove('active');
+    const $ = (sel, raiz = document) => raiz.querySelector(sel);
+    const csrf = () => (typeof getCsrfToken === 'function' ? getCsrfToken() : ($('meta[name="csrf-token"]')?.content || ''));
+    const filaDe = (el) => el.closest('tr[data-id]');
+
+    /* ───────────── Avisos accesibles ───────────── */
+    function aviso(texto, tipo = 'ok') {
+        const caja = $(tipo === 'error' ? '#gm-avisos-err' : '#gm-avisos');
+        if (!caja) return;
+        const el = document.createElement('div');
+        el.className = `gm-aviso gm-aviso--${tipo}`;
+        const icono = document.createElement('i');
+        icono.className = `bi ${tipo === 'error' ? 'bi-x-circle-fill' : 'bi-check-circle-fill'}`;
+        icono.setAttribute('aria-hidden', 'true');
+        const msg = document.createElement('span');
+        msg.textContent = texto;
+        const cerrar = document.createElement('button');
+        cerrar.type = 'button';
+        cerrar.className = 'gm-aviso-x';
+        cerrar.setAttribute('aria-label', 'Cerrar aviso');
+        cerrar.innerHTML = '<i class="bi bi-x-lg" aria-hidden="true"></i>';
+        cerrar.addEventListener('click', () => el.remove());
+        el.append(icono, msg, cerrar);
+        caja.append(el);
+        // Los errores se quedan hasta que se cierran (no se puede perder un fallo por un temporizador).
+        if (tipo !== 'error') setTimeout(() => el.remove(), 6000);
     }
-}
 
-// Search functionality
-document.addEventListener('DOMContentLoaded', function() {
-    const searchInput = document.getElementById('searchInput');
-    
-    if (searchInput) {
-        // Search on Enter key press
-        searchInput.addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                performSearch();
-            }
+    /* ───────────── Red ───────────── */
+    async function enviar(url, formData) {
+        const resp = await fetch(url, {
+            method: 'POST',
+            body: formData,
+            headers: { 'X-CSRFToken': csrf() },
+            credentials: 'same-origin',
         });
-        
-        // Optional: Search with debounce on typing
-        let searchTimeout;
-        searchInput.addEventListener('input', function() {
-            clearTimeout(searchTimeout);
-            searchTimeout = setTimeout(performSearch, 500);
+        let data = {};
+        try { data = await resp.json(); } catch (e) { /* respuesta sin JSON */ }
+        if (!resp.ok || data.error) {
+            const motivo = data.error || (typeof data.detail === 'string' ? data.detail : '');
+            throw new Error(motivo || 'No se pudo completar la operación.');
+        }
+        return data;
+    }
+
+    /* ───────────── Diálogos nativos ───────────── */
+    const ultimoFoco = new WeakMap();
+    function abrir(dlg, disparador) {
+        ultimoFoco.set(dlg, disparador || document.activeElement);
+        if (typeof dlg.showModal === 'function') dlg.showModal(); else dlg.setAttribute('open', '');
+    }
+    document.querySelectorAll('dialog.gm-dialogo').forEach((dlg) => {
+        // Clic en el fondo = cancelar (la «caja» ocupa todo el diálogo; solo el fondo llega con target = dialog).
+        dlg.addEventListener('click', (e) => { if (e.target === dlg) dlg.close('cancelar'); });
+        dlg.addEventListener('close', () => {
+            const volver = ultimoFoco.get(dlg);
+            if (volver && volver.isConnected) volver.focus();
         });
-    }
-});
-
-function performSearch() {
-    const searchInput = document.getElementById('searchInput');
-    const searchTerm = searchInput.value.trim();
-    
-    // Get current URL parameters
-    const urlParams = new URLSearchParams(window.location.search);
-    
-    // Update or add search parameter
-    if (searchTerm) {
-        urlParams.set('search', searchTerm);
-    } else {
-        urlParams.delete('search');
-    }
-    
-    // Reset to page 1 when searching
-    urlParams.set('page', '1');
-    
-    // Reload page with new parameters
-    window.location.href = `${window.location.pathname}?${urlParams.toString()}`;
-}
-
-// Upload machine logo via AJAX
-function uploadMachineLogo(machineId, origen) {
-    const fileInput = document.getElementById(`logo-input-${origen}-${machineId}`);
-    const file = fileInput.files[0];
-
-    if (!file) {
-        alert('No se seleccionó ningún archivo');
-        return;
-    }
-
-    const formData = new FormData();
-    formData.append('logo', file);
-    formData.append('machine_id', machineId);
-    formData.append('origen', origen);
-    formData.append('csrf_token', getCsrfToken());
-
-    // Show loading indicator
-    const previewEl = document.getElementById(`preview-${origen}-${machineId}`);
-    const filenameEl = document.getElementById(`filename-${origen}-${machineId}`);
-
-    // Optimistic UI update or spinner could go here
-
-    fetch('/api/gestion-maquinas/upload-logo', {
-        method: 'POST',
-        body: formData
-    })
-        .then(response => response.json())
-        .then(data => {
-            if (data.error) {
-                alert('Error: ' + data.error);
-            } else {
-                // Update preview with the image_url from the response
-                previewEl.src = data.image_url;
-                previewEl.style.display = 'block';
-                const placeholder = document.getElementById(`placeholder-${origen}-${machineId}`);
-                if (placeholder) placeholder.style.display = 'none';
-
-                // Show success message
-                showToast(data.message);
-            }
-        })
-        .catch(error => {
-            alert('Error al subir la imagen: ' + error);
-        });
-}
-
-function showToast(message, type = 'success') {
-    const toast = document.createElement('div');
-    const bg = type === 'error' ? '#dc3545' : '#10b981';
-    toast.style.cssText = `position: fixed; bottom: 20px; right: 20px; background: ${bg}; color: white; padding: 12px 24px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.2); z-index: 10010; animation: slideIn 0.3s forwards; font-weight: 500;`;
-    toast.textContent = message;
-
-    document.body.appendChild(toast);
-
-    setTimeout(() => {
-        toast.style.animation = 'slideOut 0.3s forwards';
-        setTimeout(() => toast.remove(), 300);
-    }, 3000);
-}
-
-// Add keyframes for toast
-const style = document.createElement('style');
-style.innerHTML = `
-    @keyframes slideIn { from { transform: translateY(100%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
-    @keyframes slideOut { from { transform: translateY(0); opacity: 1; } to { transform: translateY(100%); opacity: 0; } }
-`;
-document.head.appendChild(style);
-
-// === Difficulty Coloring ===
-function updateDifficultyColor(select) {
-    const value = select.value;
-    // Remove old classes
-    select.classList.remove('text-green', 'text-blue', 'text-yellow', 'text-red');
-
-    // Add new class based on value
-    if (value === 'Muy Fácil') select.classList.add('text-green');
-    else if (value === 'Fácil') select.classList.add('text-blue');
-    else if (value === 'Medio') select.classList.add('text-yellow');
-    else if (value === 'Difícil') select.classList.add('text-red');
-}
-
-// === Toggle filter row visibility ===
-function toggleFilters(tableId) {
-    const table = document.getElementById(tableId);
-    if (!table) return;
-
-    const filterRow = table.querySelector('.filter-row');
-    if (!filterRow) return;
-
-    if (filterRow.style.display === 'none') {
-        filterRow.style.display = '';
-    } else {
-        filterRow.style.display = 'none';
-    }
-}
-
-// === Column filtering & Initialization ===
-document.addEventListener('DOMContentLoaded', function () {
-    // Initialize difficulty colors
-    document.querySelectorAll('select[name="dificultad"]').forEach(s => {
-        updateDifficultyColor(s);
-        s.addEventListener('change', (e) => updateDifficultyColor(e.target));
+    });
+    document.addEventListener('click', (e) => {
+        const cerrar = e.target.closest('[data-cerrar]');
+        if (cerrar) document.getElementById(cerrar.dataset.cerrar)?.close('cancelar');
     });
 
-    // Initialize filters
-    const filters = document.querySelectorAll('.column-filter');
-    filters.forEach(filter => {
-        filter.addEventListener('input', applyColumnFilters);
-        filter.addEventListener('change', applyColumnFilters);
-    });
-
-    function applyColumnFilters() {
-        const tables = ['tablaDocker', 'tablaBunker'];
-
-        tables.forEach(tableId => {
-            const table = document.getElementById(tableId);
-            if (!table) return;
-
-            const rows = table.querySelectorAll('tbody tr');
-            const tableFilters = table.querySelectorAll('.column-filter');
-
-            const filterValues = {};
-            tableFilters.forEach(f => {
-                const column = f.dataset.column;
-                filterValues[column] = f.value.trim().toLowerCase();
-            });
-
-            rows.forEach(row => {
-                let show = true;
-
-                const getValue = (index, selector) => {
-                    const cell = row.cells[index];
-                    if (!cell) return '';
-                    const input = cell.querySelector(selector);
-                    return (input?.value || cell.textContent || '').trim().toLowerCase();
-                };
-
-                if (filterValues.nombre && !getValue(0, 'input[name="nombre"]').includes(filterValues.nombre)) show = false;
-                if (filterValues.dificultad && getValue(1, 'select[name="dificultad"]') !== filterValues.dificultad) show = false;
-                if (filterValues.autor && !getValue(2, 'input[name="autor"]').includes(filterValues.autor)) show = false;
-
-                row.style.display = show ? '' : 'none';
-            });
+    function confirmar({ titulo, mensaje, textoOk, disparador, peligro = false }) {
+        const dlg = $('#dlg-confirmar');
+        $('#dlg-conf-titulo').textContent = titulo;
+        $('#dlg-conf-texto').textContent = mensaje;
+        const ok = $('#dlg-conf-ok');
+        ok.textContent = textoOk;
+        ok.classList.toggle('gm-btn--peligro', peligro);
+        ok.classList.toggle('gm-btn--primario', !peligro);
+        return new Promise((resolver) => {
+            dlg.addEventListener('close', () => resolver(dlg.returnValue === 'ok'), { once: true });
+            dlg.returnValue = 'cancelar';
+            abrir(dlg, disparador);
         });
     }
-});
 
-// === Guest Access Toggle ===
-function toggleGuestAccess(machineId, btn) {
-    if (!confirm('¿Quieres cambiar el estado de acceso para invitados de esta máquina?')) return;
+    /* ───────────── Estado visual de cada fila ───────────── */
+    const CLASES_DIF = { 'Muy Fácil': 'dif-muyfacil', 'Fácil': 'dif-facil', 'Medio': 'dif-medio', 'Difícil': 'dif-dificil' };
+    function colorDificultad(select) {
+        select.classList.remove(...Object.values(CLASES_DIF));
+        if (CLASES_DIF[select.value]) select.classList.add(CLASES_DIF[select.value]);
+    }
 
-    const data = new FormData();
-    data.append('id', machineId);
-    data.append('csrf_token', getCsrfToken()); // Helper function assumed to exist or need implementation
+    function etiquetar(tr) {
+        // Tras renombrar, todas las etiquetas accesibles de la fila vuelven a nombrar la máquina correcta.
+        const n = tr.dataset.nombre;
+        const poner = (sel, texto) => { const el = $(sel, tr); if (el) el.setAttribute('aria-label', texto); };
+        poner('[name="nombre"]', `Nombre de la máquina ${n}`);
+        poner('[name="dificultad"]', `Dificultad de ${n}`);
+        poner('[name="categoria"]', `Categoría de ${n}`);
+        poner('[name="sistema_operativo"]', `Plataforma de ${n}`);
+        poner('[data-accion="invitados"]', `Acceso de invitados a ${n}`);
+        poner('[data-accion="stats"]', `Estadísticas de ${n}`);
+        poner('[data-accion="detalles"]', `Editar detalles de ${n}`);
+        poner('[data-accion="eliminar"]', `Eliminar ${n}`);
+        poner('.gm-acciones', `Acciones de ${n}`);
+        const img = $('img.gm-logo-img', tr); if (img) img.alt = `Logo de ${n}`;
+        const sub = $('.gm-subir .gm-oculto', tr); if (sub) sub.textContent = `Subir logo de ${n}`;
+        marcarPendiente(tr, tr.classList.contains('is-dirty'));
+    }
 
-    fetch('/api/gestion-maquinas/toggle-guest-access', {
-        method: 'POST',
-        body: data
-    })
-        .then(response => response.json())
-        .then(data => {
-            if (data.error) {
-                alert('Error: ' + data.error);
-            } else {
-                // Update UI
-                const icon = btn.querySelector('i');
-                if (data.guest_access) {
-                    // Unlocked
-                    icon.className = 'bi bi-unlock-fill text-success';
-                    btn.title = 'Acceso permitido a invitados';
-                    btn.dataset.active = 'true';
-                    showToast('Máquina desbloqueada para invitados');
-                } else {
-                    // Locked
-                    icon.className = 'bi bi-lock-fill text-danger';
-                    btn.title = 'Acceso bloqueado a invitados';
-                    btn.dataset.active = 'false';
-                    showToast('Máquina bloqueada para invitados');
-                }
+    function marcarPendiente(tr, pendiente) {
+        tr.classList.toggle('is-dirty', pendiente);
+        const etiqueta = $('.gm-pendiente', tr);
+        if (etiqueta) etiqueta.hidden = !pendiente;
+        const btn = $('[data-accion="guardar"]', tr);
+        if (btn) btn.setAttribute('aria-label', `Guardar cambios de ${tr.dataset.nombre}${pendiente ? ' (hay cambios sin guardar)' : ''}`);
+    }
+
+    /* ───────────── Guardar ───────────── */
+    async function guardar(tr, { silencioso = false } = {}) {
+        if (tr.classList.contains('is-guardando')) return false;
+        const id = tr.dataset.id;
+        const d = datos[id] || {};
+        const campoNombre = $('[name="nombre"]', tr);
+        const nombre = campoNombre.value.trim();
+        if (!nombre) {
+            aviso('El nombre de la máquina no puede estar vacío.', 'error');
+            campoNombre.focus();
+            return false;
+        }
+
+        // Mismo contrato de siempre con /api/gestion-maquinas/actualizar: se envían todos los campos.
+        const fd = new FormData();
+        fd.set('csrf_token', csrf());
+        fd.set('id', id);
+        fd.set('origen', origen);
+        fd.set('nombre', nombre);
+        fd.set('dificultad', $('[name="dificultad"]', tr).value);
+        fd.set('autor', d.autor ?? '');
+        fd.set('enlace_autor', d.enlace_autor ?? '');
+        fd.set('fecha', d.fecha ?? '');
+        fd.set('imagen', d.imagen ?? '');
+        fd.set('descripcion', d.descripcion ?? '');
+        fd.set('link_descarga', d.link_descarga ?? '');
+        const cat = $('[name="categoria"]', tr);
+        fd.set('categoria', cat ? cat.value : (d.categoria ?? ''));   // en BunkerLabs se conserva la existente
+        const so = $('[name="sistema_operativo"]', tr);
+        if (so) fd.set('sistema_operativo', so.value);
+
+        tr.classList.add('is-guardando');
+        tr.setAttribute('aria-busy', 'true');
+        try {
+            const data = await enviar('/api/gestion-maquinas/actualizar', fd);
+            tr.dataset.nombre = nombre;
+            if (cat) d.categoria = cat.value;
+            marcarPendiente(tr, false);
+            etiquetar(tr);
+            if (!silencioso) aviso(data.message || `«${nombre}» guardada correctamente.`);
+            return true;
+        } catch (err) {
+            aviso(err.message || 'Error de red al comunicar con el servidor.', 'error');
+            return false;
+        } finally {
+            tr.classList.remove('is-guardando');
+            tr.removeAttribute('aria-busy');
+        }
+    }
+
+    /* ───────────── Estadísticas ───────────── */
+    function tarjetaStat(icono, valor, etiqueta) {
+        const card = document.createElement('div');
+        card.className = 'gm-stat';
+        const i = document.createElement('i');
+        i.className = `bi ${icono}`;
+        i.setAttribute('aria-hidden', 'true');
+        const v = document.createElement('strong');
+        v.textContent = valor;
+        const l = document.createElement('span');
+        l.textContent = etiqueta;
+        const texto = document.createElement('div');
+        texto.append(v, l);
+        card.append(i, texto);
+        return card;
+    }
+
+    async function verEstadisticas(tr, disparador) {
+        const cuerpo = $('#dlg-stats-cuerpo');
+        $('#dlg-stats-sub').textContent = tr.dataset.nombre;
+        cuerpo.setAttribute('aria-busy', 'true');
+        cuerpo.replaceChildren(Object.assign(document.createElement('p'), { className: 'gm-estado', textContent: 'Cargando estadísticas…' }));
+        abrir($('#dlg-stats'), disparador);
+        try {
+            const resp = await fetch(`/api/gestion-maquinas/machine-stats/${encodeURIComponent(tr.dataset.id)}`, { credentials: 'same-origin' });
+            const data = await resp.json();
+            if (!resp.ok || data.error) throw new Error(data.error || 'No se pudieron cargar las estadísticas.');
+            const votos = data.rating_count > 0 ? `Valoración (${data.rating_count} ${data.rating_count === 1 ? 'voto' : 'votos'})` : 'Valoración (sin votos)';
+            cuerpo.replaceChildren(
+                tarjetaStat('bi-file-earmark-text', data.writeups, 'Writeups publicados'),
+                tarjetaStat('bi-download', data.descargas, 'Descargas'),
+                tarjetaStat('bi-star-fill', `${data.rating_avg} / 5`, votos),
+            );
+        } catch (err) {
+            const p = document.createElement('p');
+            p.className = 'gm-estado gm-estado--error';
+            p.textContent = err instanceof TypeError ? 'Error de red al cargar las estadísticas.' : err.message;
+            cuerpo.replaceChildren(p);
+        } finally {
+            cuerpo.removeAttribute('aria-busy');
+        }
+    }
+
+    /* ───────────── Detalles (enlace autor, descripción, link de descarga) ───────────── */
+    let filaDetalles = null;
+    function abrirDetalles(tr, disparador) {
+        filaDetalles = tr;
+        const d = datos[tr.dataset.id] || {};
+        $('#dlg-detalles-sub').textContent = tr.dataset.nombre;
+        $('#det-enlace').value = d.enlace_autor || '';
+        $('#det-descripcion').value = d.descripcion || '';
+        $('#det-link').value = d.link_descarga || '';
+        const err = $('#det-error'); err.hidden = true; err.textContent = '';
+        abrir($('#dlg-detalles'), disparador);
+        $('#det-enlace').focus();
+    }
+
+    const urlValida = (v) => { try { const u = new URL(v); return u.protocol === 'http:' || u.protocol === 'https:'; } catch (e) { return false; } };
+
+    async function guardarDetalles() {
+        if (!filaDetalles) return;
+        const err = $('#det-error');
+        const enlace = $('#det-enlace').value.trim();
+        const link = $('#det-link').value.trim();
+        const fallo = (texto, campo) => { err.textContent = texto; err.hidden = false; campo.focus(); };
+        if (enlace && !urlValida(enlace)) return fallo('El enlace del autor debe empezar por http:// o https://.', $('#det-enlace'));
+        if (!link || !urlValida(link)) return fallo('El link de descarga es obligatorio y debe empezar por http:// o https://.', $('#det-link'));
+        if (!$('#det-descripcion').value.trim()) return fallo('La descripción no puede estar vacía.', $('#det-descripcion'));
+
+        const d = datos[filaDetalles.dataset.id];
+        const anterior = { ...d };
+        d.enlace_autor = enlace;
+        d.descripcion = $('#det-descripcion').value;
+        d.link_descarga = link;
+        const boton = $('#det-guardar');
+        boton.disabled = true;
+        const ok = await guardar(filaDetalles);
+        boton.disabled = false;
+        if (ok) { $('#dlg-detalles').close('ok'); filaDetalles = null; }
+        else { Object.assign(d, anterior); fallo('No se pudo guardar. Revisa el aviso de error y vuelve a intentarlo.', boton); }
+    }
+
+    /* ───────────── Eliminar ───────────── */
+    function actualizarContadores(delta) {
+        const resumen = $('#gm-resumen');
+        if (resumen && resumen.dataset.total) {
+            const total = Math.max(0, Number(resumen.dataset.total) + delta);
+            const fin = Math.max(0, Number(resumen.dataset.fin) + delta);
+            resumen.dataset.total = total; resumen.dataset.fin = fin;
+            const fuertes = resumen.querySelectorAll('strong');
+            if (fuertes.length >= 2) { fuertes[0].textContent = `${resumen.dataset.inicio}–${fin}`; fuertes[1].textContent = total; }
+        }
+        const contador = $(`[data-contador="${origen}"]`);
+        if (contador) contador.textContent = Math.max(0, Number(contador.textContent) + delta);
+    }
+
+    async function eliminar(tr, disparador) {
+        const nombre = tr.dataset.nombre;
+        const si = await confirmar({
+            titulo: `¿Eliminar «${nombre}»?`,
+            mensaje: `Se eliminará la máquina «${nombre}» de ${nombrePlataforma}. Esta acción no se puede deshacer.`,
+            textoOk: 'Eliminar máquina',
+            peligro: true,
+            disparador,
+        });
+        if (!si) return;
+
+        const fd = new FormData();
+        fd.set('csrf_token', csrf());
+        fd.set('id', tr.dataset.id);
+        fd.set('origen', origen);
+        tr.classList.add('is-guardando');
+        try {
+            const data = await enviar('/api/gestion-maquinas/eliminar', fd);
+            const vecina = tr.nextElementSibling || tr.previousElementSibling;
+            delete datos[tr.dataset.id];
+            tr.remove();
+            actualizarContadores(-1);
+            aviso(data.message || `«${nombre}» eliminada.`);
+            if (vecina) $('[name="nombre"]', vecina)?.focus();   // el foco no se pierde en el vacío
+            else window.location.reload();                       // era la última de la página
+        } catch (err) {
+            tr.classList.remove('is-guardando');
+            aviso(err.message || 'Error de red al comunicar con el servidor.', 'error');
+        }
+    }
+
+    /* ───────────── Acceso de invitados (BunkerLabs) ───────────── */
+    async function alternarInvitados(tr, boton) {
+        const permitido = boton.getAttribute('aria-checked') === 'true';
+        const si = await confirmar({
+            titulo: permitido ? 'Bloquear acceso de invitados' : 'Permitir acceso de invitados',
+            mensaje: `¿${permitido ? 'Bloquear' : 'Permitir'} el acceso de invitados a «${tr.dataset.nombre}»?`,
+            textoOk: permitido ? 'Bloquear' : 'Permitir',
+            peligro: permitido,
+            disparador: boton,
+        });
+        if (!si) return;
+        const fd = new FormData();
+        fd.set('csrf_token', csrf());
+        fd.set('id', tr.dataset.id);
+        boton.disabled = true;
+        try {
+            const data = await enviar('/api/gestion-maquinas/toggle-guest-access', fd);
+            boton.setAttribute('aria-checked', data.guest_access ? 'true' : 'false');
+            $('.gm-interruptor-txt', boton).textContent = data.guest_access ? 'Permitido' : 'Bloqueado';
+            aviso(data.guest_access ? `«${tr.dataset.nombre}» desbloqueada para invitados.` : `«${tr.dataset.nombre}» bloqueada para invitados.`);
+        } catch (err) {
+            aviso(err.message || 'Error de red al comunicar con el servidor.', 'error');
+        } finally {
+            boton.disabled = false;
+            boton.focus();
+        }
+    }
+
+    /* ───────────── Logo ───────────── */
+    async function subirLogo(tr, input) {
+        const archivo = input.files && input.files[0];
+        if (!archivo) return;
+        if (!TIPOS_LOGO.test(archivo.type)) { aviso('El archivo debe ser una imagen.', 'error'); input.value = ''; return; }
+        if (archivo.size > MAX_LOGO) {
+            aviso(`La imagen pesa ${(archivo.size / 1048576).toFixed(1)} MB; el máximo es 2 MB.`, 'error');
+            input.value = '';
+            return;
+        }
+        const fd = new FormData();
+        fd.set('csrf_token', csrf());
+        fd.set('logo', archivo);
+        fd.set('machine_id', tr.dataset.id);
+        fd.set('origen', origen);
+        const zona = $('.gm-logo', tr);
+        zona.classList.add('is-subiendo');
+        zona.setAttribute('aria-busy', 'true');
+        input.disabled = true;
+        try {
+            const data = await enviar('/api/gestion-maquinas/upload-logo', fd);
+            let img = $('img.gm-logo-img', tr);
+            if (!img) {
+                $('.gm-logo-vacio', tr)?.remove();
+                img = Object.assign(document.createElement('img'), { className: 'gm-logo-img', width: 44, height: 44, decoding: 'async' });
+                zona.prepend(img);
             }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            alert('Ocurrió un error al intentar cambiar el estado.');
-        });
-}
-
-// === Modal de estadisticas de maquina (writeups, descargas, valoracion) ===
-let lastStatsModalTrigger = null;
-
-document.addEventListener('DOMContentLoaded', function () {
-    // Delegacion: cualquier boton .machine-name-link, en cualquiera de las
-    // dos tablas, abre el modal con el id/nombre que lleva en sus data-*.
-    document.addEventListener('click', function (e) {
-        const btn = e.target.closest('.machine-name-link');
-        if (btn) openMachineStatsModal(btn.dataset.machineId, btn.dataset.machineName, btn);
-    });
-
-    const statsModal = document.getElementById('machineStatsModal');
-    if (statsModal) {
-        // Cerrar al hacer clic en el backdrop (mismo patron que el resto de
-        // modales del sitio, definidos en base.html).
-        statsModal.addEventListener('click', function (e) {
-            if (e.target === statsModal) closeMachineStatsModal();
-        });
+            img.src = data.thumb_url || data.image_url;
+            img.alt = `Logo de ${tr.dataset.nombre}`;
+            aviso(`Logo de «${tr.dataset.nombre}» actualizado.`);
+        } catch (err) {
+            aviso(err.message || 'Error al subir la imagen.', 'error');
+        } finally {
+            zona.classList.remove('is-subiendo');
+            zona.removeAttribute('aria-busy');
+            input.disabled = false;
+            input.value = '';
+        }
     }
 
-    // Cerrar con Escape y devolver el foco al boton que abrio el modal.
-    document.addEventListener('keydown', function (e) {
-        if (e.key === 'Escape' && statsModal && statsModal.classList.contains('visible')) {
-            closeMachineStatsModal();
+    /* ───────────── Eventos ───────────── */
+    document.addEventListener('click', (e) => {
+        const btn = e.target.closest('button[data-accion]');
+        if (!btn) return;
+        const tr = filaDe(btn);
+        if (!tr) return;
+        switch (btn.dataset.accion) {
+            case 'guardar': guardar(tr); break;
+            case 'eliminar': eliminar(tr, btn); break;
+            case 'stats': verEstadisticas(tr, btn); break;
+            case 'detalles': abrirDetalles(tr, btn); break;
+            case 'invitados': alternarInvitados(tr, btn); break;
         }
     });
-});
 
-function closeMachineStatsModal() {
-    closeModal('machineStatsModal');
-    if (lastStatsModalTrigger) {
-        lastStatsModalTrigger.focus();
-        lastStatsModalTrigger = null;
-    }
-}
-
-function openMachineStatsModal(machineId, machineName, triggerEl) {
-    lastStatsModalTrigger = triggerEl || null;
-
-    const subtitle = document.getElementById('machineStatsModalSubtitle');
-    const body = document.getElementById('machineStatsModalBody');
-    if (subtitle) subtitle.textContent = machineName || '';
-    if (body) {
-        body.innerHTML = '';
-        const loading = document.createElement('div');
-        loading.className = 'machine-stats-loading';
-        loading.textContent = 'Cargando...';
-        body.appendChild(loading);
-    }
-
-    openModal('machineStatsModal');
-
-    const closeBtn = document.querySelector('#machineStatsModal .modal-close-button');
-    if (closeBtn) closeBtn.focus();
-
-    fetch(`/api/gestion-maquinas/machine-stats/${encodeURIComponent(machineId)}`)
-        .then(response => response.json().then(data => ({ ok: response.ok, data })))
-        .then(({ ok, data }) => {
-            if (!body) return;
-            body.innerHTML = '';
-
-            if (!ok || data.error) {
-                const err = document.createElement('div');
-                err.className = 'machine-stats-error';
-                err.textContent = data.error || 'No se pudieron cargar las estadísticas.';
-                body.appendChild(err);
-                return;
-            }
-
-            body.appendChild(buildStatCard('bi-file-earmark-text', data.writeups, 'Writeups publicados'));
-            body.appendChild(buildStatCard('bi-download', data.descargas, 'Descargas'));
-
-            const ratingLabel = data.rating_count > 0
-                ? `Valoración (${data.rating_count} ${data.rating_count === 1 ? 'voto' : 'votos'})`
-                : 'Valoración (sin votos)';
-            body.appendChild(buildStatCard('bi-star-fill', `${data.rating_avg} / 5`, ratingLabel));
-        })
-        .catch(() => {
-            if (!body) return;
-            body.innerHTML = '';
-            const err = document.createElement('div');
-            err.className = 'machine-stats-error';
-            err.textContent = 'Error de red al cargar las estadísticas.';
-            body.appendChild(err);
+    if (tabla) {
+        // Cambios en los campos de la fila: marcar «sin guardar»; la dificultad cambia de color.
+        tabla.addEventListener('input', (e) => {
+            const tr = filaDe(e.target);
+            if (tr && e.target.matches('input[name], select[name]')) marcarPendiente(tr, true);
         });
-}
-
-function buildStatCard(iconClass, value, label) {
-    const card = document.createElement('div');
-    card.className = 'machine-stat-card';
-
-    const icon = document.createElement('i');
-    icon.className = `bi ${iconClass} machine-stat-icon`;
-    icon.setAttribute('aria-hidden', 'true');
-
-    const valueEl = document.createElement('div');
-    valueEl.className = 'machine-stat-value';
-    valueEl.textContent = value;
-
-    const labelEl = document.createElement('div');
-    labelEl.className = 'machine-stat-label';
-    labelEl.textContent = label;
-
-    const textWrap = document.createElement('div');
-    textWrap.appendChild(valueEl);
-    textWrap.appendChild(labelEl);
-
-    card.appendChild(icon);
-    card.appendChild(textWrap);
-    return card;
-}
-
-// === Modal de detalles editables (enlace autor, descripcion, link
-// descarga). Estos campos ya no se muestran en la tabla porque no entraban;
-// siguen viviendo como inputs ocultos dentro del <form> de cada fila, y
-// este modal solo es una vista/edicion ampliada de esos mismos campos. ===
-let currentDetailsRow = null; // { form, enlaceInput, descTextarea, linkInput }
-
-document.addEventListener('DOMContentLoaded', function () {
-    const detailsModal = document.getElementById('machineDetailsModal');
-    if (detailsModal) {
-        detailsModal.addEventListener('click', function (e) {
-            if (e.target === detailsModal) closeMachineDetailsModal();
+        tabla.addEventListener('change', (e) => {
+            const tr = filaDe(e.target);
+            if (!tr) return;
+            if (e.target.matches('select[name="dificultad"]')) colorDificultad(e.target);
+            if (e.target.matches('select[name]')) marcarPendiente(tr, true);
+            if (e.target.matches('input[type="file"][data-accion="logo"]')) subirLogo(tr, e.target);
         });
+        // Intro dentro del nombre guarda la fila (antes lo hacía el <form>).
+        tabla.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && e.target.matches('input[name="nombre"]')) { e.preventDefault(); const tr = filaDe(e.target); if (tr) guardar(tr); }
+        });
+        tabla.querySelectorAll('select[name="dificultad"]').forEach(colorDificultad);
     }
 
-    document.addEventListener('keydown', function (e) {
-        if (e.key === 'Escape' && detailsModal && detailsModal.classList.contains('visible')) {
-            closeMachineDetailsModal();
-        }
+    $('#det-guardar')?.addEventListener('click', guardarDetalles);
+
+    // Aviso antes de abandonar la página con filas modificadas sin guardar.
+    window.addEventListener('beforeunload', (e) => {
+        if (tabla && tabla.querySelector('tr.is-dirty')) { e.preventDefault(); e.returnValue = ''; }
     });
-});
-
-function openMachineDetailsModal(triggerBtn) {
-    const row = triggerBtn.closest('tr');
-    if (!row) return;
-
-    const form = row.querySelector('form.d-contents');
-    const nameBtn = row.querySelector('.machine-name-link');
-    if (!form) return;
-
-    const enlaceInput = form.querySelector('[name="enlace_autor"]');
-    const descTextarea = form.querySelector('[name="descripcion"]');
-    const linkInput = form.querySelector('[name="link_descarga"]');
-
-    currentDetailsRow = { form, enlaceInput, descTextarea, linkInput, triggerBtn };
-
-    const subtitle = document.getElementById('machineDetailsModalSubtitle');
-    if (subtitle) subtitle.textContent = nameBtn ? nameBtn.dataset.machineName : '';
-
-    document.getElementById('detailsEnlaceAutor').value = enlaceInput ? enlaceInput.value : '';
-    document.getElementById('detailsDescripcion').value = descTextarea ? descTextarea.value : '';
-    document.getElementById('detailsLinkDescarga').value = linkInput ? linkInput.value : '';
-
-    openModal('machineDetailsModal');
-    document.getElementById('detailsEnlaceAutor').focus();
-}
-
-function closeMachineDetailsModal() {
-    closeModal('machineDetailsModal');
-    if (currentDetailsRow && currentDetailsRow.triggerBtn) {
-        currentDetailsRow.triggerBtn.focus();
-    }
-    currentDetailsRow = null;
-}
-
-// === Guardar/eliminar maquina via AJAX ===
-// Los <form> de "Guardar" y "Eliminar" de cada fila son <form method="post">
-// normales: sin esto, al enviarlos el navegador navega a la respuesta JSON
-// cruda de la API (`/api/gestion-maquinas/actualizar|eliminar`) y la pinta
-// como si fuera la pagina entera. Se interceptan por delegacion (una sola
-// vez, a nivel de tabla) para enviarlos con fetch y mostrar el resultado
-// como un toast, igual que ya se hace con el logo y el guest-access.
-document.addEventListener('DOMContentLoaded', function () {
-    ['tablaDocker', 'tablaBunker'].forEach(tableId => {
-        const table = document.getElementById(tableId);
-        if (table) table.addEventListener('submit', handleMachineFormSubmit);
-    });
-});
-
-function handleMachineFormSubmit(e) {
-    // Si el form es el de "Eliminar" y el usuario cancelo el confirm() de su
-    // onsubmit, el evento ya llega aqui con preventDefault() aplicado: no
-    // hacer nada, o se borraria la maquina pese a haber cancelado.
-    if (e.defaultPrevented) return;
-
-    const form = e.target;
-    if (!(form instanceof HTMLFormElement) || !form.classList.contains('d-contents')) return;
-
-    const isDelete = form.action.includes('/gestion-maquinas/eliminar');
-    const isUpdate = form.action.includes('/gestion-maquinas/actualizar');
-    if (!isDelete && !isUpdate) return;
-
-    e.preventDefault();
-
-    const submitBtn = form.querySelector('button[type="submit"]');
-    if (submitBtn) submitBtn.disabled = true;
-
-    fetch(form.action, { method: 'POST', body: new FormData(form) })
-        .then(response => response.json().then(data => ({ ok: response.ok, data })))
-        .then(({ ok, data }) => {
-            if (!ok || data.error) {
-                showToast(data.error || 'No se pudo completar la operación.', 'error');
-                return;
-            }
-
-            showToast(data.message || 'Operación realizada correctamente.');
-
-            if (isDelete) {
-                const row = form.closest('tr');
-                if (row) row.remove();
-            }
-        })
-        .catch(() => {
-            showToast('Error de red al comunicar con el servidor.', 'error');
-        })
-        .finally(() => {
-            if (submitBtn) submitBtn.disabled = false;
-        });
-}
-
-function saveMachineDetailsModal() {
-    if (!currentDetailsRow) return;
-    const { form, enlaceInput, descTextarea, linkInput } = currentDetailsRow;
-
-    if (enlaceInput) enlaceInput.value = document.getElementById('detailsEnlaceAutor').value;
-    if (descTextarea) descTextarea.value = document.getElementById('detailsDescripcion').value;
-    if (linkInput) linkInput.value = document.getElementById('detailsLinkDescarga').value;
-
-    closeModal('machineDetailsModal');
-    currentDetailsRow = null;
-
-    // Mismo submit que dispara el boton "Guardar" de la fila: un POST de
-    // formulario normal (sin AJAX), asi que se guardan a la vez todos los
-    // campos de la fila (nombre, dificultad, autor, categoria, etc.).
-    form.requestSubmit();
-}
+})();

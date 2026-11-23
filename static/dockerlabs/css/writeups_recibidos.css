@@ -181,3 +181,34 @@ body {
         min-width: 800px;
     }
 }
+/* Cody no reserva columna fija en escritorio: con una tabla ancha se queda
+   en la misma barra compacta que usa en tablet/móvil, para no quitarle
+   anchura a la tabla (ver .dl-con-cody--tabla en writeups_recibidos.html). */
+@media (min-width: 1180px) {
+    .dl-con-cody.dl-con-cody--tabla {
+        display: block;
+        max-width: none;
+        margin: 0;
+        padding: 0;
+    }
+    .dl-con-cody.dl-con-cody--tabla > .dl-ballena {
+        position: sticky; top: 80px; z-index: 5;
+        width: auto; max-width: none;
+        flex-direction: row-reverse; align-items: center; gap: 12px;
+        margin: 12px 16px 0; padding: 6px 12px 6px 8px;
+        background: rgba(var(--surface-overlay-rgb), .82);
+        border: 1px solid rgba(255, 255, 255, .08); border-radius: 18px;
+        box-shadow: 0 14px 30px -18px rgba(0, 0, 0, .8);
+        backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+    }
+    .dl-con-cody.dl-con-cody--tabla .ballena { width: 104px; flex: 0 0 auto; }
+    .dl-con-cody.dl-con-cody--tabla .dl-bocadillo {
+        flex: 1; min-width: 0; margin: 0; padding: 8px 30px 8px 12px;
+        border-radius: 14px; box-shadow: none; text-align: left;
+    }
+    .dl-con-cody.dl-con-cody--tabla .dl-bocadillo-txt { font-size: .82rem; line-height: 1.45; }
+    .dl-con-cody.dl-con-cody--tabla .dl-bocadillo-autor { margin-top: 2px; font-size: .7rem; }
+    .dl-con-cody.dl-con-cody--tabla .dl-bocadillo-cola { left: 0; top: 50%; bottom: auto; }
+    .dl-con-cody.dl-con-cody--tabla .dl-bocadillo-cola i:nth-child(1) { width: 10px; height: 10px; left: -9px; top: -2px; }
+    .dl-con-cody.dl-con-cody--tabla .dl-bocadillo-cola i:nth-child(2) { width: 6px; height: 6px; left: -15px; top: 7px; }
+}

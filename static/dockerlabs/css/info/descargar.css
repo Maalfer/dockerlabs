@@ -176,8 +176,8 @@
     transform: scale(1.015);
 }
 
-/* Máquinas Windows: dos capturas (extraer .ova / importar en VirtualBox)
-   en vez de una sola, apiladas con su leyenda. */
+/* Máquinas VirtualBox: varias capturas del paso a paso (extraer, abrir
+   el .ova, configuración y red) en vez de una sola, apiladas con su leyenda. */
 .captura-box-multi {
     flex-direction: column;
     align-items: stretch;

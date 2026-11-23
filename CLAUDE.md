@@ -1,11 +1,13 @@
 # DockerLabs – Guía de desarrollo
 
-> ## ⚠️ Despliegue: el código se edita en el VPS, el repo vuelve a estar vivo
+> ## ⚠️ Despliegue: el código se edita en el VPS, que es también el repo
 > El código en producción se edita **directamente en el VPS** (`/opt/dockerlabs/`)
-> y se aplica con `sudo systemctl restart dockerlabs`. Pero desde octubre de 2026
-> el repo de GitHub volvió a ser la fuente de verdad del código (tags `v2.0.0+`):
-> cada cambio se sincroniza a mano a un clon aparte y se comitea/pushea. **No**
-> asumas que `main` está desactualizado. Detalles completos en **`DEPLOYMENT.md`**.
+> y se aplica con `sudo systemctl restart dockerlabs`. Desde octubre de 2026 el
+> repo de GitHub (tags `v2.0.0+`) es la fuente de verdad del código, y
+> `/opt/dockerlabs` es a la vez el clon de ese repo: no hay un clon aparte ni un
+> paso de sincronización. El commit y el push **solo se hacen cuando el dueño
+> del proyecto lo pide expresamente**. **No** asumas que `main` está
+> desactualizado. Detalles completos en **`DEPLOYMENT.md`**.
 
 > ## Versión: solo la sube el dueño
 > **La versión no se sube nunca salvo que el dueño del proyecto lo pida expresamente.** No toques `VERSION` ni crees secciones `## [X.Y.Z]` en `CHANGELOG.md` por tu cuenta: los cambios se anotan en `## [Sin publicar]` y el número lo decide él.
@@ -59,7 +61,7 @@ dockerlabs/
     images.py             # Servicio de imágenes (perfil, logos)
     certificados.py       # Certificados de usuario (render PNG + archivado del PDF)
     public_profile.py     # API pública JSON del perfil: GET /u/<slug>
-    api_publica.py        # API pública: resumen, rankings y envío de máquinas
+    api_publica.py        # API pública: resumen, rankings, envío de máquinas y GET /version
     auth.py               # Autenticación: alta, acceso y recuperación de contraseña
     perfil.py             # Perfil del usuario: contraseña, datos, redes sociales y foto
     seo.py                # Recursos de raíz: favicon, robots.txt y sitemap.xml
@@ -203,8 +205,15 @@ Mascota animada de DockerLabs (SVG + CSS + JS, sin dependencias):
 - Estilos: `static/dockerlabs/css/auth-ballena.css`. Lógica:
   `static/dockerlabs/js/ballena.js`, que expone `window.DLBallena`
   (`decir(texto, autor)`, `momento(clase, ms)`, `soplar()`).
-- Frases: repertorio en `ballena.js`; las que no tienen autor real se firman
-  como «Cody».
+- Frases: `static/dockerlabs/data/frases.json` (`{t, a, c}`: texto, autor, categoría).
+  Las que firma «Cody» se muestran como «Cody - <año>». `ballena.js` las carga con
+  `fetch` (URL en `data-frases`, con `static_v`) y tiene un repertorio de reserva.
+  Cada categoría (`categorias`) se prefiere según el contexto de la página
+  (`contextos`, con probabilidad `prefProb`): se pasa con `ballena_contexto` en el
+  `{% with %}` del include (`login`, `registro`, `recuperar`, `home`, `certificados`,
+  `panel`, `info`, `legal`). El historial de las últimas frases vistas se guarda en
+  `localStorage` (`dl-cody-vistas`) para no repetir entre páginas. Para añadir
+  frases basta editar el JSON (máx. 125 caracteres; `tests/test_cody_frases.py` lo valida).
 - Guía de ayuda de la home (botón `?` junto a Dificultad):
   `templates/dockerlabs/_guia.html` + `static/dockerlabs/css/guia.css` +
   `static/dockerlabs/js/guia.js`; capturas en `static/dockerlabs/images/guia/`.

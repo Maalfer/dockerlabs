@@ -11,7 +11,7 @@
 
 {% block content %}
 <div class="dl-con-cody">
-{% with ballena_mensajes = {"idle": "Soy Cody y estas son las reglas del juego. Te las resumo ↓", "fin": "¡Hecho! Ya conoces las reglas. Hackea con ética."}, ballena_lectura = true %}{% include "dockerlabs/auth/_ballena.html" %}{% endwith %}
+{% with ballena_contexto = "legal", ballena_mensajes = {"idle": "Soy Cody y estas son las reglas del juego. Te las resumo ↓", "fin": "¡Hecho! Ya conoces las reglas. Hackea con ética."}, ballena_lectura = true %}{% include "dockerlabs/auth/_ballena.html" %}{% endwith %}
 <div class="dl-con-cody-pagina">
 <div class="policy-container">
 
@@ -25,62 +25,120 @@
     </div>
 
     <div class="policy-card">
-        <p class="policy-lead">Bienvenido a <strong>DockerLabs</strong>. Al acceder y utilizar nuestro sitio web,
-            aceptas cumplir con los siguientes términos y condiciones. Si no estás de acuerdo con alguna parte de
-            estos términos, no debes utilizar nuestra plataforma.</p>
+        <p class="policy-meta">Última actualización: 12 de noviembre de 2026</p>
+        <p class="policy-lead">Bienvenido a DockerLabs. Al acceder y utilizar este sitio web aceptas las siguientes condiciones. Si no estás de acuerdo con alguna parte, no debes utilizar la plataforma.</p>
 
-        <section class="policy-section" data-tldr="DockerLabs es de Mario Álvarez: una plataforma educativa de ciberseguridad.">
+        <section class="policy-section" data-tldr="Quién está detrás de DockerLabs y cómo contactar.">
             <h2><span class="policy-section-num">1</span> Titularidad del Sitio Web</h2>
-            <p>En cumplimiento con el deber de información recogido en el artículo 10 de la Ley 34/2002, de 11
-                de julio, de Servicios de la Sociedad de la Información y del Comercio Electrónico, se indican
-                los siguientes datos:</p>
+            <p>En cumplimiento del artículo 10 de la Ley 34/2002, de 11 de julio, de Servicios de la Sociedad de
+                la Información y del Comercio Electrónico (LSSI-CE), se indican los datos del titular:</p>
             <ul>
-                <li><strong>Titular:</strong> Mario Álvarez Fernandez</li>
-                <li><strong>Email:</strong> info@elrincondelhacker.es</li>
-                <li><strong>Sitio Web:</strong> DockerLabs.es</li>
-                <li><strong>Actividad:</strong> Plataforma educativa de ciberseguridad y despliegue de
-                    laboratorios vulnerables.</li>
+                <li><strong>Responsable:</strong> Mario Álvarez Fernández</li>
+                <li><strong>Domicilio:</strong> Calle Fernando Morán, 5, 33401, Avilés (Asturias, España)</li>
+                <li><strong>Correo electrónico:</strong> mario@elrincondelhacker.es</li>
+                <li><strong>Sitio web:</strong> DockerLabs.es</li>
             </ul>
+            <p>Actividad: plataforma educativa de ciberseguridad y despliegue de laboratorios vulnerables.</p>
         </section>
 
-        <section class="policy-section" data-tldr="Solo para aprender. Nada de atacar sistemas reales, hacer DoS ni entrar en cuentas ajenas.">
-            <h2><span class="policy-section-num">2</span> Objeto y Uso de la Plataforma</h2>
-            <p>DockerLabs es una plataforma diseñada exclusivamente con fines <strong>educativos y de
-                aprendizaje</strong> en el ámbito de la ciberseguridad. Proporcionamos entornos controlados
-                (laboratorios vulnerables basados en Docker) para que los usuarios puedan practicar y mejorar sus
-                habilidades de hacking ético.</p>
-            <p><strong>Queda terminantemente prohibido:</strong></p>
+        <section class="policy-section" data-tldr="Usar DockerLabs implica aceptar estas condiciones. Si no estás de acuerdo, no la uses.">
+            <h2><span class="policy-section-num">2</span> Aceptación</h2>
+            <p>El acceso y uso de DockerLabs atribuye la condición de usuario e implica la aceptación de estas
+                condiciones, de la <a href="{{ url_for('main.politica_privacidad') }}">Política de Privacidad</a> y
+                de la <a href="{{ url_for('main.politica_cookies') }}">Política de Cookies</a>. El servicio es
+                gratuito. Para registrarte debes tener al menos 14 años.</p>
+        </section>
+
+        <section class="policy-section" data-tldr="Es una plataforma educativa. Prohibido atacar sistemas reales sin permiso o dañar la infraestructura.">
+            <h2><span class="policy-section-num">3</span> Objeto y Uso Permitido</h2>
+            <p>DockerLabs es una plataforma con fines <strong>exclusivamente educativos</strong>: ofrece entornos
+                controlados (laboratorios vulnerables basados en Docker) para practicar hacking ético.</p>
+            <p>Queda terminantemente prohibido:</p>
             <ul>
-                <li>Utilizar los conocimientos adquiridos en esta plataforma para realizar ataques a sistemas
-                    reales sin autorización, actividades delictivas o cualquier acción que vulnere la ley
-                    vigente.</li>
+                <li>Usar lo aprendido para atacar sistemas reales sin autorización expresa, o para cualquier
+                    actividad ilícita.</li>
                 <li>Realizar ataques de denegación de servicio (DoS/DDoS) o cualquier acción que comprometa la
                     integridad, disponibilidad o seguridad de la infraestructura de DockerLabs.</li>
-                <li>Intentar acceder a cuentas de otros usuarios o extraer información de la base de datos de la
+                <li>Acceder a cuentas de otros usuarios o extraer información de la base de datos de la
                     plataforma.</li>
+                <li>Suplantar a otras personas, automatizar el registro masivo de cuentas o eludir las limitaciones
+                    técnicas del servicio.</li>
             </ul>
         </section>
 
-        <section class="policy-section" data-tldr="Los laboratorios son vulnerables a propósito; DockerLabs no responde del mal uso que se haga de ellos.">
-            <h2><span class="policy-section-num">3</span> Exención de Responsabilidad</h2>
-            <p>DockerLabs proporciona laboratorios intencionalmente vulnerables. El usuario reconoce que el uso
-                de estas herramientas y entornos conlleva riesgos inherentes. <strong>Mario Álvarez
-                Fernandez</strong> no se hace responsable del mal uso que los usuarios puedan dar a la
-                información o herramientas proporcionadas, ni de los daños que puedan causar a sus propios
-                sistemas o a terceros derivados de la práctica fuera de los entornos controlados.</p>
+        <section class="policy-section" data-tldr="Eres responsable de tu cuenta. Puedo suspenderla si incumples las normas.">
+            <h2><span class="policy-section-num">4</span> Cuenta de Usuario</h2>
+            <p>Debes facilitar datos veraces, mantener la confidencialidad de tu contraseña y avisarnos si sospechas
+                un uso no autorizado de tu cuenta. Eres responsable de la actividad realizada desde ella.
+                Podemos suspender o eliminar cuentas que incumplan estas condiciones o la ley. Puedes eliminar tu
+                cuenta en cualquier momento desde la «Zona de peligro» de tu panel de usuario, o solicitarlo escribiendo a mario@elrincondelhacker.es.</p>
         </section>
 
-        <section class="policy-section" data-tldr="Textos, logos, laboratorios y código tienen dueño: DockerLabs o sus autores.">
-            <h2><span class="policy-section-num">4</span> Propiedad Intelectual</h2>
-            <p>Todos los contenidos del sitio web (textos, logotipos, laboratorios, código fuente) son propiedad
-                de DockerLabs o de sus respectivos autores si se trata de contribuciones de la comunidad, y están
-                protegidos por las leyes de propiedad intelectual.</p>
+        <section class="policy-section" data-tldr="Lo que publicas (writeups, bio, imagen) es tuyo, pero me das permiso para mostrarlo. Respeta la ley y los derechos de otros.">
+            <h2><span class="policy-section-num">5</span> Contenido de los Usuarios</h2>
+            <p>Si envías contenido (writeups, máquinas, biografía, imagen de perfil, comentarios), declaras que
+                eres su autor o tienes derecho a usarlo y que no vulnera derechos de terceros ni la ley. Conservas
+                la titularidad, y concedes a DockerLabs una licencia gratuita, no exclusiva y limitada a mostrarlo,
+                almacenarlo y distribuirlo dentro de la plataforma mientras exista tu contenido.</p>
+            <p>No está permitido publicar contenido ilegal, que atente contra el honor, la intimidad o la
+                propiedad intelectual de otras personas, ni malware o instrucciones dirigidas a dañar sistemas
+                reales. Si crees que algún contenido infringe tus derechos o la ley, escribe a
+                mario@elrincondelhacker.es indicando el contenido, el motivo y tus datos de contacto; lo revisaremos
+                y, si procede, lo retiraremos con diligencia (art. 16 LSSI-CE).</p>
         </section>
 
-        <section class="policy-section" data-tldr="Estas condiciones pueden cambiar y rigen desde que se publican.">
-            <h2><span class="policy-section-num">5</span> Modificaciones</h2>
-            <p>Nos reservamos el derecho de modificar estos términos en cualquier momento. Las modificaciones
-                entrarán en vigor desde su publicación en este sitio web.</p>
+        <section class="policy-section" data-tldr="Los laboratorios son vulnerables a propósito: úsalos en tu equipo y bajo tu responsabilidad.">
+            <h2><span class="policy-section-num">6</span> Exención de Responsabilidad</h2>
+            <p>DockerLabs proporciona laboratorios <strong>intencionalmente vulnerables</strong>. Los despliegas
+                y ejecutas en tu propio equipo, y su uso conlleva riesgos inherentes que aceptas. El titular no
+                responde del mal uso que los usuarios hagan de la información o de las herramientas, ni de los
+                daños que puedan causarse a sus propios sistemas o a terceros por practicar fuera de los entornos
+                controlados.</p>
+            <p>El servicio se presta «tal cual», sin garantía de disponibilidad continua; podemos modificarlo,
+                interrumpirlo o retirar contenidos por mantenimiento, seguridad o motivos técnicos. Las máquinas de
+                la comunidad pertenecen a sus autores y no podemos garantizar que carezcan de errores.</p>
+            <p>En la medida permitida por la ley, el titular no responde de daños indirectos ni de la pérdida de
+                datos o de beneficios derivados del uso del sitio. Nada de lo anterior limita los derechos que la
+                ley reconoce irrenunciablemente al usuario.</p>
+        </section>
+
+        <section class="policy-section" data-tldr="Los contenidos son de DockerLabs o de sus autores. No los copies como propios.">
+            <h2><span class="policy-section-num">7</span> Propiedad Intelectual</h2>
+            <p>Los textos, diseños, logotipos, código y laboratorios de DockerLabs son propiedad de su titular o de
+                sus autores (contribuciones de la comunidad) y están protegidos por la normativa de propiedad
+                intelectual. Sus marcas y nombres comerciales pertenecen a sus respectivos propietarios. El código
+                publicado en GitHub se rige por la licencia indicada en su repositorio. Queda prohibida su
+                reproducción o explotación fuera de lo permitido por la ley o por dichas licencias.</p>
+            <p>El nombre DockerLabs, el nombre BunkerLabs, su logotipo y la mascota Cody identifican a este proyecto y
+                a su autor, Mario Álvarez Fernández. No está permitido usarlos para hacerse pasar por DockerLabs, por su
+                autor o por su equipo, ni presentar como propios el sitio, sus contenidos o sus laboratorios. Los
+                canales oficiales y la forma de comprobar su autenticidad están en
+                <a href="{{ url_for('main.autoria') }}">Autoría y canales oficiales</a>.</p>
+            <p>DockerLabs es un proyecto independiente: no está afiliado, patrocinado ni avalado por Docker, Inc.
+                «Docker» es una marca de Docker, Inc. y se menciona solo para describir la tecnología utilizada.</p>
+        </section>
+
+        <section class="policy-section" data-tldr="Enlazamos a otras webs; no controlamos su contenido. Algún enlace es de afiliación.">
+            <h2><span class="policy-section-num">8</span> Enlaces Externos y Afiliación</h2>
+            <p>DockerLabs contiene enlaces a sitios de terceros sobre cuyo contenido y políticas no tiene control ni
+                responsabilidad. Algunos enlaces son de <strong>afiliación o patrocinio</strong> (por ejemplo, el
+                banner de Raiola Networks): si contratas a través de ellos, el titular puede recibir una comisión
+                sin coste adicional para ti.</p>
+        </section>
+
+        <section class="policy-section" data-tldr="Podemos cambiar estas condiciones; la versión vigente es la publicada aquí.">
+            <h2><span class="policy-section-num">9</span> Modificaciones</h2>
+            <p>Podemos modificar estas condiciones en cualquier momento. Los cambios se publicarán en esta página
+                con su fecha de actualización y se aplicarán desde su publicación; si son sustanciales, avisaremos a
+                los usuarios registrados por correo electrónico.</p>
+        </section>
+
+        <section class="policy-section" data-tldr="Se aplica la ley española; juzgados de tu domicilio si eres consumidor.">
+            <h2><span class="policy-section-num">10</span> Legislación y Jurisdicción</h2>
+            <p>Estas condiciones se rigen por la legislación española. Para cualquier controversia, las partes se
+                someten a los juzgados y tribunales que resulten competentes conforme a la ley; si eres consumidor,
+                los de tu domicilio. Antes de acudir a la vía judicial, puedes contactar con nosotros en
+                mario@elrincondelhacker.es para intentar resolver la cuestión de forma amistosa.</p>
         </section>
 
         <div class="policy-back">

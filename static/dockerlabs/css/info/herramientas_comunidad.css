@@ -1,0 +1,21 @@
+/* =====================================================
+   PAGINA HERRAMIENTAS DE COMUNIDAD — extiende el lenguaje
+   visual de /soporte (sp-page, sp-seccion, sp-card...).
+   Aquí solo lo que es propio de esta página: una rejilla
+   de tarjetas que se adapta igual de bien con 1 o con 10
+   herramientas, y la línea de autoría de cada una.
+   ===================================================== */
+
+.hc-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 340px));
+    justify-content: center;
+    gap: 1.25rem;
+    margin-bottom: 1.25rem;
+}
+
+.hc-autor {
+    display: inline-flex; align-items: center; gap: .4rem;
+    color: var(--text-muted); font-size: .85rem;
+}
+.hc-autor i { color: var(--accent-cyan); font-size: .8rem; }

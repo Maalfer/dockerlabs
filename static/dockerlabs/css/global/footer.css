@@ -96,3 +96,38 @@ footer {
         transform: translateX(-50%) translateY(0);
     }
 }
+
+/* Pantallas de portátil/estrechas (escritorio con footer fijo): apilar texto e iconos
+   centrados y dar fondo propio para que no se mezcle con el contenido. */
+@media (min-width: 769px) and (max-width: 1500px) {
+    footer {
+        background: rgba(2, 6, 23, 0.96);
+        border-top: 1px solid rgba(51, 65, 85, 0.5);
+        padding: 10px 0;
+    }
+
+    .footer-content {
+        flex-direction: column;
+        justify-content: center;
+        gap: 6px;
+        text-align: center;
+    }
+
+    .footer-content p.copyright {
+        line-height: 1.5;
+    }
+
+    .footer-icons {
+        display: flex;
+        justify-content: center;
+        gap: 1.25rem;
+    }
+
+    .wave-container {
+        display: none;
+    }
+
+    body {
+        padding-bottom: 120px;
+    }
+}

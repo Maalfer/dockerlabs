@@ -115,7 +115,9 @@ def register_auth_routes(api_router, get_session, verify_csrf_token, create_sess
     
         if '/' in username or '\\' in username or '..' in username or '.' in username:
             return JSONResponse(status_code=400, content={"success": False, "message": "El nombre de usuario no puede contener caracteres especiales como /, \\, o puntos."})
-        if username.lower() in ['admin', 'root', 'system', 'default', 'balulero', 'default-profile', 'logo', 'pingu']:
+        # Nombres del sistema y nombres que harían pasar la cuenta por el equipo o por el
+        # autor de DockerLabs (se comparan sin guiones, mayúsculas ni sustituciones tipo 4dm1n).
+        if validators.es_nombre_reservado(username):
             return JSONResponse(status_code=400, content={"success": False, "message": "Este nombre de usuario está reservado por el sistema."})
         if not re.match(r'^[A-Za-z0-9_-]+$', username):
             return JSONResponse(status_code=400, content={"success": False, "message": "El nombre de usuario solo puede contener letras, números, guiones y guiones bajos."})
@@ -126,11 +128,15 @@ def register_auth_routes(api_router, get_session, verify_csrf_token, create_sess
         if existing:
             return JSONResponse(status_code=400, content={"success": False, "message": "El usuario o el correo ya están registrados."})
 
+        # Excepción puntual: autor legítimo de Obsession (verificado por el dueño). Quitar tras su registro.
+        _AUTHOR_CLAIM_ALLOWED = {"russ0ski"}
         auth_conflict = False
         if Machine.query.filter_by(autor=username).first(): auth_conflict = True
         elif Writeup.query.filter_by(autor=username).first(): auth_conflict = True
         elif PendingWriteup.query.filter_by(autor=username).first(): auth_conflict = True
 
+        if auth_conflict and username.lower() in _AUTHOR_CLAIM_ALLOWED:
+            auth_conflict = False
         if auth_conflict:
             return JSONResponse(status_code=400, content={"success": False, "message": "Este nombre de usuario coincide con el de un autor de máquina o writeup. Elige otro nombre de usuario."})
 

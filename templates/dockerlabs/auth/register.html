@@ -15,7 +15,7 @@
 {% with texto_cargando = "Creando cuenta..." %}{% include "dockerlabs/auth/_cargando.html" %}{% endwith %}
 
 <div class="register-container dl-auth">
-    {% with ballena_mensajes = {"idle": "¡Bienvenido a bordo! Vamos a crear tu cuenta.", "user": "Elige un nombre que dé miedo.", "email": "Ahí te mandaré el enlace para activar la cuenta.", "terms": "¡Ya casi está!", "error": "Algo no cuadra, revisa los datos.", "ok": "¡Hecho! Revisa tu correo.", "envio": "Creando tu cuenta…", "pass": "Tranquilo, no miro.", "ver": "Bueno… solo un poquito.", "clic": "¡Splash!", "espera": "Respira hondo… y espera un poquito."} %}{% include "dockerlabs/auth/_ballena.html" %}{% endwith %}
+    {% with ballena_contexto = "registro", ballena_mensajes = {"idle": "¡Bienvenido a bordo! Vamos a crear tu cuenta.", "user": "Elige un nombre que dé miedo.", "email": "Ahí te mandaré el enlace para activar la cuenta.", "terms": "¡Ya casi está!", "error": "Algo no cuadra, revisa los datos.", "ok": "¡Hecho! Revisa tu correo.", "envio": "Creando tu cuenta…", "pass": "Tranquilo, no miro.", "ver": "Bueno… solo un poquito.", "clic": "¡Splash!", "espera": "Respira hondo… y espera un poquito."} %}{% include "dockerlabs/auth/_ballena.html" %}{% endwith %}
     <div class="register-box">
         <div class="register-header">
             <h2>Crear Cuenta</h2>
@@ -107,9 +107,10 @@
                         <label>
                             <input type="checkbox" id="terms" name="terms" required>
                             <span>
-                                Al registrarme acepto los
-                                <a href="{{ url_for('main.condiciones_uso') }}" target="_blank">Términos y
-                                    Condiciones</a>
+                                Tengo al menos 14 años y acepto las
+                                <a href="{{ url_for('main.condiciones_uso') }}" target="_blank">Condiciones de Uso</a>
+                                y la
+                                <a href="{{ url_for('main.politica_privacidad') }}" target="_blank">Política de Privacidad</a>
                             </span>
                         </label>
                     </div>

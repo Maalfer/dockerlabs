@@ -41,6 +41,28 @@ class RequestEmailChangeRequest(BaseModel):
     current_password: str
     new_email: str
 
+class DeleteAccountRequest(BaseModel):
+    password: str
+    username_confirm: str
+    phrase: str
+
+FRASE_BORRADO = "ELIMINAR MI CUENTA"
+
+# Límite de intentos del borrado de cuenta (por usuario ya autenticado).
+_delete_hits: dict = defaultdict(list)
+_DELETE_LIMIT = 5
+_DELETE_WINDOW = 900  # 15 min
+
+
+def _delete_rate_limited(user_id: int) -> bool:
+    now = time.time()
+    hits = _delete_hits[user_id]
+    hits[:] = [t for t in hits if now - t < _DELETE_WINDOW]
+    if len(hits) >= _DELETE_LIMIT:
+        return True
+    hits.append(now)
+    return False
+
 
 # Límite del cambio de email: es un endpoint que envía correo y reautentica,
 # mismo motivo que forgot-password. Por user_id (ya requiere sesión activa).
@@ -103,6 +125,42 @@ def register_perfil_routes(api_router, get_session, verify_csrf_token, check_pas
             session_version=user_obj.session_version,
         )
         response.set_cookie(key="session", value=cookie_val, httponly=True, secure=True, path="/", samesite="lax")
+        return response
+
+    @api_router.post("/delete_account")
+    async def api_delete_account(request: Request, data: DeleteAccountRequest, background: BackgroundTasks, session: dict = Depends(get_session), csrf_ok: bool = Depends(verify_csrf_token)):
+        """Borrado de la propia cuenta. Exige contraseña, nombre de usuario y frase
+        exacta: la interfaz las pide en pasos, pero aquí se revalida todo."""
+        user_id = session.get('user_id')
+        if not user_id:
+            return JSONResponse(status_code=401, content={"error": "Debes iniciar sesión"})
+        if _delete_rate_limited(user_id):
+            return JSONResponse(status_code=429, content={"error": "Demasiados intentos. Espera unos minutos."})
+
+        user_obj = db.session.get(User, user_id)
+        if not user_obj:
+            return JSONResponse(status_code=404, content={"error": "Usuario no encontrado."})
+        if user_obj.role == 'admin':
+            return JSONResponse(status_code=403, content={"error": "Los administradores no pueden eliminar su cuenta desde aquí. Pídeselo a otro administrador."})
+        if data.username_confirm != user_obj.username:
+            return JSONResponse(status_code=400, content={"error": "El nombre de usuario no coincide."})
+        if (data.phrase or "").strip().upper() != FRASE_BORRADO:
+            return JSONResponse(status_code=400, content={"error": "Debes escribir la frase de confirmación exacta."})
+        if not check_password_hash_safe(user_obj.password_hash, data.password):
+            return JSONResponse(status_code=400, content={"error": "La contraseña es incorrecta."})
+
+        from dockerlabs.cuenta import eliminar_cuenta
+        try:
+            datos = eliminar_cuenta(user_obj, BASE_DIR)
+        except Exception:
+            logger.exception("Error eliminando la cuenta user_id=%s", user_id)
+            return JSONResponse(status_code=500, content={"error": "No se pudo eliminar la cuenta. No se ha borrado nada; inténtalo de nuevo o escríbenos."})
+
+        from dockerlabs.email import send_account_deleted_notice
+        background.add_task(send_account_deleted_notice, datos["email"], datos["username"])
+
+        response = JSONResponse(content={"success": True, "message": "Tu cuenta ha sido eliminada."})
+        response.delete_cookie("session", path="/")
         return response
 
     @api_router.post("/update_profile")

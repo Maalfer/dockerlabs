@@ -1,63 +1,115 @@
 {% extends "dockerlabs/base.html" %}
 
+{% block title %}Crear y enviar una máquina - DockerLabs{% endblock %}
+
 {% block extra_css %}
 <link rel="stylesheet" href="{{ static_v('dockerlabs/css/auth-ballena.css') }}">
-<link rel="stylesheet" href="{{ static_v('dockerlabs/css/info/enviar_maquina.css') }}"
-      media="print" onload="this.media='all'">
-<noscript><link rel="stylesheet" href="{{ static_v('dockerlabs/css/info/enviar_maquina.css') }}"></noscript>
+<link rel="stylesheet" href="{{ static_v('dockerlabs/css/info/enviar_maquina.css') }}">
 {% endblock %}
 
 {% block content %}
+{# Página única para creadores: cómo se crea una máquina (pasos, reglas, vídeo) y cómo
+   enviarla (requisitos, aviso y formulario). Sustituye a la antigua /como-se-crea-una-maquina. #}
 <div class="dl-con-cody">
-{% with ballena_mensajes = {"idle": "¿Tienes una máquina lista? Te cuento cómo enviarla ↓", "fin": "¡Todo claro! Pulsa «Proponer una máquina» cuando la tengas."}, ballena_lectura = true %}{% include "dockerlabs/auth/_ballena.html" %}{% endwith %}
+{% with ballena_contexto = "info", ballena_mensajes = {"idle": "¿Vas a crear tu primera máquina? Te resumo lo importante ↓", "fin": "¡Ya conoces las reglas! Cuando la tengas, pulsa «Proponer una máquina»."}, ballena_lectura = true %}{% include "dockerlabs/auth/_ballena.html" %}{% endwith %}
 <div class="dl-con-cody-pagina">
-
-
-
 <div class="container mt-5">
 
-    <h1 class="title">Enviar Máquina</h1>
+    <h1 class="title">Crear y Enviar una Máquina</h1>
 
     <p class="mt-4">
-        En DockerLabs, las máquinas enviadas por la comunidad son una parte fundamental del proyecto.
-        Actualmente, las máquinas se suben de forma manual una por una por
-        <strong>El Pingüino de Mario</strong>,
-        por lo que el proceso puede tardar dependiendo de disponibilidad.
+        En esta página aprenderás el proceso completo para crear una máquina para DockerLabs y,
+        cuando la tengas lista, cómo enviarla. Más abajo encontrarás un vídeo donde se explica paso
+        a paso cómo construir y preparar correctamente una máquina lista para publicar en la plataforma.
     </p>
 
+    <nav class="em-indice" aria-label="Contenido de la página">
+        <a href="#pasos"><span>1</span> Pasos</a>
+        <a href="#reglas"><span>2</span> Reglas</a>
+        <a href="#video"><span>3</span> Vídeo</a>
+        <a href="#requisitos"><span>4</span> Requisitos</a>
+        <a href="#enviar"><span>5</span> Enviarla</a>
+    </nav>
 
-    <div class="enviar_maquina-card p-4 mt-4">
-
-        <h2 class="subtitle text-center" data-tldr="Avisa en el Discord, canal #dockerlabs, mencionando a los moderadores. Las máquinas se suben a mano, ten paciencia.">
-            ¿Cómo avisar correctamente de que tienes una máquina lista?
-        </h2>
-
-        <p class="mt-3">
-            La forma más recomendada es avisar a través del servidor oficial de Discord
-            en <strong>#dockerlabs</strong>, mencionando moderadores.
-        </p>
-
-        <p class="mt-3">
-            También puedes contactar por LinkedIn, aunque puede tardar más.
-        </p>
-
-        <div class="mt-4 text-center">
-            <a href="https://discord.com/invite/dD3yVejBUR" target="_blank" class="dl-btn">
-
-                <i class="bi bi-discord"></i>
-                Unirse al servidor de Discord
-
+    <!-- 1. Pasos generales -->
+    <div class="enviar_maquina-card p-4 mt-4" id="pasos">
+        <h2 class="subtitle text-center" data-tldr="Diseña el flujo, configura lo vulnerable, documéntalo, pruébalo y empaquétalo en TAR o ZIP.">Pasos generales</h2>
+        <ol class="mt-3">
+            <li>Diseñar el flujo y la estructura de la máquina.</li>
+            <li>Configurar los servicios vulnerables.</li>
+            <li>Añadir pistas, detalles y la documentación necesaria.</li>
+            <li>Realizar pruebas internas para verificar que todo funcione correctamente.</li>
+            <li>Empaquetar la máquina en un archivo TAR o ZIP siguiendo las directrices de DockerLabs.</li>
+        </ol>
+        <div class="text-center mt-4">
+            <a href="{{ url_for('static', filename='dockerlabs/scripts/auto_deploy.sh') }}" class="dl-btn" download>
+                <i class="bi bi-download"></i> Descargar script auto_deploy.sh
             </a>
         </div>
-
     </div>
 
+    <!-- 2. Reglas para creadores -->
+    <div class="enviar_maquina-card p-4 mt-4" id="reglas">
+        <h2 class="subtitle text-center" data-tldr="Exclusiva de DockerLabs, contraseñas entre las 5000 primeras de rockyou, historiales a /dev/null, dominio .dl y nada repetido.">Reglas para creadores</h2>
+        <div class="em-reglas mt-3">
+            <h3>1. EXCLUSIVIDAD CON LA PLATAFORMA</h3>
+            <p>Las máquinas no podrán ser publicadas en otras plataformas.</p>
+            <h3>2. LÍMITE DE FUERZA BRUTA</h3>
+            <p>Si se emplea fuerza bruta para realizar la máquina la contraseña debe estar entre las primeras 5000 líneas del rockyou.txt</p>
+            <div class="alert-warning">
+                <i class="bi bi-exclamation-octagon-fill"></i>Si la contraseña se encuentra +5000 líneas del rockyou.txt, la máquina será rechazada. Si es necesario para la explotación de la máquina puede contactar con los Administradores/Moderadores de la plataforma mediante el servidor de Discord para solicitar una excepción.
+            </div>
+            <h3>3. ARCHIVOS DE REGISTRO</h3>
+            <p>Elimina o redirija los archivos de historial <i>(.bash_history,.mysql_history...)</i> al <i>/dev/null</i> a menos de que sea necesario para la explotación de la máquina.</p>
+            <h3>4. DOMINIO</h3>
+            <p>Si la máquina requiere un dominio debe de acabar en <code>.dl</code></p>
+            <h3>5. ORIGINALIDAD</h3>
+            <p>Innovar es nuestra prioridad, por eso solicitamos a los creadores de máquinas ser originales. Evitar el uso técnicas repetitivas. <i>(Como fuerza bruta al SSH)</i></p>
+            <div class="alert-warning">
+                <i class="bi bi-exclamation-octagon-fill"></i>Si ya existe una máquina con el mismo modo de explotación que la tuya será rechazada.
+            </div>
+        </div>
+    </div>
 
+    <!-- 3. Vídeo -->
+    <div class="enviar_maquina-card p-4 mt-4" id="video">
+        <h2 class="subtitle text-center" data-tldr="En el vídeo lo tienes todo paso a paso."><i class="bi bi-youtube em-yt-icono"></i> Cómo crear una máquina para DockerLabs</h2>
 
-    <div class="enviar_maquina-card p-4 mt-4">
+        <p class="mt-3">
+            En el siguiente vídeo puedes ver de forma práctica y detallada todo el procedimiento
+            necesario para crear tu propia máquina para DockerLabs:
+        </p>
 
+        <div class="ratio ratio-16x9 mt-4 dl-yt" id="dl-yt" data-id="kDAK9Wc8o_k">
+            <div class="dl-yt-puerta">
+                <button type="button" class="dl-btn dl-btn--neutro dl-yt-boton">
+                    <i class="bi bi-play-circle-fill" aria-hidden="true"></i> Reproducir vídeo
+                </button>
+                <p class="dl-yt-aviso">Al reproducirlo se cargará contenido de YouTube (Google), que podrá tratar tus datos según su
+                    <a href="https://policies.google.com/privacy" target="_blank" rel="noopener">política de privacidad</a>.
+                    Hasta entonces no se conecta con YouTube.</p>
+            </div>
+        </div>
+        <script nonce="{{ csp_nonce }}">
+            (function () {
+                var caja = document.getElementById("dl-yt");
+                if (!caja) return;
+                caja.querySelector(".dl-yt-boton").addEventListener("click", function () {
+                    var f = document.createElement("iframe");
+                    f.src = "https://www.youtube-nocookie.com/embed/" + caja.getAttribute("data-id") + "?autoplay=1&rel=0";
+                    f.title = "Cómo crear una máquina para DockerLabs (YouTube)";
+                    f.allow = "autoplay; encrypted-media; picture-in-picture; fullscreen";
+                    f.allowFullscreen = true;
+                    caja.replaceChildren(f);
+                });
+            })();
+        </script>
+    </div>
+
+    <!-- 4. Requisitos del envío -->
+    <div class="enviar_maquina-card p-4 mt-4" id="requisitos">
         <h2 class="subtitle text-center" data-tldr="Original, con intrusión y escalada, writeup en PDF y un ZIP con auto_deploy.sh y el .tar. No hacen falta flags.">
-            Requisitos
+            Requisitos para enviarla
         </h2>
 
         <ul class="mt-3">
@@ -72,48 +124,45 @@
             <i class="bi bi-exclamation-octagon-fill"></i>
             Si se envía sin writeup puede ser rechazada.
         </div>
-
     </div>
 
-
-
-    <div class="enviar_maquina-card p-4 mt-4">
-
-        <h2 class="subtitle text-center" data-tldr="Súbela a Drive o Mega, envía el enlace con el formulario y espera la revisión.">
-            Proceso de Envío
+    <!-- 5. Enviarla -->
+    <div class="enviar_maquina-card p-4 mt-4" id="enviar">
+        <h2 class="subtitle text-center" data-tldr="Propónla con el formulario y avisa en el Discord, canal #dockerlabs, mencionando a los moderadores. Se suben a mano, ten paciencia.">
+            Enviar tu máquina
         </h2>
 
         <p class="mt-3">
-            Sube la máquina a Drive, Mega u otro alojamiento y comparte el enlace.
-            Tras revisión podrá publicarse en la plataforma.
+            En DockerLabs, las máquinas enviadas por la comunidad son una parte fundamental del proyecto.
+            Actualmente, las máquinas se suben de forma manual una por una por
+            <strong>El Pingüino de Mario</strong>,
+            por lo que el proceso puede tardar dependiendo de disponibilidad.
         </p>
 
-        <div class="alert-hint">
-            <i class="bi bi-exclamation-circle-fill"></i>
-            Puede ver un ejemplo en
-            <a target="_blank" href="https://mega.nz/file/7cNzjJBL#74J4tjoHRF_URnduGxixoaB8MOrMnAE5eZQnLlwDoxY">
-                la plantilla DockerLabs
-            </a>
+        <div class="submit-wrapper">
+            <button id="openSubmitMachine" class="dl-btn dl-btn--grande" type="button">
+                🚀 Proponer una Máquina
+            </button>
         </div>
 
+        <h3 class="em-sub mt-5">¿Cómo avisar correctamente de que tienes una máquina lista?</h3>
+        <p class="mt-3">
+            La forma más recomendada es avisar a través del servidor oficial de Discord
+            en <strong>#dockerlabs</strong>, mencionando moderadores.
+        </p>
+        <p class="mt-3">
+            También puedes contactar por LinkedIn, aunque puede tardar más.
+        </p>
+        <div class="mt-4 text-center mb-2">
+            <a href="https://discord.com/invite/dD3yVejBUR" target="_blank" rel="noopener noreferrer" class="dl-btn dl-btn--neutro">
+                <i class="bi bi-discord"></i>
+                Unirse al servidor de Discord
+            </a>
+        </div>
     </div>
 
-
-
-    <!-- NUEVO BOTÓN DE ENVÍO -->
-
-    <div class="submit-wrapper mb-5">
-
-        <button id="openSubmitMachine" class="dl-btn dl-btn--grande">
-            🚀 Proponer una Máquina
-        </button>
-
-    </div>
-
+    <div class="mb-5"></div>
 </div>
-
-
-
 
 <!-- MODAL SUBMIT -->
 
@@ -212,7 +261,6 @@
 
     </div>
 </div>
-
 
 <script src="{{ static_v('dockerlabs/js/machine_submission.js') }}"></script>
 </div>

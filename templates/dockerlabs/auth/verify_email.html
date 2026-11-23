@@ -2,7 +2,14 @@
 
 {% block title %}Verificar correo - DockerLabs{% endblock %}
 
+{% block extra_css %}
+<link rel="stylesheet" href="{{ static_v('dockerlabs/css/auth-ballena.css') }}">
+{% endblock %}
+
 {% block content %}
+<div class="dl-con-cody">
+{% with ballena_contexto = "info", ballena_mensajes = {"idle": "Estoy comprobando el enlace de tu correo. Mira el resultado →"}, ballena_lectura = true %}{% include "dockerlabs/auth/_ballena.html" %}{% endwith %}
+<div class="dl-con-cody-pagina">
 <div style="min-height: 60vh; display: flex; align-items: center; justify-content: center; padding: 40px 20px;">
   <div style="background: #1e293b; border-radius: 12px; padding: 48px 40px; max-width: 480px; width: 100%; text-align: center; box-shadow: 0 25px 50px rgba(0,0,0,0.5);">
 
@@ -36,4 +43,7 @@
 
   </div>
 </div>
+</div>
+</div>
+<script src="{{ static_v('dockerlabs/js/ballena.js') }}" defer></script>
 {% endblock %}

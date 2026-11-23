@@ -1,4 +1,11 @@
 #!/bin/bash
+#
+# auto_deploy.sh - despliegue de máquinas de DockerLabs
+# Autor: Mario Álvarez Fernández (El Pingüino de Mario) - https://dockerlabs.es
+# Sitio oficial y autoría: https://dockerlabs.es/autoria
+# Condiciones de uso de este script: https://dockerlabs.es/terminos-condiciones
+# Si redistribuyes o adaptas este script, conserva este aviso.
+#
 
 # Colores ANSI
 CRE='\033[31m'  # Rojo

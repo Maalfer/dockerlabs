@@ -5,12 +5,16 @@ import secrets
 from fastapi import Depends, Request
 from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
 
+import logging
+
 from sqlalchemy import func
 from sqlalchemy.exc import IntegrityError
 
 from bunkerlabs.models import BunkerAccessLog, BunkerAccessToken
 from dockerlabs.models import Machine, MachineDownloadLog
 from dockerlabs.tiempo import utcnow
+
+logger = logging.getLogger(__name__)
 
 
 def register_bunkerlabs_pages_routes(
@@ -23,6 +27,80 @@ def register_bunkerlabs_pages_routes(
     db,
     url_for,
 ):
+    # ------------------------------------------------------------------
+    # Modelo de acceso a BunkerLabs
+    #
+    # Un PIN (BunkerAccessToken) es una LLAVE compartida, no una identidad:
+    # cualquiera que lo conozca entra, tenga o no cuenta en DockerLabs, y nadie
+    # es «dueño» de un PIN. Por eso la sesión solo guarda QUÉ acceso se tiene:
+    #
+    #   bunkerlabs_ok     True si hay acceso concedido
+    #   bunkerlabs_guest  True si es el acceso de invitado (sin PIN, catálogo limitado)
+    #   bunkerlabs_id     id del PIN usado (para poder revocarlo: si se desactiva
+    #                     o se borra, quien entró con él pierde el acceso)
+    #
+    # QUIÉN es la persona no se guarda aquí: se calcula en cada página a partir
+    # de la sesión de DockerLabs (username si la hay; si no, «Anónimo» o
+    # «Invitado»). El nombre del PIN es solo una etiqueta para el administrador
+    # y nunca se muestra a quien lo usa. Las claves antiguas bunkerlabs_nombre /
+    # _anonymous / _unauthenticated ya no se escriben; se limpian al conceder
+    # o cerrar el acceso.
+    # ------------------------------------------------------------------
+    _CLAVES_BUNKER = (
+        "bunkerlabs_ok", "bunkerlabs_guest", "bunkerlabs_id",
+        "bunkerlabs_nombre", "bunkerlabs_anonymous", "bunkerlabs_unauthenticated",
+    )
+
+    def _limpiar_acceso(session: dict) -> None:
+        for key in _CLAVES_BUNKER:
+            session.pop(key, None)
+
+    def _conceder_acceso(session: dict, token_obj=None) -> None:
+        """Con PIN (token_obj) concede acceso completo; sin él, acceso de invitado."""
+        _limpiar_acceso(session)
+        session["bunkerlabs_ok"] = True
+        if token_obj is None:
+            session["bunkerlabs_guest"] = True
+        else:
+            session["bunkerlabs_id"] = token_obj.id
+
+    def _registrar_entrada(session: dict, token_obj) -> None:
+        """Anota la entrada en el historial del PIN: quién fue, si se sabe."""
+        quien = session.get("username") if session.get("user_id") else None
+        token_obj.last_accessed = utcnow()
+        db.session.add(BunkerAccessLog(token_id=token_obj.id, user_nombre=quien or "Anónimo", accessed_at=utcnow()))
+        db.session.commit()
+
+    def _pin_valido(pin: str):
+        pin = (pin or "").strip()
+        if not pin or len(pin) > 255:
+            return None
+        return BunkerAccessToken.query.filter_by(token=pin, activo=1).first()
+
+    def _acceso_vigente(session: dict) -> bool:
+        """¿Sigue teniendo acceso? Si entró con un PIN que ya no existe o está
+        desactivado, se le retira (la sesión queda limpia; quien llama debe
+        reenviar la cookie con `_respuesta`)."""
+        if not session.get("bunkerlabs_ok"):
+            return False
+        token_id = session.get("bunkerlabs_id")
+        if token_id is not None:
+            activo = db.session.query(BunkerAccessToken.activo).filter(BunkerAccessToken.id == token_id).scalar()
+            if not activo:
+                _limpiar_acceso(session)
+                session["_flashes"] = [("error", "El acceso con el que entraste ya no está activo. Introduce uno válido.")]
+                return False
+        return True
+
+    def _respuesta(session: dict, url: str):
+        resp = RedirectResponse(url=url, status_code=302)
+        resp.set_cookie("session", encode_session_cookie(session), httponly=True, secure=True, path="/", samesite="lax")
+        return resp
+
+    def _bunker_home_url(nombre):
+        nombre = (nombre or "").strip()
+        return "/bunkerlabs?maquina=" + quote(nombre, safe="") if nombre else "/bunkerlabs"
+
     @pages_router.get("/bunkerlabs/login", response_class=HTMLResponse)
     @pages_router.post("/bunkerlabs/login", response_class=HTMLResponse)
     async def bunkerlabs_login_page(
@@ -33,56 +111,29 @@ def register_bunkerlabs_pages_routes(
         # Máquina compartida a resaltar tras el acceso (se conserva a través del login)
         maquina = (request.query_params.get("maquina") or "").strip()
 
-        def _bunker_home_url(nombre):
-            return "/bunkerlabs?maquina=" + quote(nombre, safe="") if nombre else "/bunkerlabs"
-
-        if session.get("bunkerlabs_ok"):
+        # Quien ya tiene acceso completo no necesita el formulario. El invitado sí:
+        # aquí es donde cambia su acceso de prueba por uno con PIN.
+        if request.method == "GET" and _acceso_vigente(session) and not session.get("bunkerlabs_guest"):
             return RedirectResponse(url=_bunker_home_url(maquina), status_code=302)
 
-        error = None
+        # Avisos dejados por otra ruta (enlace directo inválido, PIN desactivado...)
+        avisos = session.pop("_flashes", None) or []
+        error = avisos[0][1] if avisos and len(avisos[0]) > 1 else None
 
         if request.method == "POST":
             form = await request.form()
-            token_introducido = (form.get("password") or "").strip()
+            pin = (form.get("password") or "").strip()
             maquina = (form.get("maquina") or maquina or "").strip()
 
-            if not token_introducido:
+            if not pin:
                 error = "Debes introducir una contraseña de acceso."
             else:
-                token_obj = BunkerAccessToken.query.filter_by(token=token_introducido, activo=1).first()
+                token_obj = _pin_valido(pin)
                 if token_obj:
-                    docker_username = session.get("username")
-                    if docker_username:
-                        # NO se toca `token_obj.nombre`: es la etiqueta que el
-                        # admin asignó al crear el token (p.ej. "Pepe"), fija
-                        # y compartida por TODO el que use este PIN — no "la
-                        # última persona que entró". Sobrescribirla aquí hacía
-                        # que el siguiente visitante anónimo con este mismo
-                        # PIN (rama `else` de abajo) heredara el username de
-                        # quien entró antes que él. Quién entró y cuándo ya
-                        # queda registrado, por evento, en `BunkerAccessLog`.
-                        token_obj.last_accessed = utcnow()
-                        db.session.add(
-                            BunkerAccessLog(token_id=token_obj.id, user_nombre=docker_username, accessed_at=utcnow())
-                        )
-                        db.session.commit()
-                        session["bunkerlabs_nombre"] = docker_username
-                    else:
-                        session["bunkerlabs_nombre"] = token_obj.nombre
-                        token_obj.last_accessed = utcnow()
-                        db.session.add(
-                            BunkerAccessLog(token_id=token_obj.id, user_nombre=token_obj.nombre, accessed_at=utcnow())
-                        )
-                        db.session.commit()
-
-                    session["bunkerlabs_ok"] = True
-                    session["bunkerlabs_id"] = token_obj.id
-                    cookie = encode_session_cookie(session)
-                    resp = RedirectResponse(url=_bunker_home_url(maquina), status_code=302)
-                    resp.set_cookie("session", cookie, httponly=True, secure=True, path="/", samesite="lax")
-                    return resp
-                else:
-                    error = "Contraseña incorrecta o inactiva."
+                    _conceder_acceso(session, token_obj)
+                    _registrar_entrada(session, token_obj)
+                    return _respuesta(session, _bunker_home_url(maquina))
+                error = "Contraseña incorrecta o inactiva."
 
         csrf_token = session.get("csrf_token")
         if not csrf_token:
@@ -106,29 +157,15 @@ def register_bunkerlabs_pages_routes(
         maquina: Optional[str] = None,
         session: dict = Depends(get_session),
     ):
-        is_unauthenticated = session.get("user_id") is None
-        session["bunkerlabs_ok"] = True
-        session["bunkerlabs_guest"] = True
-        session["bunkerlabs_nombre"] = "Invitado"
-        session["bunkerlabs_id"] = None
-        session["bunkerlabs_unauthenticated"] = is_unauthenticated
-        cookie = encode_session_cookie(session)
-        destino = "/bunkerlabs?maquina=" + quote(maquina.strip(), safe="") if maquina and maquina.strip() else "/bunkerlabs"
-        resp = RedirectResponse(url=destino, status_code=302)
-        resp.set_cookie("session", cookie, httponly=True, secure=True, path="/", samesite="lax")
-        return resp
+        # No se degrada a invitado a quien ya entró con un PIN válido.
+        if not (_acceso_vigente(session) and not session.get("bunkerlabs_guest")):
+            _conceder_acceso(session)
+        return _respuesta(session, _bunker_home_url(maquina))
 
     @pages_router.get("/bunkerlabs/logout")
     def bunkerlabs_logout(request: Request, session: dict = Depends(get_session)):
-        for key in (
-            "bunkerlabs_ok", "bunkerlabs_guest", "bunkerlabs_nombre", "bunkerlabs_id",
-            "bunkerlabs_anonymous", "bunkerlabs_unauthenticated",
-        ):
-            session.pop(key, None)
-        cookie = encode_session_cookie(session)
-        resp = RedirectResponse(url="/bunkerlabs/login", status_code=302)
-        resp.set_cookie("session", cookie, httponly=True, secure=True, path="/", samesite="lax")
-        return resp
+        _limpiar_acceso(session)
+        return _respuesta(session, "/bunkerlabs/login")
 
     @pages_router.get("/bunkerlabs", response_class=HTMLResponse)
     @pages_router.get("/bunkerlabs/", response_class=HTMLResponse)
@@ -138,59 +175,25 @@ def register_bunkerlabs_pages_routes(
         maquina: Optional[str] = None,
         session: dict = Depends(get_session),
     ):
+        # Enlace directo (?token=PIN): equivale a teclear el PIN en el formulario.
         if token:
-            token_obj = BunkerAccessToken.query.filter_by(token=token, activo=1).first()
+            token_obj = _pin_valido(token)
             if token_obj:
-                docker_username = session.get("username")
-                docker_user_id = session.get("user_id")
-                if docker_username and docker_user_id:
-                    # Ver el comentario del mismo caso en /bunkerlabs/login:
-                    # no se toca `token_obj.nombre`, es la etiqueta fija del
-                    # token, compartida por todo el que lo use.
-                    session["bunkerlabs_nombre"] = docker_username
-                    session["bunkerlabs_anonymous"] = False
-                else:
-                    session["bunkerlabs_nombre"] = "Anónimo"
-                    session["bunkerlabs_anonymous"] = True
-                session["bunkerlabs_ok"] = True
-                token_obj.last_accessed = utcnow()
-                db.session.add(
-                    BunkerAccessLog(
-                        token_id=token_obj.id,
-                        user_nombre=session["bunkerlabs_nombre"],
-                        accessed_at=utcnow(),
-                    )
-                )
-                db.session.commit()
-                cookie = encode_session_cookie(session)
-                resp = RedirectResponse(url="/bunkerlabs", status_code=302)
-                resp.set_cookie("session", cookie, httponly=True, secure=True, path="/", samesite="lax")
-                return resp
-            else:
-                session["_flashes"] = [("error", "El enlace de acceso no es válido o está inactivo.")]
-                cookie = encode_session_cookie(session)
-                resp = RedirectResponse(url="/bunkerlabs/login", status_code=302)
-                resp.set_cookie("session", cookie, httponly=True, secure=True, path="/", samesite="lax")
-                return resp
+                _conceder_acceso(session, token_obj)
+                _registrar_entrada(session, token_obj)
+                # Se redirige para que el PIN no se quede en la barra de direcciones
+                return _respuesta(session, _bunker_home_url(maquina))
+            session["_flashes"] = [("error", "El enlace de acceso no es válido o está inactivo.")]
+            return _respuesta(session, "/bunkerlabs/login")
 
-        if "bunkerlabs_nombre" not in session or not session.get("bunkerlabs_ok"):
-            # Enlace compartido: si llega alguien por ?maquina= sin sesión de bunker,
-            # se le concede acceso de invitado automáticamente y se le lleva a la
+        if not _acceso_vigente(session):
+            # Enlace compartido: si llega alguien por ?maquina= sin acceso al búnker,
+            # se le concede el de invitado automáticamente y se le lleva a la
             # máquina resaltada (aunque como invitado no pueda descargarla).
-            if maquina and maquina.strip():
-                session["bunkerlabs_ok"] = True
-                session["bunkerlabs_guest"] = True
-                session["bunkerlabs_nombre"] = session.get("username") or "Invitado"
-                session["bunkerlabs_id"] = None
-                session["bunkerlabs_unauthenticated"] = session.get("user_id") is None
-                cookie = encode_session_cookie(session)
-                resp = RedirectResponse(
-                    url="/bunkerlabs?maquina=" + quote(maquina.strip(), safe=""),
-                    status_code=302,
-                )
-                resp.set_cookie("session", cookie, httponly=True, secure=True, path="/", samesite="lax")
-                return resp
-            return RedirectResponse(url="/bunkerlabs/login", status_code=302)
+            if maquina and maquina.strip() and not session.get("_flashes"):
+                _conceder_acceso(session)
+                return _respuesta(session, _bunker_home_url(maquina))
+            return _respuesta(session, "/bunkerlabs/login")
 
         maquinas = Machine.query.filter_by(origen="bunker").order_by(Machine.id.asc()).all()
 
@@ -200,29 +203,21 @@ def register_bunkerlabs_pages_routes(
             csrf_token = secrets.token_urlsafe(32)
             session["csrf_token"] = csrf_token
 
-        # Los flags bunkerlabs_anonymous/bunkerlabs_unauthenticated se fijan una
-        # sola vez, en el momento en que se concede el acceso a BunkerLabs (vía
-        # enlace con ?token=, el login por PIN o el acceso de invitado). Si en
-        # ese momento el usuario no tenía sesión iniciada en DockerLabs quedan a
-        # True y se guardan tal cual en la cookie de sesión firmada. El
-        # problema: si el usuario luego inicia sesión en DockerLabs (lo cual solo
-        # actualiza user_id/username/role en la sesión, no estos dos flags), el
-        # aviso de "anónimo"/"invitado sin cuenta" se queda pegado para siempre
-        # aunque ahora sí esté identificado. Por eso aquí se combinan con el
-        # estado de login real en el momento de renderizar la página, que es la
-        # fuente de verdad (get_session() ya revalida user_id contra la BD en
-        # cada petición): si hay user_id, estos avisos nunca se muestran, sin
-        # necesidad de tocar cada punto donde se concede acceso a BunkerLabs.
+        # Los avisos de «anónimo» / «invitado sin cuenta» se deciden aquí, en cada
+        # visita, con el estado real de la sesión de DockerLabs (get_session() ya
+        # revalida user_id contra la BD): no se guardan en la cookie, así que
+        # desaparecen en cuanto la persona inicia sesión.
         docker_logged_in = bool(session.get("user_id"))
+        es_invitado = bool(session.get("bunkerlabs_guest"))
 
         return templates.TemplateResponse(
             request,
             "bunkerlabs/home.html",
             {
                 "maquinas": maquinas,
-                "is_guest": session.get("bunkerlabs_guest", False),
-                "is_anonymous": session.get("bunkerlabs_anonymous", False) and not docker_logged_in,
-                "is_unauthenticated_guest": session.get("bunkerlabs_unauthenticated", False) and not docker_logged_in,
+                "is_guest": es_invitado,
+                "is_anonymous": not es_invitado and not docker_logged_in,
+                "is_unauthenticated_guest": es_invitado and not docker_logged_in,
                 "session": session,
                 "url_for": url_for,
                 "current_user_role": current_user_role,
@@ -255,6 +250,12 @@ def register_bunkerlabs_pages_routes(
 
             if not nombre or not password:
                 error = "El nombre y la contraseña son obligatorios."
+            elif len(nombre) > 60:
+                error = "El nombre es demasiado largo (máximo 60 caracteres)."
+            elif len(password) < 4 or len(password) > 128:
+                error = "La contraseña debe tener entre 4 y 128 caracteres."
+            elif any(c.isspace() for c in password):
+                error = "La contraseña no puede contener espacios (se usa también en el enlace directo)."
             else:
                 try:
                     db.session.add(BunkerAccessToken(nombre=nombre, token=password))
@@ -265,6 +266,57 @@ def register_bunkerlabs_pages_routes(
                     error = "Error: Esa contraseña ya existe."
 
         tokens = BunkerAccessToken.query.order_by(BunkerAccessToken.created_at.desc()).all()
+
+        # Uso de cada acceso: nº de entradas, personas distintas y última entrada.
+        ahora = utcnow()
+        uso = {
+            tid: {"accesos": n, "personas": personas, "ultimo": ultimo}
+            for tid, n, personas, ultimo in db.session.query(
+                BunkerAccessLog.token_id,
+                func.count(BunkerAccessLog.id),
+                func.count(func.distinct(BunkerAccessLog.user_nombre)),
+                func.max(BunkerAccessLog.accessed_at),
+            ).group_by(BunkerAccessLog.token_id).all()
+        }
+
+        def hace(fecha):
+            if not fecha:
+                return "nunca"
+            seg = max(0, (ahora - fecha).total_seconds())
+            if seg < 3600:
+                return "hace un momento" if seg < 120 else f"hace {int(seg // 60)} min"
+            if seg < 86400:
+                return f"hace {int(seg // 3600)} h"
+            dias = int(seg // 86400)
+            if dias == 1:
+                return "ayer"
+            if dias < 60:
+                return f"hace {dias} días"
+            if dias < 730:
+                return f"hace {dias // 30} meses"
+            return f"hace {dias // 365} años"
+
+        filas = []
+        for t in tokens:
+            u = uso.get(t.id, {"accesos": 0, "personas": 0, "ultimo": None})
+            ultimo = u["ultimo"] or t.last_accessed
+            filas.append({
+                "t": t,
+                "accesos": u["accesos"],
+                "personas": u["personas"],
+                "ultimo": ultimo,
+                "ultimo_txt": hace(ultimo),
+                "creado_txt": hace(t.created_at) if t.created_at else "",
+                "sin_uso": u["accesos"] == 0 and not ultimo,
+            })
+        from datetime import timedelta
+        resumen = {
+            "total": len(tokens),
+            "activos": sum(1 for t in tokens if t.activo),
+            "accesos": sum(u["accesos"] for u in uso.values()),
+            "semana": db.session.query(func.count(BunkerAccessLog.id)).filter(
+                BunkerAccessLog.accessed_at >= ahora - timedelta(days=7)).scalar() or 0,
+        }
         real_machines = Machine.query.filter_by(origen="bunker", clase="real").order_by(Machine.nombre.asc()).all()
         bunker_machines = Machine.query.filter_by(origen="bunker").order_by(Machine.nombre.asc()).all()
 
@@ -275,6 +327,8 @@ def register_bunkerlabs_pages_routes(
 
         context = {
             "tokens": tokens,
+            "filas": filas,
+            "resumen": resumen,
             "error": error,
             "success": success,
             "real_machines": real_machines,
@@ -287,8 +341,12 @@ def register_bunkerlabs_pages_routes(
         response.set_cookie("session", encode_session_cookie(session), httponly=True, secure=True, path="/", samesite="lax")
         return response
 
+    def _quiere_json(request: Request) -> bool:
+        return "application/json" in (request.headers.get("accept") or "")
+
     @pages_router.post("/bunkerlabs/gestion/{token_id}/delete")
     def delete_bunker_token(
+        request: Request,
         token_id: int,
         session: dict = Depends(get_session),
         csrf_ok: bool = Depends(verify_csrf_token),
@@ -298,15 +356,48 @@ def register_bunkerlabs_pages_routes(
             return JSONResponse(status_code=403, content={"error": "Acceso denegado"})
 
         token_obj = db.session.get(BunkerAccessToken, token_id)
+        borrado = False
         if token_obj:
-            db.session.delete(token_obj)
-            db.session.commit()
+            try:
+                # El historial referencia al token (clave foránea sin cascada): hay que
+                # borrarlo antes, o MariaDB rechaza el DELETE y la petición acaba en 500.
+                BunkerAccessLog.query.filter_by(token_id=token_id).delete(synchronize_session=False)
+                db.session.delete(token_obj)
+                db.session.commit()
+                borrado = True
+            except Exception:
+                db.session.rollback()
+                logger.exception("No se pudo eliminar el acceso de BunkerLabs %s", token_id)
+                if _quiere_json(request):
+                    return JSONResponse(status_code=500, content={"error": "No se pudo eliminar el acceso"})
+        if _quiere_json(request):
+            if not token_obj:
+                return JSONResponse(status_code=404, content={"error": "Ese acceso ya no existe"})
+            return {"success": True, "message": "Acceso eliminado"}
         return RedirectResponse(url="/bunkerlabs/gestion", status_code=302)
+
+    @pages_router.post("/bunkerlabs/gestion/{token_id}/toggle")
+    def toggle_bunker_token(
+        token_id: int,
+        session: dict = Depends(get_session),
+        csrf_ok: bool = Depends(verify_csrf_token),
+    ):
+        """Activa o desactiva un acceso sin borrarlo (ni su historial)."""
+        ok, redir = require_auth_and_role(session, ["admin"])
+        if not ok:
+            return JSONResponse(status_code=403, content={"error": "Acceso denegado"})
+        token_obj = db.session.get(BunkerAccessToken, token_id)
+        if not token_obj:
+            return JSONResponse(status_code=404, content={"error": "Ese acceso ya no existe"})
+        token_obj.activo = 0 if token_obj.activo else 1
+        db.session.commit()
+        return {"success": True, "activo": bool(token_obj.activo),
+                "message": "Acceso activado" if token_obj.activo else "Acceso desactivado"}
 
     @pages_router.get("/bunkerlabs/maquinas/{machine_id}/descargar", response_class=HTMLResponse)
     def bunkerlabs_descargar_page(machine_id: int, request: Request, session: dict = Depends(get_session)):
-        if not session.get("bunkerlabs_ok"):
-            return RedirectResponse(url="/bunkerlabs/login", status_code=302)
+        if not _acceso_vigente(session):
+            return _respuesta(session, "/bunkerlabs/login")
 
         maquina = Machine.query.filter_by(id=machine_id, origen="bunker").first()
         if not maquina:
@@ -321,12 +412,14 @@ def register_bunkerlabs_pages_routes(
         # escribirlo chocaba con el snapshot isolation de MariaDB y lanzaba
         # "Error 1020: Record has changed since last read", tirando la
         # pagina de descarga con un 500.
-        db.session.query(Machine).filter(Machine.id == maquina.id).update(
-            {Machine.descargas: func.coalesce(Machine.descargas, 0) + 1},
-            synchronize_session=False,
-        )
-        db.session.add(MachineDownloadLog(machine_id=maquina.id))
-        db.session.commit()
+        from dockerlabs.traffic import is_human_navigation
+        if is_human_navigation(request):
+            db.session.query(Machine).filter(Machine.id == maquina.id).update(
+                {Machine.descargas: func.coalesce(Machine.descargas, 0) + 1},
+                synchronize_session=False,
+            )
+            db.session.add(MachineDownloadLog(machine_id=maquina.id))
+            db.session.commit()
 
         csrf_token = session.get("csrf_token")
         if not csrf_token:

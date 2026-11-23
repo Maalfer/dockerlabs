@@ -32,12 +32,13 @@ _FLASK_TO_FASTAPI = {
         # Páginas principales
         'main.home': '/',
         'main.dashboard': '/dashboard',
-        'main.instrucciones_uso': '/instrucciones-uso',
         'main.soporte': '/soporte',
+        'main.herramientas_comunidad': '/herramientas-comunidad',
         'main.equipo': '/equipo',
         'main.enviar_maquina': '/enviar-maquina',
-        'main.como_se_crea': '/como-se-crea-una-maquina',
+        'main.como_se_crea': '/enviar-maquina',  # página unificada (la antigua redirige con 301)
         'main.agradecimientos': '/agradecimientos',
+        'main.autoria': '/autoria',
         'main.terminos_condiciones': '/terminos-condiciones',
         'main.politica_privacidad': '/politica-privacidad',
         'main.politica_cookies': '/politica-cookies',
@@ -191,7 +192,7 @@ def get_session(request: Request) -> dict:
         if uid:
             real = None
             try:
-                real = db.session.query(User.role, User.session_version).filter(User.id == uid).one_or_none()
+                real = db.session.query(User.role, User.session_version, User.last_seen_at).filter(User.id == uid).one_or_none()
             except Exception:
                 db.session.rollback()
                 real = None
@@ -200,10 +201,22 @@ def get_session(request: Request) -> dict:
                 # Cuenta borrada: la sesión deja de ser válida.
                 return {}
 
-            real_role, real_session_version = real
+            real_role, real_session_version, visto = real
             cookie_session_version = d.get("session_version")
             if cookie_session_version is not None and cookie_session_version != real_session_version:
                 return {}
+
+            # Último acceso (para /gestion-usuarios): se anota como mucho cada 10 minutos
+            # y con un UPDATE directo, que no dispara los eventos del modelo (slug...).
+            try:
+                from dockerlabs.tiempo import utcnow
+                ahora = utcnow()
+                if visto is None or (ahora - visto).total_seconds() > 600:
+                    db.session.query(User).filter(User.id == uid).update(
+                        {User.last_seen_at: ahora}, synchronize_session=False)
+                    db.session.commit()
+            except Exception:
+                db.session.rollback()
 
             if real_role != d.get("role"):
                 d["role"] = real_role

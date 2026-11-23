@@ -1,6 +1,7 @@
 {% extends "dockerlabs/base.html" %}
 
 {% block extra_css %}
+<link rel="stylesheet" href="{{ static_v('dockerlabs/css/auth-ballena.css') }}">
 <link rel="stylesheet" href="{{ static_v('dockerlabs/css/writeups_recibidos.css') }}"
       media="print" onload="this.media='all'">
 <noscript><link rel="stylesheet" href="{{ static_v('dockerlabs/css/writeups_recibidos.css') }}"></noscript>
@@ -12,6 +13,9 @@
 {% endblock %}
 
 {% block content %}
+<div class="dl-con-cody dl-con-cody--tabla">
+{% with ballena_contexto = "info", ballena_mensajes = {"idle": "Aquí están los writeups enviados que esperan revisión.", "fin": "Cuando se aprueban pasan a Writeups publicados."}, ballena_lectura = true %}{% include "dockerlabs/auth/_ballena.html" %}{% endwith %}
+<div class="dl-con-cody-pagina">
 <div class="writeups-container">
 
     {% if user.role in ['admin', 'moderador'] %}
@@ -65,6 +69,9 @@
     </div>
     {% endif %}
 </div>
+</div>
+</div>
+<script src="{{ static_v('dockerlabs/js/ballena.js') }}" defer></script>
 {% endblock %}
 
 {% block scripts %}
