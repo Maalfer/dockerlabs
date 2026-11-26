@@ -17,6 +17,9 @@ def _get_smtp_config():
         'password': os.environ.get('SMTP_PASS', ''),
         'from_name': os.environ.get('SMTP_FROM_NAME', 'DockerLabs'),
         'from_addr': os.environ.get('SMTP_FROM') or os.environ.get('SMTP_USER', ''),
+        # dockerlabs.es tiene MX nulo: las respuestas a SMTP_FROM rebotan. Si se
+        # define SMTP_REPLY_TO, se usa una dirección con buzón real.
+        'reply_to': os.environ.get('SMTP_REPLY_TO', ''),
     }
 
 
@@ -48,8 +51,15 @@ def _send(to_addr: str, subject: str, html_body: str, text_body: str | None = No
     msg['Subject'] = subject
     msg['From'] = f"{cfg['from_name']} <{cfg['from_addr']}>"
     msg['To'] = to_addr
-    msg['Date'] = formatdate(localtime=True)
+    # Las respuestas deben ir a un buzón que exista: dockerlabs.es tiene MX nulo.
+    if cfg['reply_to'] and cfg['reply_to'] != cfg['from_addr']:
+        msg['Reply-To'] = cfg['reply_to']
+    msg['Date'] = formatdate()  # UTC, independiente de la zona del servidor
     msg['Message-ID'] = make_msgid(domain=cfg['from_addr'].split('@')[-1])
+    # Evita que los filtros de los destinatarios generen contestadores
+    # automáticos (fuera de oficina, vacaciones) y el ruido que eso crea.
+    msg['Auto-Submitted'] = 'auto-generated'
+    msg['X-Auto-Response-Suppress'] = 'All'
     # multipart/alternative: el texto plano va primero, el HTML el último (el cliente
     # de correo muestra la última parte que sepa renderizar). Sin la parte de texto,
     # muchos filtros antispam penalizan el correo como "HTML-only".

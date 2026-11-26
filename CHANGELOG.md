@@ -230,6 +230,10 @@ Las entradas de seguridad referencian su identificador de advisory
   certificados; ahora borra también la imagen, como `sync_user_certificates()`.
 - El año del pie de página se calcula en UTC (helper `utcnow()`) en vez de en
   hora local.
+- Correos transaccionales: las respuestas iban a `info@dockerlabs.es`, que tiene
+  MX nulo y rebota, y no llevaban cabeceras para suprimir contestadores
+  automáticos. Se añade `Reply-To` configurable (`SMTP_REPLY_TO`), `Date` en UTC
+  y `Auto-Submitted` / `X-Auto-Response-Suppress`.
 
 ## [2.0.1] - 2026-10-22
 

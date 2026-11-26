@@ -27,6 +27,7 @@ class TestGetSmtpConfig:
         assert cfg["password"] == ""
         assert cfg["from_name"] == "DockerLabs"
         assert cfg["from_addr"] == ""
+        assert cfg["reply_to"] == ""
 
     def test_reads_overridden_env_vars(self, monkeypatch):
         monkeypatch.setenv("SMTP_HOST", "smtp.example.com")
@@ -43,12 +44,18 @@ class TestGetSmtpConfig:
             "password": "secret",
             "from_name": "Mi App",
             "from_addr": "noreply@example.com",
+            "reply_to": "",
         }
 
     def test_from_addr_falls_back_to_smtp_user_when_smtp_from_unset(self, monkeypatch):
         monkeypatch.setenv("SMTP_USER", "bot@example.com")
         cfg = _get_smtp_config()
         assert cfg["from_addr"] == "bot@example.com"
+
+    def test_reads_reply_to(self, monkeypatch):
+        monkeypatch.setenv("SMTP_FROM", "info@dockerlabs.es")
+        monkeypatch.setenv("SMTP_REPLY_TO", "mario@elrincondelhacker.es")
+        assert _get_smtp_config()["reply_to"] == "mario@elrincondelhacker.es"
 
 
 class TestIsSmtpConfigured:
