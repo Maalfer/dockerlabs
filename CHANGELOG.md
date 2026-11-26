@@ -161,6 +161,12 @@ Las entradas de seguridad referencian su identificador de advisory
   una de las comunidades que figuraban en la página y se añade **VulNyx**
   (`https://vulnyx.com/machines/`) junto a HackMyVM, con su logotipo alojado en
   local.
+- Documentación sincronizada con el código: ya no se describe un clon
+  intermedio ni un paso de rsync para publicar, el rate limiting se documenta
+  como límite por IP directa del peer (no por cabeceras de Cloudflare), los
+  certificados explican que el PDF se compone al vuelo desde el WebP
+  archivado, y se retira la afirmación de que el pie de página muestra la
+  versión (solo lo hacen el meta tag y `/api/version`).
 
 ### Removed
 
@@ -172,6 +178,10 @@ Las entradas de seguridad referencian su identificador de advisory
   equivalía a una sesión de admin. Ahora la única forma de autenticarse es la
   cookie de sesión. Todos los tokens existentes ya estaban revocados. La
   tabla `api_tokens` queda en la BD sin uso (no se borra automáticamente).
+- Imágenes estáticas sin ninguna referencia en el repo ni peticiones en los
+  logs del proxy: dos avatares antiguos de agradecimientos, una captura vieja
+  del README, dos variantes antiguas del logotipo y dos cursores SVG que no
+  usaba nadie (la ballena emplea las versiones PNG).
 
 ### Fixed
 
@@ -196,6 +206,18 @@ Las entradas de seguridad referencian su identificador de advisory
   columna lateral fija que dejaba la tabla sin ancho suficiente, obligando a
   desplazarla para ver la columna de enlaces; ahora se muestra en la misma
   barra compacta que ya usaba en tablet/móvil.
+- `POST /api/writeups/{id}/report` valida el token CSRF, como el resto de rutas
+  de escritura (el frontend ya lo enviaba).
+- `GET /api/certificado/<maquina>?formato=pdf` volvía a fallar porque buscaba
+  un PDF en disco que ya no se archiva; ahora compone el PDF desde el WebP,
+  igual que el endpoint público por `cert_id`.
+- Los clics a la Academia desde la guía de ayuda se contabilizaban como
+  `otro`; ahora tienen su propia ubicación `guia` en `/estadisticas`.
+- BunkerLabs cargaba `fonts.css` dos veces (enlace de la base y `@import` en
+  su CSS); se quita el `@import` duplicado.
+- Referencia del smoke check actualizada: el baseline seguía esperando una
+  plantilla retirada y no incluía rutas ya desplegadas, así que informaba de
+  falsas regresiones.
 
 ## [2.0.1] - 2026-10-22
 
@@ -218,9 +240,9 @@ afectadas/corregidas en advisories de seguridad y solicitudes de CVE.
 
 ### Added
 
-- Versión de la aplicación expuesta de tres formas: fichero `VERSION` en la
-  raíz (fuente única de verdad), pie de página en todas las vistas y
-  endpoint público `GET /api/version`.
+- Versión de la aplicación expuesta en el fichero `VERSION` en la raíz (fuente
+  única de verdad), el meta tag `application-version` y el endpoint público
+  `GET /api/version`.
 - Soporte PWA: manifest, service worker, iconos y página offline.
 
 ### Changed

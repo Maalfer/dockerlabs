@@ -5,6 +5,7 @@ import os
 import time
 
 from fastapi import Depends, File, Form, Request, UploadFile
+from fastapi.concurrency import run_in_threadpool
 from fastapi.responses import JSONResponse
 from PIL import Image
 from pydantic import BaseModel
@@ -127,77 +128,82 @@ def register_maquinas_api_routes(api_router, get_session, verify_csrf_token, BAS
         if len(file_bytes) > 2 * 1024 * 1024:
             return JSONResponse(status_code=400, content={"error": "La imagen es demasiado grande (máx 2MB)"})
 
-        from dockerlabs import validators
+        # Validar, convertir a WebP y escribir a disco es CPU/IO síncrono
+        # (PIL + filesystem): se manda al threadpool para no bloquear el
+        # event loop del worker mientras dura.
+        def _procesar_y_guardar_logo():
+            from dockerlabs import validators
+            from dockerlabs.image_utils import to_webp
 
-        try:
-            img = Image.open(io.BytesIO(file_bytes))
-            img.verify()
-        except Exception:
-            return JSONResponse(status_code=400, content={"error": "La imagen enviada no es válida"})
+            try:
+                img = Image.open(io.BytesIO(file_bytes))
+                img.verify()
+            except Exception:
+                return JSONResponse(status_code=400, content={"error": "La imagen enviada no es válida"})
 
-        valid, err = validators.validate_image_content(io.BytesIO(file_bytes))
-        if not valid:
-            return JSONResponse(status_code=400, content={"error": f"Imagen inválida: {err}"})
+            valid, err = validators.validate_image_content(io.BytesIO(file_bytes))
+            if not valid:
+                return JSONResponse(status_code=400, content={"error": f"Imagen inválida: {err}"})
 
-        original_filename = secure_filename(logo.filename or '')
-        _, ext = os.path.splitext(original_filename)
-        ext = ext.lower()
-        ALLOWED = {'.jpg', '.jpeg', '.png', '.gif', '.webp', '.bmp', '.tiff', '.avif'}
-        if ext not in ALLOWED:
-            return JSONResponse(status_code=400, content={"error": "Formato de imagen no permitido"})
+            original_filename = secure_filename(logo.filename or '')
+            _, ext = os.path.splitext(original_filename)
+            ext = ext.lower()
+            ALLOWED = {'.jpg', '.jpeg', '.png', '.gif', '.webp', '.bmp', '.tiff', '.avif'}
+            if ext not in ALLOWED:
+                return JSONResponse(status_code=400, content={"error": "Formato de imagen no permitido"})
 
-        from dockerlabs.image_utils import to_webp
+            try:
+                save_bytes = to_webp(file_bytes, profile='logo')
+            except Exception:
+                return JSONResponse(status_code=400, content={"error": "No se pudo procesar la imagen"})
+            logo_mime = 'image/webp'
+            save_ext = '.webp'
 
-        try:
-            save_bytes = to_webp(file_bytes, profile='logo')
-        except Exception:
-            return JSONResponse(status_code=400, content={"error": "No se pudo procesar la imagen"})
-        logo_mime = 'image/webp'
-        save_ext = '.webp'
+            almacenamiento_dir = os.path.join(BASE_DIR, 'uploads', 'logos')
+            os.makedirs(almacenamiento_dir, exist_ok=True)
 
-        almacenamiento_dir = os.path.join(BASE_DIR, 'uploads', 'logos')
-        os.makedirs(almacenamiento_dir, exist_ok=True)
+            ts = int(time.time())
+            prefix = 'bunker' if origen == 'bunker' else 'docker'
+            final_filename = f"{prefix}_{machine_id}_{ts}{save_ext}"
+            file_path = os.path.join(almacenamiento_dir, final_filename)
 
-        ts = int(time.time())
-        prefix = 'bunker' if origen == 'bunker' else 'docker'
-        final_filename = f"{prefix}_{machine_id}_{ts}{save_ext}"
-        file_path = os.path.join(almacenamiento_dir, final_filename)
+            try:
+                with open(file_path, 'wb') as f:
+                    f.write(save_bytes)
 
-        try:
-            with open(file_path, 'wb') as f:
-                f.write(save_bytes)
-
-            if maq.logo_path:
-                old_path = os.path.join(BASE_DIR, maq.logo_path)
-                if os.path.exists(old_path):
+                if maq.logo_path:
+                    old_path = os.path.join(BASE_DIR, maq.logo_path)
+                    if os.path.exists(old_path):
+                        try:
+                            os.remove(old_path)
+                        except Exception:
+                            pass
+                    # Miniaturas del logo anterior: ya no sirven.
                     try:
-                        os.remove(old_path)
+                        import glob
+                        parte = os.path.splitext(os.path.basename(maq.logo_path))[0]
+                        for mini in glob.glob(os.path.join(almacenamiento_dir, "thumbs", parte + "_*.webp")):
+                            os.remove(mini)
                     except Exception:
                         pass
-                # Miniaturas del logo anterior: ya no sirven.
-                try:
-                    import glob
-                    parte = os.path.splitext(os.path.basename(maq.logo_path))[0]
-                    for mini in glob.glob(os.path.join(almacenamiento_dir, "thumbs", parte + "_*.webp")):
-                        os.remove(mini)
-                except Exception:
-                    pass
 
-            maq.logo_path = f"uploads/logos/{final_filename}"
-            maq.logo_data = None
-            maq.logo_mime = logo_mime
-            db.session.commit()
-        except Exception as e:
-            logger.exception("Error inesperado en api_upload_machine_logo")
-            db.session.rollback()
-            return JSONResponse(status_code=500, content={"error": str(e)})
+                maq.logo_path = f"uploads/logos/{final_filename}"
+                maq.logo_data = None
+                maq.logo_mime = logo_mime
+                db.session.commit()
+            except Exception as e:
+                logger.exception("Error inesperado en api_upload_machine_logo")
+                db.session.rollback()
+                return JSONResponse(status_code=500, content={"error": str(e)})
 
-        return {
-            "message": "Logo subido correctamente",
-            "filename": final_filename,
-            "image_url": f"/img/maquina/{machine_id}?t={ts}",
-            "thumb_url": f"/img/maquina/{machine_id}?s=96&v={final_filename}"
-        }
+            return {
+                "message": "Logo subido correctamente",
+                "filename": final_filename,
+                "image_url": f"/img/maquina/{machine_id}?t={ts}",
+                "thumb_url": f"/img/maquina/{machine_id}?s=96&v={final_filename}"
+            }
+
+        return await run_in_threadpool(_procesar_y_guardar_logo)
 
     @api_router.get("/get_users")
     def api_get_users(request: Request, session: dict = Depends(get_session)):
@@ -210,7 +216,7 @@ def register_maquinas_api_routes(api_router, get_session, verify_csrf_token, BAS
         return {"users": [{"id": u.id, "username": u.username} for u in users]}
 
     @api_router.post("/rate_machine")
-    def api_rate_machine(request: Request, data: RateMachineRequest, session: dict = Depends(get_session)):
+    def api_rate_machine(request: Request, data: RateMachineRequest, session: dict = Depends(get_session), csrf_ok: bool = Depends(verify_csrf_token)):
         user_id = session.get('user_id')
         if not user_id:
             return JSONResponse(status_code=401, content={"success": False, "message": "Debes iniciar sesión para puntuar"})

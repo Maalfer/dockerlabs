@@ -10,6 +10,7 @@ from datetime import timedelta
 from typing import Optional
 
 from fastapi import BackgroundTasks, Depends, File, Request, UploadFile
+from fastapi.concurrency import run_in_threadpool
 from fastapi.responses import JSONResponse
 from PIL import Image
 from pydantic import BaseModel
@@ -324,71 +325,73 @@ def register_perfil_routes(api_router, get_session, verify_csrf_token, check_pas
         if len(file_bytes) > MAX_UPLOAD_BYTES:
             return JSONResponse(status_code=400, content={"error": "La imagen es demasiado grande (máx 5MB)"})
 
-        from dockerlabs import validators
+        # Validar, convertir a WebP y escribir a disco es CPU/IO síncrono
+        # (PIL + filesystem): se manda al threadpool para no bloquear el
+        # event loop del worker mientras dura.
+        def _procesar_y_guardar_foto():
+            from dockerlabs import validators
+            from dockerlabs.image_utils import to_webp
 
-        try:
-            img = Image.open(io.BytesIO(file_bytes))
-            img.verify()
-        except Exception:
-            logging.exception("Verificación de imagen fallida")
-            return JSONResponse(status_code=400, content={"error": "La imagen enviada no es válida"})
+            try:
+                img = Image.open(io.BytesIO(file_bytes))
+                img.verify()
+            except Exception:
+                logging.exception("Verificación de imagen fallida")
+                return JSONResponse(status_code=400, content={"error": "La imagen enviada no es válida"})
 
-        original_filename = secure_filename(photo.filename or '')
-        _, ext = os.path.splitext(original_filename)
-        ext = ext.lower()
+            original_filename = secure_filename(photo.filename or '')
+            _, ext = os.path.splitext(original_filename)
+            ext = ext.lower()
 
-        ALLOWED_PROFILE_EXTENSIONS = {'.png', '.jpg', '.jpeg', '.gif', '.webp', '.bmp', '.tiff', '.avif'}
-        if ext not in ALLOWED_PROFILE_EXTENSIONS:
-            return JSONResponse(status_code=400, content={"error": "Formato de imagen no permitido"})
+            ALLOWED_PROFILE_EXTENSIONS = {'.png', '.jpg', '.jpeg', '.gif', '.webp', '.bmp', '.tiff', '.avif'}
+            if ext not in ALLOWED_PROFILE_EXTENSIONS:
+                return JSONResponse(status_code=400, content={"error": "Formato de imagen no permitido"})
 
-        valid, error = validators.validate_image_content(io.BytesIO(file_bytes))
-        if not valid:
-            return JSONResponse(status_code=400, content={"error": f"Archivo inválido: {error}"})
+            valid, error = validators.validate_image_content(io.BytesIO(file_bytes))
+            if not valid:
+                return JSONResponse(status_code=400, content={"error": f"Archivo inválido: {error}"})
 
-        import time
-        from dockerlabs.image_utils import to_webp
+            try:
+                webp_bytes = to_webp(file_bytes, profile='perfil')
+            except Exception:
+                logging.exception("Error al convertir imagen de perfil a WebP")
+                return JSONResponse(status_code=400, content={"error": "No se pudo procesar la imagen"})
 
-        try:
-            webp_bytes = to_webp(file_bytes, profile='perfil')
-        except Exception:
-            logging.exception("Error al convertir imagen de perfil a WebP")
-            return JSONResponse(status_code=400, content={"error": "No se pudo procesar la imagen"})
+            user_obj = db.session.get(User, user_id)
+            if not user_obj:
+                return JSONResponse(status_code=400, content={"error": "No se ha podido determinar el usuario"})
 
-        user_obj = db.session.get(User, user_id)
-        if not user_obj:
-            return JSONResponse(status_code=400, content={"error": "No se ha podido determinar el usuario"})
+            almacenamiento_dir = os.path.join(BASE_DIR, 'uploads', 'perfiles')
+            os.makedirs(almacenamiento_dir, exist_ok=True)
 
-        almacenamiento_dir = os.path.join(BASE_DIR, 'uploads', 'perfiles')
-        os.makedirs(almacenamiento_dir, exist_ok=True)
+            ts = int(time.time())
+            filename = f"user_{user_id}_{ts}.webp"
+            file_path = os.path.join(almacenamiento_dir, filename)
 
-        ts = int(time.time())
-        filename = f"user_{user_id}_{ts}.webp"
-        file_path = os.path.join(almacenamiento_dir, filename)
+            try:
+                with open(file_path, 'wb') as f:
+                    f.write(webp_bytes)
 
-        try:
-            with open(file_path, 'wb') as f:
-                f.write(webp_bytes)
+                if user_obj.profile_image_path:
+                    old_path = os.path.join(BASE_DIR, user_obj.profile_image_path)
+                    if os.path.exists(old_path):
+                        try:
+                            os.remove(old_path)
+                        except Exception:
+                            pass
 
-            if user_obj.profile_image_path:
-                old_path = os.path.join(BASE_DIR, user_obj.profile_image_path)
-                if os.path.exists(old_path):
-                    try:
-                        os.remove(old_path)
-                    except Exception:
-                        pass
+                user_obj.profile_image_path = f"uploads/perfiles/{filename}"
+                user_obj.profile_image_data = None
+                user_obj.profile_image_mime = 'image/webp'
+                db.session.commit()
+            except Exception:
+                logging.exception("Error al guardar la foto de perfil en disco")
+                db.session.rollback()
+                return JSONResponse(status_code=500, content={"error": "Error al guardar la imagen en el servidor"})
 
-            user_obj.profile_image_path = f"uploads/perfiles/{filename}"
-            user_obj.profile_image_data = None
-            user_obj.profile_image_mime = 'image/webp'
-            db.session.commit()
-        except Exception:
-            logging.exception("Error al guardar la foto de perfil en disco")
-            db.session.rollback()
-            return JSONResponse(status_code=500, content={"error": "Error al guardar la imagen en el servidor"})
+            return {
+                'message': 'Foto de perfil actualizada correctamente.',
+                'image_url': f"/img/perfil/{user_id}?t={ts}"
+            }
 
-        image_url = f"/img/perfil/{user_id}?t={ts}"
-
-        return {
-            'message': 'Foto de perfil actualizada correctamente.',
-            'image_url': image_url
-        }
+        return await run_in_threadpool(_procesar_y_guardar_foto)

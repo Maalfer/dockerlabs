@@ -1,8 +1,7 @@
 # Suite de tests de DockerLabs
 
-Suite de 610 tests (pytest) contra el `fastapi_app` real de `asgi.py` y una
-MariaDB de verdad (vía Docker Compose), construida para reemplazar los 5
-tests muertos de la era Flask que había antes. Sin SQLite ni mocks del ORM:
+Suite de tests (pytest) contra el `fastapi_app` real de `asgi.py` y una
+MariaDB de verdad (vía Docker Compose). Sin SQLite ni mocks del ORM:
 los tests de `tests/integration/` golpean la app de punta a punta (incluidos
 todos los middlewares — CSRF, rate limiting, cabeceras de seguridad) y los de
 `tests/unit/` cubren funciones puras sin BD ni red.
@@ -101,32 +100,16 @@ arreglar bugs nuevos. Lo siguiente quedó documentado con comentarios `NOTA`/
 `HALLAZGO` en el test correspondiente, pinnando el comportamiento real para
 que el equipo decida si lo corrige:
 
-- **`routes/certificados.py` — `GET /api/certificado/<maquina>?formato=pdf`
-  rompe siempre con un `RuntimeError` (archivo inexistente).** `ensure_certificate()`
-  ya no archiva un PDF físico (solo WebP; el PDF se compone al vuelo), pero
-  esta rama sigue esperando un fichero que nunca se escribe. El endpoint
-  público `GET /api/certificado/pdf/<cert_id>` (el que de verdad consumen
-  terceros) no tiene este problema: compone el PDF al vuelo correctamente.
-  **Esto afecta también a producción, no solo al clon de test** — candidato
-  a arreglar aparte. Ver `test_certificados_api.py::test_formato_pdf_is_actually_broken_no_physical_pdf_archived`.
 - **`routes/pending_admin.py`** — aprobar una `PendingMachineSubmission` solo
   cambia su `estado` a `"aprobado"`: no crea ninguna fila `Machine`/`Category`.
   Si no hay otro proceso que lo haga, "aprobar" no publica la máquina en el
   catálogo. Ver `test_pending_admin.py::test_approve_does_not_create_machine_or_category_row`.
-- **`routes/writeups.py` — `POST /api/writeups/{id}/report`** es la única
-  ruta de escritura de todo el fichero sin `Depends(verify_csrf_token)`: una
-  sesión autenticada por cookie puede reportar un writeup sin CSRF token
-  (impacto bajo: solo crea una fila `WriteupReport`). Ver
-  `test_writeups.py::test_succeeds_without_csrf_header`.
 - **`routes/writeups.py` — borrado batch de análisis** (`api_delete_writeups_batch`):
   un id no numérico en la lista dispara un `ValueError` sin manejo
   específico, capturado por un `except Exception` genérico que devuelve 500
   con el texto crudo de la excepción (fuga de detalle interno) y además
   aborta TODO el batch (nada se borra, ni los ids válidos). Ver
   `test_writeups_analisis.py::test_non_numeric_id_aborts_whole_batch_with_500`.
-- **`routes/pages_admin.py` — `?page=<no numérico>`** en `/gestion-usuarios`
-  no atrapa el `ValueError` de `int(...)`: un cliente real recibiría un 500
-  en vez de un 400. Ver `test_pages_admin.py::test_non_numeric_page_param_crashes_with_500`.
 - **`asgi.py` — rate limiter global** (`rate_limit_middleware`) usa
   `request.client.host` crudo: no respeta `X-Forwarded-For` ni
   `cf-connecting-ip`, a diferencia de `visit_counter_middleware` y de

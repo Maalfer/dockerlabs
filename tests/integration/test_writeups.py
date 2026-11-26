@@ -321,29 +321,31 @@ class TestReportWriteup:
         r = client.post(f"/api/writeups/{writeup.id}/report", json={"reason": "spam"})
         assert r.status_code == 401
 
-    def test_succeeds_without_csrf_header(self, client, login_as, db):
-        # HALLAZGO: a diferencia de TODAS sus rutas hermanas de escritura
-        # (aprobar, borrar, dismiss, delete-batch...), esta ruta
-        # (`api_report_writeup` en dockerlabs/routes/writeups.py) NO declara
-        # `csrf_ok: bool = Depends(verify_csrf_token)` en su firma. Una
-        # sesión autenticada por cookie puede por tanto reportar un writeup
-        # sin enviar `X-CSRFToken`, lo que en teoría permite que un sitio de
-        # terceros fuerce esta petición desde el navegador de la víctima
-        # (CSRF clásico, impacto bajo: solo crea una fila `WriteupReport`).
-        # Se fija aquí el comportamiento ACTUAL (acepta sin CSRF) sin
-        # "arreglar" nada en el código de la app -- fuera de alcance de este
-        # archivo de tests.
+    def test_requires_csrf_header(self, client, login_as, db):
         maquina = make_machine(db)
         writeup = make_writeup(db, maquina=maquina.nombre, autor=maquina.autor)
-        user = _jugador(db)
-        login_as(user)  # cookie puesta, pero no se manda X-CSRFToken
+        login_as(_jugador(db))  # cookie puesta, pero sin X-CSRFToken
         r = client.post(f"/api/writeups/{writeup.id}/report", json={"reason": "spam"})
+        assert r.status_code == 403
+
+    def test_succeeds_with_csrf_header(self, client, login_as, db):
+        maquina = make_machine(db)
+        writeup = make_writeup(db, maquina=maquina.nombre, autor=maquina.autor)
+        csrf = login_as(_jugador(db))
+        r = client.post(
+            f"/api/writeups/{writeup.id}/report",
+            json={"reason": "spam"},
+            headers=csrf_headers(csrf),
+        )
         assert r.status_code == 200, r.text
 
     def test_nonexistent_writeup_404(self, client, login_as, db):
-        user = _jugador(db)
-        login_as(user)
-        r = client.post("/api/writeups/999999/report", json={"reason": "spam"})
+        csrf = login_as(_jugador(db))
+        r = client.post(
+            "/api/writeups/999999/report",
+            json={"reason": "spam"},
+            headers=csrf_headers(csrf),
+        )
         assert r.status_code == 404
 
 

@@ -35,10 +35,11 @@ def register_pages_core_routes(
         "master": "https://thebigschool.com/master-ciberseguridad-hacking-etico/",
     }
     _GO_BOTS = ("bot", "crawl", "spider", "curl", "wget", "python-requests", "headless", "preview", "monitor", "facebookexternalhit")
-    # Únicos valores que envían las plantillas propias (home.html, base.html). Cualquier otro
-    # valor de "o" es ruido de escáneres probando SQLi/XSS en el parámetro y se agrupa en "otro"
-    # para no ensuciar /estadisticas con una fila nueva por cada payload distinto.
-    _GO_ORIGENES_VALIDOS = {"footer", "home-boton", "bunker-login"}
+    # Únicos valores que envían las plantillas propias (home.html, base.html,
+    # _guia.html). Cualquier otro valor de "o" es ruido de escáneres probando
+    # SQLi/XSS en el parámetro y se agrupa en "otro" para no ensuciar
+    # /estadisticas con una fila nueva por cada payload distinto.
+    _GO_ORIGENES_VALIDOS = {"footer", "home-boton", "bunker-login", "guia"}
 
     @pages_router.get("/go/{destino}", include_in_schema=False)
     def go_externo(destino: str, request: Request, o: str = "footer"):

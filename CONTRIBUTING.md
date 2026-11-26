@@ -36,8 +36,7 @@ hacen funcionar la plataforma — no las dupliques aquí, instala directamente
 desde ese fichero para no tener dos listas que puedan divergir.
 
 El rate limiting no depende de memcached ni de ningún servicio externo: es un
-middleware ASGI en memoria (ver `agent.md`), pensado para funcionar detrás de
-Cloudflare.
+middleware ASGI en memoria que cuenta por IP directa del peer (ver `agent.md`).
 
 > [!WARNING]
 > Se recomienda hacerlo en un entorno virtual de Python. Para desplegar uno:
@@ -60,14 +59,11 @@ plantilla). Si prefieres no instalar nada de esto a mano, usa directamente
 Una vez todo preparado podemos lanzar DockerLabs, para ello ejecutaremos el script [run.py](/run.py):
 
 ```bash
-(venv) root@b3e19df7fedc:~/dockerlabs# python3 run.py 
-INFO:     Will watch for changes in these directories: ['/root/dockerlabs']
+(venv) user@local:~/dockerlabs$ python3 run.py
+INFO:     Will watch for changes in these directories: ['/home/user/dockerlabs']
 INFO:     Uvicorn running on http://0.0.0.0:5000 (Press CTRL+C to quit)
 INFO:     Started reloader process [29]
-INFO:     Waiting for application startup.
 INFO:     Started server process [31]
-INFO:     Waiting for application startup.
-INFO:     ASGI 'lifespan' protocol appears unsupported.
 INFO:     Application startup complete.
 ```
 
@@ -81,9 +77,9 @@ Valoramos y agradecemos todas las contribuciones. Sin embargo, te pedimos que re
 
 DockerLabs sigue [Versionado Semántico](https://semver.org/lang/es/)
 (`MAJOR.MINOR.PATCH`) desde la `v2.0.0`. La fuente única de verdad es el
-fichero [`VERSION`](VERSION) en la raíz: todo lo demás (footer, meta tag,
-`GET /api/version`, badge del README) lo lee de ahí, así que nunca hay que
-tocar nada más que ese fichero y el `CHANGELOG.md`.
+fichero [`VERSION`](VERSION) en la raíz: el meta tag y `GET /api/version` lo
+leen de ahí. El badge del README sigue los tags de GitHub, así que nunca hay
+que tocar nada más que ese fichero y el `CHANGELOG.md`.
 
 > **La versión no se sube nunca salvo que el dueño del proyecto lo pida expresamente.** No toques `VERSION` ni crees secciones `## [X.Y.Z]` en `CHANGELOG.md` por tu cuenta: los cambios se anotan en `## [Sin publicar]` y el número lo decide él.
 

@@ -29,7 +29,8 @@ El candado está en el código (`certificados.py: machine_certificable()` y
 ## `GET /u/<slug>` — perfil público completo
 
 `<slug>` es `User.slug` (o el `username` literal como alias). Responde `200`
-con el JSON de abajo, o `404` `{"error": "...", "slug": "..."}` si no existe.
+con el JSON de abajo, o `404` `{"error": "...", "slug": "..."}` si no existe o
+si el perfil está en privado (`perfil_publico = false`).
 Cabecera `Cache-Control: public, max-age=60`.
 
 Claves de primer nivel (todas deben existir siempre):
@@ -66,7 +67,8 @@ ISO usan sufijo `Z`.
 ## `GET /api/certificado/pdf/<CERT_ID>` — diploma en PDF
 
 `<CERT_ID>` con formato `DL-XXXXXX` (6 hex mayúsculas). `200 application/pdf`
-del diploma archivado, o `404`. Público, `Cache-Control: 86400`.
+del diploma, compuesto al vuelo a partir del WebP archivado, o `404`. Público,
+`Cache-Control: public, max-age=86400`.
 
 ## `GET /api/certificado/imagen/<CERT_ID>` — diploma en imagen
 
@@ -85,8 +87,7 @@ Responde `200` con `{"version": "2.0.1"}` (SemVer, sin prefijo `v`).
 Cabecera `Cache-Control: public, max-age=60`. Pensado para que herramientas
 externas (escáneres, advisories de seguridad) comprueben qué versión corre
 en producción sin parsear HTML. La fuente de verdad es el fichero `VERSION`
-en la raíz del repo (ver `dockerlabs/__init__.py`); coincide siempre con el
-footer de la web.
+en la raíz del repo (ver `dockerlabs/__init__.py`).
 
 ## `GET /img/maquina/<id>` y `GET /img/perfil/<id>` — imágenes públicas
 
@@ -101,8 +102,8 @@ deben seguir siendo públicas. Responden con CSP `sandbox` en vigor (mitiga SVG)
    asigna con `allocate_cert_id()`, que preserva los IDs ya emitidos. Para leer
    el ID definitivo usa `Certificate.cert_id`, nunca recalcules con
    `certificate_id()` (es solo el primer candidato del hash).
-2. **El PDF y la imagen se archivan al publicar el writeup** (no al pedirlos),
-   así que `pdf_url`/`imagen_url` de un certificado `generado: true` siempre
-   resuelven.
+2. **El diploma se archiva como WebP al publicar el writeup** (no al pedirlo);
+   el PDF se compone al vuelo desde ese WebP. Así, `pdf_url`/`imagen_url` de un
+   certificado `generado: true` siempre resuelven.
 3. **BunkerLabs nunca aparece** ni genera certificados (ver arriba).
 4. Estos endpoints **no requieren sesión**. No añadas autenticación.

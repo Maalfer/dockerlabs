@@ -395,28 +395,18 @@ class TestGenerarCertificado:
         finally:
             _cleanup_cert_files(user.id)
 
-    def test_formato_pdf_is_actually_broken_no_physical_pdf_archived(self, client, login_as, db):
-        """HALLAZGO (no es un fallo del test, es el comportamiento real):
-        `ensure_certificate()` ya NO archiva un PDF físico — el comentario del
-        propio módulo dice "ya no se archiva un PDF por certificado... el PDF
-        se compone al vuelo" — pero la rama `formato == "pdf"` de
-        `api_generar_certificado` sigue haciendo
-        `FileResponse(abspath_for(cert.pdf_path), ...)` esperando un fichero
-        que nunca se escribe. El resultado es que `GET
-        /api/certificado/<maquina>?formato=pdf` SIEMPRE revienta con un
-        `RuntimeError` (archivo inexistente) en vez de servir el PDF — a
-        diferencia de `GET /api/certificado/pdf/<cert_id>` (el endpoint
-        público de verificación), que sí compone el PDF al vuelo desde el
-        WebP y funciona bien (ver `test_serve_real_files_after_ensure_certificate`
-        más arriba). Se deja documentado aquí en vez de forzar un 200 falso;
-        no se toca `dockerlabs/routes/certificados.py` (fuera de alcance)."""
+    def test_formato_pdf_compone_desde_webp(self, client, login_as, db):
+        """`?formato=pdf` compone el PDF al vuelo desde el WebP archivado,
+        igual que el endpoint público `/api/certificado/pdf/<cert_id>`."""
         user = make_user(db, username="genuser4")
         make_machine(db, origen="docker", nombre="GenMachine4")
         make_writeup(db, maquina="GenMachine4", autor="genuser4")
         login_as(user)
         try:
-            with pytest.raises(RuntimeError, match="does not exist"):
-                client.get("/api/certificado/GenMachine4", params={"formato": "pdf"})
+            r = client.get("/api/certificado/GenMachine4", params={"formato": "pdf"})
+            assert r.status_code == 200, r.text
+            assert r.headers["content-type"] == "application/pdf"
+            assert r.content.startswith(b"%PDF")
         finally:
             _cleanup_cert_files(user.id)
 

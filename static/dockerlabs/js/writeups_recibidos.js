@@ -108,14 +108,6 @@ function renderRow(writeup) {
 
 function handleAprobar(row) {
     const id = row.dataset.id;
-    // Optional: Gather updated values from inputs if we want to support editing before approving
-    // But original logic didn't seem to have specific 'save' button other than approve.
-    // The previous implementation used /api/writeups_recibidos/<id>/aprobar which inserts into writeups_subidos.
-    // It doesn't take body params. So any edits in the table won't be saved unless we add a 'Guardar' step or auto-save.
-    // For now, let's assume approval uses DB state. If user wants to edit, they might need an edit endpoint.
-    // I noticed I added an API PUT endpoint in app.py earlier? Let's check. 
-    // Yes: @writeups_bp.route('/api/writeups_recibidos/<int:writeup_id>', methods=['PUT'])
-    // It would be good to auto-save on change?
 
     if (!confirm(`¿Seguro que quieres aprobar este writeup?`)) {
         return;

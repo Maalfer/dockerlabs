@@ -4,6 +4,7 @@ from datetime import datetime
 from typing import List, Optional
 
 from fastapi import Depends, Request
+from fastapi.concurrency import run_in_threadpool
 from fastapi.responses import JSONResponse, StreamingResponse
 from pydantic import BaseModel
 from sqlalchemy import func, case
@@ -160,7 +161,7 @@ def register_writeup_routes(api_router, get_session, verify_csrf_token, db):
             db.session.commit()
 
             from dockerlabs.writeups import recalcular_ranking_writeups
-            recalcular_ranking_writeups()
+            await run_in_threadpool(recalcular_ranking_writeups)
 
             # El diploma se emite al publicar el writeup, no cuando el usuario lo pide.
             from dockerlabs.routes.certificados import ensure_certificate_safe
@@ -228,7 +229,7 @@ def register_writeup_routes(api_router, get_session, verify_csrf_token, db):
 
             from dockerlabs.writeups import recalcular_ranking_writeups
 
-            recalcular_ranking_writeups()
+            await run_in_threadpool(recalcular_ranking_writeups)
 
             # El diploma se emite al publicar el writeup, no cuando el usuario lo pide.
             from dockerlabs.routes.certificados import ensure_certificate_safe
@@ -283,7 +284,7 @@ def register_writeup_routes(api_router, get_session, verify_csrf_token, db):
             db.session.commit()
             from dockerlabs.writeups import recalcular_ranking_writeups
 
-            recalcular_ranking_writeups()
+            await run_in_threadpool(recalcular_ranking_writeups)
             return {"message": "Writeup actualizado correctamente"}
         except Exception as e:
             logger.exception("Error inesperado en api_update_writeup_subido")
@@ -309,7 +310,7 @@ def register_writeup_routes(api_router, get_session, verify_csrf_token, db):
         db.session.commit()
         from dockerlabs.writeups import recalcular_ranking_writeups
 
-        recalcular_ranking_writeups()
+        await run_in_threadpool(recalcular_ranking_writeups)
 
         from dockerlabs.routes.certificados import revoke_certificate_safe
         revoke_certificate_safe(autor, maquina)
@@ -340,7 +341,7 @@ def register_writeup_routes(api_router, get_session, verify_csrf_token, db):
             return JSONResponse(status_code=500, content={"error": f"Error al eliminar: {str(e)}"})
         from dockerlabs.writeups import recalcular_ranking_writeups
 
-        recalcular_ranking_writeups()
+        await run_in_threadpool(recalcular_ranking_writeups)
 
         from dockerlabs.routes.certificados import revoke_certificate_safe
         revoke_certificate_safe(autor, maquina)
@@ -449,7 +450,7 @@ def register_writeup_routes(api_router, get_session, verify_csrf_token, db):
         return writeups
 
     @api_router.post("/writeups/{writeup_id}/report")
-    def api_report_writeup(request: Request, writeup_id: int, data: ReportWriteupRequest, session: dict = Depends(get_session)):
+    def api_report_writeup(request: Request, writeup_id: int, data: ReportWriteupRequest, session: dict = Depends(get_session), csrf_ok: bool = Depends(verify_csrf_token)):
         user_id = session.get("user_id")
         if not user_id:
             return JSONResponse(status_code=401, content={"error": "Debes iniciar sesión para reportar"})
@@ -820,7 +821,7 @@ def register_writeup_routes(api_router, get_session, verify_csrf_token, db):
                 WriteupAnalysisResult.query.filter_by(writeup_id=int(wid)).delete()
             db.session.commit()
             from dockerlabs.writeups import recalcular_ranking_writeups
-            recalcular_ranking_writeups()
+            await run_in_threadpool(recalcular_ranking_writeups)
             return {"message": f"{deleted} writeup(s) eliminados correctamente", "deleted": deleted}
         except Exception as e:
             logger.exception("Error inesperado en api_delete_writeups_batch")

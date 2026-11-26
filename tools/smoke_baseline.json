@@ -17,14 +17,15 @@
     "/ruta-que-no-existe-smoke-test": 404,
     "/static/dockerlabs/js/utils.js": 200
   },
-  "modulos_compilados": 80,
-  "n_rutas": 235,
+  "modulos_compilados": 82,
+  "n_rutas": 250,
   "plantillas": [
     "bunkerlabs/base.html",
     "bunkerlabs/descargar.html",
     "bunkerlabs/gestion.html",
     "bunkerlabs/home.html",
     "bunkerlabs/login-bunkerlabs.html",
+    "dockerlabs/_cody_logo.html",
     "dockerlabs/_guia.html",
     "dockerlabs/admin/dashboard.html",
     "dockerlabs/admin/gestion_maquinas.html",
@@ -46,9 +47,10 @@
     "dockerlabs/home.html",
     "dockerlabs/info/add-maquina.html",
     "dockerlabs/info/agradecimientos.html",
-    "dockerlabs/info/como_se_crea_una_maquina.html",
+    "dockerlabs/info/autoria.html",
     "dockerlabs/info/descargar.html",
     "dockerlabs/info/enviar_maquina.html",
+    "dockerlabs/info/herramientas_comunidad.html",
     "dockerlabs/info/soporte.html",
     "dockerlabs/info/terminos-condiciones.html",
     "dockerlabs/perfil_publico.html",
@@ -76,6 +78,13 @@
       ],
       "name": "index_page",
       "path": "/"
+    },
+    {
+      "methods": [
+        "GET"
+      ],
+      "name": "security_txt",
+      "path": "/.well-known/security.txt"
     },
     {
       "methods": [
@@ -152,6 +161,20 @@
         "POST"
       ],
       "name": "(openapi)",
+      "path": "/api/admin/pending-machines/limpiar"
+    },
+    {
+      "methods": [
+        "POST"
+      ],
+      "name": "api_limpiar_pending_machines",
+      "path": "/api/admin/pending-machines/limpiar"
+    },
+    {
+      "methods": [
+        "POST"
+      ],
+      "name": "(openapi)",
       "path": "/api/admin/pending-machines/{machine_id}/approve"
     },
     {
@@ -166,6 +189,20 @@
         "POST"
       ],
       "name": "(openapi)",
+      "path": "/api/admin/pending-machines/{machine_id}/estado"
+    },
+    {
+      "methods": [
+        "POST"
+      ],
+      "name": "api_estado_pending_machine",
+      "path": "/api/admin/pending-machines/{machine_id}/estado"
+    },
+    {
+      "methods": [
+        "POST"
+      ],
+      "name": "(openapi)",
       "path": "/api/admin/pending-machines/{machine_id}/reject"
     },
     {
@@ -174,6 +211,34 @@
       ],
       "name": "api_reject_pending_machine",
       "path": "/api/admin/pending-machines/{machine_id}/reject"
+    },
+    {
+      "methods": [
+        "POST"
+      ],
+      "name": "(openapi)",
+      "path": "/api/admin/send_password_reset/{user_id}"
+    },
+    {
+      "methods": [
+        "POST"
+      ],
+      "name": "api_send_password_reset",
+      "path": "/api/admin/send_password_reset/{user_id}"
+    },
+    {
+      "methods": [
+        "POST"
+      ],
+      "name": "(openapi)",
+      "path": "/api/admin/set_user_password/{user_id}"
+    },
+    {
+      "methods": [
+        "POST"
+      ],
+      "name": "api_set_user_password",
+      "path": "/api/admin/set_user_password/{user_id}"
     },
     {
       "methods": [
@@ -1013,6 +1078,20 @@
         "GET"
       ],
       "name": "(openapi)",
+      "path": "/autoria"
+    },
+    {
+      "methods": [
+        "GET"
+      ],
+      "name": "info_autoria",
+      "path": "/autoria"
+    },
+    {
+      "methods": [
+        "GET"
+      ],
+      "name": "(openapi)",
       "path": "/bug-bounty"
     },
     {
@@ -1108,6 +1187,20 @@
     },
     {
       "methods": [
+        "POST"
+      ],
+      "name": "(openapi)",
+      "path": "/bunkerlabs/gestion/{token_id}/toggle"
+    },
+    {
+      "methods": [
+        "POST"
+      ],
+      "name": "toggle_bunker_token",
+      "path": "/bunkerlabs/gestion/{token_id}/toggle"
+    },
+    {
+      "methods": [
         "GET"
       ],
       "name": "(openapi)",
@@ -1194,14 +1287,7 @@
       "methods": [
         "GET"
       ],
-      "name": "(openapi)",
-      "path": "/como-se-crea-una-maquina"
-    },
-    {
-      "methods": [
-        "GET"
-      ],
-      "name": "info_como_se_crea_una_maquina",
+      "name": "como_se_crea_retirada",
       "path": "/como-se-crea-una-maquina"
     },
     {
@@ -1367,6 +1453,20 @@
       ],
       "name": "go_externo",
       "path": "/go/{destino}"
+    },
+    {
+      "methods": [
+        "GET"
+      ],
+      "name": "(openapi)",
+      "path": "/herramientas-comunidad"
+    },
+    {
+      "methods": [
+        "GET"
+      ],
+      "name": "info_herramientas_comunidad",
+      "path": "/herramientas-comunidad"
     },
     {
       "methods": [
@@ -1585,6 +1685,13 @@
       ],
       "name": "robots",
       "path": "/robots.txt"
+    },
+    {
+      "methods": [
+        "GET"
+      ],
+      "name": "security_txt",
+      "path": "/security.txt"
     },
     {
       "methods": [

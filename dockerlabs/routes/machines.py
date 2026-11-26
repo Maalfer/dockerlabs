@@ -3,6 +3,7 @@ from datetime import datetime
 from typing import Optional
 
 from fastapi import Depends, Form, HTTPException, Request
+from fastapi.concurrency import run_in_threadpool
 from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
 from pydantic import BaseModel
 from sqlalchemy import func
@@ -181,7 +182,7 @@ def register_machine_routes(
             db.session.commit()
 
             if origen == "docker":
-                recalcular_ranking_creadores()
+                await run_in_threadpool(recalcular_ranking_creadores)
 
             return {"success": True, "message": "Máquina actualizada correctamente"}
         except Exception as e:
@@ -211,7 +212,7 @@ def register_machine_routes(
             db.session.delete(maquina)
             db.session.commit()
             if origen == "docker":
-                recalcular_ranking_creadores()
+                await run_in_threadpool(recalcular_ranking_creadores)
             return {"success": True, "message": "Máquina eliminada correctamente"}
         except Exception as e:
             logger.exception("Error inesperado en api_eliminar_maquina")
@@ -278,7 +279,7 @@ def register_machine_routes(
             db.session.add(new_machine)
             db.session.commit()
             if data.destino == "docker":
-                recalcular_ranking_creadores()
+                await run_in_threadpool(recalcular_ranking_creadores)
             # Si la máquina venía de un envío de la comunidad, sale sola de la cola de revisión.
             try:
                 from dockerlabs.routes.pending_admin import marcar_publicadas

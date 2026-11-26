@@ -256,14 +256,14 @@ Carga el catálogo y las categorías por lotes; no añadas consultas por máquin
 
 Un certificado **existe en cuanto el usuario tiene un writeup publicado** de una
 máquina de DockerLabs: no hay que pedirlo. `ensure_certificate()` renderiza el diploma y
-archiva el PDF en `uploads/certificados/user_<id>/<CERT_ID>-<maquina>.pdf`,
+archiva el WebP en `uploads/certificados/user_<id>/<CERT_ID>-<maquina>.webp`,
 registrándolo en la tabla `certificados`. Se invoca automáticamente al aprobar
 un writeup, así que `/u/<slug>` siempre lo encuentra ya hecho.
 
-Junto al PDF se archiva el diploma como WebP (`.webp`, ~85 KB). Ambos se
-sirven públicos: `GET /api/certificado/pdf/<CERT_ID>` y
-`GET /api/certificado/imagen/<CERT_ID>` (este último, `inline`, para verlo o
-incrustarlo). `GET /api/certificado/<maquina>` sigue descargando un PNG
+El PDF no se guarda: `GET /api/certificado/pdf/<CERT_ID>` lo compone al vuelo
+desde ese WebP (~65 KB), que también se sirve público con
+`GET /api/certificado/imagen/<CERT_ID>` (`inline`, para verlo o incrustarlo).
+`GET /api/certificado/<maquina>` sigue descargando un PNG
 (`?formato=png`, por defecto) o el PDF (`?formato=pdf`).
 
 No guardes el diploma como PNG ni lo sirvas con `optimize=True`: pesa 1 MB y
@@ -279,7 +279,7 @@ ya se repararon (script puntual, retirado del repo). La fecha impresa es la del 
 renderizado, para que regenerar un diploma no lo cambie.
 
 Como el `cert_id` depende del nombre de usuario y el diploma lleva impreso el
-`nombre_diploma`, ambos cambios reemiten los PDFs vía `sync_user_certificates()`.
+`nombre_diploma`, ambos cambios reemiten los diplomas vía `sync_user_certificates()`.
 Al borrar un writeup se retira el diploma con `revoke_certificate_safe()`.
 
 `author_matches_user()` decide de quién es un writeup: coincidencia exacta, y la

@@ -64,10 +64,9 @@ DockerLabs sigue [Versionado Semántico](https://semver.org/lang/es/)
 (`MAJOR.MINOR.PATCH`) a partir de la `v2.0.0`. Cada release queda
 etiquetada en git y documentada en [`CHANGELOG.md`](CHANGELOG.md).
 
-La versión desplegada se puede consultar en tres sitios, siempre
+La versión desplegada se puede consultar en dos sitios, siempre
 consistentes entre sí porque leen del mismo fichero [`VERSION`](VERSION):
 
-- El pie de página de https://dockerlabs.es
 - La etiqueta `<meta name="application-version">` del `<head>`
 - El endpoint público `GET /api/version` → `{"version": "2.0.1"}`
 
@@ -124,9 +123,13 @@ Apache) con TLS, con la app servida vía `uvicorn` gestionado por systemd
 y MariaDB como base de datos — el mismo proceso que arranca el paso 4 de
 arriba, solo que supervisado por el sistema en vez de a mano.
 
-### Rate Limiting (Cloudflare)
+### Rate limiting
 
-El sistema de limitación de peticiones (Rate Limit) está configurado para funcionar con **Cloudflare**, proporcionando protección a nivel de red sin necesidad de servicios adicionales como memcached.
+El middleware ASGI limita a 300 peticiones por minuto y IP directa (el par
+`request.client.host`). Detrás de nginx o Cloudflare esa IP es la del proxy,
+así que el límite se aplica al peer que llega a Uvicorn: si quieres limitar por
+IP del visitante, hazlo en la capa que vea la cabecera real del cliente. No se
+necesita ningún servicio externo (memcached u otros).
 
 ### Convertir un usuario en admin
 

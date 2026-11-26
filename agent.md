@@ -57,7 +57,7 @@ BunkerLabs tiene un campo adicional `pin` y el modo `entorno_real` que omite el 
 
 ## 8. Rate limiting
 
-Middleware ASGI personalizado en `asgi.py`: 300 req/min por IP, ventana deslizante en memoria. Excluye `/static/`, `/img/` y `/database/` (prefijo histórico; la carpeta `database/` ya no existe). Al ser en memoria, el límite efectivo con 2 workers es 300×2 por IP; suficiente para producción sin dependencias externas.
+Middleware ASGI personalizado en `asgi.py`: 300 req/min por IP, ventana deslizante en memoria. Excluye `/static/` y `/img/`. Al ser en memoria, el límite efectivo con 2 workers es 300×2 por IP; suficiente para producción sin dependencias externas. Los de `routes/certificados.py` (verificación y generación de certificados) usan el mismo patrón en memoria por proceso. Subir `--workers` en el systemd unit relaja estos límites en la misma proporción (y, por separado, multiplica el techo de conexiones a la BD — ver el comentario junto a `pool_size` en `database.py`).
 
 ## 9. Seguridad en uploads
 

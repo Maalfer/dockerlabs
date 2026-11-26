@@ -2,8 +2,9 @@
 
 Un certificado existe en cuanto el usuario tiene un writeup publicado de una
 máquina: no hay que pedirlo. `ensure_certificate()` renderiza el diploma y
-archiva su PDF en `uploads/certificados/`, y se invoca automáticamente al
+archiva su WebP en `uploads/certificados/`, y se invoca automáticamente al
 aprobar un writeup, de modo que `/u/<slug>` siempre lo encuentra ya hecho.
+El PDF se compone al vuelo desde ese WebP al descargarlo.
 
 La fecha impresa es la del writeup (la finalización real), no la del momento en
 que se renderiza; así el diploma es determinista y se puede regenerar sin que
@@ -303,9 +304,9 @@ def _writeup_for(user, machine_name: str):
 
 
 def ensure_certificate(user, machine_name: str, *, force: bool = False):
-    """Garantiza que el PDF del certificado existe y devuelve su fila.
+    """Garantiza que el diploma del certificado existe y devuelve su fila.
 
-    Idempotente: si el PDF ya está en disco, con el `cert_id` correcto, no
+    Idempotente: si la imagen ya está en disco, con el `cert_id` correcto, no
     vuelve a renderizar salvo que se pase `force=True` (renombrado de usuario o
     cambio del nombre del diploma). Devuelve `None` si el usuario no tiene
     writeup publicado de esa máquina, es decir, si no le corresponde diploma.
@@ -690,10 +691,10 @@ def register_certificado_routes(api_router, get_session, db):
         filename_base = f"diploma-dockerlabs-{safe_name(machine_name)}"
 
         if formato == "pdf":
-            return FileResponse(
-                abspath_for(cert.pdf_path),
+            return Response(
+                content=_pdf_bytes_from_webp(cert.image_path),
                 media_type="application/pdf",
-                filename=f"{filename_base}.pdf",
+                headers={"Content-Disposition": f'attachment; filename="{filename_base}.pdf"'},
             )
 
         machine = Machine.query.filter(func.lower(Machine.nombre) == func.lower(machine_name)).first()

@@ -2,9 +2,6 @@
    BUNKERLABS CSS – MORADO OSCURO MINIMALISTA
    ========================================= */
 
-/* Fuentes mejoradas */
-@import url('/static/dockerlabs/css/fonts.css');
-
 /* Paleta morada oscura equilibrada */
 :root {
     --bunker-primary: #7E57C2;

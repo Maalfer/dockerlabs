@@ -21,7 +21,8 @@ ramas de versiones antiguas en producción.
 
 | Versión | Soportada |
 | --- | --- |
-| 2.x.x | ✅ |
+| 2.0.1 (última publicada) | ✅ |
+| 2.0.0 y otras versiones 2.x anteriores | ❌ |
 | < 2.0.0 (sin versionar) | ❌ |
 
 ## CVE e identificación de vulnerabilidades

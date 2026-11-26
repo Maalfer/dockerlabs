@@ -26,6 +26,12 @@ def _compile_unbounded_varchar(element, compiler, **kw):
     return compiler.visit_VARCHAR(element, **kw)
 
 
+# pool_size=5 + max_overflow=25 -> hasta 30 conexiones por proceso. Con
+# --workers N en el systemd unit, cada worker es un proceso con su propio
+# engine, así que el techo real de esta app es N x 30. Comprueba
+# `max_connections` de MariaDB antes de subir --workers: subirlos sin tocar
+# esto (o sin bajar pool_size/max_overflow) puede agotar las conexiones de
+# toda la instancia, no solo las de DockerLabs.
 engine = create_engine(
     DATABASE_URL,
     pool_size=5,
