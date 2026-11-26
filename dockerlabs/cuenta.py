@@ -51,7 +51,8 @@ def eliminar_cuenta(user, base_dir: str) -> dict:
         if ruta.startswith(raiz + os.sep):
             ficheros.append(ruta)
 
-    # Diplomas: PDF e imagen archivados en disco (las filas caen en cascada).
+    # Diplomas: WebP archivado y, en filas antiguas, PDF legacy (las filas
+    # caen en cascada).
     for cert in Certificate.query.filter_by(user_id=uid).all():
         for rel in (cert.pdf_path, cert.image_path):
             if rel:

@@ -1,7 +1,8 @@
-"""Emite por adelantado el PDF de todo certificado que ya corresponda.
+"""Emite por adelantado el diploma WebP de todo certificado que ya corresponda.
 
 Un certificado corresponde en cuanto hay un writeup publicado de una máquina
 por un usuario registrado. Idempotente: los diplomas ya archivados se saltan.
+El PDF no se archiva: se compone al vuelo desde el WebP al descargarlo.
 
     venv/bin/python tools/backfill_certificados.py            # emite los que falten
     venv/bin/python tools/backfill_certificados.py --force    # re-renderiza todos
@@ -101,6 +102,8 @@ def main():
         if cert.id not in esperados:
             print(f"  - retirado {cert.cert_id} {cert.username}/{cert.machine_name}")
             _remove_file(cert.pdf_path)
+            if cert.image_path:
+                _remove_file(cert.image_path)
             db.session.delete(cert)
             retirados += 1
     if retirados:

@@ -182,6 +182,14 @@ Las entradas de seguridad referencian su identificador de advisory
   logs del proxy: dos avatares antiguos de agradecimientos, una captura vieja
   del README, dos variantes antiguas del logotipo y dos cursores SVG que no
   usaba nadie (la ballena emplea las versiones PNG).
+- Excepción temporal de registro que permitía reclamar el nombre `russ0ski`
+  pese a coincidir con un autor (el usuario ya está registrado, así que la
+  regla genérica vuelve a aplicarse sin efecto práctico).
+- Helpers, parámetros, constantes, entradas del mapa `url_for`, imports y
+  comentarios sin uso heredados de la migración a FastAPI: duplicado de
+  `get_profile_image_static_path`, argumentos que nunca se leían en los
+  registradores de rutas, constantes de bots en `asgi.py` y cabeceras vacías
+  en `routers.py`.
 
 ### Fixed
 
@@ -218,6 +226,10 @@ Las entradas de seguridad referencian su identificador de advisory
 - Referencia del smoke check actualizada: el baseline seguía esperando una
   plantilla retirada y no incluía rutas ya desplegadas, así que informaba de
   falsas regresiones.
+- `tools/backfill_certificados.py` dejaba el WebP huérfano en disco al retirar
+  certificados; ahora borra también la imagen, como `sync_user_certificates()`.
+- El año del pie de página se calcula en UTC (helper `utcnow()`) en vez de en
+  hora local.
 
 ## [2.0.1] - 2026-10-22
 

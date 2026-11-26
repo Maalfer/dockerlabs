@@ -58,7 +58,7 @@ class ResetPasswordRequest(BaseModel):
     password2: str
 
 
-def register_auth_routes(api_router, get_session, verify_csrf_token, create_session_cookie, check_password_hash_safe, get_user_and_verify_password):
+def register_auth_routes(api_router, get_session, create_session_cookie, get_user_and_verify_password):
     """Registra las rutas de este modulo en el router recibido."""
 
     @api_router.post("/auth/login", response_model=LoginResponse)
@@ -128,15 +128,11 @@ def register_auth_routes(api_router, get_session, verify_csrf_token, create_sess
         if existing:
             return JSONResponse(status_code=400, content={"success": False, "message": "El usuario o el correo ya están registrados."})
 
-        # Excepción puntual: autor legítimo de Obsession (verificado por el dueño). Quitar tras su registro.
-        _AUTHOR_CLAIM_ALLOWED = {"russ0ski"}
         auth_conflict = False
         if Machine.query.filter_by(autor=username).first(): auth_conflict = True
         elif Writeup.query.filter_by(autor=username).first(): auth_conflict = True
         elif PendingWriteup.query.filter_by(autor=username).first(): auth_conflict = True
 
-        if auth_conflict and username.lower() in _AUTHOR_CLAIM_ALLOWED:
-            auth_conflict = False
         if auth_conflict:
             return JSONResponse(status_code=400, content={"success": False, "message": "Este nombre de usuario coincide con el de un autor de máquina o writeup. Elige otro nombre de usuario."})
 

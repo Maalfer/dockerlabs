@@ -21,7 +21,7 @@ def ficheros_py():
         yield r
 
 
-def nombres_usados(arbol, fuente):
+def nombres_usados(arbol):
     """Todos los identificadores referenciados en el módulo."""
     usados = set()
     for n in ast.walk(arbol):
@@ -73,7 +73,7 @@ def main():
             print("  %s: NO SE PUDO ANALIZAR (%s)" % (ruta.relative_to(BASE), exc))
             continue
 
-        usados = nombres_usados(arbol, fuente)
+        usados = nombres_usados(arbol)
         sin_usar = []
         for local, linea, texto in imports_del_modulo(arbol):
             if local == "*":

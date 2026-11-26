@@ -202,7 +202,7 @@ def _resolve_range(rango: str, desde: str, hasta: str, visible_min: datetime):
     }
 
 
-def _smart_presets(visible_min: datetime, active: str):
+def _smart_presets(visible_min: datetime):
     """Construye la lista de presets de filtro disponibles. Un preset con ventana
     [s, e] queda 'disabled' si termina antes del primer dato visible (e <
     visible_min): ofrecerlo solo mostraría un gráfico vacío. Si aún no hay
@@ -250,9 +250,7 @@ def _average(values):
 def register_pages_admin_routes(
     pages_router,
     get_session,
-    verify_csrf_token,
     require_auth_and_role,
-    encode_session_cookie,
     templates,
     url_for,
     db,
@@ -860,7 +858,7 @@ def register_pages_admin_routes(
             "label": filtro_label,
             "total_descargas": total_descargas,
             "total_certificados": len(cert_requests_filtered),
-            "presets": _smart_presets(visible_min, active_rango),
+            "presets": _smart_presets(visible_min),
             "granularity": _bucket_granularity(start, end),
             "visible_since": visible_min.strftime("%d/%m/%Y") if visible_min else None,
             "empty": resolved["empty"],

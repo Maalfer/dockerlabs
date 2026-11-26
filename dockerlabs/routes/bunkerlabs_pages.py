@@ -351,12 +351,11 @@ def register_bunkerlabs_pages_routes(
         session: dict = Depends(get_session),
         csrf_ok: bool = Depends(verify_csrf_token),
     ):
-        ok, redir = require_auth_and_role(session, ["admin"])
+        ok, _ = require_auth_and_role(session, ["admin"])
         if not ok:
             return JSONResponse(status_code=403, content={"error": "Acceso denegado"})
 
         token_obj = db.session.get(BunkerAccessToken, token_id)
-        borrado = False
         if token_obj:
             try:
                 # El historial referencia al token (clave foránea sin cascada): hay que
@@ -364,7 +363,6 @@ def register_bunkerlabs_pages_routes(
                 BunkerAccessLog.query.filter_by(token_id=token_id).delete(synchronize_session=False)
                 db.session.delete(token_obj)
                 db.session.commit()
-                borrado = True
             except Exception:
                 db.session.rollback()
                 logger.exception("No se pudo eliminar el acceso de BunkerLabs %s", token_id)
@@ -383,7 +381,7 @@ def register_bunkerlabs_pages_routes(
         csrf_ok: bool = Depends(verify_csrf_token),
     ):
         """Activa o desactiva un acceso sin borrarlo (ni su historial)."""
-        ok, redir = require_auth_and_role(session, ["admin"])
+        ok, _ = require_auth_and_role(session, ["admin"])
         if not ok:
             return JSONResponse(status_code=403, content={"error": "Acceso denegado"})
         token_obj = db.session.get(BunkerAccessToken, token_id)

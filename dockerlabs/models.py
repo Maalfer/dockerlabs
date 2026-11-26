@@ -54,10 +54,11 @@ class User(db.Model):
     __repr__ = lambda self: f'<User {self.username}>'
 
 class Certificate(db.Model):
-    """Certificado de finalización ya emitido, con su PDF archivado en disco.
+    """Certificado de finalización ya emitido, con su WebP archivado en disco.
 
-    Se crea al generar el diploma desde `/api/certificado/<maquina>`; el PDF
-    persiste en `uploads/certificados/` para servirlo después sin re-renderizar.
+    Se crea al publicar el writeup; el WebP persiste en `uploads/certificados/`.
+    El PDF se compone al vuelo desde ese WebP al descargarlo. `pdf_path` se
+    conserva por compatibilidad con filas antiguas y consumo externo.
     """
     __tablename__ = 'certificados'
 

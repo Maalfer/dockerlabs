@@ -84,7 +84,6 @@ def register_machine_routes(
     get_session,
     verify_csrf_token,
     require_auth_and_role,
-    encode_session_cookie,
     templates,
     db,
     url_for,

@@ -1,8 +1,6 @@
 from dockerlabs.extensions import db
 from dockerlabs.tiempo import utcnow
 
-# Note: BunkerUser and BunkerMachine removed - use dockerlabs.models.User and Machine instead
-# Machine model now includes pin and guest_access fields for bunker functionality
 
 class BunkerAccessToken(db.Model):
     __tablename__ = 'bunker_access_tokens'
@@ -22,6 +20,3 @@ class BunkerAccessLog(db.Model):
     token_id = db.Column(db.Integer, db.ForeignKey('bunker_access_tokens.id'), nullable=False)
     user_nombre = db.Column(db.String, nullable=False)
     accessed_at = db.Column(db.DateTime, default=utcnow)
-
-    # Optional: Relationship if needed
-    # token = db.relationship('BunkerAccessToken', backref=db.backref('logs', lazy=True))

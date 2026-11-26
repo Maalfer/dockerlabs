@@ -259,8 +259,6 @@ def register_writeup_routes(api_router, get_session, verify_csrf_token, db):
         if not user_id:
             return JSONResponse(status_code=403, content={"error": "Debes iniciar sesión."})
 
-        from dockerlabs import validators
-
         valid, err = validators.validate_url(data.url)
         if not valid:
             return JSONResponse(status_code=400, content={"error": f"URL inválida: {err}"})
@@ -358,8 +356,6 @@ def register_writeup_routes(api_router, get_session, verify_csrf_token, db):
         caller_role = session.get("role", "")
         if caller_role not in ("admin", "moderador"):
             return JSONResponse(status_code=403, content={"error": "Acceso denegado"})
-
-        from dockerlabs import validators
 
         for val_fn, field in [
             (validators.validate_machine_name, data.maquina),
@@ -531,7 +527,7 @@ def register_writeup_routes(api_router, get_session, verify_csrf_token, db):
         results = query.order_by(PendingWriteup.created_at.desc(), PendingWriteup.id.desc()).all()
 
         writeups = []
-        for pw, machine_id, imagen in results:
+        for pw, machine_id, _imagen in results:
             image_url = f"/img/maquina/{machine_id}" if machine_id else None
             writeups.append(
                 {
@@ -858,7 +854,7 @@ def register_writeup_routes(api_router, get_session, verify_csrf_token, db):
         ).order_by(func.lower(Writeup.maquina)).all()
 
         maquinas = []
-        for maquina_nombre, total, imagen, logo_path, machine_id, dificultad, videos, ultimo in results:
+        for maquina_nombre, total, imagen, _logo_path, machine_id, dificultad, videos, ultimo in results:
             imagen_url = None
             
             # Usar el endpoint dinámico que sirve desde el sistema correcto (nuevo o antiguo)

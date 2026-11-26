@@ -252,7 +252,6 @@ def register_perfil_routes(api_router, get_session, verify_csrf_token, check_pas
 
         old_email = user_obj.email
         base_url = os.environ.get('APP_URL', '').rstrip('/') or str(request.base_url).rstrip('/')
-        from fastapi.concurrency import run_in_threadpool
         await run_in_threadpool(send_email_change_verification, new_email, user_obj.username, token, base_url)
         # Aviso a la dirección actual: así el titular legítimo se entera de
         # inmediato si alguien más solicitó el cambio desde su sesión, aunque

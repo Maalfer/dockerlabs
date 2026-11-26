@@ -2,7 +2,7 @@ from fastapi import APIRouter, Request, Depends, HTTPException
 from fastapi.responses import RedirectResponse
 from fastapi.templating import Jinja2Templates
 from typing import Optional
-from datetime import datetime
+from dockerlabs.tiempo import utcnow
 import secrets
 import re
 import os
@@ -23,20 +23,15 @@ _FLASK_TO_FASTAPI = {
         'auth.gestion_usuarios': '/gestion-usuarios',
         # BunkerLabs
         'bunkerlabs.bunkerlabs_login': '/bunkerlabs/login',
-        'bunkerlabs.bunkerlabs_home': '/bunkerlabs',
         'bunkerlabs.bunkerlabs_logout': '/bunkerlabs/logout',
         'bunkerlabs.bunkerlabs_guest': '/bunkerlabs/guest',
         'bunkerlabs.accesos_bunkerlabs': '/bunkerlabs/gestion',
-        'bunkerlabs.gestion_bunkerlabs': '/bunkerlabs/gestion',
-        'bunkerlabs.delete_bunker_token': '/bunkerlabs/gestion/{token_id}/delete',
         # Páginas principales
         'main.home': '/',
-        'main.dashboard': '/dashboard',
         'main.soporte': '/soporte',
         'main.herramientas_comunidad': '/herramientas-comunidad',
         'main.equipo': '/equipo',
         'main.enviar_maquina': '/enviar-maquina',
-        'main.como_se_crea': '/enviar-maquina',  # página unificada (la antigua redirige con 301)
         'main.agradecimientos': '/agradecimientos',
         'main.autoria': '/autoria',
         'main.terminos_condiciones': '/terminos-condiciones',
@@ -46,15 +41,10 @@ _FLASK_TO_FASTAPI = {
         'main.estadisticas': '/estadisticas',
         'main.pending_machines': '/pending-machines',
         'main.user_pending_machines': '/user-pending',
-        'main.approve_machine': '/api/admin/pending-machines/{machine_id}/approve',
-        'main.reject_machine': '/api/admin/pending-machines/{machine_id}/reject',
-        'main.bug_bounty': '/bug-bounty',
         # Máquinas
         'maquinas.maquinas_hechas': '/maquinas-hechas',
         'maquinas.gestion_maquinas': '/gestion-maquinas',
         'maquinas.add_maquina_page': '/add-maquina',
-        'maquinas.actualizar_maquina': '/api/gestion-maquinas/actualizar',
-        'maquinas.eliminar_maquina': '/api/gestion-maquinas/eliminar',
         'maquinas.serve_machine_logo': '/img/maquina/{machine_id}',
         # Writeups
         'writeups.writeups_publicados': '/writeups-publicados',
@@ -108,7 +98,7 @@ templates.env.globals['url_for'] = url_for
 
 # Añadir el año actual como variable global en todas las plantillas
 def get_current_year():
-    return datetime.now().year
+    return utcnow().year
 
 templates.env.globals['current_year'] = get_current_year
 
@@ -209,7 +199,6 @@ def get_session(request: Request) -> dict:
             # Último acceso (para /gestion-usuarios): se anota como mucho cada 10 minutos
             # y con un UPDATE directo, que no dispara los eventos del modelo (slug...).
             try:
-                from dockerlabs.tiempo import utcnow
                 ahora = utcnow()
                 if visto is None or (ahora - visto).total_seconds() > 600:
                     db.session.query(User).filter(User.id == uid).update(
@@ -298,7 +287,6 @@ def encode_session_cookie(session_data: dict) -> str:
 
 def create_session_cookie(user_id: int, username: str, role: str = 'jugador', existing_session: dict = None, _id: str = None, session_version: int = None) -> str:
     import hashlib
-    import os
 
     session_data = existing_session or {}
     if _id is None:
@@ -404,45 +392,6 @@ def _get_user_and_verify_password(username: str, password: str):
     }
 
 
-
-
-
-
-
-
-
-
-
-
-# Perfil
-
-
-
-
-
-
-
-
-# Administración
-
-
-
-
-
-
-# Toggle acceso guest
-
-# Subida de logo de máquina
-
-# Lista de usuarios (autocompletado admin)
-
-# Valoración de máquina
-
-# Consulta de valoración
-
-# Máquinas completadas
-
-
 def require_auth_and_role(session: dict, allowed_roles: list):
     """Helper para verificar autenticación y roles."""
     user_id = session.get('user_id')
@@ -516,7 +465,6 @@ register_machine_routes(
     get_session=get_session,
     verify_csrf_token=verify_csrf_token,
     require_auth_and_role=require_auth_and_role,
-    encode_session_cookie=encode_session_cookie,
     templates=templates,
     db=db,
     url_for=url_for,
@@ -532,9 +480,7 @@ register_pages_info_routes(
 register_pages_admin_routes(
     pages_router=pages_router,
     get_session=get_session,
-    verify_csrf_token=verify_csrf_token,
     require_auth_and_role=require_auth_and_role,
-    encode_session_cookie=encode_session_cookie,
     templates=templates,
     url_for=url_for,
     db=db,
@@ -568,12 +514,10 @@ register_public_profile_routes(
 )
 
 register_image_routes(
-    api_router=api_router,
     pages_router=pages_router,
 )
 
 
-# --- Rutas extraidas de este mismo modulo (antes estaban aqui en linea) ------
 from dockerlabs.routes.api_publica import register_api_publica_routes
 from dockerlabs.routes.auth import register_auth_routes
 from dockerlabs.routes.perfil import register_perfil_routes
@@ -590,9 +534,7 @@ register_api_publica_routes(
 register_auth_routes(
     api_router=api_router,
     get_session=get_session,
-    verify_csrf_token=verify_csrf_token,
     create_session_cookie=create_session_cookie,
-    check_password_hash_safe=check_password_hash_safe,
     get_user_and_verify_password=_get_user_and_verify_password,
 )
 

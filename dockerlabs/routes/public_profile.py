@@ -2,7 +2,7 @@
 
 Devuelve, sin autenticación, todo el progreso público de un usuario: las
 máquinas que ha resuelto con su ficha completa, las que ha creado, sus writeups
-y sus certificados (PDF e imagen ya archivados).
+y sus certificados (WebP archivado, PDF compuesto al vuelo).
 
 `GET /perfil/<slug>` sirve exactamente los mismos datos como página HTML.
 
@@ -225,8 +225,8 @@ def register_public_profile_routes(pages_router, db, api_router=None,
         ]
 
         # --- Certificados -----------------------------------------------------
-        # Cada writeup publicado da derecho a un certificado; el PDF y la imagen
-        # se archivan al publicarlo, así que `generado` es true salvo rarezas.
+        # Cada writeup publicado da derecho a un certificado; el WebP se archiva
+        # al publicarlo, así que `generado` es true salvo rarezas.
         certificados = []
         vistos = set()
         for w in writeups_publicos:

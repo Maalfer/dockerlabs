@@ -55,8 +55,8 @@ TEXT_COLOR   = (30, 65, 85)
 
 _gen_rate: dict = defaultdict(list)
 _ver_rate: dict = defaultdict(list)
-# Generar ya no renderiza 13 s: sirve un fichero archivado o compone un PNG en
-# 0,45 s. Un usuario con 59 diplomas tiene que poder descargarlos del tirón.
+# Generar ya no renderiza 13 s: compone un PNG al vuelo desde el WebP en 0,45 s.
+# Un usuario con 59 diplomas tiene que poder descargarlos del tirón.
 GEN_MAX_PER_MIN  = 60
 VER_MAX_PER_MIN  = 20
 
@@ -447,7 +447,7 @@ def revoke_certificate_safe(username: str, machine_name: str) -> None:
 def sync_user_certificates_safe(user_id: int, *, force: bool = False) -> None:
     """Resincroniza los certificados de un usuario en segundo plano.
 
-    Re-renderizar un diploma cuesta ~170 ms (PDF + WebP); un usuario con 59 de
+    Re-renderizar un diploma cuesta ~170 ms (WebP); un usuario con 59 de
     ellos tardaría 10 s. Se ejecuta como BackgroundTask, después de responder,
     con su propio ámbito de sesión: el del request ya se ha cerrado.
     """

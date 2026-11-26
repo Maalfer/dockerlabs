@@ -257,8 +257,6 @@ def register_pages_core_routes(
         if csrf_token:
             return csrf_token, None
 
-        import hashlib
-        import os
         new_id = hashlib.sha512(os.urandom(24)).hexdigest()
         csrf_token = compute_csrf_token(new_id)
         cookie_val = create_session_cookie(

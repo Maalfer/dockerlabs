@@ -11,7 +11,7 @@ from dockerlabs.models import Machine, User
 from dockerlabs.extensions import db
 
 
-def register_image_routes(api_router, pages_router):
+def register_image_routes(pages_router):
     def _serve_profile_image_logic(user_id: int):
 
         base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))

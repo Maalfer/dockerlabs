@@ -202,7 +202,6 @@ _LEET = str.maketrans({"0": "o", "1": "i", "3": "e", "4": "a", "5": "s", "7": "t
 
 def es_nombre_reservado(username):
     """True si `username`, normalizado, coincide con un nombre reservado."""
-    import re
     import unicodedata
 
     base = unicodedata.normalize("NFKD", username or "").encode("ascii", "ignore").decode().lower()
